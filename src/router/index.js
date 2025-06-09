@@ -138,6 +138,12 @@ const routes = [
         component: () =>
           import(/* webpackChunkName: "home" */ "@/views/tickettype/TicketType.vue"),
       },
+      {
+        path: "/trip-template",
+        name: "TripTemplates",
+        component: () =>
+          import(/* webpackChunkName: "home" */ "@/views/triptemplate/TripTemplate.vue"),
+      },
     ],
   },
 ];

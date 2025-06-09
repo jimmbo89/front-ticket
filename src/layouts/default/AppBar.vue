@@ -14,6 +14,10 @@
     </v-row>
   </v-snackbar>
   <v-app-bar scroll-threshold="0">
+     <v-app-bar-nav-icon 
+      @click.stop="$emit('toggle-drawer')"
+      v-if="!$vuetify.display.mdAndUp"
+    />
     <v-app-bar-title>
   <div style="display: flex; align-items: center; gap: 0;">
     <!--<v-icon size="40">mdi-bus</v-icon>  Icono sin margen inferior -->
@@ -169,6 +173,9 @@
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 export default {
+  props: {
+    drawerVisible: Boolean
+  },
   data: () => ({
     visible: false,
     visible1: false,

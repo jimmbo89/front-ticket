@@ -75,38 +75,38 @@
                     <v-toolbar :color="paleteColors.primary">
                       <span class="text-subtitle-2 ml-4">Diagrama de Asientos</span>
                     </v-toolbar>
-                    <v-card-text>
-                      <div v-for="(row, rowIndex) in editedItem.seatMap" :key="rowIndex" class="seat-row">
-    <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
-      <div v-if="seat.type === 'seat'" 
-           :style="{ color: getSeatColor(seat) }" 
-           @click="confirmSelection(rowIndex, seatIndex)" 
-           class="seat-icon" 
-           style="cursor: pointer; position: relative;">
-        <v-icon size="x-large" class="seat-icon">mdi-seat</v-icon>
-        <span class="seat-label">{{ seat.label }}</span>
-      </div>
+                    <v-card-text style="overflow-y: auto; max-height: 60vh;">
+                      <div v-for="(row, rowIndex) in editedItem.seatMap" :key="rowIndex" class="seat-row" >
+                        <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
+                          <div v-if="seat.type === 'seat'" 
+                              :style="{ color: getSeatColor(seat) }" 
+                              @click="confirmSelection(rowIndex, seatIndex)" 
+                              class="seat-icon" 
+                              style="cursor: pointer; position: relative;">
+                            <v-icon size="50" class="seat-icon">mdi-seat</v-icon>
+                            <span class="seat-label">{{ seat.label }}</span>
+                          </div>
 
-      <!-- Mostrar ícono de pasillo si es un pasillo -->
-      <div v-else-if="seat.type === 'aisle'" 
-           :style="{ color: getSeatColor(seat) }" 
-           @click="confirmSelection(rowIndex, seatIndex)" 
-           class="aisle-icon" 
-           style="cursor: pointer; position: relative; opacity: 0.7">
-        <v-icon size="large" class="aisle-icon">mdi-arrow-split-vertical</v-icon>
-        <span class="aisle-label">P</span>
-      </div>
+                          <!-- Mostrar ícono de pasillo si es un pasillo -->
+                          <div v-else-if="seat.type === 'aisle'" 
+                              :style="{ color: getSeatColor(seat) }" 
+                              @click="confirmSelection(rowIndex, seatIndex)" 
+                              class="aisle-icon" 
+                              style="cursor: pointer; position: relative; opacity: 0.7">
+                            <v-icon size="40" class="aisle-icon">''</v-icon>
+                            <span class="aisle-label">P</span>
+                          </div>
 
-      <!-- Mostrar botón normal si no es asiento ni pasillo -->
-      <v-btn v-else 
-             :color="getSeatColor(seat)" 
-             @click="confirmSelection(rowIndex, seatIndex)" 
-             class="seat-button" style=" opacity: 0.7">
-            
-        {{ seat.label ? `${seat.label}` : '' }}
-      </v-btn>
-    </div>
-  </div>
+                          <!-- Mostrar botón normal si no es asiento ni pasillo -->
+                          <v-btn v-else 
+                                :color="getSeatColor(seat)" 
+                                @click="confirmSelection(rowIndex, seatIndex)" 
+                                class="seat-button" style=" opacity: 0.7">
+                                
+                            {{ seat.label ? `${seat.label}` : '' }}
+                          </v-btn>
+                        </div>
+                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -190,39 +190,39 @@
           <template v-slot:item.seatMap="{ item }">
             <div class="seat-map-container">
               <div v-for="(row, rowIndex) in item.seatMap" :key="rowIndex" class="seat-row">
-    <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
-      <!-- Mostrar ícono de asiento si es un asiento -->
-      <div v-if="seat.type === 'seat'" 
-           :style="{ color: getSeatColor(seat) }" 
-           @click="handleSeatClick(rowIndex, seatIndex)" 
-           class="seat-icon-card" 
-           style="cursor: pointer; position: relative;">
-        <v-icon size="small">mdi-seat</v-icon>
-        <span class="seat-label-card">{{ seat.label }}</span>
-      </div>
+              <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
+                <!-- Mostrar ícono de asiento si es un asiento -->
+                <div v-if="seat.type === 'seat'" 
+                    :style="{ color: getSeatColor(seat) }" 
+                    @click="handleSeatClick(rowIndex, seatIndex)" 
+                    class="seat-icon-card" 
+                    style="cursor: pointer; position: relative;">
+                  <v-icon size="40">mdi-seat</v-icon>
+                  <span class="seat-label-card">{{ seat.label }}</span>
+                </div>
 
-      <!-- Mostrar ícono de pasillo si es un pasillo -->
-      <div v-else-if="seat.type === 'aisle'" 
-           :style="{ color: getSeatColor(seat) }" 
-           @click="handleSeatClick(rowIndex, seatIndex)" 
-           class="aisle-icon-card" 
-           style="cursor: pointer; position: relative; opacity: 0.6;"> <!-- Opacidad añadida -->
-        <v-icon size="small">mdi-arrow-split-vertical</v-icon>
-        <span class="aisle-label-card">P</span>
-      </div>
+                <!-- Mostrar ícono de pasillo si es un pasillo -->
+                <div v-else-if="seat.type === 'aisle'" 
+                    :style="{ color: getSeatColor(seat) }" 
+                    @click="handleSeatClick(rowIndex, seatIndex)" 
+                    class="aisle-icon-card" 
+                    style="cursor: pointer; position: relative; opacity: 0.6;"> <!-- Opacidad añadida -->
+                  <v-icon size="small">' '</v-icon>
+                  <span class="aisle-label-card"> </span>
+                </div>
 
-      <!-- Mostrar botón normal si no es asiento ni pasillo -->
-      <v-btn v-else 
-             :color="getSeatColor(seat)" 
-             :disabled="!seat.type" 
-             @click="handleSeatClick(rowIndex, seatIndex)" 
-             class="seat-button-preview" 
-             small 
-             style="opacity: 0.6;"> <!-- Opacidad añadida -->
-        {{ seat.label ? `${seat.label}` : '' }}
-      </v-btn>
-    </div>
-  </div>
+                <!-- Mostrar botón normal si no es asiento ni pasillo 
+                <v-btn v-else 
+                      :color="getSeatColor(seat)" 
+                      :disabled="!seat.type" 
+                      @click="handleSeatClick(rowIndex, seatIndex)" 
+                      class="seat-button-preview" 
+                      small 
+                      style="opacity: 0.6;"> 
+                  {{ seat.label ? `${seat.label}` : '' }}
+                </v-btn>-->
+              </div>
+            </div>
             </div>
           </template>
           <template v-slot:item.actions="{ item }">
@@ -639,10 +639,10 @@ export default {
     },
     generateSeatMap() {
       const totalSeats = this.editedItem.seatCount;
-      const columns = 5; // Número fijo de columnas (ajusta según tu diseño)
+      const rows = 5; // Número fijo de columnas (ajusta según tu diseño)
 
       // Calcular el número de filas necesario
-      const rows = Math.ceil(totalSeats / (columns - 1)) + 2; // Resta 1 columna para pasillos y agrega 2 filas adicionales
+      const columns = Math.ceil(totalSeats / (rows - 1)) + 2; // Resta 1 columna para pasillos y agrega 2 filas adicionales
 
       this.seatMap = [];
       this.editedItem.seatMap = [];
@@ -1035,9 +1035,9 @@ export default {
   /* Espacio entre los asientos */
   border-radius: 4px;
   /* Bordes redondeados */
-  min-width: 25px;
+  min-width: 20px;
   /* Tamaño mínimo */
-  min-height: 25px;
+  min-height: 20px;
   /* Tamaño mínimo */
   font-size: 12px;
   /* Tamaño de la fuente */
@@ -1101,11 +1101,11 @@ export default {
   /* Espacio entre los asientos */
   border-radius: 4px;
   /* Bordes redondeados */
-  min-width: 30px;
+  min-width: 20px;
   /* Tamaño mínimo */
-  min-height: 30px;
+  min-height: 20px;
   /* Tamaño mínimo */
-  font-size: 10px;
+  font-size: 12px;
   /* Tamaño de la fuente */
 }
 
@@ -1133,8 +1133,8 @@ export default {
 }
 
 .seat-button-preview {
-  min-width: 30px !important;
-  height: 30px !important;
+  min-width: 20px !important;
+  height: 20px !important;
   padding: 0 !important;
 }
 
@@ -1179,10 +1179,10 @@ export default {
 /* Estilos para el número del asiento */
 .seat-label-card {
   position: absolute;
-  top: 45%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 0.8rem; /* Tamaño del número */
+  font-size: 0.9rem; /* Tamaño del número */
   font-weight: bold;
   color: black; /* Color del texto */
 }
@@ -1212,18 +1212,18 @@ export default {
 /* Estilos para la "P" del pasillo */
 .aisle-label {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1rem; /* Tamaño de la "P" */
+  font-size: 1.5rem; /* Tamaño de la "P" */
   font-weight: bold;
   color: black; /* Color del texto */
 }
 
 /* Estilos para el botón */
 .seat-button {
-  min-width: 40px; /* Ajusta el tamaño del botón */
-  min-height: 40px; /* Ajusta el tamaño del botón */
+  min-width: 30px; /* Ajusta el tamaño del botón */
+  min-height: 30px; /* Ajusta el tamaño del botón */
   position: relative; /* Necesario para posicionar los elementos hijos de forma absoluta */
 }
 </style>

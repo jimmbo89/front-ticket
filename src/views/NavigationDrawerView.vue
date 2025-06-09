@@ -1,7 +1,5 @@
 <template>
   <v-card>
-    <v-layout>
-      <v-navigation-drawer permanent class="pt-4 my-1" color="white" theme="dark" app>
         <template v-slot:prepend>
           <v-list-item class="text-subtitle-1" lines="two" variant="flat"
             :prepend-avatar="`${this.$axios.defaults.baseURL}images/${this.imageBranch}`" :title="this.title"
@@ -70,9 +68,9 @@
               class="list-item"></v-list-item>
           </v-list>-->
         </template>
-      </v-navigation-drawer>
+
       <v-main style="height: 94vh"></v-main>
-    </v-layout>
+
   </v-card>
 </template>
 
@@ -91,6 +89,7 @@ export default {
       { title: "Estructuras de asientos", icon: "mdi-bus-side", to: "structure", permission: "view_structures" },
       { title: "Promociones", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
       { title: "Tipos de Pasajes", icon: "mdi-ticket-confirmation-outline", to: "ticket-type", permission: "view_tickettype" },
+      { title: "Plantillas de Viajes", icon: "mdi-map-marker-path", to: "trip-template", permission: "view_triptemplates" },
     ],
     security: [
       { title: "Roles", icon: "mdi-account-cog-outline", to: "role", permission: "view_roles" },

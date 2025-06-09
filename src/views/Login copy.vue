@@ -1,4 +1,4 @@
-<!--<template>
+<template>
   <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
     :multi-line="true" vertical v-model="snackbar">
     <v-row>
@@ -13,7 +13,6 @@
 
     </v-row>
   </v-snackbar>
-  
     <v-row justify="center">
       <v-col
         cols="11"
@@ -84,124 +83,12 @@
       </v-card>
     </v-form>
   </div>
-</template>-->
-<template>
-  <div class="login-wrapper">
-    <v-container class="fill-height" fluid>
-      <v-row class="ma-0" align="center" justify="center">
-        <v-col cols="12" md="10" lg="8" xl="6">
-          <v-sheet class="d-flex flex-wrap rounded-xl glass-card" elevation="8">
-            <!-- Lado izquierdo: Ilustración (solo en pantallas md+) -->
-            <v-col
-              cols="12"
-              md="6"
-              class="login-illustration d-none d-md-flex align-center justify-center"
-            >
-              <v-img
-                src="https://undraw.co/api/illustrations/91fe13b2-4a63-4bd0-abe9-4bd11910e465"
-                max-width="300"
-                cover
-              />
-            </v-col>
-
-            <!-- Lado derecho: Formulario -->
-            <v-col cols="12" md="6" class="pa-6">
-              <div class="text-center mb-4">
-                <v-icon size="56" color="indigo-darken-2">mdi-ticket-confirmation</v-icon>
-                <h2 class="text-h5 font-weight-bold text-indigo-darken-2 mt-2">BusGo</h2>
-                <p class="text-grey-darken-1">Inicia sesión para continuar</p>
-              </div>
-
-              <v-form ref="form" v-model="valid">
-                <v-text-field
-                  v-model="editedItem.email"
-                  label="Correo o usuario"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-account"
-                  density="comfortable"
-                />
-
-                <v-text-field
-                  v-model="editedItem.password"
-                  :type="visible ? 'text' : 'password'"
-                  label="Contraseña"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-lock"
-                  :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="visible = !visible"
-                  density="comfortable"
-                />
-
-                <v-radio-group v-model="selectedOption" inline class="mt-2">
-                  <v-radio color="indigo" label="Empresa" value="empresa" />
-                  <v-radio color="indigo" label="Sucursal" value="sucursales" />
-                </v-radio-group>
-
-                <v-autocomplete
-                  v-if="selectedOption === 'sucursales'"
-                  v-model="editedItem.branch_id"
-                  :items="branches"
-                  item-title="name"
-                  item-value="id"
-                  label="Sucursal"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-domain"
-                  clearable
-                >
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item
-                      v-bind="props"
-                      :prepend-avatar="`${$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name"
-                    />
-                  </template>
-                </v-autocomplete>
-
-                <v-btn
-                  block
-                  color="indigo-darken-2"
-                  size="large"
-                  class="mt-6"
-                  :loading="loading"
-                  :disabled="!valid"
-                  @click="login"
-                  rounded
-                >
-                  <v-icon start>mdi-login</v-icon>
-                  Ingresar
-                </v-btn>
-              </v-form>
-
-              <v-card-actions class="justify-center mt-4">
-                <small class="text-grey-darken-1">BusGo © 2025</small>
-              </v-card-actions>
-            </v-col>
-          </v-sheet>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar" location="top right" :timeout="sb_timeout">
-      <v-alert
-        :type="sb_type"
-        variant="flat"
-        color="indigo"
-        border="start"
-        class="w-100"
-        :icon="sb_icon"
-      >
-        <strong>{{ sb_title }}</strong><br />
-        {{ sb_message }}
-      </v-alert>
-    </v-snackbar>
-  </div>
 </template>
-
 <script>
 import LocalStorageService from "@/LocalStorageService";
 import router from '@/router/index';
 import { handleRequest } from "@/utils/api";
+
 export default {
   data: () => ({
     visible: false,
@@ -355,29 +242,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
-.login-wrapper {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #eef2f7, #f4f7fb);
-  min-height: 100vh;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.glass-card {
-  backdrop-filter: blur(8px);
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.login-illustration {
-  background: linear-gradient(180deg, #e0e7ff, #ffffff);
-}
-</style>
