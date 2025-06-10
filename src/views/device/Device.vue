@@ -28,6 +28,32 @@
       </v-toolbar>
 
       <v-card-text>
+      <v-row>
+                    <v-container fluid>
+                        <v-cols cols="12" md="12">
+                            <v-row v-if="mostrarFila" dense>
+                                <v-col cols="12" md="3">
+                                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id"
+                                        v-if="mostrarFila" :items="branches" label="Seleccione una Sucursal"
+                                        prepend-inner-icon="mdi-store" item-title="name" item-value="id"
+                                        variant="underlined" :rules="selectRules" density="compact">
+                                        <template v-slot:item="{ props, item }">
+                                            <v-list-item v-bind="props"
+                                                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+                                            </v-list-item>
+                                        </template>
+                                    </v-autocomplete><!-- @update:model-value="initialize()">-->
+                                </v-col>
+                                <v-col cols="12" md="2">
+                                    <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
+                                        <v-icon>mdi-magnify</v-icon></v-btn>
+                                </v-col>
+                            </v-row>
+                        </v-cols>
+                    </v-container>
+                </v-row>
+               <v-row dense>
+                    <v-col cols="12">
         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
           hide-details>
         </v-text-field>
@@ -59,6 +85,8 @@
                         </v-chip>
           </template>
         </v-data-table>
+        </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
   </v-container>
@@ -214,6 +242,7 @@ export default {
     input2: null,
     dialog: false,
     dialogDelete: false,
+    mostrarFila: false,
     devices: [],
     branches: [],
     role: '',
@@ -367,9 +396,11 @@ export default {
           this.branches = [];
         }
       } catch (error) {
+        this.mostrarFila= false,
         // Captura de errores no controlados
         this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
       } finally {
+        this.mostrarFila= true,
         this.loading = false;
         this.initialize();
       }

@@ -98,7 +98,7 @@
             </v-list>
           </v-menu>
         </v-btn>-->
-    <v-menu>
+    <!--<v-menu>
       <template v-slot:activator="{ props }">
 
         <v-list-item v-bind="props" variant="tonal" class="mr-4" lines="two" :title="this.name" :subtitle="this.role"
@@ -125,7 +125,83 @@
           <v-list-item-title> {{ item.title }}</v-list-item-title>
         </v-list-item>
       </v-list>
-    </v-menu>
+    </v-menu>-->
+     <v-menu 
+    :max-width="mobile ? '280' : undefined" 
+    :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
+    location="bottom end"
+  >
+    <template v-slot:activator="{ props: menuProps }">
+      <!-- Versión móvil con tooltip -->
+      <v-tooltip 
+        v-if="mobile" 
+        location="bottom"
+        content-class="custom-user-tooltip"
+      >
+        <template v-slot:activator="{ props: tooltipProps }">
+          <div v-bind="{...tooltipProps, ...menuProps}" class="mobile-avatar-wrapper">
+            <v-avatar class="mr-2" size="40">
+              <v-img 
+                :src="`${$axios.defaults.baseURL}images/${imageUrl}`" 
+                alt="Avatar"
+              />
+            </v-avatar>
+            <v-btn 
+              size="small" 
+              variant="text" 
+              icon="mdi-dots-vertical"
+              class="mobile-menu-btn"
+            />
+          </div>
+        </template>
+        <div class="tooltip-content">
+          <div class="text-subtitle-2">{{ name }}</div>
+          <div class="text-caption text-medium-emphasis">{{ role }}</div>
+        </div>
+      </v-tooltip>
+
+      <!-- Versión desktop -->
+      <v-list-item
+        v-if="!mobile"
+        v-bind="menuProps"
+        variant="tonal"
+        class="user-menu-activator"
+        lines="two"
+        :title="name"
+        :subtitle="role"
+      >
+        <template v-slot:prepend>
+          <v-avatar class="mr-2">
+            <v-img 
+              :src="`${$axios.defaults.baseURL}images/${imageUrl}`" 
+              alt="Avatar"
+            />
+          </v-avatar>      
+        </template>
+        <template v-slot:append>
+          <v-btn 
+            size="small" 
+            variant="text" 
+            icon="mdi-menu-down"
+          />
+        </template>
+      </v-list-item>
+    </template>
+
+    <v-list density="compact" nav>
+      <v-list-item
+        v-for="(item, i) in items"
+        :key="i"
+        :value="item"
+        @click="handleItemClick(item)"
+      >
+        <template v-slot:prepend>
+          <v-icon :icon="item.icon"/>
+        </template>
+        <v-list-item-title>{{ item.title }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
   </v-app-bar>
   <v-dialog v-model="dialogChangePass" max-width="400px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
@@ -172,6 +248,7 @@
 <script>
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { useDisplay } from 'vuetify';
 export default {
   props: {
     drawerVisible: Boolean
@@ -214,6 +291,10 @@ export default {
     ],
     passwordRule: (value) => value && value.length >= 5 || 'La contraseña debe tener al menos 5 caracteres',
   }),
+  setup() {
+    const { mobile } = useDisplay()
+    return { mobile }
+  },
   mounted() {
     this.name = JSON.parse(LocalStorageService.getItem('name'));
     this.user = JSON.parse(LocalStorageService.getItem('user'));
@@ -324,3 +405,46 @@ export default {
   }
 }
 </script>
+<style scoped>
+/* Estilos para móvil */
+.mobile-avatar-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.mobile-menu-btn {
+  margin-left: 4px;
+}
+
+/* Estilos para desktop */
+.user-menu-activator {
+  max-width: 300px;
+}
+
+/* Estilos del tooltip */
+:deep(.custom-user-tooltip) {
+  opacity: 1 !important;
+  background: rgba(var(--v-theme-surface-variant), 0.9) !important;
+  color: rgba(var(--v-theme-on-surface-variant)) !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .v-menu__content {
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+}
+</style>

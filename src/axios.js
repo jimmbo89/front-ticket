@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8001/api/',
-  //baseURL: 'https://busgo.api.wezen.cl/api/',
+  //baseURL: 'http://localhost:8001/api/',
+  baseURL: 'https://busgo.api.wezen.cl/api/',
   timeout: 10000,
 });
 

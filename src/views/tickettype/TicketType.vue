@@ -108,8 +108,8 @@
                             </v-autocomplete>-->
                             <v-switch
                                 v-model="editedItem.active"
-                                :true-value="1"
-                                :false-value="0"
+                                :true-value="true"
+                                :false-value="false"
                                 :label="`Activo: ${editedItem.active ? 'Sí' : 'No'}`"
                                 :color="paleteColors.active"
                                 hide-details
