@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card style="display: flex; flex-direction: column; height: 100%;">
         <template v-slot:prepend>
           <v-list-item class="text-subtitle-1" lines="two" variant="flat"
             :prepend-avatar="`${this.$axios.defaults.baseURL}images/${this.imageBranch}`" :title="this.title"
