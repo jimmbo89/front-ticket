@@ -11,39 +11,152 @@
       </v-col>
     </v-row>
   </v-snackbar>
+  <v-card class="d-flex align-center pa-4" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-office-building</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Empresa</div>
+      <div class="text-body-2 text-grey">Administracion de la Empresa</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn color="primary" class="text-subtitle-1 ml-12" variant="tonal" elevation="2" prepend-icon="mdi-plus-circle"
+      @click="showAddBussines">
+      Agregar Empresa
+    </v-btn>
+  </v-card>
+
   <v-container fluid>
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Negocios</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-              prepend-icon="mdi-plus-circle" @click="showAddBussines">
-              Agregar Negocio
-            </v-btn>
+    <v-card elevation="0" class="">
+      <v-card-text>
+        <v-card v-for="(company, index) in companies" :key="index" class="mb-4 rounded-lg pa-2" density="comfortable"
+          elevation="2">
+          <v-row>
+            <v-col cols="auto" class="d-flex justify-start">
+              <v-dialog max-width="500" class="rounded-lg">
+                <!-- Activator: Solo el avatar es clickeable -->
+                <template v-slot:activator="{ props: activatorProps }">
+                  <v-avatar v-bind="activatorProps" class="mr-1 icono-concavo" elevation="3" color="grey-lighten-4"
+                    style="cursor: pointer">
+                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
+                        company.image
+                      }?t=${getCacheTimestamp()}`" alt="Logo de la compañía" cover />
+                  </v-avatar>
+                </template>
+
+                <!-- Diálogo con la imagen expandida -->
+                <template v-slot:default="{ isActive }">
+                  <v-card class="modal-imagen">
+                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
+                        company.image
+                      }?t=${getCacheTimestamp()}`" max-height="500" contain />
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn text="Cerrar" variant="flat" @click="isActive.value = false" />
+                    </v-card-actions>
+                  </v-card>
+                </template>
+              </v-dialog>
+            </v-col>
+            <v-col cols="4" class="d-flex align-center justify-start">
+              <v-row align="center" class="gap-3">
+                <div>
+                  <div class="font-weight-bold text-body-2">
+                    {{ company.name }}
+                  </div>
+                  <div class="text-body-2 d-flex align-center text-grey-darken-1 text-truncate">
+                    {{ company.address }}
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Dirección: {{ company.address }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+                </div>
+              </v-row>
+            </v-col>
+
+            <v-col cols="3" class="d-flex align-center justify-start">
+              <div class="text-body-2 d-flex align-center text-truncate">
+                {{ company.rut }}
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Rut: {{ company.rut }}
+                  </span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Rut: {{ company.rut }}
+                    </span>
+                  </v-tooltip>
+                </v-tooltip>
+              </div>
+            </v-col>
+            <v-col cols="2" class="d-flex align-center justify-start">
+              <div class="text-body-2 d-flex align-center text-truncate">
+                {{ company.phone }}
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Teléfono: {{ company.phone }}
+                  </span>
+                </v-tooltip>
+              </div>
+            </v-col>
+            <v-col cols="2" class="d-flex align-center justify-end">
+              <v-btn variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }" class="me-1"
+                :color="paleteColors.primary" @click="editItem(company)" size="small" title="Editar">
+                <v-icon size="20">mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                :color="paleteColors.error" @click="deleteItem(company)" size="small" title="Eliminar">
+                <v-icon size="20">mdi-delete</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card>
+        <v-row>
+          <v-col cols="12" md="12">
+            <v-row>
+              <v-col v-for="item_menu in administracion" :key="item_menu.value" cols="12" sm="2" md="2">
+                <v-card class="d-flex flex-column align-center pa-3" elevation="2" rounded="lg"
+                  @click="$router.push(item_menu.to)">
+                  <v-avatar size="48" class="mb-3" color="grey-lighten-4">
+                    <v-icon :icon="item_menu.icon" color="primary" size="28" />
+                  </v-avatar>
+                  <span class="text-body-1 font-weight-medium">{{
+                    item_menu.title
+                    }}</span>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
-      </v-toolbar>
 
-      <v-card-text>
+        <br /><br />
+
         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
           hide-details>
         </v-text-field>
         <v-data-table :headers="headers" :search="search" :items="companies" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
+          style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
           no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
           <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-              elevation="1" title="Editar Negocio"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-              elevation="1" title="Eliminar Negocio"></v-btn>
+            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
+              variant="tonal" elevation="1" title="Editar Empresa"></v-btn>
+            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
+              variant="tonal" elevation="1" title="Eliminar Empresa"></v-btn>
           </template>
           <template v-slot:item.name="{ item }">
             <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?t=${Date.now()}`" alt="image"></v-img>
-            </v-avatar><!--+'?$'+Date.now()-->
+              <v-img :src="`${this.$axios.defaults.baseURL}images/${
+                  item.image
+                }?t=${getCacheTimestamp()}`" alt="image"></v-img>
+            </v-avatar>
             {{ item.name }}
           </template>
         </v-data-table>
@@ -79,16 +192,14 @@
             </v-row>
             <v-row>
               <v-col cols="12" md="6">
-                <v-file-input clearable v-model="file" ref="fileInput" label="Imagen del Negocio" variant="underlined"
+                <v-file-input clearable v-model="file" ref="fileInput" label="Imagen de la Empresa" variant="underlined"
                   density="compact" name="file" accept=".png, .jpg, .jpeg" @change="onFileSelected">
                 </v-file-input>
               </v-col>
               <v-col cols="12" md="6">
                 <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
-                  <img v-if="imagenDisponible()" :src="imgedit" height="120" width="210">
+                  <img v-if="imagenDisponible()" :src="imgedit" height="120" width="210" />
                 </v-card>
-
-
               </v-col>
             </v-row>
           </v-container>
@@ -97,19 +208,20 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid" :loading="loading">Aceptar</v-btn>
+          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
+            :loading="loading">Aceptar</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
   </v-dialog>
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
-
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Negocio</span>
+        <span class="text-subtitle-2 ml-4"> Eliminar Empresa</span>
       </v-toolbar>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el negocio seleccionado?</v-card-text>
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar la empresa seleccionada?</v-card-text>
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -119,7 +231,6 @@
         <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
           Aceptar
         </v-btn>
-
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -131,75 +242,124 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 export default {
   data: () => ({
     snackbar: false,
-    sb_type: '',
-    sb_message: '',
+    sb_type: "",
+    sb_message: "",
     sb_timeout: 2000,
-    sb_title: '',
-    sb_icon: '',
+    sb_title: "",
+    sb_icon: "",
     paleteColors: paleteColors,
     valid: true,
-    loading: false,
+
     mostrar: false,
     file: null,
-    imgMiniatura: '',
+    imgMiniatura: "",
 
     dialog: false,
     dialogDelete: false,
     companies: [],
     data: {},
     headers: [
-      { title: 'Nombre', value: 'name', width: '30%' },
-      { title: 'Rut', value: 'rut', width: '10%' },
-      { title: 'Teléfono', value: 'phone', width: '10%' },
-      { title: 'Dirección', value: 'address', width: '40%' },
-      { title: 'Acciones', value: 'actions', sortable: false, width: '20%' },
+      { title: "Nombre", value: "name", width: "30%" },
+      { title: "Rut", value: "rut", width: "10%" },
+      { title: "Teléfono", value: "phone", width: "10%" },
+      { title: "Dirección", value: "address", width: "40%" },
+      { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+    ],
+    loading: true,
+
+    administracion: [
+      {
+        icon: "mdi-store",
+        title: "Sucursales",
+        to: "/branch",
+        value: "branch",
+        permission: "view_branches",
+      },
+      {
+        icon: "mdi-account",
+        title: "Trabajadores",
+        to: "/worker",
+        value: "worker",
+        permission: "view_workers",
+      },
+      {
+        icon: "mdi-bus",
+        title: "Vehículos",
+        to: "/vehicle",
+        value: "vehicle",
+        permission: "view_vehicles",
+      },
+      {
+        icon: "mdi-map-marker",
+        title: "Lugares",
+        to: "/location",
+        value: "location",
+        permission: "view_locations",
+      },
+      {
+        icon: "mdi-road-variant",
+        title: "Rutas",
+        to: "/route",
+        value: "route",
+        permission: "view_routes",
+      },
+      {
+        icon: "mdi-devices",
+        title: "Dispositivos",
+        to: "/device",
+        value: "devices",
+        permission: "view_devices",
+      },
     ],
 
     editedItem: {
-      id: '',
-      name: '',
-      address: '',
-      rut: '',
-      image: '',
-      phone: '',
+      id: "",
+      name: "",
+      address: "",
+      rut: "",
+      image: "",
+      phone: "",
     },
     originalItem: {
-      id: '',
-      name: '',
-      address: '',
-      rut: '',
-      image: '',
-      phone: '',
+      id: "",
+      name: "",
+      address: "",
+      rut: "",
+      image: "",
+      phone: "",
     },
     defaultItem: {
-      id: '',
-      name: '',
-      address: '',
-      rut: '',
-      image: '',
-      phone: '',
+      id: "",
+      name: "",
+      address: "",
+      rut: "",
+      image: "",
+      phone: "",
     },
     editedIndex: -1,
-    search: '',
+    search: "",
     nameRules: [
       (v) => !!v || "El campo es requerido",
-      (v) => (v && v.length <= 50) ||
-        "El campo debe tener menos de 51 caracteres",
-      (v) => (v && v.length >= 3) ||
-        "El campo debe tener al menos 3 caracteres",
+      (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
+      (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     mobileRules: [
-      v => !!v || 'El número de móvil es requerido',
-      v => /^\+569\d{8}$/.test(v) || 'Formato de número móvil inválido. Ejemplo: +56912345678'
+      (v) => !!v || "El número de móvil es requerido",
+      (v) =>
+        /^\+569\d{8}$/.test(v) ||
+        "Formato de número móvil inválido. Ejemplo: +56912345678",
     ],
-    rutRules: [v => !!v || 'El RUT es requerido',
-    v => /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(v) || 'El RUT debe estar en el formato XX.XXX.XXX-Y (ejemplo: 12.345.678-9)'
-    ]
+    rutRules: [
+      (v) => !!v || "El RUT es requerido",
+      (v) =>
+        /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(v) ||
+        "El RUT debe estar en el formato XX.XXX.XXX-Y (ejemplo: 12.345.678-9)",
+    ],
   }),
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? 'Agregar Negocio' : 'Editar Negocio';
+      return this.editedIndex === -1 ? "Agregar Empresa" : "Editar Empresa";
     },
     imgedit() {
       return this.imgMiniatura;
@@ -209,6 +369,12 @@ export default {
     this.initialize();
   },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     showAddBussines() {
       this.dialog = true;
     },
@@ -218,16 +384,16 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
-      this.editedIndex = -1
+      this.editedIndex = -1;
       this.file = null;
-      this.imgMiniatura = '';
+      this.imgMiniatura = "";
     },
     async initialize() {
       try {
         this.loading = true;
         const result = await handleRequest({
-          endpoint: 'company',
-          method: 'GET',
+          endpoint: "company",
+          method: "GET",
         });
 
         if (result.success) {
@@ -240,7 +406,11 @@ export default {
       } catch (error) {
         this.loading = false;
         // Captura de errores no controlados
-        this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
       } finally {
         this.loading = false;
       }
@@ -256,19 +426,19 @@ export default {
 
         // Crear un objeto FormData
         const formData = new FormData();
-        formData.append('name', this.data.name);
-        formData.append('address', this.data.address);
-        formData.append('phone', this.data.phone);
-        formData.append('rut', this.data.rut);
+        formData.append("name", this.data.name);
+        formData.append("address", this.data.address);
+        formData.append("phone", this.data.phone);
+        formData.append("rut", this.data.rut);
         if (this.file) {
-          formData.append('image', this.editedItem.image);
+          formData.append("image", this.editedItem.image);
         }
 
         try {
           const result = await handleRequest({
-            endpoint: 'company',
-            method: 'POST',
-            data: formData
+            endpoint: "company",
+            method: "POST",
+            data: formData,
           });
 
           // Manejo de la respuesta según el resultado
@@ -282,14 +452,22 @@ export default {
           }
         } catch (error) {
           // Este bloque captura errores inesperados fuera del manejo estándar
-          this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
+          this.showAlert(
+            "error",
+            "Ocurrió un error inesperado al procesar la solicitud.",
+            3000
+          );
           this.loading = false;
         }
       } else {
         this.valid = false;
-        const fieldsToUpdate = ['id', 'name', 'address', 'rut', 'phone', 'image'];
+        const fieldsToUpdate = ["id", "name", "address", "rut", "phone", "image"];
         let updatedFields = Object.keys(this.editedItem)
-          .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
+          .filter(
+            (key) =>
+              fieldsToUpdate.includes(key) &&
+              this.editedItem[key] !== this.originalItem[key]
+          )
           .reduce((obj, key) => {
             obj[key] = this.editedItem[key];
             return obj;
@@ -305,9 +483,9 @@ export default {
           }
           try {
             const result = await handleRequest({
-              endpoint: 'company-update',
-              method: 'POST',
-              data: formData
+              endpoint: "company-update",
+              method: "POST",
+              data: formData,
             });
 
             // Manejo de la respuesta según el resultado
@@ -321,7 +499,11 @@ export default {
             }
           } catch (error) {
             // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
+            this.showAlert(
+              "error",
+              "Ocurrió un error inesperado al procesar la solicitud.",
+              3000
+            );
             this.loading = false;
           }
         } else {
@@ -346,8 +528,8 @@ export default {
           // Asignar la imagen cargada a imgMiniatura
           this.imgMiniatura = `${this.$axios.defaults.baseURL}images/${item.image}`;
         } catch (error) {
-          console.error('Error al cargar la imagen', error);
-          this.showAlert('error', 'Error al cargar la imagen.', 3000);
+          console.error("Error al cargar la imagen", error);
+          this.showAlert("error", "Error al cargar la imagen.", 3000);
         }
       };
       this.dialog = true;
@@ -358,20 +540,20 @@ export default {
       this.dialogDelete = true;
     },
     closeDelete() {
-      this.dialogDelete = false
+      this.dialogDelete = false;
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
-      })
+        this.editedItem = Object.assign({}, this.defaultItem);
+      });
     },
     async deleteItemConfirm() {
       try {
         let request = {
-          id: this.editedItem.id
+          id: this.editedItem.id,
         };
         const result = await handleRequest({
-          endpoint: 'company-destroy',
-          method: 'POST',
-          data: request
+          endpoint: "company-destroy",
+          method: "POST",
+          data: request,
         });
 
         // Manejo de la respuesta según el resultado
@@ -383,7 +565,11 @@ export default {
         }
       } catch (error) {
         // Este bloque captura errores inesperados fuera del manejo estándar
-        this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
       } finally {
         this.closeDelete();
       }
@@ -410,7 +596,7 @@ export default {
       this.snackbar = true;
     },
     imagenDisponible() {
-      if (this.imgedit !== undefined && this.imgedit !== '') {
+      if (this.imgedit !== undefined && this.imgedit !== "") {
         // Intenta cargar la imagen en un elemento oculto para verificar si está disponible
         let img = new Image();
         img.src = this.imgedit;
@@ -423,7 +609,7 @@ export default {
       // Validar el tamaño del archivo (500 KB máximo)
       const maxSize = 500 * 1024; // 500 KB en bytes
       if (file && file.size > maxSize) {
-        this.showAlert('warning', 'El archivo de imagen debe ser de máximo 500 KB', 3000);
+        this.showAlert("warning", "El archivo de imagen debe ser de máximo 500 KB", 3000);
         return; // Detener el proceso si el archivo es demasiado grande
       }
       this.editedItem.image = file;
@@ -434,9 +620,35 @@ export default {
       let reader = new FileReader();
       reader.onload = (e) => {
         this.imgMiniatura = e.target.result;
-      }
+      };
       reader.readAsDataURL(file);
     },
   },
 };
 </script>
+<style scoped>
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+</style>

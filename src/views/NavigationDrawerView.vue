@@ -1,90 +1,103 @@
 <template>
-  <v-card style="display: flex; flex-direction: column; height: 100%;">
-        <template v-slot:prepend>
-          <v-list-item class="text-subtitle-1" lines="two" variant="flat"
-            :prepend-avatar="`${this.$axios.defaults.baseURL}images/${this.imageBranch}`" :title="this.title"
-            :subtitle="this.subtitle"
-            :style="{ backgroundColor: '#ECEFF1', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#000000' }"
-            cover>
+  <v-card flat class="pa-0" style="overflow: hidden;">
+    <!-- Encabezado -->
+
+      <v-list>
+          <v-list-item
+            :prepend-avatar="`${this.$axios.defaults.baseURL}images/${imageBranch}`"
+            :subtitle="subtitle"
+            :title="title"
+            to="home"
+            value="home"
+          >
+            
           </v-list-item>
-        </template>
-        <!--prepend-avatar=`${this.$axios.defaults.baseURL}images/${imageBusiness}`-->
-        <v-divider></v-divider>
-
-        <v-list density="compact" nav :opened="open" open-strategy="single">
-          <v-list-item prepend-icon="mdi-view-dashboard-outline" title="Dashboard" to="home" value="home"
-            class="list-item"></v-list-item>
-          <v-list-group value="Admin" v-if="filteredMenuAdministracion.length !== 0">
-            <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" prepend-icon="mdi-cog-outline" title="Administración"></v-list-item>
-            </template>
-
-            <v-list-item v-for="item in filteredMenuAdministracion" style="padding-left: 20px !important;"
-              :key="item.title" :prepend-icon="item.icon" :title="item.title" :to="item.to" :value="item.value">
-              <!-- Filtrado directo usando v-if -->
-
-            </v-list-item>
-
-          </v-list-group>
-
-          <v-list-group value="Seguridad" v-if="filteredMenuSecurity.length !== 0">
-            <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" prepend-icon="mdi-shield-account" title="Seguridad"></v-list-item>
-            </template>
-
-            <v-list-item v-for="item in filteredMenuSecurity" style="padding-left: 20px !important" :key="item.title"
-              :prepend-icon="item.icon" :title="item.title" :to="item.to" :value="item.value"></v-list-item>
-            <!-- Filtrado directo usando v-if -->
-          </v-list-group>
-
-          <v-list-group value="Reportes" v-if="filteredMenuReports.length !== 0">
-            <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" prepend-icon="mdi-file-chart" title="Reportes"></v-list-item>
-            </template>
-
-            <v-list-item v-for="item in filteredMenuReports" style="padding-left: 20px !important" :key="item.title"
-              :prepend-icon="item.icon" :title="item.title" :to="item.to" :value="item.value"></v-list-item>
-            <!-- Filtrado directo usando v-if -->
-          </v-list-group>
-
-          <v-list-group value="Mantenedores" v-if="filteredMenuMainteiners.length !== 0">
-            <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" prepend-icon="mdi-progress-wrench" title="Mantenedores"></v-list-item>
-            </template>
-
-            <v-list-item v-for="item in filteredMenuMainteiners" style="padding-left: 20px !important" :key="item.title"
-              :prepend-icon="item.icon" :title="item.title" :to="item.to" :value="item.value"></v-list-item>
-            <!-- Filtrado directo usando v-if -->
-          </v-list-group>
         </v-list>
 
-        <!-- Espaciador -->
-        <v-spacer></v-spacer>
-        <template v-slot:append>
+  <v-divider></v-divider>
+    <!-- Menú -->
+    <v-list nav :opened="open" open-strategy="single"  bg-color="" density="comfortable">
+      <v-list-item
+        prepend-icon="mdi-view-dashboard-outline"
+        title="Dashboard"
+        to="home"
+        value="home"
+        class="menu-item"
+      ></v-list-item>
 
-          <!-- Opciones en la parte inferior 
-          <v-list density="compact" nav>
-            <v-list-item prepend-icon="mdi-cog-outline" title="Configuración" to="/settings" value="settings"
-              class="list-item"></v-list-item>
-          </v-list>-->
+      <!-- Administración -->
+      <v-list-group value="Admin" v-if="filteredMenuAdministracion.length">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" prepend-icon="mdi-cog-outline" title="Administración"></v-list-item>
         </template>
+        <v-list-item
+          v-for="item in filteredMenuAdministracion"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+          :value="item.value"
+          class="sub-menu-item"
+        ></v-list-item>
+      </v-list-group>
 
-      <v-main style="height: 94vh"></v-main>
+      <!-- Seguridad -->
+      <v-list-group value="Seguridad" v-if="filteredMenuSecurity.length">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" prepend-icon="mdi-shield-account" title="Seguridad"></v-list-item>
+        </template>
+        <v-list-item
+          v-for="item in filteredMenuSecurity"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+          :value="item.value"
+          class="sub-menu-item"
+        ></v-list-item>
+      </v-list-group>
 
+      <!-- Reportes -->
+      <v-list-group value="Reportes" v-if="filteredMenuReports.length">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" prepend-icon="mdi-file-chart" title="Reportes"></v-list-item>
+        </template>
+        <v-list-item
+          v-for="item in filteredMenuReports"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+          :value="item.value"
+          class="sub-menu-item"
+        ></v-list-item>
+      </v-list-group>
+
+      <!-- Mantenedores -->
+      <v-list-group value="Mantenedores" v-if="filteredMenuMainteiners.length">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" prepend-icon="mdi-progress-wrench" title="Mantenedores"></v-list-item>
+        </template>
+        <v-list-item
+          v-for="item in filteredMenuMainteiners"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+          :value="item.value"
+          class="sub-menu-item"
+        ></v-list-item>
+      </v-list-group>
+    </v-list>
   </v-card>
 </template>
 
 <script>
 import LocalStorageService from "@/LocalStorageService";
+
 export default {
   data: () => ({
     open: ["Admin"],
-    /*mainteiners: [
-      //['Categorías', 'mdi-text-box-outline', '/category'],
-      //['Prioridades', 'mdi-star-circle-outline', '/priority'],
-      ['Roles', 'mdi-account-cog-outline', '/role'],
-      ['Permisos', 'mdi-shield-check', '/permission'],
-    ],*/
     mainteiners: [
       { title: "Estructuras de asientos", icon: "mdi-bus-side", to: "structure", permission: "view_structures" },
       { title: "Promociones", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
@@ -96,7 +109,7 @@ export default {
       { title: "Permisos", icon: "mdi-shield-check", to: "permission", permission: "view_permissions" },
     ],
     administracion: [
-      { icon: "mdi-office-building", title: "Negocio", to: "company", value: "company", permission: "view_business" },
+      { icon: "mdi-office-building", title: "Empresa", to: "company", value: "company", permission: "view_business" },
       { icon: "mdi-store", title: "Sucursales", to: "branch", value: "branch", permission: "view_branches" },
       { icon: "mdi-account", title: "Trabajadores", to: "worker", value: "worker", permission: "view_workers" },
       { icon: "mdi-devices", title: "Dispositivos", to: "device", value: "devices", permission: "view_devices" },
@@ -114,73 +127,51 @@ export default {
     ],
     title: '',
     imageBranch: '',
-    subtitle: 'Negocio',
+    subtitle: 'Empresa',
     role: '',
   }),
   computed: {
     permissions() {
-    // Recuperar permisos de LocalStorage
-    const permissions = LocalStorageService.getItem('permissions');
-    console.log("Permisos recuperados de LocalStorage:", permissions); // Depuración
-    // Convertir de JSON a array (si es necesario)
-    try {
-      return permissions ? JSON.parse(permissions) : [];
-    } catch (error) {
-      console.error("Error al parsear permisos:", error);
-      return [];
-    }
-  },
-  filteredMenuAdministracion() {
-    return this.administracion.filter(item => 
-      this.permissions.includes(item.permission) // Comparación exacta
-    );
-  },
-  filteredMenuSecurity() {
-    return this.security.filter(item => 
-      this.permissions.includes(item.permission)
-    );
-  },
-  filteredMenuMainteiners() {
-    return this.mainteiners.filter(item => 
-      this.permissions.includes(item.permission)
-    );
-  },
-  filteredMenuReports() {
-    return this.reports.filter(item => 
-      this.permissions.includes(item.permission)
-    );
-  },
+      const permissions = LocalStorageService.getItem('permissions');
+      try {
+        return permissions ? JSON.parse(permissions) : [];
+      } catch {
+        return [];
+      }
+    },
+    filteredMenuAdministracion() {
+      return this.administracion.filter(item => this.permissions.includes(item.permission));
+    },
+    filteredMenuSecurity() {
+      return this.security.filter(item => this.permissions.includes(item.permission));
+    },
+    filteredMenuMainteiners() {
+      return this.mainteiners.filter(item => this.permissions.includes(item.permission));
+    },
+    filteredMenuReports() {
+      return this.reports.filter(item => this.permissions.includes(item.permission));
+    },
   },
   mounted() {
-    /*this.name = JSON.parse(LocalStorageService.getItem('name'));
-    this.user = JSON.parse(LocalStorageService.getItem('user'));
-    this.user_id = JSON.parse(LocalStorageService.getItem('user_id'));
-    this.rol_id = LocalStorageService.getItem('role_id');*/
     this.role = JSON.parse(LocalStorageService.getItem('role'));
-   // this.permissions = LocalStorageService.getItem("permissions");
-    ///console.log('this.permissions');
-    //console.log(this.permissions);
-    console.log(this.role);
     if (this.role === 'Administrador') {
       this.title = JSON.parse(LocalStorageService.getItem('nameBusiness'));
       this.imageBranch = LocalStorageService.getItem('imageBusiness').replace(/['"]+/g, '');
-      this.subtitle = 'Negocio'
+      this.subtitle = 'Empresa';
     } else {
       this.title = JSON.parse(LocalStorageService.getItem('nameBranch'));
       this.imageBranch = LocalStorageService.getItem('imageBranch').replace(/['"]+/g, '');
-      this.subtitle = 'Sucursal'
+      this.subtitle = 'Sucursal';
     }
   },
-}
+};
 </script>
-<style>
-.list-item {
-  padding: 2px 4px !important;
-  /* Reduce el padding vertical y horizontal */
-}
 
-.maintainer-item {
-  padding-left: 16px !important;
-  /* Indentación menor para subelementos */
+<style scoped>
+.menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.sub-menu-item {
+  padding-left: 32px !important;
 }
 </style>

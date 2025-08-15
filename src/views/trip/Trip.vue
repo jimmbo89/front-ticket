@@ -11,242 +11,196 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-container style="min-width: 100%">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Viajes</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-              prepend-icon="mdi-plus-circle" @click="showAdd">
-              Agregar Viaje
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
-      <v-card-text>
-        <v-row>
-          <v-container fluid>
-            <v-col cols="12" md="12">
-              <v-row v-if="mostrarFila" dense>
-                <v-col cols="12" md="3">
-                  <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
-                    label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
-                    variant="underlined" :rules="selectRules" density="compact">
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props"
-                        :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                      </v-list-item>
-                    </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
-                </v-col>
-                <v-col cols="12" md="2">
-                  <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
-                    <v-icon>mdi-magnify</v-icon></v-btn>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-container>
-        </v-row>
-        <v-row dense>
-          <v-col cols="12">
-            <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-              hide-details>
-            </v-text-field>
-            <v-data-table :headers="headers" :search="search" :items="trips" class="elevation-1"
-              style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-              no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-              <template v-slot:item.actions="{ item }">
-                <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
-                  variant="tonal" elevation="1" title="Editar Viaje"></v-btn>
-                <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
-                  variant="tonal" elevation="1" title="Eliminar Viaje"></v-btn>
-              </template>
-              <template v-slot:item.origin="{ item }">
-                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                      item.originImage
-                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
-                {{ item.origin }}
-              </template>
-              <template v-slot:item.destination="{ item }">
-                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                      item.destinationImage
-                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
-                {{ item.destination }}
-              </template>
-              <template v-slot:item.vehicleName="{ item }">
-                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                      item.vehicleImage
-                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
-                {{ item.vehicleName }}
-              </template>
-            </v-data-table>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-steering</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Viajes</div>
+      <div class="text-body-2 text-grey">Gestionar Viajes</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Viaje
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+   <v-card flat>
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Listado de viajes</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Grupo: Autocomplete + Botón buscar -->
+   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+
+          <!-- Botón de búsqueda (actualizar datos) -->
+          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
+            class="mt-2 mt-md-0 mr-5 ml-1">
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+        </div>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de viajes con filas personalizadas -->
+  <v-data-table :headers="headers" :items="trips" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+              <!-- Ruta -->
+              <div style="width: 10%; min-width: 0" class="text-truncate">
+                <span>{{ slotProps.item.name }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Ruta: {{ slotProps.item.name }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Origen con avatar -->
+              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.origin }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Origen: {{ slotProps.item.origin }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Destino con avatar -->
+              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.destination }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Destino: {{ slotProps.item.destination }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Vehículo con avatar -->
+              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Vehículo: {{ slotProps.item.vehicleName }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Fecha -->
+              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.date }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Fecha: {{ slotProps.item.date }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Horario -->
+              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.schedule }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Horario: {{ slotProps.item.schedule }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Precio -->
+              <div style="width: 8%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.price }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Precio: {{ slotProps.item.price }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Salida -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.start }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Salida: {{ slotProps.item.start }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Llegada -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.end }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Llegada: {{ slotProps.item.end }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Acciones -->
+              <div class="d-flex gap-1" style="width: 8%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Editar Viaje">
+                  <v-icon size="20">mdi-pencil</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                  title="Eliminar Viaje">
+                  <v-icon size="20">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
   </v-container>
-
-  <!--<v-dialog v-model="dialog" max-width="700px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-tabs v-model="tab" vertical>
-              <v-tab value="general" :class="tab === 'general' ? 'selected-tab' : ''">Generales</v-tab>
-              <v-tab value="worker" :class="tab === 'worker' ? 'selected-tab' : ''"
-                v-if="editedItem.vehicle_id">Trabajadores</v-tab>
-            </v-tabs>
-            <v-window v-model="tab">
-              <v-window-item value="general">
-                <v-row style="margin-top: 5px">
-                  <v-col cols="12" md="12">
-                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.route_id"
-                      :items="routes" label="Ruta" prepend-icon="mdi-road" item-title="name" item-value="id"
-                      variant="underlined" :rules="selectRules" density="compact" @update:model-value="updateStimated">
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props">
-                          <v-list-item-content>
-                            <v-list-item-subtitle>
-                              <v-row align="center" no-gutters>
-                                <v-col cols="auto" class="d-flex align-center">
-                                  <v-avatar>
-                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
-                                      max-width="40" />
-                                  </v-avatar>
-                                  <div class="ml-2" style="
-                                      max-width: 150px;
-                                      white-space: nowrap;
-                                      overflow: hidden;
-                                      text-overflow: ellipsis;
-                                    ">
-                                    {{ item.raw.originAddress }}
-                                  </div>
-                                </v-col>
-
-                                <v-col cols="auto" class="d-flex align-center">
-                                  <v-avatar>
-                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
-                                      max-width="40" />
-                                  </v-avatar>
-                                  <div class="ml-2" style="
-                                      max-width: 150px;
-                                      white-space: nowrap;
-                                      overflow: hidden;
-                                      text-overflow: ellipsis;
-                                    ">
-                                    {{ item.raw.destinationAddress }}
-                                  </div>
-                                </v-col>
-                              </v-row>
-                            </v-list-item-subtitle>
-                          </v-list-item-content>
-                        </v-list-item>
-                      </template>
-                    </v-autocomplete>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.vehicle_id"
-                      :items="vehicles" label="Vehículo" prepend-icon="mdi-car-side" item-title="vehicleName"
-                      item-value="id" variant="underlined" :rules="selectRules" density="compact"
-                      @update:model-value="filterWorkers">
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props"
-                          :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.vehicleImage}`"
-                          :title="item.raw.vehicleName">
-                          <v-list-item-subtitle class="d-flex flex-column">
-                            <div>Marca: {{ item.raw.brand }}</div>
-                            <div>Asientos: {{ item.raw.seats }}</div>
-                          </v-list-item-subtitle>
-                        </v-list-item>
-                      </template>
-                    </v-autocomplete>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40"
-                      transition="scale-transition" offset-y min-width="290px">
-                      <template v-slot:activator="{ props }">
-                        <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
-                          prepend-icon="mdi-calendar" label="Fecha" density="compact"></v-text-field>
-                      </template>
-                      <v-locale-provider locale="es">
-                        <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                          :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"
-                          :min="new Date().toISOString().split('T')[0]"></v-date-picker>
-                      </v-locale-provider>
-                    </v-menu>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12" md="4">
-                    <v-select v-model="editedItem.schedule" :items="filteredTimeSlots" label="Hora de salida"
-                      variant="underlined" density="compact" prepend-icon="mdi-calendar-clock"
-                      @update:modelValue="updateArrival" :disabled="!this.editedItem.route_id" :key="timeSlotsKey"></v-select>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field v-model="editedItem.arrival" label="Hora de llegada" disabled="true"
-                      variant="underlined" density="compact" prepend-icon="mdi-calendar-clock"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field v-model="editedItem.price" label="Precio" prepend-icon="mdi-currency-usd"
-                      variant="underlined" :rules="priceRules" type="number" density="compact" min="0"></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-window-item>
-              <v-window-item value="worker" class="mt-4">
-                <v-card elevation="3" class="mx-2">
-                  <v-toolbar :color="paleteColors.primary">
-                    <v-row align="center">
-                      <v-col cols="12" md="7" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Relación de Trabajadores</strong></span>
-                      </v-col>
-                      <v-col cols="12" md="4" class="text-right">
-                        <v-btn class="text-subtitle-1" :color="paleteColors.white" variant="tonal" elevation="2"
-                          prepend-icon="mdi-plus-circle" @click="showAssiegnedWorker">
-                          Asignar Trabajador
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-toolbar>
-
-                  <v-card-text>
-                    <v-data-table :headers="headersWorkers" :items="editedItem.workers" class="elevation-1"
-                      style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-                      no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                      <template v-slot:item.actions="{ item }">
-                        <v-btn density="comfortable" icon="mdi-delete" @click="deleteItemWorker(item)"
-                          :color="paleteColors.error" variant="tonal" elevation="1" title="Eliminar Relación"></v-btn>
-                      </template>
-                      <template v-slot:item.name="{ item }">
-                        <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                          <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image
-                            }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                        {{ item.name }}
-                      </template>
-                    </v-data-table>
-                  </v-card-text>
-                </v-card>
-              </v-window-item>
-            </v-window>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save"
-            :disabled="(!valid || !editedItem.workers.length)" :loading=loading>Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>-->
 
   <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
     <v-card style="display: flex; flex-direction: column; min-height: 100vh;">
@@ -263,7 +217,7 @@
                     <template v-slot:item="{ props, item }">
                       <v-card class="mx-1 my-2" elevation="2">
                         <v-list-item v-bind="props">
-                          <v-list-item-content>
+                          <v-list-item>
                             <v-row align="center" no-gutters>
                               <!-- Columna 1: Origen -->
                               <v-col cols="12" md="4" class="d-flex align-center">
@@ -311,7 +265,7 @@
                                 </div>
                               </v-col>
                             </v-row>
-                          </v-list-item-content>
+                          </v-list-item>
                         </v-list-item>
                       </v-card>
                     </template>
@@ -420,7 +374,7 @@
                       <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
                         <v-img :src="`${this.$axios.defaults.baseURL}images/${
                             item.workerImage
-                          }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
+                          }?t=${getCacheTimestamp()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
                       {{ item.workerName }}
                     </template>
                     <template v-slot:item.actions="{ item }">
@@ -665,6 +619,12 @@ export default {
   },
   },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     generateTimeSlots() {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -1278,7 +1238,7 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 .selected-tab {
   background-color: #1976d2;
   /* Fondo del tab seleccionado */
@@ -1286,5 +1246,54 @@ export default {
   /* Texto blanco */
   border-radius: 4px;
   /* Esquinas redondeadas, opcional */
+}
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

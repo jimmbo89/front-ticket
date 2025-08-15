@@ -14,24 +14,98 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container style="min-width: 100%; min-height: 100%">
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <span class="text-subtitle-2 ml-4"> Trabajadores asociados al vehículo:</span>
-                <span class="text-subtitle-2 ml-4">
-                    <!-- Avatar del vehículo -->
-                    <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                        <v-img :src="`${this.$axios.defaults.baseURL}images/${this.vehicle.image}?t=${Date.now()}`"
-                            alt="image"></v-img>
-                    </v-avatar>
-                     {{ this.vehicle.plate }}
-                </span>
-                <v-spacer></v-spacer>
-                <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2" @click="showAdd()">
-                    Agregar Trabajador
-                </v-btn>
-            </v-toolbar>
+    <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-img :src="`${this.$axios.defaults.baseURL}images/${this.vehicle.image}?t=${getCacheTimestamp()}`"
+                            alt="image" class="icono-concavo" cover></v-img>
+    </v-avatar>
 
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">{{ this.vehicle.plate }}</div>
+      <div class="text-body-2 text-grey">Gestionar Trabajdores asociados al vehículo</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Trabajador
+    </v-btn>
+  </v-card>
+    <v-container style="min-width: 100%;">
+    <v-card flat>
+  <!-- Barra superior con título y búsqueda -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Trabajadores Asociados</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar trabajador" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de trabajadores con filas personalizadas -->
+  <v-data-table :headers="headers" :items="vehicleworkers" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+    class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+              <!-- Nombre con avatar -->
+              <div class="d-flex align-center" style="width: 40%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4" size="large">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`" cover></v-img>
+                </v-avatar>
+                <div>
+                  <span class="text-truncate d-block">{{ slotProps.item.name }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Nombre: {{ slotProps.item.name }}
+                    </span>
+                  </v-tooltip>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div style="width: 40%; min-width: 0" class="text-truncate">
+                <span>{{ slotProps.item.email }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Email: {{ slotProps.item.email }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Acciones -->
+              <div class="d-flex" style="width: 20%; justify-content: flex-end">
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                  title="Eliminar Trabajador">
+                  <v-icon size="20">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
+        <!--<v-card elevation="6" class="mx-2">
             <v-card-text>
                 <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
                     hide-details>
@@ -46,12 +120,12 @@
                     <template v-slot:item.name="{ item }">
                         <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
                             <v-img :src="`${this.$axios.defaults.baseURL}images/${item.name
-                                }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
+                                }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
                         {{ item.name }}
                     </template>
                 </v-data-table>
             </v-card-text>
-        </v-card>
+        </v-card>-->
     </v-container>
 
     <v-dialog v-model="dialog" max-width="400px">
@@ -176,6 +250,12 @@ export default {
         this.initialize();
     },
     methods: {
+        getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
         async showAdd() {
             try {
                 const result = await handleRequest({
@@ -402,3 +482,54 @@ export default {
     },
 };
 </script>
+<style scope>
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
+}
+</style>

@@ -1,12 +1,12 @@
 // src/assets/colors.js
 export const paleteColors = {
-    primary: '#1976D2', // Azul
+    primary: '#1867C0', // Azul
     gris: '#E7E9E9', // Gris
     grey: 'grey', // Gris
     secondary: 'secondary',
     success: '#4CAF50', // Verde
     warning: '#FFC107', // Amarillo
-    error: '#FF5252', // Rojo
+    error: '#E53935', // Rojo
     white: 'white',
     orange: '#FF9800',
     route: '#8BC34A',

@@ -1,14 +1,6 @@
 <template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
+  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
+    :multi-line="true" vertical v-model="snackbar">
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -22,36 +14,30 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-container style="min-width: 100%; min-height: 100%">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <span class="text-subtitle-2 ml-4"> Rutas de la Sucursal: </span>
-        <span class="text-subtitle-2 ml-4">
-          <!-- Avatar del vehículo -->
-          <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-            <v-img
-              :src="`${this.$axios.defaults.baseURL}images/${
-                this.branch.image
-              }?t=${Date.now()}`"
-              alt="image"
-            ></v-img>
-          </v-avatar>
-          {{ this.branch.name }}
-        </span>
-        <v-spacer></v-spacer>
-        <v-btn
-          class="text-subtitle-1 ml-12"
-          prepend-icon="mdi-plus-circle"
-          :color="paleteColors.white"
-          variant="tonal"
-          elevation="2"
-          @click="showAdd()"
-        >
-          Agregar Ruta
-        </v-btn>
-      </v-toolbar>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-img :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
+        alt="image" class="icono-concavo" cover></v-img>
+    </v-avatar>
 
-      <v-card-text>
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">{{ this.branch.name }}</div>
+      <div class="text-body-2 text-grey">Gestionar Rutas de la Sucursal</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Ruta
+    </v-btn>
+  </v-card>
+  <!--<v-container style="min-width: 100%; min-height: 100%">
+    <v-card elevation="6" class="mx-2">
+        <v-card-text>
         <v-text-field
           class="mt-1 mb-1"
           v-model="search"
@@ -100,7 +86,7 @@
                 }?t=${Date.now()}`"
                 alt="image"
               ></v-img> </v-avatar
-            ><!--+'?$'+Date.now()-->
+            >
             {{ item.originName }}
           </template>
           <template v-slot:item.destinationName="{ item }">
@@ -111,7 +97,7 @@
                 }?t=${Date.now()}`"
                 alt="image"
               ></v-img> </v-avatar
-            ><!--+'?$'+Date.now()-->
+            >
             {{ item.destinationName }}
           </template>
           <template v-slot:item.price="{ item }">
@@ -120,8 +106,103 @@
         </v-data-table>
       </v-card-text>
     </v-card>
-  </v-container>
+  </v-container>-->
 
+  <v-card flat>
+    <v-card-title class="d-flex align-center">
+      Listado de rutas
+
+      <v-spacer></v-spacer>
+
+      <v-text-field v-model="search" density="compact" label="Buscar ruta" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </v-card-title>
+
+    <v-divider class="my-2"></v-divider>
+
+    <v-data-table :headers="headers" :items="branchroutes" :search="search"
+      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+      loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+      style="max-height: 68vh; overflow-y: auto; background: transparent">
+      <!-- Slot personalizado para cada fila -->
+      <template v-slot:item="slotProps">
+        <tr>
+          <td colspan="100%" style="padding: 0; border: none">
+            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+
+                <!-- Columna 1: Nombre de la ruta -->
+                <div class="d-flex align-center" style="width: 15%; min-width: 0">
+                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Nombre de la ruta: {{ slotProps.item.name }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 2: Origen (con avatar) -->
+                <div class="d-flex align-center" style="width: 30%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`"
+                      alt="Imagen del origen" class="icono-concavo" cover></v-img>
+                  </v-avatar>
+                  <span class="text-truncate">{{ slotProps.item.originName }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Origen: {{ slotProps.item.originName }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 3: Destino (con avatar) -->
+                <div class="d-flex align-center" style="width: 30%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`"
+                      alt="Imagen del destino" class="icono-concavo" cover></v-img>
+                  </v-avatar>
+                  <span class="text-truncate">{{ slotProps.item.destinationName }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Destino: {{ slotProps.item.destinationName }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 4: Precio -->
+                <div style="width: 10%; min-width: 0" class="text-truncate text-right">
+                  <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Precio: {{ formatNumber(Number(slotProps.item.price)) }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 5: Acciones -->
+                <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
+                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                      title="Editar Ruta">
+                      <v-icon size="20">mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                      title="Eliminar Ruta">
+                      <v-icon size="20">mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+  </v-card>
   <v-dialog v-model="dialog" max-width="550px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card>
@@ -132,30 +213,18 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-autocomplete
-                  :no-data-text="'No hay datos disponibles'"
-                  v-model="editedItem.route_id"
-                  :items="routes"
-                  label="Ruta"
-                  prepend-icon="mdi-road"
-                  item-title="name"
-                  item-value="id"
-                  variant="underlined"
-                  :rules="selectRules"
-                  density="compact"
-                  :disabled="this.editedIndex === 1"
-                >
+                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.route_id" :items="routes"
+                  label="Ruta" prepend-icon="mdi-road" item-title="name" item-value="id" variant="underlined"
+                  :rules="selectRules" density="compact" :disabled="this.editedIndex === 1">
                   <template v-slot:item="{ props, item }">
                     <v-card class="mx-1 my-2" elevation="2">
                       <v-list-item v-bind="props">
-                        <v-list-item-content>
+                        <v-list-item>
                           <v-row align="center" no-gutters>
                             <!-- Columna 1: Origen -->
                             <v-col cols="12" md="6" class="d-flex align-center pa-2">
                               <v-avatar size="40">
-                                <v-img
-                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
-                                />
+                                <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`" />
                               </v-avatar>
                               <div class="ml-2 flex-grow-1">
                                 <div class="text-caption text-grey">
@@ -176,9 +245,7 @@
                             <!-- Columna 2: Destino -->
                             <v-col cols="12" md="6" class="d-flex align-center pa-2">
                               <v-avatar size="40">
-                                <v-img
-                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
-                                />
+                                <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`" />
                               </v-avatar>
                               <div class="ml-2 flex-grow-1">
                                 <div class="text-caption text-grey">
@@ -196,25 +263,16 @@
                               </div>
                             </v-col>
                           </v-row>
-                        </v-list-item-content>
+                        </v-list-item>
                       </v-list-item>
                     </v-card>
                   </template>
                 </v-autocomplete>
               </v-col>
               <v-col cols="12" md="12">
-                <v-text-field
-                  v-model="editedItem.price"
-                  label="Precio"
-                  type="number"
-                  variant="underlined"
-                  density="compact"
-                  prepend-icon="mdi-cash"
-                  :rules="[(v) => v > 0 || 'Debe ser un precio válido']"
-                  placeholder="Ingrese el precio del pasaje"
-                  min="0"
-                  step="1.00"
-                >
+                <v-text-field v-model="editedItem.price" label="Precio" type="number" variant="underlined"
+                  density="compact" prepend-icon="mdi-cash" :rules="[(v) => v > 0 || 'Debe ser un precio válido']"
+                  placeholder="Ingrese el precio del pasaje" min="0" step="1.00">
                 </v-text-field>
               </v-col>
             </v-row>
@@ -224,14 +282,8 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="!valid"
-            :loading="loading"
-            >Aceptar</v-btn
-          >
+          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
+            :loading="loading">Aceptar</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -326,6 +378,12 @@ export default {
     this.initialize();
   },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     formatNumber(value) {
       // Si el valor es menor que 1000, devuelve el valor original con dos decimales
       if (value < 1000) {
@@ -603,3 +661,54 @@ export default {
   },
 };
 </script>
+<style>
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
+}
+</style>

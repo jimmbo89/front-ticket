@@ -11,23 +11,29 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-container style="min-width: 100%; min-height: 100%;">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Vehículos</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-              prepend-icon="mdi-plus-circle" @click="showAdd">
-              Agregar Vehículo
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-bus</v-icon>
+    </v-avatar>
 
-      <v-card-text>
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Vehículos</div>
+      <div class="text-body-2 text-grey">Gestionar Vehículos</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Vehículo
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+    <!--<v-card elevation="6" class="mx-2">
+     <v-card-text>
         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
           hide-details>
         </v-text-field>
@@ -45,7 +51,7 @@
           <template v-slot:item.plate="{ item }">
             <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
               <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?t=${Date.now()}`" alt="image"></v-img>
-            </v-avatar><!--+'?$'+Date.now()-->
+            </v-avatar>
             {{ item.plate }}
           </template>
           <template v-slot:item.state="{ item }">
@@ -56,7 +62,115 @@
           </template>
         </v-data-table>
       </v-card-text>
-    </v-card>
+    </v-card>-->
+    <v-card flat>
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Listado de vehículos</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+      <v-text-field v-model="search" density="compact" label="Buscar vehículo" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de vehículos con filas personalizadas -->
+  <v-data-table :headers="headers" :items="vehicles" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+    class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+              <!-- Placa con avatar -->
+              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.plate }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Placa: {{ slotProps.item.plate }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Marca -->
+              <div style="width: 15%; min-width: 0" class="text-truncate text-center text-start">
+                <span>{{ slotProps.item.brand }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Marca: {{ slotProps.item.brand }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Modelo -->
+              <div style="width: 15%; min-width: 0" class="text-truncate text-center text-start">
+                <span>{{ slotProps.item.model }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Modelo: {{ slotProps.item.model }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Asientos -->
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
+                <span>{{ slotProps.item.seats }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Asientos: {{ slotProps.item.seats }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Estado -->
+              <div style="width: 10%; min-width: 0" class="text-center">
+                <v-chip :color="slotProps.item.state === 1 ? paleteColors.active : paleteColors.inactive" 
+                        :text-color="paleteColors.white" size="small">
+                  {{ slotProps.item.state === 1 ? "Activo" : "Inactivo" }}
+                </v-chip>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Estado: {{ slotProps.item.state === 1 ? "Activo" : "Inactivo" }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Acciones -->
+              <div class="d-flex gap-1" style="width: 30%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.green" @click="showAddWorker(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Agregar Trabajador">
+                  <v-icon size="20">mdi-account-tie</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Editar Vehículo">
+                  <v-icon size="20">mdi-pencil</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                  title="Eliminar Vehículo">
+                  <v-icon size="20">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
   </v-container>
   <v-dialog v-model="dialog" max-width="700px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
@@ -101,8 +215,8 @@
                   variant="underlined"></v-text-field>
               </v-col>
               <v-col cols="12" md="4">
-                <v-text-field v-model="editedItem.plate" label="Placa" prepend-icon="mdi-license"
-                  variant="underlined" :rules="[v => !!v || 'La placa es requerida']"></v-text-field>
+                <v-text-field v-model="editedItem.plate" label="Placa" prepend-icon="mdi-license" variant="underlined"
+                  :rules="[v => !!v || 'La placa es requerida']"></v-text-field>
               </v-col>
               <!--<v-col cols="12" md="6">
                 <v-text-field v-model="editedItem.rut" label="RUT" prepend-icon="mdi-identifier"
@@ -110,8 +224,8 @@
                 </v-text-field>
               </v-col>-->
               <v-col cols="12" md="4">
-                <v-text-field v-model="editedItem.seats" label="Asientos" prepend-icon="mdi-seat"
-                  variant="underlined" :rules="[v => !!v || 'El número de asientos es requerido',
+                <v-text-field v-model="editedItem.seats" label="Asientos" prepend-icon="mdi-seat" variant="underlined"
+                  :rules="[v => !!v || 'El número de asientos es requerido',
                   v => !isNaN(v) || 'Debe ser un número'
                   ]" disabled="true"></v-text-field>
               </v-col>
@@ -285,6 +399,12 @@ export default {
     this.initialize();
   },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     updateSeats(structureId) {
       // Busca el elemento seleccionado en el array trips
       const selectedStructure = this.structures.find((structure) => structure.id === structureId);
@@ -629,5 +749,55 @@ seat-map-preview {
   /* Eliminar padding */
   margin: 1px !important;
   /* Margen reducido */
+}
+
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>
