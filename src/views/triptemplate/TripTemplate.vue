@@ -11,7 +11,247 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container style="min-width: 100%">
+      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-map-marker-path</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Plantilla de Viajes</div>
+      <div class="text-body-2 text-grey">Gestionar Plantillas de Viajes</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Plantilla de Viaje
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+   <v-card flat>
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Listado de plantillas de viajes</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Grupo: Autocomplete + Botón buscar -->
+   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+
+          <!-- Botón de búsqueda (actualizar datos) -->
+          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
+            class="mt-2 mt-md-0 mr-5 ml-1">
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+        </div>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar plantilla de viaje" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de viajes con filas personalizadas -->
+  <v-data-table :headers="headers" :items="templates" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+              <!-- Ruta -->
+              <div style="width: 10%; min-width: 0" class="text-truncate">
+                <span>{{ slotProps.item.name }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Ruta: {{ slotProps.item.name }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Origen con avatar -->
+              <div class="d-flex align-center" style="width: 15%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.origin }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Origen: {{ slotProps.item.origin }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Destino con avatar -->
+              <div class="d-flex align-center" style="width: 15%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.destination }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Destino: {{ slotProps.item.destination }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Vehículo con avatar -->
+              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Vehículo: {{ slotProps.item.vehicleName }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- trabajadores -->
+              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+                 <div class="avatar-row">
+                                    <v-tooltip v-for="person in slotProps.item.workers" :key="person.id" bottom>
+                                        <template v-slot:activator="{ props }">
+                                            <v-avatar class="avatar-item hover-expand" size="32" elevation="3"
+                                                v-bind="props">
+                                                <v-img
+                                                    :src="`${this.$axios.defaults.baseURL}images/${person.workerImage}?t=${getCacheTimestamp()}`"
+                                                    alt="image" />
+                                            </v-avatar>
+                                        </template>
+                                        <span>{{ person.workerName }}</span>
+                                        <v-spacer></v-spacer>
+                                        <span class="text-secondary">{{ person.roleName }}</span>
+                                    </v-tooltip>
+                                </div>
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.schedule }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Horario: {{ slotProps.item.schedule }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Horario -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.duration }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Duración (Minutos): {{ slotProps.item.duration }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Precio -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ formatNumber(slotProps.item.price) }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Precio: {{ formatNumber(slotProps.item.price) }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- frecuencia -->
+              <div style="width: 8%; min-width: 0" class="text-truncate text-center">
+              <div class="text-truncate text-center" v-if="slotProps.item.recurrence_pattern">
+                                <v-icon small class="me-1" :color="getRecurrenceColor(slotProps.item.recurrence_pattern)">{{ getRecurrenceIcon(slotProps.item.recurrence_pattern) }}</v-icon>
+                                <span >{{ translateRecurrence(slotProps.item.recurrence_pattern) }}</span>
+                            </div>
+                            <span v-else>—</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Frecuencia: {{ translateRecurrence(slotProps.item.recurrence_pattern) }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Dias -->
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+              <div v-if="slotProps.item.days_of_week" class="d-flex">
+                                <v-tooltip location="bottom">
+                                <template v-slot:activator="{ props: activatorProps }">
+                                    <div v-bind="activatorProps" class="d-flex flex-wrap gap-1">
+                                    <v-avatar
+                                        v-for="day in 7"
+                                        :key="day"
+                                        size="24"
+                                        :color="getDaysArray(slotProps.item.days_of_week).includes(day - 1) ? 'primary' : 'grey-lighten-4'"
+                                        class="text-caption"
+                                    >
+                                        {{ ['D', 'L', 'M', 'X', 'J', 'V', 'S'][day - 1] }}
+                                    </v-avatar>
+                                    </div>
+                                </template>
+                                <span>{{ formatFullDayNames(getDaysArray(slotProps.item.days_of_week)) }}</span>
+                                </v-tooltip>
+                            </div>
+                            <span v-else>-</span>
+              </div>
+
+              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+                <div class="selection-content">
+                                                    <v-icon :size="20"
+                                                            :color="slotProps.item.active ? 'success' : 'error'"
+                                                            :icon="slotProps.item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
+                                                            class="selection-icon"></v-icon>
+                                                    <span class="selection-text">{{ activeName(slotProps.item.active) }}</span>
+                                                </div>
+                                                 <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Estado: {{ activeName(slotProps.item.active) }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Acciones -->
+              <div class="d-flex gap-1" style="width: 7%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Editar plantilla deViaje">
+                  <v-icon size="20">mdi-pencil</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                  title="Eliminar plantilla de  Viaje">
+                  <v-icon size="20">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
+  </v-container>
+    <!--<v-container style="min-width: 100%">
         <v-card elevation="6" class="mx-2">
             <v-toolbar :color="paleteColors.primary">
                 <v-row align="center">
@@ -40,7 +280,7 @@
                                             <v-list-item v-bind="props"
                                                 :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
                                             </v-list-item>
-                                        </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
+                                        </template> </v-autocomplete>
                                 </v-col>
                                 <v-col cols="12" md="2">
                                     <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
@@ -73,7 +313,7 @@
                                     }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
                                 {{ item.origin }}
                             </template>
-                            <!--<template v-slot:item.origin="{ item }">
+                            <template v-slot:item.origin="{ item }">
                                 <div class="avatar-row">
                                     <v-tooltip v-if="item.origin && item.originImage" bottom
                                         content-class="custom-tooltip">
@@ -90,7 +330,7 @@
                                     </v-tooltip>
                                     <span v-else>{{ item.origin || 'N/A' }}</span>
                                 </div>
-                            </template>-->
+                            </template>                           
                             <template v-slot:item.destination="{ item }">
                                 <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
                                 <v-img :src="`${this.$axios.defaults.baseURL}images/${
@@ -98,7 +338,7 @@
                                     }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
                                 {{ item.destination }}
                             </template>
-                            <!--<template v-slot:item.destination="{ item }">
+                            <template v-slot:item.destination="{ item }">
                                 <div class="avatar-row">
                                     <v-tooltip v-if="item.destination && item.destinationImage" bottom
                                         content-class="custom-tooltip">
@@ -115,7 +355,7 @@
                                     </v-tooltip>
                                     <span v-else>{{ item.destination || 'N/A' }}</span>
                                 </div>
-                            </template>-->
+                            </template>
                             <template v-slot:item.vehicleName="{ item }">
                                 <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
                                     <v-img :src="`${this.$axios.defaults.baseURL}images/${
@@ -125,7 +365,6 @@
                             </template>
                             <template v-slot:item.workers="{ item }">
                                 <div class="avatar-row">
-                                    <!-- Mostrar los avatares de las personas con tooltip -->
                                     <v-tooltip v-for="person in item.workers" :key="person.id" bottom
                                         content-class="custom-tooltip">
                                         <template v-slot:activator="{ props }">
@@ -136,10 +375,9 @@
                                                     alt="image" />
                                             </v-avatar>
                                         </template>
-                                        <!-- Información en el tooltip -->
                                         <span>{{ person.workerName }}</span>
                                         <v-spacer></v-spacer>
-                                        <span class="text-secondary">{{ person.roleName }}</span> <!-- Segundo dato -->
+                                        <span class="text-secondary">{{ person.roleName }}</span>
                                     </v-tooltip>
                                 </div>
                             </template>
@@ -189,7 +427,7 @@
                 </v-row>
             </v-card-text>
         </v-card>
-    </v-container>
+    </v-container>-->
     <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
         <v-card style="display: flex; flex-direction: column; min-height: 100vh;">
             <v-card-text style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
@@ -731,6 +969,12 @@ export default {
   }
 },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     formatNumber(value) {
       // Verificar si el valor es 0, null, undefined o no es un número
       if (value === 0 || value === null || value === undefined || isNaN(value)) {
@@ -1359,7 +1603,7 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 .selected-tab {
   background-color: #1976d2;
   /* Fondo del tab seleccionado */
@@ -1440,5 +1684,53 @@ export default {
   font-size: 0.875rem; /* Tamaño consistente con Vuetify */
 }
 
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
 
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
+}
 </style>

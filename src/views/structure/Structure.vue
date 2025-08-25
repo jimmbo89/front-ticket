@@ -11,6 +11,142 @@
       </v-col>
     </v-row>
   </v-snackbar>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-bus-side</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Estructu de Asientos</div>
+      <div class="text-body-2 text-grey">Gestionar Estructura de Asientos</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Agregar Estructura
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+    <v-card flat>
+      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+        <!-- Título -->
+        <div class="text-h6 font-weight-bold">Listado de promociones</div>
+
+        <!-- Spacer (solo visible en md+) -->
+        <v-spacer class="d-none d-md-block"></v-spacer>
+        <!-- Campo de búsqueda global -->
+        <div class="flex-grow-1" style="max-width: 300px">
+          <v-text-field v-model="search" density="compact" label="Buscar promociones" prepend-inner-icon="mdi-magnify"
+            variant="solo-filled" hide-details single-line flat></v-text-field>
+        </div>
+      </v-card-title>
+
+      <!-- Separador -->
+      <v-divider class="my-2"></v-divider>
+
+      <!-- Tabla de viajes con filas personalizadas -->
+      <v-data-table :headers="headers" :items="structures" :search="search"
+        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+        loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+        style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <!-- Fila personalizada -->
+        <template v-slot:item="slotProps">
+          <tr>
+            <td colspan="100%" style="padding: 0; border: none">
+              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+                  <!-- Ruta -->
+                  <div style="width: 22%; min-width: 0" class="text-truncate">
+                    <span>{{ slotProps.item.name }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Nombre: {{ slotProps.item.name }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Destino con avatar 
+                                    <div class="d-flex align-center" style="width: 50%; min-width: 0">
+                                       <div class="seat-map-container">
+                                          <div v-for="(row, rowIndex) in slotProps.item.seatMap" :key="rowIndex" class="seat-row">
+                                          <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
+                                            <div v-if="seat.type === 'seat'" 
+                                                :style="{ color: getSeatColor(seat) }" 
+                                                @click="handleSeatClick(rowIndex, seatIndex)" 
+                                                class="seat-icon-card" 
+                                                style="cursor: pointer; position: relative;">
+                                              <v-icon size="40">mdi-seat</v-icon>
+                                              <span class="seat-label-card">{{ seat.label }}</span>
+                                            </div>
+
+                                            <div v-else-if="seat.type === 'aisle'" 
+                                                :style="{ color: getSeatColor(seat) }" 
+                                                @click="handleSeatClick(rowIndex, seatIndex)" 
+                                                class="aisle-icon-card" 
+                                                style="cursor: pointer; position: relative; opacity: 0.6;">
+                                              <v-icon size="small">' '</v-icon>
+                                              <span class="aisle-label-card"> </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        </div>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Asientos: {{ slotProps.item.seatCount }}
+                                            </span>
+                                        </v-tooltip>
+                                    </div>-->
+                  <div class="d-flex align-center gap-1" style="width: 10%; min-width: 0; cursor: pointer;"
+                      @click="openDialog(slotProps.item)"
+                    >
+                      <v-icon size="18" color="primary">mdi-seat-outline</v-icon>
+                      <span style="font-weight: 500; color: var(--v-theme-primary);">{{ slotProps.item.seatCount }}</span>
+
+                      <v-tooltip activator="parent" location="bottom" max-width="350px">
+                        <span style="white-space: normal; word-break: break-word">
+                          🔍 Haz clic para ver la estructura completa | Asientos: {{ slotProps.item.seatCount }}
+                        </span>
+                      </v-tooltip>
+                    </div>
+
+                  <!-- Origen con avatar -->
+                  <div class="d-flex align-center" style="width: 60%; min-width: 0">
+                    <span class="text-truncate">{{ slotProps.item.description }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Descripción: {{ slotProps.item.description }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Acciones -->
+                  <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                      title="Editar Estructura">
+                      <v-icon size="20">mdi-pencil</v-icon>
+                    </v-btn>
+
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                      title="Eliminar Estructura">
+                      <v-icon size="20">mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
+  </v-container>
   <!-- Diálogo para crear una nueva estructura-->
   <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
     <v-card>
@@ -76,33 +212,27 @@
                       <span class="text-subtitle-2 ml-4">Diagrama de Asientos</span>
                     </v-toolbar>
                     <v-card-text style="overflow-y: auto; max-height: 60vh;">
-                      <div v-for="(row, rowIndex) in editedItem.seatMap" :key="rowIndex" class="seat-row" >
+                      <div v-for="(row, rowIndex) in editedItem.seatMap" :key="rowIndex" class="seat-row">
                         <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
-                          <div v-if="seat.type === 'seat'" 
-                              :style="{ color: getSeatColor(seat) }" 
-                              @click="confirmSelection(rowIndex, seatIndex)" 
-                              class="seat-icon" 
-                              style="cursor: pointer; position: relative;">
+                          <div v-if="seat.type === 'seat'" :style="{ color: getSeatColor(seat) }"
+                            @click="confirmSelection(rowIndex, seatIndex)" class="seat-icon"
+                            style="cursor: pointer; position: relative;">
                             <v-icon size="50" class="seat-icon">mdi-seat</v-icon>
                             <span class="seat-label">{{ seat.label }}</span>
                           </div>
 
                           <!-- Mostrar ícono de pasillo si es un pasillo -->
-                          <div v-else-if="seat.type === 'aisle'" 
-                              :style="{ color: getSeatColor(seat) }" 
-                              @click="confirmSelection(rowIndex, seatIndex)" 
-                              class="aisle-icon" 
-                              style="cursor: pointer; position: relative; opacity: 0.7">
+                          <div v-else-if="seat.type === 'aisle'" :style="{ color: getSeatColor(seat) }"
+                            @click="confirmSelection(rowIndex, seatIndex)" class="aisle-icon"
+                            style="cursor: pointer; position: relative; opacity: 0.7">
                             <v-icon size="40" class="aisle-icon">''</v-icon>
                             <span class="aisle-label">P</span>
                           </div>
 
                           <!-- Mostrar botón normal si no es asiento ni pasillo -->
-                          <v-btn v-else 
-                                :color="getSeatColor(seat)" 
-                                @click="confirmSelection(rowIndex, seatIndex)" 
-                                class="seat-button" style=" opacity: 0.7">
-                                
+                          <v-btn v-else :color="getSeatColor(seat)" @click="confirmSelection(rowIndex, seatIndex)"
+                            class="seat-button" style=" opacity: 0.7">
+
                             {{ seat.label ? `${seat.label}` : '' }}
                           </v-btn>
                         </div>
@@ -118,7 +248,8 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="close" :color="paleteColors.gris" variant="flat">Cancelar</v-btn>
-          <v-btn @click="save" :color="paleteColors.primary" variant="flat" :loading="this.loading" :disabled="!valid">Aceptar</v-btn>
+          <v-btn @click="save" :color="paleteColors.primary" variant="flat" :loading="this.loading"
+            :disabled="!valid">Aceptar</v-btn>
         </v-card-actions>
 
       </v-form>
@@ -164,7 +295,7 @@
     </v-card>
   </v-dialog>
   <!-- Lista de estructuras guardadas -->
-  <v-container style="min-width: 100%; min-height: 100%;">
+  <!--<v-container style="min-width: 100%; min-height: 100%;">
     <v-card elevation="6" class="mx-2">
       <v-toolbar :color="paleteColors.primary">
         <v-row align="center">
@@ -186,12 +317,10 @@
         <v-data-table :headers="headers" :search="search" :items="structures" class="elevation-1"
           style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
           no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <!-- Columna personalizada para el gráfico de asientos -->
           <template v-slot:item.seatMap="{ item }">
             <div class="seat-map-container">
               <div v-for="(row, rowIndex) in item.seatMap" :key="rowIndex" class="seat-row">
               <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
-                <!-- Mostrar ícono de asiento si es un asiento -->
                 <div v-if="seat.type === 'seat'" 
                     :style="{ color: getSeatColor(seat) }" 
                     @click="handleSeatClick(rowIndex, seatIndex)" 
@@ -201,17 +330,16 @@
                   <span class="seat-label-card">{{ seat.label }}</span>
                 </div>
 
-                <!-- Mostrar ícono de pasillo si es un pasillo -->
                 <div v-else-if="seat.type === 'aisle'" 
                     :style="{ color: getSeatColor(seat) }" 
                     @click="handleSeatClick(rowIndex, seatIndex)" 
                     class="aisle-icon-card" 
-                    style="cursor: pointer; position: relative; opacity: 0.6;"> <!-- Opacidad añadida -->
+                    style="cursor: pointer; position: relative; opacity: 0.6;">
                   <v-icon size="small">' '</v-icon>
                   <span class="aisle-label-card"> </span>
                 </div>
 
-                <!-- Mostrar botón normal si no es asiento ni pasillo 
+                 nooooMostrar botón normal si no es asiento ni pasillo 
                 <v-btn v-else 
                       :color="getSeatColor(seat)" 
                       :disabled="!seat.type" 
@@ -220,7 +348,7 @@
                       small 
                       style="opacity: 0.6;"> 
                   {{ seat.label ? `${seat.label}` : '' }}
-                </v-btn>-->
+                </v-btn>--noooo
               </div>
             </div>
             </div>
@@ -234,7 +362,7 @@
         </v-data-table>
       </v-card-text>
     </v-card>
-  </v-container>
+  </v-container>-->
   <!-- Diálogo para mostrar el gráfico de asientos -->
   <v-dialog v-model="dialogSeats" max-width="600">
     <v-card>
@@ -278,6 +406,36 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <v-dialog v-model="dialogStructure" width="auto" scrollable class="rounded-xl">
+    <v-card>
+      <v-card-title>{{ selectedStructure?.name }}</v-card-title>
+      <v-divider></v-divider>
+      <v-card-text style="max-height: 70vh; overflow-y: auto;">
+        <!-- Mostrar el mismo mapa de asientos -->
+        <div class="seat-map-container">
+          <div v-for="(row, rowIndex) in selectedStructure?.seatMap" :key="rowIndex" class="seat-row">
+            <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
+              <div v-if="seat.type === 'seat'" :style="{ color: getSeatColor(seat) }" class="seat-icon-card"
+                style="cursor: pointer; position: relative;">
+                <v-icon size="40">mdi-seat</v-icon>
+                <span class="seat-label-card">{{ seat.label }}</span>
+              </div>
+
+              <div v-else-if="seat.type === 'aisle'" :style="{ color: getSeatColor(seat) }" class="aisle-icon-card"
+                style="cursor: pointer; position: relative; opacity: 0.6;">
+                <v-icon size="small">' '</v-icon>
+                <span class="aisle-label-card"> </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" variant="flat" @click="dialogStructure = false">Cerrar</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <!--</v-container>-->
 </template>
 
@@ -291,6 +449,7 @@ export default {
       */
       itemsPerPage: 2,
       totalItems: 0,
+      dialogStructure: false,
       name: '',
       description: '',
       page: 1,
@@ -383,6 +542,12 @@ export default {
     this.initialize();
   },
   methods: {
+    openDialog(item) {
+      console.log(item);
+      console.log('item');
+      this.selectedStructure = JSON.parse(JSON.stringify(item));
+      this.dialogStructure = true;
+    },
     // Confirma la selección del tipo (asiento o pasillo)
     confirmSelection(rowIndex, seatIndex) {
       /*const { rowIndex, seatIndex } = this.selectedSeat;
@@ -1225,5 +1390,55 @@ export default {
   min-width: 30px; /* Ajusta el tamaño del botón */
   min-height: 30px; /* Ajusta el tamaño del botón */
   position: relative; /* Necesario para posicionar los elementos hijos de forma absoluta */
+}
+
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

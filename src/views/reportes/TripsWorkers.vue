@@ -11,7 +11,240 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container style="min-width: 100%; min-height: 100%;">
+      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-bus-marker</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Viajes Realizados</div>
+      <div class="text-body-2 text-grey">Gestionar Viajes Realizados</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-file-excel-box" @click="exportToExcel()">
+      Exportar a Excel
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+   <v-card flat>
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Listado de viajes realizados</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Grupo: Autocomplete + Botón buscar -->
+   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
+          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+
+           <v-menu
+            v-model="menu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="290px"
+          >
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                :modelValue="dateFormatted"
+                variant="solo-filled"
+                hide-details
+                single-line
+                flat
+                prepend-inner-icon="mdi-calendar"
+                label="Fecha"
+                density="compact"
+                class="ml-1"
+              ></v-text-field>
+            </template>
+            <v-locale-provider locale="es">
+              <v-date-picker
+                header="Calendario"
+                title="Seleccione la fecha"
+                :color="paleteColors.primary"
+                :modelValue="input"
+                @update:model-value="updateDate"
+                format="yyyy-MM-dd"
+              ></v-date-picker>
+            </v-locale-provider>
+          </v-menu>
+
+          <v-menu
+            v-model="menu2"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="290px"
+          >
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                :modelValue="dateFormatted1"
+                variant="solo-filled"
+                hide-details
+                single-line
+                flat
+                prepend-inner-icon="mdi-calendar"
+                label="Fecha"
+                density="compact"
+                class="ml-1"
+              ></v-text-field>
+            </template>
+            <v-locale-provider locale="es">
+              <v-date-picker
+                header="Calendario"
+                title="Seleccione la fecha"
+                :color="paleteColors.primary"
+                :modelValue="input2"
+                @update:model-value="updateDate1"
+                format="yyyy-MM-dd"
+                :min="dateFormatted"
+              ></v-date-picker>
+            </v-locale-provider>
+          </v-menu>
+
+          <!-- Botón de búsqueda (actualizar datos) -->
+          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id" 
+            class="mt-2 mt-md-0 mr-5 ml-1">
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+        </div>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de viajes con filas personalizadas -->
+  <v-data-table :headers="headers" :items="response" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+              <!-- Ruta -->
+              <div style="width: 15%; min-width: 0" class="text-truncate">
+                <span>{{ slotProps.item.name }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Ruta: {{ slotProps.item.name }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Fecha -->
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.date }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Fecha: {{ slotProps.item.date }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Origen con avatar -->
+              <div class="d-flex align-center" style="width: 25%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.origin }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Origen: {{ slotProps.item.origin }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Destino con avatar -->
+              <div class="d-flex align-center" style="width: 25%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.destination }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Destino: {{ slotProps.item.destination }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Vehículo con avatar -->
+              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Vehículo: {{ slotProps.item.vehicleName }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Salida -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.start }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Salida: {{ slotProps.item.start }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Llegada -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.end }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Llegada: {{ slotProps.item.end }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.passenger }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Pasajes: {{ slotProps.item.passenger }}
+                  </span>
+                </v-tooltip>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
+  </v-container>
+    <!--<v-container style="min-width: 100%; min-height: 100%;">
 
         <v-card elevation="6" class="mx-2">
             <v-toolbar :color="paleteColors.primary">
@@ -56,7 +289,7 @@
                                 <v-date-picker header="Calendario" title="Seleccione la fecha"
                                     :color="paleteColors.primary" :modelValue="input2" format="yyyy-MM-dd"
                                     :min="dateFormatted"
-                                    @update:model-value="updateDate1"></v-date-picker><!--@update:model-value="updateDate2"-->
+                                    @update:model-value="updateDate1"></v-date-picker>
                             </v-locale-provider>
                         </v-menu>
                     </v-col>
@@ -69,14 +302,14 @@
                                 <v-list-item v-bind="props"
                                     :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
                                     <template v-slot:title>
-                                        {{ item.raw.name }} <!-- Nombre de la sucursal -->
+                                        {{ item.raw.name }} 
                                     </template>
                                     <template v-slot:subtitle>
-                                        Rol: {{ item.raw.role }} <!-- Nombre del rol -->
+                                        Rol: {{ item.raw.role }} 
                                     </template>
                                 </v-list-item>
                             </template>
-                        </v-autocomplete><!-- @update:model-value="initialize()">-->
+                        </v-autocomplete>
                     </v-col>
                     <v-col cols="12" md="3">
                         <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
@@ -96,7 +329,7 @@
                                     <v-img
                                         :src="`${this.$axios.defaults.baseURL}images/${item.vehicleImage}?t=${Date.now()}`"
                                         alt="image"></v-img>
-                                </v-avatar><!--+'?$'+Date.now()-->
+                                </v-avatar>
                                 {{ item.vehicleName }}
                             </template>
                             <template v-slot:item.origin="{ item }">
@@ -104,7 +337,7 @@
                                     <v-img
                                         :src="`${this.$axios.defaults.baseURL}images/${item.originImage}?t=${Date.now()}`"
                                         alt="image"></v-img>
-                                </v-avatar><!--+'?$'+Date.now()-->
+                                </v-avatar>
                                 {{ item.origin }}
                             </template>
                             <template v-slot:item.destination="{ item }">
@@ -112,7 +345,7 @@
                                     <v-img
                                         :src="`${this.$axios.defaults.baseURL}images/${item.destinationImage}?t=${Date.now()}`"
                                         alt="image"></v-img>
-                                </v-avatar><!--+'?$'+Date.now()-->
+                                </v-avatar>
                                 {{ item.destination }}
                             </template>
                         </v-data-table>
@@ -120,7 +353,7 @@
                 </v-row>
             </v-card-text>
         </v-card>
-    </v-container>
+    </v-container>-->
 </template>
 
 <script>
@@ -198,6 +431,12 @@ export default {
         }
     },
     methods: {
+         getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
         formatNumber(value) {
             // Si el valor es menor que 1000, devuelve el valor original con dos decimales
             if (value < 1000) {
@@ -355,3 +594,54 @@ export default {
     },
 };
 </script>
+<style>
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
+}
+</style>

@@ -11,7 +11,27 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container style="min-width: 100%; min-height: 100%;">
+    <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+        <!-- Icono -->
+        <v-avatar :color="paleteColors.primary" class="icono-concavo">
+            <v-icon cover>mdi-ticket-confirmation-outline</v-icon>
+        </v-avatar>
+
+        <!-- Texto -->
+        <div class="ml-4">
+            <div class="text-h6 font-weight-medium">Tipos de Pasajes</div>
+            <div class="text-body-2 text-grey">Gestionar Tipos de Pasajes</div>
+        </div>
+
+        <!-- Botones -->
+        <v-spacer></v-spacer>
+
+        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+            prepend-icon="mdi-plus-circle" @click="showAdd()">
+            Agregar Tipo de Pasaje
+        </v-btn>
+    </v-card>
+    <!--<v-container style="min-width: 100%; min-height: 100%;">
         <v-card elevation="6" class="mx-2">
             <v-toolbar :color="paleteColors.primary">
                 <v-row align="center">
@@ -40,7 +60,6 @@
                         <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
                             variant="tonal" elevation="1" title="Eliminar"></v-btn>
                     </template>
-                    <!-- Columna de estado active -->
                     <template v-slot:item.active="{ item }">
                     <v-chip
                     :color="item.active ? 'green-darken-3' : 'red-darken-3'"
@@ -52,8 +71,98 @@
                 </v-data-table>
             </v-card-text>
         </v-card>
-    </v-container>
+    </v-container>-->
+    <v-container style="min-width: 100%;">
+        <v-card flat>
+            <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+            <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+                <!-- Título -->
+                <div class="text-h6 font-weight-bold">Listado de tipos de pasajes</div>
 
+                <!-- Spacer (solo visible en md+) -->
+                <v-spacer class="d-none d-md-block"></v-spacer>
+                <!-- Campo de búsqueda global -->
+                <div class="flex-grow-1" style="max-width: 300px">
+                    <v-text-field v-model="search" density="compact" label="Buscar tipos de pasajes"
+                        prepend-inner-icon="mdi-magnify" variant="solo-filled" hide-details single-line
+                        flat></v-text-field>
+                </div>
+            </v-card-title>
+
+            <!-- Separador -->
+            <v-divider class="my-2"></v-divider>
+
+            <!-- Tabla de viajes con filas personalizadas -->
+            <v-data-table :headers="headers" :items="ticketTypes" :search="search"
+                :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+                loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+                style="max-height: 68vh; overflow-y: auto; background: transparent">
+                <!-- Fila personalizada -->
+                <template v-slot:item="slotProps">
+                    <tr>
+                        <td colspan="100%" style="padding: 0; border: none">
+                            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+                                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+                                    <!-- Ruta -->
+                                    <div style="width: 20%; min-width: 0" class="text-truncate">
+                                        <span>{{ slotProps.item.name }}</span>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Nombre: {{ slotProps.item.name }}
+                                            </span>
+                                        </v-tooltip>
+                                    </div>
+
+                                    <!-- Origen con avatar -->
+                                    <div class="d-flex align-center" style="width: 60%; min-width: 0">
+                                        <span class="text-truncate">{{ slotProps.item.description }}</span>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Descripción: {{ slotProps.item.description }}
+                                            </span>
+                                        </v-tooltip>
+                                    </div>
+
+                                    <!-- Destino con avatar -->
+                                    <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                                       <v-chip
+                                        :color="slotProps.item.active ? 'green-darken-3' : 'red-darken-3'"
+                                        :prepend-icon="slotProps.item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
+                                        :text="slotProps.item.active ? 'Sí' : 'No'"
+                                        variant="outlined"
+                                        ></v-chip>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Estado: {{ slotProps.item.active ? 'Sí' : 'No' }}
+                                            </span>
+                                        </v-tooltip>
+                                    </div>
+
+                                    <!-- Acciones -->
+                                    <div class="d-flex gap-1"
+                                        style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
+                                        <v-btn size="small" variant="outlined"
+                                            :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                                            :color="paleteColors.primary" @click="editItem(slotProps.item)"
+                                            class="flex-shrink-0 mr-1" title="Editar Viaje">
+                                            <v-icon size="20">mdi-pencil</v-icon>
+                                        </v-btn>
+
+                                        <v-btn size="small" variant="outlined"
+                                            :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                                            :color="paleteColors.error" @click="deleteItem(slotProps.item)"
+                                            class="flex-shrink-0" title="Eliminar Viaje">
+                                            <v-icon size="20">mdi-delete</v-icon>
+                                        </v-btn>
+                                    </div>
+                                </v-card-text>
+                            </v-card>
+                        </td>
+                    </tr>
+                </template>
+            </v-data-table>
+        </v-card>
+    </v-container>
     <v-dialog v-model="dialog" max-width="600px">
         <v-form ref="form" v-model="valid">
             <v-card>
@@ -106,25 +215,19 @@
                                 </v-chip>
                             </template>
                             </v-autocomplete>-->
-                            <v-switch
-                                v-model="editedItem.active"
-                                :true-value="true"
-                                :false-value="false"
-                                :label="`Activo: ${editedItem.active ? 'Sí' : 'No'}`"
-                                :color="paleteColors.active"
-                                hide-details
-                                inset
-                                class="custom-switch"
-                            >
-                                <template v-slot:label>
-                                <span class="text-body-1" :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
-                                    Activo: 
-                                    <span class="text-body-1">
-                                    {{ editedItem.active ? 'Sí' : 'No' }}
-                                    </span>
-                                </span>
-                                </template>
-                            </v-switch>
+                                <v-switch v-model="editedItem.active" :true-value="true" :false-value="false"
+                                    :label="`Activo: ${editedItem.active ? 'Sí' : 'No'}`" :color="paleteColors.active"
+                                    hide-details inset class="custom-switch">
+                                    <template v-slot:label>
+                                        <span class="text-body-1"
+                                            :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
+                                            Activo:
+                                            <span class="text-body-1">
+                                                {{ editedItem.active ? 'Sí' : 'No' }}
+                                            </span>
+                                        </span>
+                                    </template>
+                                </v-switch>
                             </v-col>
                             <v-col cols="12" md="12">
                                 <v-textarea v-model="editedItem.description" clearable label="Descripción"
@@ -154,7 +257,8 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">Cancelar</v-btn>
-                <v-btn :color="paleteColors.error" variant="flat" :loading="loading" @click="deleteItemConfirm">Aceptar</v-btn>
+                <v-btn :color="paleteColors.error" variant="flat" :loading="loading"
+                    @click="deleteItemConfirm">Aceptar</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -411,12 +515,62 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .avatar-border {
     border: 2px solid #000;
 }
 .custom-switch {
   transform: scale(1);
   margin-left: 8px;
+}
+
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

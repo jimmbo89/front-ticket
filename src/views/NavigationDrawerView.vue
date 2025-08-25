@@ -110,12 +110,12 @@ export default {
     ],
     administracion: [
       { icon: "mdi-office-building", title: "Empresa", to: "company", value: "company", permission: "view_business" },
-      { icon: "mdi-store", title: "Sucursales", to: "branch", value: "branch", permission: "view_branches" },
-      { icon: "mdi-account", title: "Trabajadores", to: "worker", value: "worker", permission: "view_workers" },
-      { icon: "mdi-devices", title: "Dispositivos", to: "device", value: "devices", permission: "view_devices" },
-      { icon: "mdi-bus", title: "Vehículos", to: "vehicle", value: "vehicle", permission: "view_vehicles" },
-      { icon: "mdi-map-marker", title: "Lugares", to: "location", value: "location", permission: "view_locations" },
-      { icon: "mdi-road-variant", title: "Rutas", to: "route", value: "route", permission: "view_routes" },
+      //{ icon: "mdi-store", title: "Sucursales", to: "branch", value: "branch", permission: "view_branches" },
+      //{ icon: "mdi-account", title: "Trabajadores", to: "worker", value: "worker", permission: "view_workers" },
+      //{ icon: "mdi-devices", title: "Dispositivos", to: "device", value: "devices", permission: "view_devices" },
+      //{ icon: "mdi-bus", title: "Vehículos", to: "vehicle", value: "vehicle", permission: "view_vehicles" },
+      //{ icon: "mdi-map-marker", title: "Lugares", to: "location", value: "location", permission: "view_locations" },
+      //{ icon: "mdi-road-variant", title: "Rutas", to: "route", value: "route", permission: "view_routes" },
       { icon: "mdi-steering", title: "Viajes", to: "trip", value: "trip", permission: "view_trips" },
       { icon: "mdi-ticket", title: "Tickets", to: "ticket", value: "ticket", permission: "view_tickets" },
       { icon: "mdi-alert", title: "Incidentes", to: "incident", value: "incident", permission: "view_incidents" }

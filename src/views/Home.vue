@@ -76,8 +76,7 @@
 
     <!-- Tabla de viajes -->
     <v-row align="stretch" v-if="!showWelcomeMessage">
-      <v-col cols="12">
-        <v-card class="elevation-4 mx-1 ma-sm-1">
+        <!--<v-card class="elevation-4 mx-1 ma-sm-1">
           <v-container fluid>
             <v-toolbar color="white">
               <v-row align="center">
@@ -121,7 +120,7 @@
                   <span>Horario completo:<br>{{ item.horario }}</span>
                 </v-tooltip>
               </template>
-              <!--<template v-slot:item.horario="{ item }">
+              <--noooo<template v-slot:item.horario="{ item }">
       <div class="d-flex flex-column time-cell">
         <div class="d-flex align-center">
           <v-icon small color="primary" class="mr-1">mdi-clock-outline</v-icon>
@@ -133,11 +132,150 @@
           {{ calculateDuration(item.horario) }}
         </span>
       </div>
-    </template>-->
+    </template>--noooo
             </v-data-table>
           </v-container>
-        </v-card>
-      </v-col>
+        </v-card>-->
+        <v-container style="min-width: 100%;">
+   <v-card flat elevation="1">
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Viajes</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de viajes con filas personalizadas -->
+  <v-data-table :headers="headers" :items="trips" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent" :items-per-page="5">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+             <!-- Vehículo con avatar -->
+              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.vehiclePlate }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Patente: {{ slotProps.item.vehiclePlate }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.vehicleBrand }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Marca: {{ slotProps.item.vehicleBrand }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 40%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.route }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Recorrido: {{ slotProps.item.route }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Fecha -->
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.date }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Fecha: {{ slotProps.item.date }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Horario -->
+              <div style="width: 10%; min-width: 0" class="text-truncate">
+                <v-tooltip location="top">
+                  <!-- Activator -->
+                  <template v-slot:activator="{ props }">
+                    <div
+                      v-bind="props"
+                      class="d-flex flex-column"
+                      style="cursor: default; padding: 4px 0;"
+                    >
+                      <!-- Fila superior: ícono + minutos alineados horizontalmente -->
+                      <div class="d-flex align-center gap-1">
+                        <v-icon size="small" color="primary" class="mr-1">mdi-clock-outline</v-icon>
+                        <span class="text-grey">
+                          {{ slotProps.item.estimated }} minutos
+                        </span>
+                      </div>
+
+                      <!-- Horario debajo del ícono (alineado con el ícono, no con los minutos) -->
+                      <span class="ml-1 mt-1">
+                        {{ formatTimeRange(slotProps.item.horario) }}
+                      </span>
+                    </div>
+                  </template>
+
+                  <!-- Tooltip -->
+                  <span>
+                    <strong>Horario completo:</strong><br>{{ slotProps.item.horario }}
+                  </span>
+                </v-tooltip>
+              </div>
+              <!-- Capacidad -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.capacidad }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Capacidad: {{ slotProps.item.capacidad }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Asientos -->
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.asientosVendidos }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Asientos vendidos: {{ slotProps.item.asientosVendidos }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Precio -->
+              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                <span style="font-weight: bold;">{{ formatNumber(slotProps.item.dineroGenerado) }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Dinero Generado: {{ formatNumber(slotProps.item.dineroGenerado) }}
+                  </span>
+                </v-tooltip>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
+  </v-container>
+      
     </v-row>
   </v-container>
 </template>
@@ -147,6 +285,7 @@ import Bar from "@/components/Bar.vue";
 import Doughnut from "@/components/Doughnut.vue";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { paleteColors } from "@/assets/colors";
 export default {
   name: 'BarChart',
   components: { Bar, Doughnut, },
@@ -159,6 +298,7 @@ export default {
       sb_title: '',
       sb_icon: '',
       role: '',
+      paleteColors: paleteColors,
       showWelcomeMessage: false, // Controlar si se muestra el mensaje de bienvenida
       branch_id: '',
       sales: [],
@@ -199,6 +339,12 @@ export default {
     }
   },
   methods: {
+    getCacheTimestamp() {
+      // Usamos medianoche (00:00:00) del día actual
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    },
     formatTimeRange(timeRange) {
     if (!timeRange) return '--';
     
@@ -308,8 +454,57 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .text-white {
   color: white !important;
+}
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

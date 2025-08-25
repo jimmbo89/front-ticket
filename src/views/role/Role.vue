@@ -11,50 +11,108 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-container style="min-width: 100%; min-height: 100%;">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Listado de Roles</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-              prepend-icon="mdi-plus-circle" @click="showAddRole">
-              Agregar Rol
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
+    <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+   <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-account-cog-outline</v-icon>
+    </v-avatar>
 
-      <v-card-text>
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="roles" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-              elevation="1" title="Editar Rol"></v-btn>
-              <v-btn density="comfortable" icon="mdi-shield-check" @click="showAddPermission(item)" :color="paleteColors.green" variant="tonal"
-              elevation="1" title="Asignar Permisos"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-              elevation="1" title="Eliminar Rol"></v-btn>
-          </template>
-          <template v-slot:item.type="{ item }">
-            <v-avatar class="mr-1  avatar-border" elevation="3" size="small">
-              <v-icon :title="item.type">
-                {{ getTypeIcon(item.type) }}
-              </v-icon>
-            </v-avatar>
-            {{ item.type }}
-          </template>
-        </v-data-table>
-      </v-card-text>
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Roles</div>
+      <div class="text-body-2 text-grey">Gestionar Roles</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAddRole">
+      Agregar Rol
+    </v-btn>
+  </v-card>
+    <v-container style="min-width: 100%;">
+    <v-card flat>
+      <v-card-title class="d-flex align-center">
+        Listado de roles
+        <v-spacer></v-spacer>
+
+        <v-text-field v-model="search" density="compact" label="Buscar roles" prepend-inner-icon="mdi-magnify"
+          variant="solo-filled" hide-details single-line flat></v-text-field>
+      </v-card-title>
+
+      <v-divider class="my-2"></v-divider>
+      <v-data-table :headers="headers" :items="roles" :search="search" :items-per-page-text="'Elementos por páginas'"
+        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <!-- Slot para cada fila -->
+        <template v-slot:item="slotProps">
+          <tr>
+            <td colspan="100%" style="padding: 0; border: none">
+               <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+                  <!-- Columna 1: Nombre -->
+                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                   <span class="text-truncate">{{ slotProps.item.name }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Nombre: {{ slotProps.item.name }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Columna 3: tipo -->
+                  <div style="width: 15%; min-width: 0" class="text-truncate text-center">
+                    <v-avatar class="mr-1  avatar-border" elevation="3" size="small">
+                      <v-icon :title=" slotProps.item.type">
+                        {{ getTypeIcon( slotProps.item.type) }}
+                      </v-icon>
+                    </v-avatar>
+                    {{  slotProps.item.type }}
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Tipo: {{ slotProps.item.type }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Columna 4: descripción -->
+                  <div style="width: 50%; min-width: 0" class="text-truncate">
+                    <span>{{ slotProps.item.description }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Descripción: {{ slotProps.item.description }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Columna 5: Acciones -->
+                  <div class="d-flex gap-1" style="width: 15%; justify-content: flex-end; flex-wrap: nowrap">
+                    <v-btn size="small" :style="{ 'border-width': '2px', 'border-style': 'solid' }" variant="outlined"
+                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                      title="Editar">
+                      <v-icon size="20">mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.green" @click="showAddPermission(slotProps.item)" class="flex-shrink-0 mr-1"
+                      title="Asignar permisosr">
+                      <v-icon size="20">mdi-shield-check</v-icon>
+                    </v-btn>
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                      title="Eliminar">
+                      <v-icon size="20">mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
     </v-card>
   </v-container>
-
+  
   <v-dialog v-model="dialog" max-width="600px">
     <v-form ref="form" v-model="valid">
       <v-card>
@@ -410,9 +468,58 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 .avatar-border {
   border: 2px solid #000;
   /* Aquí se define el borde */
+}
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

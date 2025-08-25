@@ -20,7 +20,7 @@
     <!-- Texto -->
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Empresa</div>
-      <div class="text-body-2 text-grey">Administracion de la Empresa</div>
+      <div class="text-body-2 text-grey">Administración de la Empresa</div>
     </div>
 
     <!-- Botones -->
@@ -137,7 +137,7 @@
           </v-col>
         </v-row>
 
-        <br /><br />
+        <!--<br /><br />
 
         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
           hide-details>
@@ -159,7 +159,7 @@
             </v-avatar>
             {{ item.name }}
           </template>
-        </v-data-table>
+        </v-data-table>-->
       </v-card-text>
     </v-card>
   </v-container>

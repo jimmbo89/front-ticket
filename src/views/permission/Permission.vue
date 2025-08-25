@@ -11,7 +11,103 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container fluid fill-height>
+      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+   <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-store</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Permisos</div>
+      <div class="text-body-2 text-grey">Gestionar Permisos</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd">
+      Agregar Permiso
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+  <v-card flat>
+    <v-card-title class="d-flex align-center">
+      Listado de permisos
+
+      <v-spacer></v-spacer>
+
+      <v-text-field v-model="search" density="compact" label="Buscar permiso" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </v-card-title>
+
+    <v-divider class="my-2"></v-divider>
+
+    <v-data-table :headers="headers" :items="permisions" :search="search"
+      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+      loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+      style="max-height: 68vh; overflow-y: auto; background: transparent">
+      <!-- Slot personalizado para cada fila -->
+      <template v-slot:item="slotProps">
+        <tr>
+          <td colspan="100%" style="padding: 0; border: none">
+            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+
+                <!-- Columna 1: Nombre de la ruta -->
+                <div class="d-flex align-center" style="width: 15%; min-width: 0">
+                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Nombre: {{ slotProps.item.name }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 3: Destino (con avatar) -->
+                <div class="d-flex align-center" style="width: 15%; min-width: 0">
+                  <span class="text-truncate">{{ slotProps.item.module }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Módulo: {{ slotProps.item.module }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <div class="d-flex align-center" style="width: 55%; min-width: 0">
+                  <span class="text-truncate">{{ slotProps.item.description }}</span>
+                  <v-tooltip activator="parent" location="top" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Descripción: {{ slotProps.item.description }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Columna 5: Acciones -->
+                <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
+                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                      title="Editar Permiso">
+                      <v-icon size="20">mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                      title="Eliminar Permiso">
+                      <v-icon size="20">mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+  </v-card>
+  </v-container>
+    <!--<v-container fluid fill-height>
         <v-card elevation="6" class="mx-2">
             <v-toolbar :color="paleteColors.primary">
                 <v-row align="center">
@@ -43,7 +139,7 @@
                 </v-data-table>
             </v-card-text>
         </v-card>
-    </v-container>
+    </v-container>-->
 
     <v-dialog v-model="dialog" max-width="600px">
         <v-form ref="form" v-model="valid">

@@ -11,24 +11,30 @@
             </v-col>
         </v-row>
     </v-snackbar>
-    <v-container style="min-width: 100%; min-height: 100%;">
+     <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-ticket</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Tickets</div>
+      <div class="text-body-2 text-grey">Gestionar Tickets</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+      prepend-icon="mdi-plus-circle" @click="showAdd()">
+      Vender ticket
+    </v-btn>
+  </v-card>
+    <!--<v-container style="min-width: 100%; min-height: 100%;">
         <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <v-row align="center">
-                    <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Ticket Vendidos</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="3" class="text-right">
-                        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-                            prepend-icon="mdi-plus-circle" @click="showAdd">
-                            Vender Ticket
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-toolbar>
-            <v-card-text>
+              <v-card-text>
                 <v-row>
-                    <v-container fluid>
                         <v-cols cols="12" md="12">
                             <v-row v-if="mostrarFila" dense>
                                 <v-col cols="12" md="3">
@@ -41,7 +47,7 @@
                                                 :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
                                             </v-list-item>
                                         </template>
-                                    </v-autocomplete><!-- @update:model-value="initialize()">-->
+                                    </v-autocomplete>
                                 </v-col>
                                 <v-col cols="12" md="2">
                                     <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
@@ -49,9 +55,6 @@
                                 </v-col>
                             </v-row>
                         </v-cols>
-                    </v-container>
-                </v-row>
-                <v-row dense>
                     <v-col cols="12">
                         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar"
                             single-line hide-details>
@@ -91,7 +94,181 @@
                 </v-row>
             </v-card-text>
         </v-card>
-    </v-container>
+    </v-container>-->
+    <v-container style="min-width: 100%;">
+   <v-card flat>
+  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+    <!-- Título -->
+    <div class="text-h6 font-weight-bold">Tickets Vendidos</div>
+
+    <!-- Spacer (solo visible en md+) -->
+    <v-spacer class="d-none d-md-block"></v-spacer>
+
+    <!-- Grupo: Autocomplete + Botón buscar -->
+   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+
+          <!-- Botón de búsqueda (actualizar datos) -->
+          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
+            class="mt-2 mt-md-0 mr-5 ml-1">
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+        </div>
+
+    <!-- Campo de búsqueda global -->
+    <div class="flex-grow-1" style="max-width: 300px">
+      <v-text-field v-model="search" density="compact" label="Buscar ticket" prepend-inner-icon="mdi-magnify"
+        variant="solo-filled" hide-details single-line flat></v-text-field>
+    </div>
+  </v-card-title>
+
+  <!-- Separador -->
+  <v-divider class="my-2"></v-divider>
+
+  <!-- Tabla de viajes con filas personalizadas -->
+  <v-data-table :headers="headers" :items="tickets" :search="search" :items-per-page-text="'Elementos por página'"
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
+        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <!-- Fila personalizada -->
+    <template v-slot:item="slotProps">
+      <tr>
+        <td colspan="100%" style="padding: 0; border: none">
+          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+
+              <div style="width: 12%; min-width: 0" class="text-truncate">
+                <span>{{ slotProps.item.tripName }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Ruta: {{ slotProps.item.tripName }}
+                  </span>
+                </v-tooltip>
+              </div>
+              
+              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.tripOrigin }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Origen: {{ slotProps.item.tripOrigin }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                </v-avatar>
+                <span class="text-truncate">{{ slotProps.item.tripDestination }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Destino: {{ slotProps.item.tripDestination }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.date }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Fecha: {{ slotProps.item.date }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.schedule }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Horario: {{ slotProps.item.schedule }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.method }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Método: {{ slotProps.item.method }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 3%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.quantity }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Passajes: {{ slotProps.item.quantity }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 3%; min-width: 0" class="text-truncate text-center">
+                <span>{{ slotProps.item.seats }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Asientos: {{ slotProps.item.seats }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+                <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Precio: {{ formatNumber(Number(slotProps.item.price)) }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+                <span>{{ formatNumber(Number(slotProps.item.total)) }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Total: {{ formatNumber(Number(slotProps.item.total)) }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <!-- Acciones -->
+              <div class="d-flex gap-1" style="width: 12%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Editar Ticket">
+                  <v-icon size="20">mdi-pencil</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.green" @click="printerItem(slotProps.item)" class="flex-shrink-0 mr-1"
+                  title="Reimprimir Ticket">
+                  <v-icon size="20">mdi-printer</v-icon>
+                </v-btn>
+
+                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
+                  title="Eliminar Ticket">
+                  <v-icon size="20">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </td>
+      </tr>
+    </template>
+  </v-data-table>
+</v-card>
+  </v-container>
     <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
         <v-form ref="form" v-model="valid" enctype="multipart/form-data">
             <v-card style="height: 100vh;">
@@ -853,6 +1030,12 @@ export default {
             }
         },
         methods: {
+        getCacheTimestamp() {
+        // Usamos medianoche (00:00:00) del día actual
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+        },
         getMethodColor(methodValue) {
             const colors = {
             'Efectivo': 'green-darken-2',
@@ -2568,7 +2751,7 @@ export default {
     },
 };
 </script>
-<style scoped>
+<style>
 .payment-method-card {
   border: 3px solid #e0e0e0 !important;
   transition: all 0.2s ease;
@@ -2700,5 +2883,54 @@ export default {
   .seat-number {
     top: 28%; /* Puedes ajustar este valor según necesidad */
   }
+}
+.icono-concavo {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  /* Mantenemos solo el efecto cóncavo en el ícono 
+  box-shadow: inset;*/
+  position: relative;
+  overflow: hidden;
+}
+
+.icono-concavo::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 8px;
+  background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>
