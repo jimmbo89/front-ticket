@@ -48,7 +48,7 @@
       <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
       <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
         <!-- Título -->
-        <div class="text-h6 font-weight-bold">Listado de incidencias</div>
+        <div class="text-subtitle-1 font-weight-bold">Listado de incidencias</div>
 
         <!-- Spacer (solo visible en md+) -->
         <v-spacer class="d-none d-md-block"></v-spacer>
@@ -177,169 +177,207 @@
           ></v-text-field>
         </div>
       </v-card-title>
+      <v-data-table
+        :headers="headers"
+        :items="incidents"
+        v-model:expanded="expandedItems"
+        item-value="id"
+        :items-per-page-text="'Elementos por página'"
+          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+              class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent"
+        show-expand
+      >
 
-      <!-- Separador -->
-      <v-divider class="my-2"></v-divider>
-<v-data-table
-  :headers="headers"
-  :items="incidents"
-  v-model:expanded="expandedItems"
-  item-value="id"
-  :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent"
-  show-expand
->
-  <!-- Personalización completa de la fila con v-slot:row -->
-  <template v-slot:row="{ item }">
-<tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-          <!-- Avatar + Nombre -->
-          <div class="d-flex align-center" style="width: 20%; min-width: 0; gap: 8px">
-            <v-avatar class="icono-concavo" color="grey-lighten-4" size="40">
-              <v-img
-                :src="`${this.$axios.defaults.baseURL}images/${item.image}`"
-                class="icono-concavo"
-                cover
-              ></v-img>
-            </v-avatar>
-            <div class="d-inline-block" style="min-width: 0; flex: 1">
-              <span class="text-truncate d-inline-block" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                {{ item.workerName }}
-              </span>
-              <v-tooltip activator="parent" location="bottom" max-width="350px">
-                <span style="white-space: normal; word-break: break-word">
-                  Trabajador: {{ item.workerName }}
-                </span>
-              </v-tooltip>
-            </div>
-          </div>
+      <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+                    <!-- Negocio (20%) -->
+                    <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
+                      Nombre del Trabajdor
+                    </div>
 
-          <!-- Título con ícono -->
-          <div style="width: 25%; min-width: 0; flex: 1">
-            <div class="d-flex align-center" style="gap: 6px">
-              <v-icon
-                v-if="item.title.includes('Retraso')"
-                color="warning"
-                size="20"
-              >
-                mdi-clock-alert
-              </v-icon>
-              <v-icon
-                v-else-if="item.title.includes('Escaneo')"
-                color="success"
-                size="20"
-              >
-                mdi-qrcode-scan
-              </v-icon>
-              <v-icon
-                v-else-if="item.title.includes('Reimpresión')"
-                color="info"
-                size="20"
-              >
-                mdi-printer
-              </v-icon>
-              <div class="d-inline-block" style="min-width: 0; flex: 1">
-                <span
-                  class="text-truncate d-inline-block"
-                  style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-                >
-                  {{ item.title }}
-                </span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    {{ item.title }}
+                    <!-- Nombre (20%) -->
+                    <div style="width: 22%; min-width: 0" class="text-left font-weight-bold">
+                      Título
+                    </div>
+
+                    <!-- Teléfono (10%) -->
+                    <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
+                      Fecha
+                    </div>
+
+                    <!-- Dirección (25%) -->
+                    <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+                      Descripción
+                    </div>
+
+                    <!-- Acciones (25%) -->
+                    <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                      
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </template>
+              <!-- Personalización completa de la fila con v-slot:row -->
+            <template v-slot:row="{ item }">  
+            <tr>
+              <td colspan="100%" style="padding: 0; border: none">
+                <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+                  <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+                <!-- Avatar + Nombre -->
+                <div class="d-flex align-center" style="width: 20%; min-width: 0; gap: 8px">
+                  <v-avatar class="icono-concavo" color="grey-lighten-4" size="40">
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${item.image}`"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                  <div class="d-inline-block" style="min-width: 0; flex: 1">
+                    <span class="text-truncate d-inline-block" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                      {{ item.workerName }}
+                    </span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Trabajador: {{ item.workerName }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+                </div>
+
+                <!-- Título con ícono -->
+                <div style="width: 25%; min-width: 0; flex: 1">
+                  <div class="d-flex align-center" style="gap: 6px">
+                    <v-icon
+                      v-if="item.title.includes('Retraso')"
+                      color="warning"
+                      size="20"
+                    >
+                      mdi-clock-alert
+                    </v-icon>
+                    <v-icon
+                      v-else-if="item.title.includes('Escaneo')"
+                      color="success"
+                      size="20"
+                    >
+                      mdi-qrcode-scan
+                    </v-icon>
+                    <v-icon
+                      v-else-if="item.title.includes('Reimpresión')"
+                      color="info"
+                      size="20"
+                    >
+                      mdi-printer
+                    </v-icon>
+                    <div class="d-inline-block" style="min-width: 0; flex: 1">
+                      <span
+                        class="text-truncate d-inline-block"
+                        style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                      >
+                        {{ item.title }}
+                      </span>
+                      <v-tooltip activator="parent" location="bottom" max-width="350px">
+                        <span style="white-space: normal; word-break: break-word">
+                          {{ item.title }}
+                        </span>
+                      </v-tooltip>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fecha -->
+                <div style="width: 10%; min-width: 0; text-align: left">
+                  <span class="text-truncate d-inline-block" style="max-width: 100%">
+                    {{ item.date }}
                   </span>
-                </v-tooltip>
+                  <v-tooltip activator="parent" location="bottom">
+                    Fecha: {{ item.date }}
+                  </v-tooltip>
+                </div>
+
+                <!-- Descripción -->
+                <div style="width: 30%; min-width: 0; text-align: left">
+                  <span class="text-truncate d-inline-block" style="max-width: 100%">
+                    {{ item.description }}
+                  </span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Descripción: {{ item.description }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <!-- Botón de expansión -->
+                <div style="width: 10%; min-width: 0; text-align: right">
+                  <v-btn
+                    size="small"
+                    variant="text"
+                    :color="getDetailsButtonColor(item)"
+                    @click.stop="toggleExpand(item)"
+                  >
+                    <v-icon start size="18">
+                      {{ isExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
+                    </v-icon>
+                    <span class="text-caption">
+                      {{ isExpanded(item) ? "Ocultar" : "Ver" }}
+                    </span>
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
+          </td>
+        </tr>
+      </template>
+
+        <!-- Contenido expandido -->
+        <template v-slot:expanded-row="{ item }">
+          <tr>
+            <td :colspan="headers.length">
+              <div class="pa-4 bg-grey-lighten-4">
+                <h4 class="text-subtitle-1 mb-2">Detalles completos:</h4>
+
+                <!-- Título con ícono -->
+                <div class="d-flex align-center mb-3">
+                  <v-icon v-if="item.title.includes('Retraso')" color="warning" class="mr-2">
+                    mdi-clock-alert
+                  </v-icon>
+                  <v-icon v-else-if="item.title.includes('Escaneo')" color="success" class="mr-2">
+                    mdi-qrcode-scan
+                  </v-icon>
+                  <v-icon v-else-if="item.title.includes('Reimpresión')" color="info" class="mr-2">
+                    mdi-printer
+                  </v-icon>
+                  <strong>{{ item.title }}</strong>
+                </div>
+
+                <!-- Tabla de detalles -->
+                <table class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4">
+                  <tbody>
+                    <tr v-for="(value, key) in JSON.parse(item.details)" :key="key">
+                      <td class="font-weight-bold" style="width: 200px">
+                        {{ formatDetailKey(key) }}:
+                      </td>
+                      <td>
+                        {{ formatDetailValue(key, value) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
-
-          <!-- Fecha -->
-          <div style="width: 10%; min-width: 0; text-align: center">
-            <span class="text-truncate d-inline-block" style="max-width: 100%">
-              {{ item.date }}
-            </span>
-            <v-tooltip activator="parent" location="bottom">
-              Fecha: {{ item.date }}
-            </v-tooltip>
-          </div>
-
-          <!-- Descripción -->
-          <div style="width: 30%; min-width: 0; text-align: center">
-            <span class="text-truncate d-inline-block" style="max-width: 100%">
-              {{ item.description }}
-            </span>
-            <v-tooltip activator="parent" location="bottom" max-width="350px">
-              <span style="white-space: normal; word-break: break-word">
-                Descripción: {{ item.description }}
-              </span>
-            </v-tooltip>
-          </div>
-
-          <!-- Botón de expansión -->
-          <div style="width: 10%; min-width: 0; text-align: right">
-            <v-btn
-              size="small"
-              variant="text"
-              :color="getDetailsButtonColor(item)"
-              @click.stop="toggleExpand(item)"
-            >
-              <v-icon start size="18">
-                {{ isExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
-              </v-icon>
-              <span class="text-caption">
-                {{ isExpanded(item) ? "Ocultar" : "Ver" }}
-              </span>
-            </v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-    </td>
-  </tr>
-</template>
-
-  <!-- Contenido expandido -->
-  <template v-slot:expanded-row="{ item }">
-    <tr>
-      <td :colspan="headers.length">
-        <div class="pa-4 bg-grey-lighten-4">
-          <h4 class="text-subtitle-1 mb-2">Detalles completos:</h4>
-
-          <!-- Título con ícono -->
-          <div class="d-flex align-center mb-3">
-            <v-icon v-if="item.title.includes('Retraso')" color="warning" class="mr-2">
-              mdi-clock-alert
-            </v-icon>
-            <v-icon v-else-if="item.title.includes('Escaneo')" color="success" class="mr-2">
-              mdi-qrcode-scan
-            </v-icon>
-            <v-icon v-else-if="item.title.includes('Reimpresión')" color="info" class="mr-2">
-              mdi-printer
-            </v-icon>
-            <strong>{{ item.title }}</strong>
-          </div>
-
-          <!-- Tabla de detalles -->
-          <table class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4">
-            <tbody>
-              <tr v-for="(value, key) in JSON.parse(item.details)" :key="key">
-                <td class="font-weight-bold" style="width: 200px">
-                  {{ formatDetailKey(key) }}:
-                </td>
-                <td>
-                  {{ formatDetailValue(key, value) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </td>
-    </tr>
-  </template>
-</v-data-table>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
     </v-card>
   </v-container>
 </template>
@@ -372,11 +410,11 @@ export default {
     data: {},
     branch_id: "",
     headers: [
-      { title: "Trabajador", value: "workerName" },
-      { title: "Título", value: "title" },
-      { title: "Fecha", value: "date" },
-      { title: "Descripción", value: "description" },
-       { title: "Acciones", key: "data-table-expand", value: "data-table-expand" },
+      { title: "Trabajador", key: "workerName" },
+      { title: "Título", key: "title" },
+      { title: "Fecha", key: "date" },
+      { title: "Descripción", key: "description" },
+       { title: "Acciones", key: "data-table-expand" },
     ],
     editedItem: {
       startDate: null,

@@ -11,17 +11,17 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
+  <v-card class="d-flex align-center pa-1" elevation="0">
+    <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-steering</v-icon>
-    </v-avatar>
+    </v-avatar>-->
 
-    <!-- Texto -->
+    <!-- Texto 
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Viajes</div>
       <div class="text-body-2 text-grey">Gestionar Viajes</div>
-    </div>
+    </div>-->
 
     <!-- Botones -->
     <v-spacer></v-spacer>
@@ -31,12 +31,12 @@
       Agregar Viaje
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
+  <!--<v-container style="min-width: 100%;">-->
    <v-card flat>
   <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-h6 font-weight-bold">Listado de viajes</div>
+    <div class="text-body-1 font-weight-bold">Listado de viajes</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -67,13 +67,70 @@
     </div>
   </v-card-title>
 
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
-
   <!-- Tabla de viajes con filas personalizadas -->
   <v-data-table :headers="headers" :items="trips" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Ruta
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Origen
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Destino
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Vehículo
+              </div>
+
+              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+                Fecha
+              </div>
+
+              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+                Horario
+              </div>
+
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+                Precio
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Salida
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Llegada
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 8%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Fila personalizada -->
     <template v-slot:item="slotProps">
       <tr>
@@ -91,7 +148,7 @@
               </div>
 
               <!-- Origen con avatar -->
-              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+              <div class="d-flex align-left" style="width: 20%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
                 </v-avatar>
@@ -104,7 +161,7 @@
               </div>
 
               <!-- Destino con avatar -->
-              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+              <div class="d-flex align-left" style="width: 20%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
                 </v-avatar>
@@ -117,7 +174,7 @@
               </div>
 
               <!-- Vehículo con avatar -->
-              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+              <div class="d-flex align-left" style="width: 10%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
                 </v-avatar>
@@ -130,7 +187,7 @@
               </div>
 
               <!-- Fecha -->
-              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.date }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -140,7 +197,7 @@
               </div>
 
               <!-- Horario -->
-              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.schedule }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -150,7 +207,7 @@
               </div>
 
               <!-- Precio -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.price }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -160,7 +217,7 @@
               </div>
 
               <!-- Salida -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.start }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -170,7 +227,7 @@
               </div>
 
               <!-- Llegada -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.end }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -181,13 +238,13 @@
 
               <!-- Acciones -->
               <div class="d-flex gap-1" style="width: 8%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Editar Viaje">
                   <v-icon size="20">mdi-pencil</v-icon>
                 </v-btn>
 
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                   title="Eliminar Viaje">
                   <v-icon size="20">mdi-delete</v-icon>
@@ -200,7 +257,7 @@
     </template>
   </v-data-table>
 </v-card>
-  </v-container>
+  <!--</v-container>-->
 
   <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
     <v-card style="display: flex; flex-direction: column; min-height: 100vh;">

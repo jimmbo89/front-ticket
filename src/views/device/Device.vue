@@ -99,7 +99,7 @@
       <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
       <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
         <!-- Título -->
-        <div class="text-h6 font-weight-bold">Listado de dispositivos</div>
+        <div class="text-subtitle-1 font-weight-bold">Listado de dispositivos</div>
 
         <!-- Spacer (solo visible en md+) -->
         <v-spacer class="d-none d-md-block"></v-spacer>
@@ -135,8 +135,64 @@
 
       <!-- Tabla de dispositivos con filas personalizadas -->
       <v-data-table :headers="headers" :items="devices" :search="search" :items-per-page-text="'Elementos por página'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Nombre
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                MAC
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Serie
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Android
+              </div>
+
+              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+                Adquirido
+              </div>
+              
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+                Mantenimiento
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Estado
+              </div>
+
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
+                Descripción
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
         <!-- Fila personalizada -->
         <template v-slot:item="slotProps">
           <tr>
@@ -159,7 +215,7 @@
                   </div>
 
                   <!-- Mac -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.mac }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -169,7 +225,7 @@
                   </div>
 
                   <!-- Serie -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.serial }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -179,7 +235,7 @@
                   </div>
 
                   <!-- Android -->
-                  <div style="width: 5%; min-width: 0" class="text-truncate text-center text-start">
+                  <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.version }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -189,7 +245,7 @@
                   </div>
 
                   <!-- Adquirido -->
-                  <div style="width: 7%; min-width: 0" class="text-truncate text-center text-start">
+                  <div style="width: 7%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.acquisition }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -199,7 +255,7 @@
                   </div>
 
                   <!-- Mantenimiento -->
-                  <div style="width: 7%; min-width: 0" class="text-truncate text-center text-start">
+                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.maintenance }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -225,8 +281,8 @@
                   </div>
 
                   <!-- Descripción -->
-                  <div style="width: 26%; min-width: 0" class="text-truncate text-start">
-                    <span>{{ slotProps.item.notes }}</span>
+                  <div style="width: 25%; min-width: 0" class="d-inline-block text-truncate text-start">
+                    <span class="text-truncate">{{ slotProps.item.notes }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
                         Descripción: {{ slotProps.item.notes }}
@@ -236,13 +292,13 @@
 
                   <!-- Acciones -->
                   <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar Dispositivo">
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar Dispositivo">
                       <v-icon size="20">mdi-delete</v-icon>
@@ -291,8 +347,22 @@
                   variant="underlined" :rules="serialRules"></v-text-field>
               </v-col>
               <v-col cols="12" md="4">
-                <v-select v-model="editedItem.status" :items="statusOptions" item-value="value" item-title="text"
-                  label="Estado" prepend-icon="mdi-check-circle" variant="underlined"></v-select>
+                <v-switch 
+  v-model="editedItem.status" 
+  :true-value=1 
+  :false-value=0
+  :color="paleteColors.active"
+  hide-details 
+  inset 
+  class="custom-switch"
+>
+  <template v-slot:label>
+    <span class="text-body-1"
+      :style="{ color: editedItem.status ? paleteColors.active : paleteColors.grey }">
+      {{ editedItem.status ? 'Activo' : 'Inactivo' }}
+    </span>
+  </template>
+</v-switch>
               </v-col>
             </v-row>
             <v-row>
@@ -882,6 +952,12 @@ export default {
 };
 </script>
 <style>
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-wrap: normal;
+}
 .icono-concavo {
   width: 45px;
   height: 45px;

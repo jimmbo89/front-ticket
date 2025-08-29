@@ -1,123 +1,58 @@
 <template>
-  <v-container style="min-width: 100%; min-height: 100%">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Ventas Diarias</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn
-              class="text-subtitle-1 ml-12"
-              :color="paleteColors.white"
-              variant="tonal"
-              elevation="2"
-              prepend-icon="mdi-file-excel-box"
-              @click="exportToExcel"
-            >
-              Exportar a Excel
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-finance</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Monto Generado</div>
+      <div class="text-body-2 text-grey">Monto Generado por Períodos</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.green" variant="tonal" elevation="2"
+      prepend-icon="mdi-file-excel" @click="exportToExcel">
+      Exportar a Excel
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+    <v-card flat>
       <v-card-text>
         <v-row dense>
           <v-col cols="12" md="2">
-            <v-menu
-              v-model="menu"
-              :close-on-content-click="false"
-              :nudge-right="40"
-              transition="scale-transition"
-              offset-y
-              min-width="290px"
-            >
+            <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+              offset-y min-width="290px">
               <template v-slot:activator="{ props }">
-                <v-text-field
-                  v-bind="props"
-                  :modelValue="dateFormatted"
-                  variant="underlined"
-                  prepend-inner-icon="mdi-calendar"
-                  label="Fecha de inicio"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
+                  prepend-inner-icon="mdi-calendar" label="Fecha de inicio" density="compact"></v-text-field>
               </template>
               <v-locale-provider locale="es">
-                <v-date-picker
-                  header="Calendario"
-                  title="Seleccione la fecha"
-                  :color="paleteColors.primary"
-                  :modelValue="input"
-                  @update:model-value="updateDate"
-                  format="yyyy-MM-dd"
-                ></v-date-picker>
+                <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                  :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"></v-date-picker>
               </v-locale-provider>
             </v-menu>
           </v-col>
           <v-col cols="12" md="2">
-            <v-menu
-              v-model="menu2"
-              :close-on-content-click="false"
-              :nudge-right="40"
-              transition="scale-transition"
-              offset-y
-              min-width="290px"
-            >
+            <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+              offset-y min-width="290px">
               <template v-slot:activator="{ props }">
-                <v-text-field
-                  v-bind="props"
-                  :modelValue="dateFormatted1"
-                  variant="underlined"
-                  prepend-inner-icon="mdi-calendar"
-                  label="Fecha Terminación"
-                  density="compact"
-                ></v-text-field>
+                <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="underlined"
+                  prepend-inner-icon="mdi-calendar" label="Fecha Terminación" density="compact"></v-text-field>
               </template>
               <v-locale-provider locale="es">
-                <v-date-picker
-                  header="Calendario"
-                  title="Seleccione la fecha"
-                  :color="paleteColors.primary"
-                  :modelValue="input2"
-                  format="yyyy-MM-dd"
-                  :min="dateFormatted"
-                  @update:model-value="updateDate1"
-                ></v-date-picker
-                ><!--@update:model-value="updateDate2"-->
+                <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                  :modelValue="input2" format="yyyy-MM-dd" :min="dateFormatted"
+                  @update:model-value="updateDate1"></v-date-picker><!--@update:model-value="updateDate2"-->
               </v-locale-provider>
             </v-menu>
           </v-col>
-          <v-col cols="12" md="3" v-if="type === 'Sucursal' && mostrarFila">
-            <v-autocomplete
-              :no-data-text="'No hay datos disponibles'"
-              v-model="branch_id"
-              :items="branches"
-              label="Seleccione una Sucursal"
-              prepend-inner-icon="mdi-store"
-              item-title="name"
-              item-value="id"
-              variant="underlined"
-              :rules="selectRules"
-              density="compact"
-            >
-              <template v-slot:item="{ props, item }">
-                <v-list-item
-                  v-bind="props"
-                  :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                >
-                </v-list-item>
-              </template> </v-autocomplete
-            ><!-- @update:model-value="initialize()">-->
-          </v-col>
           <v-col cols="12" md="2">
-            <v-select
-              v-model="type"
-              :items="options"
-              label="Seleccione una opción"
-              variant="underlined"
-              density="compact"
-              item-title="title"
-              item-value="value"
-            >
+            <v-select v-model="type" :items="options" label="Seleccione una opción" variant="underlined"
+              density="compact" item-title="title" item-value="value">
               <!-- Personalizar cómo se muestran las opciones en la lista -->
               <template v-slot:item="{ props, item }">
                 <v-list-item v-bind="props">
@@ -133,126 +68,124 @@
               </template>
             </v-select>
           </v-col>
+
+          <v-col cols="12" md="3" v-if="type === 'Sucursal' && mostrarFila">
+            <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
+              label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
+              variant="underlined" :rules="selectRules" density="compact">
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+                </v-list-item>
+              </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
+          </v-col>
           <v-col cols="12" md="3">
-            <v-btn
-              icon
-              @click="initialize"
-              :color="paleteColors.primary"
-              density="comfortable"
-            >
-              <v-icon>mdi-magnify</v-icon></v-btn
-            >
+            <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
+              <v-icon>mdi-magnify</v-icon></v-btn>
           </v-col>
         </v-row>
-        <v-row class="mx-auto">
+        <v-row dense>
           <v-col cols="12" class="pa-0">
             <v-row class="ma-0">
-              <v-col cols="12" class="text-h6 font-weight-bold text-center pa-1">
+              <!--<v-col cols="12" class="text-body-1 font-weight-medium text-center pa-1">
                 {{ response.nombre }}
-              </v-col>
+              </v-col>-->
 
               <!-- Fecha -->
-              <v-col cols="12" class="text-h6 font-weight-bold text-center pa-1">
-                FECHA: {{ response.fecha }}
-              </v-col>
-
-              <!-- Sección RESUMEN -->
-              <v-col cols="12" class="text-h6 font-weight-bold pa-1">
-                <strong>RESUMEN:</strong>
+              <v-col cols="12" class="text-subtitle-1 font-weight-medium pa-1">
+                Fecha: {{ response.fecha }}
               </v-col>
 
               <!-- Cards informativas -->
-              <v-col cols="12" md="4" class="pa-1">
-                <v-card
-                  class="h-100"
-                  title="Pasajes emitidos"
-                  :subtitle="response.pasajesEmitidos"
-                >
-                  <template v-slot:prepend>
-                    <v-avatar color="blue-lighten-1">
-                      <v-icon>mdi-ticket-confirmation</v-icon>
-                    </v-avatar>
+              <v-col cols="12" md="4" class="pa-1 text-body-1">
+                <v-card class="h-100 text-body-1 font-weight-medium rounded-lg">
+                  <template v-slot:title>
+                    <div class="text-subtitle-1 font-weight-medium">Pasajes emitidos</div>
+                    <!-- Puedes usar: text-h4, text-h5, text-h6, text-subtitle-1, etc. -->
                   </template>
-                  <template v-slot:append>
-                    <v-avatar color="blue-lighten-4" size="32">
-                      <v-icon color="blue-darken-2" size="20">mdi-plus</v-icon>
+
+                  <template v-slot:subtitle>
+                    <div class="text-subtitle-1 font-weight-medium">{{ response.pasajesEmitidos }}</div>
+                  </template>
+
+                  <template v-slot:prepend>
+                    <v-avatar :color="paleteColors.green">
+                      <v-icon>mdi-ticket-confirmation</v-icon>
                     </v-avatar>
                   </template>
                 </v-card>
               </v-col>
 
-              <v-col cols="12" md="4" class="pa-1">
-                <v-card
-                  class="h-100"
-                  title="Reimpresiones"
-                  :subtitle="response.reimpresiones"
-                >
+              <!-- Card: Reimpresiones -->
+              <v-col cols="12" md="4" class="pa-1 text-body-1">
+                <v-card class="h-100 text-body-1 rounded-lg">
+                  <template v-slot:title>
+                    <div class="text-subtitle-1 font-weight-medium">Reimpresiones</div>
+                  </template>
+
+                  <template v-slot:subtitle>
+                    <div class="text-subtitle-1 font-weight-medium">{{ response.reimpresiones }}</div>
+                  </template>
+
                   <template v-slot:prepend>
                     <v-avatar color="orange-lighten-1">
                       <v-icon>mdi-printer</v-icon>
                     </v-avatar>
                   </template>
-                  <template v-slot:append>
-                    <v-avatar color="orange-lighten-4" size="32">
-                      <v-icon color="orange-darken-2" size="20">mdi-refresh</v-icon>
-                    </v-avatar>
-                  </template>
                 </v-card>
               </v-col>
-              <v-col cols="12" md="4" class="pa-1">
-                <v-card
-                  class="h-100"
-                  title="TOTAL GENERAL"
-                  :subtitle="'$' + formatNumber(Number(response.totales))"
-                >
+
+              <!-- Card: Total General -->
+              <v-col cols="12" md="4" class="pa-1 text-body-1">
+                <v-card class="h-100 text-body-1 rounded-lg">
+                  <template v-slot:title>
+                    <div class="text-subtitle-1 font-weight-medium">Total General</div>
+                  </template>
+
+                  <template v-slot:subtitle>
+                   <div class="text-subtitle-1 font-weight-medium"> ${{ formatNumber(Number(response.totales)) }}</div>
+                  </template>
+
                   <template v-slot:prepend>
-                    <v-avatar color="blue-grey-lighten-1">
+                    <v-avatar color="black">
                       <v-icon>mdi-scale-balance</v-icon>
                     </v-avatar>
                   </template>
                 </v-card>
               </v-col>
               <br />
-              <v-col cols="12" md="12" class="pa-1">
-                <v-card class="mt-4" elevation="2">
-                  <v-card-title class="bg-blue-grey-lighten-5">
+              <v-col cols="12" md="12" class="pa-1 text-body-1">
+                <v-card class="mt-4 rounded-lg" elevation="2">
+                  <v-card-title class="bg-blue-grey-lighten-5 text-subtitle-1">
                     <v-icon start>mdi-credit-card-multiple</v-icon>
                     Totales por Método de Pago
                   </v-card-title>
-                  <v-data-table
-                    :headers="headersMetodos"
-                    :items="response.totalesPorMetodo || []"
-                    :items-per-page="5"
-                    class="elevation-0"
-                    density="comfortable"
-                    no-data-text="No se encontraron registros de pagos"
-                  >
+                  <v-data-table :headers="headersMetodos" :items="response.totalesPorMetodo || []" :items-per-page="5"
+                    class="elevation-0" density="comfortable" no-data-text="No se encontraron registros de pagos">
                     <template v-slot:item.metodo="{ item }">
-                      <v-chip :color="getMethodColor(item.metodo)" size="small" label>
+                      <v-chip 
+                        :color="getMethodInfo(item.metodo).color" 
+                        size="small" 
+                        label 
+                        class="font-weight-bold text-body-2"
+                      >
+                        <v-icon start :icon="getMethodInfo(item.metodo).icon" size="small"></v-icon>
                         {{ item.metodo }}
                       </v-chip>
                     </template>
                     <template v-slot:item.cantidad="{ item }">
-                      <v-chip
-                        variant="outlined"
-                        size="small"
-                        :color="getMethodColor(item.metodo)"
-                      >
+                      <v-chip variant="outlined" size="small" :color="getMethodColor(item.metodo)" class="font-weight-bold">
                         {{ item.cantidad }}
                       </v-chip>
                     </template>
                     <template v-slot:item.total="{ item }">
-                      <span
-                        class="font-weight-bold"
-                        :class="'text-' + getMethodColor(item.metodo) + '-darken-3'"
-                      >
+                      <span class="font-weight-bold" :class="'text-' + getMethodColor(item.metodo) + '-darken-3'">
                         ${{ formatNumber(Number(item.total)) }}
                       </span>
                     </template>
                     <template v-slot:bottom>
-                      <div class="text-right pa-2">
-                        <span class="text-subtitle-1">Total general: </span>
-                        <span class="text-h6 text-success">
+                      <div class="text-right pa-2 font-weight-bold">
+                        <span class="text-subtitle-1 font-weight-medium">Total general: </span>
+                    <span class="font-weight-medium">
                           ${{ formatNumber(Number(response.totales)) }}
                         </span>
                       </div>
@@ -324,7 +257,7 @@ export default {
     date: null,
     endDate: null,
     options: [
-      { title: "Negocio", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
+      { title: "Empresa", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
       { title: "Sucursal", value: "Sucursal", icon: "mdi-store" }, // Opción Sucursal con ícono
     ],
   }),
@@ -387,6 +320,28 @@ export default {
 
       return methodColors[normalized] || "grey";
     },
+
+    getMethodInfo(metodo) {
+  if (!metodo) return { color: "grey", icon: "mdi-help-circle" };
+
+  const normalized = metodo
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  const methodData = {
+    efectivo: { color: "green", icon: "mdi-cash" },
+    debito: { color: "blue", icon: "mdi-credit-card-outline" },
+    credito: { color: "orange", icon: "mdi-credit-card" },
+    "tarjeta debito": { color: "blue", icon: "mdi-credit-card-outline" },
+    "tarjeta credito": { color: "orange", icon: "mdi-credit-card" },
+    // ... más métodos
+  };
+
+  return methodData[normalized] || { color: "grey", icon: "mdi-help-circle" };
+},
     formatNumber(value) {
       // Si el valor es menor que 1000, devuelve el valor original con dos decimales
       if (value < 1000) {

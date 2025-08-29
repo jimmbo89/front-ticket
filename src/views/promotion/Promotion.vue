@@ -31,12 +31,12 @@
             Agregar Promoción
         </v-btn>
     </v-card>
-        <v-container style="min-width: 100%;">
+    <v-container style="min-width: 100%;">
         <v-card flat>
             <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
             <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
                 <!-- Título -->
-                <div class="text-h6 font-weight-bold">Listado de promociones</div>
+                <div class="text-subtitle-1 font-weight-bold">Listado de promociones</div>
 
                 <!-- Spacer (solo visible en md+) -->
                 <v-spacer class="d-none d-md-block"></v-spacer>
@@ -48,14 +48,51 @@
                 </div>
             </v-card-title>
 
-            <!-- Separador -->
-            <v-divider class="my-2"></v-divider>
-
             <!-- Tabla de viajes con filas personalizadas -->
             <v-data-table :headers="headers" :items="promotions" :search="search"
                 :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-                loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+                loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
                 style="max-height: 68vh; overflow-y: auto; background: transparent">
+               <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+                            <!-- Negocio (20%) -->
+                            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                                Nombre
+                            </div>
+
+                            <!-- Nombre (20%) -->
+                            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                                Porciento (%)
+                            </div>
+
+                            <!-- Teléfono (10%) -->
+                            <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
+                                Descripción
+                            </div>
+
+                            <!-- Dirección (25%) -->
+                            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                                Estado
+                            </div>
+
+                            <!-- Acciones (25%) -->
+                            <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </template>
                 <!-- Fila personalizada -->
                 <template v-slot:item="slotProps">
                     <tr>
@@ -72,7 +109,7 @@
                                         </v-tooltip>
                                     </div>
 
-                                    <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                                    <div class="d-flex align-center" style="width: 10%; min-width: 0; text-align: left">
                                         <span class="text-truncate">{{ slotProps.item.percentage }}</span>
                                         <v-tooltip activator="parent" location="bottom" max-width="350px">
                                             <span style="white-space: normal; word-break: break-word">
@@ -92,8 +129,10 @@
                                     </div>
 
                                     <!-- Destino con avatar -->
-                                    <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                                        <v-chip :color="slotProps.item.active ? paleteColors.active : paleteColors.inactive" :text-color="paleteColors.white">
+                                    <div class="d-flex align-center" style="width: 10%; min-width: 0">
+                                        <v-chip
+                                            :color="slotProps.item.active ? paleteColors.active : paleteColors.inactive"
+                                            :text-color="paleteColors.white">
                                             {{ slotProps.item.active ? "Activa" : "Inactiva" }}
                                         </v-chip>
                                         <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -106,15 +145,15 @@
                                     <!-- Acciones -->
                                     <div class="d-flex gap-1"
                                         style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                                        <v-btn size="small" variant="outlined"
-                                            :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                                        <v-btn size="35" icon variant="outlined"
+                                            :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                                             :color="paleteColors.primary" @click="editItem(slotProps.item)"
                                             class="flex-shrink-0 mr-1" title="Editar Promoción">
                                             <v-icon size="20">mdi-pencil</v-icon>
                                         </v-btn>
 
-                                        <v-btn size="small" variant="outlined"
-                                            :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                                        <v-btn size="35" icon variant="outlined"
+                                            :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                                             :color="paleteColors.error" @click="deleteItem(slotProps.item)"
                                             class="flex-shrink-0" title="Eliminar Promoción">
                                             <v-icon size="20">mdi-delete</v-icon>
@@ -182,19 +221,22 @@
                                     :rules="nameRules"></v-text-field>
                             </v-col>
                             <v-col cols="12" md="6">
-                                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.active"
-                                    :items="[
-                                        { id: true, name: 'Activa' },
-                                        { id: false, name: 'Inactiva' },
-                                    ]" label="Estado" item-title="name" item-value="id" variant="underlined"
-                                    :rules="selectRules">
-                                    <template v-slot:prepend>
-                                        <v-icon :color="editedItem.active ? 'green' : 'red'">
-                                            {{ editedItem.active ? "mdi-toggle-switch" : "mdi-toggle-switch-off-outline"
-                                            }}
-                                        </v-icon>
-                                    </template>
-                                </v-autocomplete>
+                                <v-switch 
+  v-model="editedItem.active" 
+  :true-value="true" 
+  :false-value="false"
+  :color="paleteColors.active"
+  hide-details 
+  inset 
+  class="custom-switch"
+>
+  <template v-slot:label>
+    <span class="text-body-1"
+      :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
+      {{ editedItem.active ? 'Activa' : 'Inactiva' }}
+    </span>
+  </template>
+</v-switch>
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-text-field v-model="editedItem.percentage" clearable label="Descuento (%)"
@@ -232,7 +274,8 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">Cancelar</v-btn>
-                <v-btn :color="paleteColors.error" variant="flat" :loading="loading" @click="deleteItemConfirm">Aceptar</v-btn>
+                <v-btn :color="paleteColors.error" variant="flat" :loading="loading"
+                    @click="deleteItemConfirm">Aceptar</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

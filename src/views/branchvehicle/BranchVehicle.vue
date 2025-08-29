@@ -61,7 +61,7 @@
     </v-card>
   </v-container>-->
   <v-card flat>
-    <v-card-title class="d-flex align-center">
+    <v-card-title class="d-flex align-center text-body-1">
       Listado de vehículos
 
       <v-spacer></v-spacer>
@@ -70,12 +70,50 @@
         variant="solo-filled" hide-details single-line flat></v-text-field>
     </v-card-title>
 
-    <v-divider class="my-2"></v-divider>
-
     <v-data-table :headers="headers" :items="branchvehicles" :search="search"
       :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+      loading-text="Cargando datos..." class="elevation-1" :hide-default-header="true"
       style="max-height: 68vh; overflow-y: auto; background: transparent">
+       <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+                Chapa
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Marca
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Modelo
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Asientos
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 20%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
       <!-- Slot personalizado para cada fila -->
       <template v-slot:item="slotProps">
         <tr>
@@ -129,12 +167,12 @@
                 <div class="d-flex flex-column align-end" style="width: 20%; min-width: 0; text-align: right">
                   <!-- Botones de acción -->
                   <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar vehículo">
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar vehículo">
                       <v-icon size="20">mdi-delete</v-icon>
@@ -235,11 +273,11 @@ export default {
     branch_id: "",
     data: {},
     headers: [
-      { title: "Chapa", value: "plate", width: "30%" },
-      { title: "Marca", value: "brand", width: "20%" },
-      { title: "Modelo", value: "model", width: "20%" },
-      { title: "Asientos", value: "seats", width: "10%" },
-      { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+      { title: "Chapa", key: "plate", width: "30%" },
+      { title: "Marca", key: "brand", width: "20%" },
+      { title: "Modelo", key: "model", width: "20%" },
+      { title: "Asientos", key: "seats", width: "10%" },
+      { title: "Acciones", key: "actions", sortable: false, width: "20%" },
     ],
 
     editedItem: {
@@ -543,7 +581,7 @@ export default {
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
+/*.v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
 .v-data-table__content > thead,
@@ -560,5 +598,5 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
-}
+}*/
 </style>

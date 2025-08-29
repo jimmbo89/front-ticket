@@ -109,7 +109,7 @@
   </v-container>-->
 
   <v-card flat>
-    <v-card-title class="d-flex align-center">
+    <v-card-title class="d-flex align-center text-body-1">
       Listado de rutas
 
       <v-spacer></v-spacer>
@@ -118,12 +118,50 @@
         variant="solo-filled" hide-details single-line flat></v-text-field>
     </v-card-title>
 
-    <v-divider class="my-2"></v-divider>
-
     <v-data-table :headers="headers" :items="branchroutes" :search="search"
       :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+      loading-text="Cargando datos..." class="elevation-1" :hide-default-header="true"
       style="max-height: 68vh; overflow-y: auto; background: transparent">
+      <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
+                Nombre de la ruta
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
+                Origen
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
+                Destino
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
+                Precio
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold text-subtitle-2">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
       <!-- Slot personalizado para cada fila -->
       <template v-slot:item="slotProps">
         <tr>
@@ -172,7 +210,7 @@
                 </div>
 
                 <!-- Columna 4: Precio -->
-                <div style="width: 10%; min-width: 0" class="text-truncate text-right">
+                <div style="width: 10%; min-width: 0" class="text-truncate">
                   <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
@@ -184,12 +222,12 @@
                 <!-- Columna 5: Acciones -->
                 <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
                   <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar Ruta">
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar Ruta">
                       <v-icon size="20">mdi-delete</v-icon>
@@ -339,11 +377,11 @@ export default {
     branch_id: "",
     data: {},
     headers: [
-      { title: "Ruta", value: "name", width: "15%" },
-      { title: "Origen", value: "originName", width: "30%" },
-      { title: "Destino", value: "destinationName", width: "30%" },
-      { title: "Precio", value: "price", width: "10%" },
-      { title: "Acciones", value: "actions", sortable: false, width: "15%" },
+      { title: "Ruta", key: "name", width: "15%" },
+      { title: "Origen", key: "originName", width: "30%" },
+      { title: "Destino", key: "destinationName", width: "30%" },
+      { title: "Precio", key: "price", width: "10%" },
+      { title: "Acciones", key: "actions", sortable: false, width: "15%" },
     ],
 
     editedItem: {
@@ -408,33 +446,26 @@ export default {
       this.data = {};
       const firstBranchRoute = this.branchroutes[0];
       const targetOriginId = firstBranchRoute?.origin_id;
+      this.data.branch_id = this.branch_id;
       try {
         const result = await handleRequest({
-          endpoint: "route",
-          method: "GET",
+          endpoint: "route-index-branch",
+          method: "POST",
+          data:this.data,
         });
 
         if (result.success) {
           // Obtenemos el origin_id de la primera ruta en branchroutes (si existe)
-          const firstBranchRoute = this.branchroutes[0];
-          const targetOriginId = firstBranchRoute?.origin_id;
+          /*const firstBranchRoute = this.branchroutes[0];
+          const targetOriginId = firstBranchRoute?.origin_id;*/
 
           // Filtramos las rutas
-          this.routes =
-            result.data?.routes.filter((route) => {
-              // 1. Filtramos rutas que no estén ya en branchroutes
-              const notInBranchRoutes = !this.branchroutes.some(
-                (branchroute) => branchroute.route_id === route.id
-              );
-
-              // 2. Si hay un targetOriginId, solo mostramos rutas con ese origin_id
-              //    Si no hay targetOriginId (no hay branchroutes), mostramos todas
-              const matchesOrigin = targetOriginId
-                ? route.origin_id === targetOriginId
-                : true;
-
-              return notInBranchRoutes && matchesOrigin;
-            }) || [];
+          this.routes = result.data?.routes.filter(
+              (route) =>
+                !this.branchroutes.some(
+                  (branchroute) => branchroute.route_id === route.id
+                ) || route.id === this.editedItem.route_id
+            ) || [];
         } else {
           this.routes = [];
         }
@@ -567,22 +598,19 @@ export default {
     },
     async editItem(item) {
       this.editedIndex = 1;
+      this.data = {};
       this.originalItem = Object.assign({}, item);
       this.editedItem = Object.assign({}, item);
+       this.data.branch_id = this.branch_id;
       try {
         const result = await handleRequest({
-          endpoint: "route",
-          method: "GET",
+          endpoint: "route-index-branch",
+          method: "POST",
+          data: this.data,
         });
 
         if (result.success) {
-          this.routes =
-            result.data?.routes.filter(
-              (route) =>
-                !this.branchroutes.some(
-                  (branchroute) => branchroute.route_id === route.id
-                ) || route.id === this.editedItem.route_id
-            ) || [];
+          this.routes = result.data?.routes || [];
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];
@@ -692,7 +720,7 @@ export default {
   text-overflow: ellipsis;
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* Máxima especificidad para ocultar el thead 
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
@@ -710,5 +738,5 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
-}
+}*/
 </style>

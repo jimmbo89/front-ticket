@@ -11,17 +11,17 @@
             </v-col>
         </v-row>
     </v-snackbar>
-      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
+      <v-card class="d-flex align-center pa-3" elevation="0">
+    <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-map-marker-path</v-icon>
-    </v-avatar>
+    </v-avatar>-->
 
-    <!-- Texto -->
+    <!-- Texto 
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Plantilla de Viajes</div>
       <div class="text-body-2 text-grey">Gestionar Plantillas de Viajes</div>
-    </div>
+    </div>-->
 
     <!-- Botones -->
     <v-spacer></v-spacer>
@@ -31,12 +31,12 @@
       Agregar Plantilla de Viaje
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
+  <!--<v-container style="min-width: 100%;">-->
    <v-card flat>
   <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-h6 font-weight-bold">Listado de plantillas de viajes</div>
+    <div class="text-body-1 font-weight-bold">Listado de plantillas de viajes</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -67,13 +67,79 @@
     </div>
   </v-card-title>
 
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
 
   <!-- Tabla de viajes con filas personalizadas -->
   <v-data-table :headers="headers" :items="templates" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+  <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Ruta
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Origen
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Destino
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Vehículo
+              </div>
+
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+                Trabajadores
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+                Horario
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Duración
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Precio
+              </div>
+
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+                Frecuencia
+              </div>
+
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Días
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+                Estado
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 6%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Fila personalizada -->
     <template v-slot:item="slotProps">
       <tr>
@@ -130,7 +196,7 @@
               </div>
 
               <!-- trabajadores -->
-              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                  <div class="avatar-row">
                                     <v-tooltip v-for="person in slotProps.item.workers" :key="person.id" bottom>
                                         <template v-slot:activator="{ props }">
@@ -148,7 +214,7 @@
                                 </div>
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.schedule }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -158,7 +224,7 @@
               </div>
 
               <!-- Horario -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.duration }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -168,7 +234,7 @@
               </div>
 
               <!-- Precio -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ formatNumber(slotProps.item.price) }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -178,7 +244,7 @@
               </div>
 
               <!-- frecuencia -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
               <div class="text-truncate text-center" v-if="slotProps.item.recurrence_pattern">
                                 <v-icon small class="me-1" :color="getRecurrenceColor(slotProps.item.recurrence_pattern)">{{ getRecurrenceIcon(slotProps.item.recurrence_pattern) }}</v-icon>
                                 <span >{{ translateRecurrence(slotProps.item.recurrence_pattern) }}</span>
@@ -214,30 +280,29 @@
                             <span v-else>-</span>
               </div>
 
-              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
-                <div class="selection-content">
-                                                    <v-icon :size="20"
-                                                            :color="slotProps.item.active ? 'success' : 'error'"
-                                                            :icon="slotProps.item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
-                                                            class="selection-icon"></v-icon>
-                                                    <span class="selection-text">{{ activeName(slotProps.item.active) }}</span>
-                                                </div>
-                                                 <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Estado: {{ activeName(slotProps.item.active) }}
-                  </span>
-                </v-tooltip>
+              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+                
+                <v-chip
+                                            :color="slotProps.item.active ? paleteColors.active : paleteColors.inactive"
+                                            :text-color="paleteColors.white">
+                                            {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                                        </v-chip>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                                            </span>
+                                        </v-tooltip>
               </div>
 
               <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 7%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+              <div class="d-flex gap-1" style="width: 6%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Editar plantilla deViaje">
                   <v-icon size="20">mdi-pencil</v-icon>
                 </v-btn>
 
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                   title="Eliminar plantilla de  Viaje">
                   <v-icon size="20">mdi-delete</v-icon>
@@ -250,8 +315,8 @@
     </template>
   </v-data-table>
 </v-card>
-  </v-container>
-    <!--<v-container style="min-width: 100%">
+  <!--</v-container>
+    <v-container style="min-width: 100%">
         <v-card elevation="6" class="mx-2">
             <v-toolbar :color="paleteColors.primary">
                 <v-row align="center">
@@ -447,7 +512,6 @@
                                             <template v-slot:item="{ props, item }">
                                                 <v-card class="mx-1 my-2" elevation="2">
                                                     <v-list-item v-bind="props">
-                                                        <v-list-item-content>
                                                             <v-row align="center" no-gutters>
                                                                 <!-- Columna 1: Origen -->
                                                                 <v-col cols="12" md="4" class="d-flex align-center">
@@ -506,7 +570,6 @@
                                                                     </div>
                                                                 </v-col>
                                                             </v-row>
-                                                        </v-list-item-content>
                                                     </v-list-item>
                                                 </v-card>
                                             </template>
@@ -600,7 +663,23 @@
                                         prepend-icon="mdi-timer" variant="underlined" :rules="durationRules"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" md="3">
-                                      <v-select
+                                    <v-switch 
+  v-model="editedItem.active" 
+  :true-value="true" 
+  :false-value="false"
+  :color="paleteColors.active"
+  hide-details 
+  inset 
+  class="custom-switch"
+>
+  <template v-slot:label>
+    <span class="text-body-1"
+      :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
+      {{ editedItem.active ? 'Activa' : 'Inactiva' }}
+    </span>
+  </template>
+</v-switch>
+                                      <!--<v-select
                                             v-model="editedItem.active"
                                             :items="statusOptions"
                                             item-value="value"
@@ -627,7 +706,7 @@
                                                     <span class="selection-text">{{ item.raw.text }}</span>
                                                 </div>
                                             </template>
-                                        </v-select>
+                                        </v-select>-->
                                     </v-col>
                                 </v-row>
                             </div>

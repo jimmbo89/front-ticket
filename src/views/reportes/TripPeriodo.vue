@@ -1,21 +1,28 @@
 <template>
-  <v-container style="min-width: 100%; min-height: 100%">
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar :color="paleteColors.primary">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Ventas Diarias</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-              prepend-icon="mdi-file-excel-box" @click="exportToExcel">
-              Exportar a Excel
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-map-marker-path</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Monto por Viajes</div>
+      <div class="text-body-2 text-grey">Monto por Viajes por Período</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.green" variant="tonal" elevation="2"
+      prepend-icon="mdi-file-excel" @click="exportToExcel">
+      Exportar a Excel
+    </v-btn>
+  </v-card>
+  <v-container style="min-width: 100%;">
+    <v-card flat>
       <v-card-text>
-        <v-row>
+        <v-row dense>
           <v-col cols="12" md="2">
             <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
               offset-y min-width="290px">
@@ -43,15 +50,6 @@
               </v-locale-provider>
             </v-menu>
           </v-col>
-          <v-col cols="12" md="3" v-if="type === 'Sucursal' && mostrarFila">
-            <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
-              label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
-              variant="underlined" :rules="selectRules" density="compact">
-              <template v-slot:item="{ props, item }">
-                <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                </v-list-item>
-              </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
-          </v-col>
           <v-col cols="12" md="2">
             <v-select v-model="type" :items="options" label="Seleccione una opción" variant="underlined"
               density="compact" item-title="title" item-value="value">
@@ -70,58 +68,79 @@
               </template>
             </v-select>
           </v-col>
+          <v-col cols="12" md="3" v-if="type === 'Sucursal' && mostrarFila">
+            <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
+              label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
+              variant="underlined" :rules="selectRules" density="compact">
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+                </v-list-item>
+              </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
+          </v-col>
           <v-col cols="12" md="3">
             <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
               <v-icon>mdi-magnify</v-icon></v-btn>
           </v-col>
         </v-row>
-        <v-row class="ma-0">
-          <v-col cols="12" class="text-h6 font-weight-bold text-center pa-1">
+        <v-row dense>
+          <!--<v-col cols="12" class="text-body-1 font-weight-medium text-center pa-1">
             {{ response.nombre }}
-          </v-col>
+          </v-col>-->
 
           <!-- Fecha -->
-          <v-col cols="12" class="text-h6 font-weight-bold text-center pa-1"> FECHA: {{ response.fecha }} </v-col>
+          <v-col cols="12" class="text-subtitle-1 font-weight-medium pa-1"> Fecha: {{ response.fecha }} </v-col>
 
-          <!-- Sección RESUMEN -->
-          <v-col cols="12" class="text-h6 font-weight-bold">
-            <strong>RESUMEN:</strong>
-          </v-col>
-
-          <!-- Cards informativas -->
-          <v-col cols="12" md="4" class="pa-1">
-            <v-card class="h-100" title="Pasajes emitidos" :subtitle="response.pasajesEmitidos">
-              <template v-slot:prepend>
-                <v-avatar color="blue-lighten-1">
-                  <v-icon>mdi-ticket-confirmation</v-icon>
-                </v-avatar>
+          <v-col cols="12" md="4" class="pa-1 text-body-1">
+            <v-card class="h-100 text-body-1 font-weight-medium rounded-lg">
+              <template v-slot:title>
+                <div class="text-subtitle-1 font-weight-medium">Pasajes emitidos</div>
+                <!-- Puedes usar: text-h4, text-h5, text-h6, text-subtitle-1, etc. -->
               </template>
-              <template v-slot:append>
-                <v-avatar color="blue-lighten-4" size="32">
-                  <v-icon color="blue-darken-2" size="20">mdi-plus</v-icon>
+
+              <template v-slot:subtitle>
+                <div class="text-subtitle-1 font-weight-medium">{{ response.pasajesEmitidos }}</div>
+              </template>
+
+              <template v-slot:prepend>
+                <v-avatar :color="paleteColors.green">
+                  <v-icon>mdi-ticket-confirmation</v-icon>
                 </v-avatar>
               </template>
             </v-card>
           </v-col>
 
-          <v-col cols="12" md="4" class="pa-1">
-            <v-card class="h-100" title="Reimpresiones" :subtitle="response.reimpresiones">
+          <!-- Card: Reimpresiones -->
+          <v-col cols="12" md="4" class="pa-1 text-body-1">
+            <v-card class="h-100 text-body-1 rounded-lg">
+              <template v-slot:title>
+                <div class="text-subtitle-1 font-weight-medium">Reimpresiones</div>
+              </template>
+
+              <template v-slot:subtitle>
+                <div class="text-subtitle-1 font-weight-medium">{{ response.reimpresiones }}</div>
+              </template>
+
               <template v-slot:prepend>
                 <v-avatar color="orange-lighten-1">
                   <v-icon>mdi-printer</v-icon>
                 </v-avatar>
               </template>
-              <template v-slot:append>
-                <v-avatar color="orange-lighten-4" size="32">
-                  <v-icon color="orange-darken-2" size="20">mdi-refresh</v-icon>
-                </v-avatar>
-              </template>
             </v-card>
           </v-col>
-          <v-col cols="12" md="4" class="pa-1">
-            <v-card class="h-100" title="TOTAL GENERAL" :subtitle="'$' + formatNumber(Number(response.totales))">
+
+          <!-- Card: Total General -->
+          <v-col cols="12" md="4" class="pa-1 text-body-1">
+            <v-card class="h-100 text-body-1 rounded-lg">
+              <template v-slot:title>
+                <div class="text-subtitle-1 font-weight-medium">Total General</div>
+              </template>
+
+              <template v-slot:subtitle>
+                <div class="text-subtitle-1 font-weight-medium"> ${{ formatNumber(Number(response.totales)) }}</div>
+              </template>
+
               <template v-slot:prepend>
-                <v-avatar color="blue-grey-lighten-1">
+                <v-avatar color="black">
                   <v-icon>mdi-scale-balance</v-icon>
                 </v-avatar>
               </template>
@@ -129,20 +148,22 @@
           </v-col>
           <br />
           <v-col cols="12" md="12" class="pa-1">
-            <v-card class="mt-4" elevation="2">
-              <v-card-title class="bg-blue-grey-lighten-5">
+            <v-card class="mt-4 rounded-lg" elevation="2">
+              <v-card-title class="bg-blue-grey-lighten-5 text-subtitle-1">
                 <v-icon start>mdi-credit-card-multiple</v-icon>
                 Totales por Método de Pago
               </v-card-title>
               <v-data-table :headers="headersMetodos" :items="response.totalesPorMetodo || []" :items-per-page="5"
                 class="elevation-0" density="comfortable" no-data-text="No se encontraron registros de pagos">
                 <template v-slot:item.metodo="{ item }">
-                  <v-chip :color="getMethodColor(item.metodo)" size="small" label>
+                  <v-chip :color="getMethodInfo(item.metodo).color" size="small" label
+                    class="font-weight-bold text-body-2">
+                    <v-icon start :icon="getMethodInfo(item.metodo).icon" size="small"></v-icon>
                     {{ item.metodo }}
                   </v-chip>
                 </template>
                 <template v-slot:item.cantidad="{ item }">
-                  <v-chip variant="outlined" size="small" :color="getMethodColor(item.metodo)">
+                  <v-chip variant="outlined" size="small" :color="getMethodColor(item.metodo)" class="font-weight-bold">
                     {{ item.cantidad }}
                   </v-chip>
                 </template>
@@ -153,8 +174,8 @@
                 </template>
                 <template v-slot:bottom>
                   <div class="text-right pa-2">
-                    <span class="text-subtitle-1">Total general: </span>
-                    <span class="text-h6 text-success">
+                    <span class="text-body-1 font-weight-medium">Total general: </span>
+                    <span class="font-weight-medium">
                       ${{ formatNumber(Number(response.totales)) }}
                     </span>
                   </div>
@@ -171,46 +192,41 @@
         <v-row>
           <v-col cols="12" class="mt-6">
             <v-card elevation="1" rounded="lg" class="tramos-card">
-              <v-card-title class="bg-blue-grey-lighten-5 d-flex align-center">
+              <v-card-title class="bg-blue-grey-lighten-5 d-flex align-center text-subtitle-1">
                 <v-icon start>mdi-map-marker-path</v-icon>
-                TRAMOS
+                Rutas
               </v-card-title>
 
               <v-card-text class="pa-0 tramos-container">
-                <v-expansion-panels variant="accordion" class="px-2">
-                  <v-expansion-panel v-for="(tramo, index) in response.tramos" :key="index" class="my-1">
-                    <v-expansion-panel-title class="py-2" expand-icon="mdi-chevron-down">
+                <v-expansion-panels variant="accordion" class="px-2 rounded-lg">
+                  <v-expansion-panel v-for="(tramo, index) in response.tramos" :key="index" class="my-1 rounded-lg">
+                    <v-expansion-panel-title class="py-1"
+                      :expand-icon="tramo.totalPasajes > 0 ? 'mdi-chevron-down' : undefined"
+                      :hide-actions="tramo.totalPasajes === 0">
                       <v-row align="center" no-gutters>
                         <v-col cols="7" md="8" class="d-flex align-center">
-                          <v-avatar :color="
-                              tramo.totalPasajes > 0
-                                ? 'green-lighten-4'
-                                : 'grey-lighten-3'
-                            " size="28" class="mr-2">
-                            <v-icon :color="tramo.totalPasajes > 0 ? 'green-darken-2' : 'grey'" size="16">
+                          <v-avatar :color="tramo.totalPasajes > 0 ? 'green-lighten-4' : 'grey-lighten-3'" size="28"
+                            class="mr-2">
+                            <v-icon :color="tramo.totalPasajes > 0 ? 'green-darken-2' : 'grey'" size="20">
                               mdi-road
                             </v-icon>
                           </v-avatar>
-                          <span class="font-weight-medium text-body-1">{{
-                            tramo.nombre
-                            }}</span>
+                          <div class="d-flex align-center">
+                            <span class="font-weight-medium text-body-1">{{ tramo.origin }}</span>
+                            <v-icon size="20" :color="tramo.totalPasajes > 0 ? 'green-darken-2' : 'grey'"
+                              class="mx-2">mdi-arrow-right</v-icon>
+                            <span class="font-weight-medium text-body-1">{{ tramo.destination }}</span>
+                          </div>
                         </v-col>
                         <v-col cols="5" md="4" class="text-right">
                           <v-tooltip location="top">
                             <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" :color="
-                                  tramo.totalPasajes > 0
-                                    ? 'green-lighten-2'
-                                    : 'grey-lighten-2'
-                                " :text-color="
-                                  tramo.totalPasajes > 0
-                                    ? 'green-darken-2'
-                                    : 'grey-darken-2'
-                                " variant="outlined" size="medium" class="mr-1 px-2" style="font-size: 1em">
-                                <v-icon start size="x-small">mdi-ticket</v-icon>
-                                <span class="font-weight-bold">{{
-                                  tramo.totalPasajes
-                                  }}</span>
+                              <v-chip v-bind="props"
+                                :color="tramo.totalPasajes > 0 ? 'green-lighten-2' : 'grey-lighten-2'"
+                                :text-color="tramo.totalPasajes > 0 ? 'green-darken-2' : 'grey-darken-2'"
+                                variant="outlined" size="20" class="mr-1 px-2 text-body-1 font-weight-bold">
+                                <v-icon start size="20">mdi-ticket</v-icon>
+                                <span class="text-body-1 font-weight-bold">{{ tramo.totalPasajes }}</span>
                               </v-chip>
                             </template>
                             <span>Total pasajes vendidos</span>
@@ -218,15 +234,12 @@
 
                           <v-tooltip location="top">
                             <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" :color="
-                                  tramo.totalTramo > 0
-                                    ? 'blue-lighten-2'
-                                    : 'grey-lighten-3'
-                                " :text-color="
-                                  tramo.totalTramo > 0 ? 'blue-darken-2' : 'grey-darken-2'
-                                " size="medium" class="mr-1 px-2" style="font-size: 1em">
-                                <v-icon start size="x-small">mdi-cash</v-icon>
-                                <span class="font-weight-bold">${{ formatNumber(Number(tramo.totalTramo)) }}</span>
+                              <v-chip v-bind="props" :color="tramo.totalTramo > 0 ? 'green-darken-2' : 'grey-lighten-3'"
+                                :text-color="tramo.totalTramo > 0 ? 'green-darken-2' : 'grey-darken-2'" size="medium"
+                                class="mr-1 px-2 text-body-1 font-weight-bold">
+                                <v-icon start size="20">mdi-cash</v-icon>
+                                <span class="text-body-1 font-weight-bold">${{
+                                  formatNumber(Number(tramo.totalTramo)) }}</span>
                               </v-chip>
                             </template>
                             <span>Total recaudado</span>
@@ -235,17 +248,21 @@
                       </v-row>
                     </v-expansion-panel-title>
 
-                    <v-expansion-panel-text class="pt-2 pb-3">
-                      <v-card variant="flat" class="border">
+                    <!-- Solo mostrar el contenido si hay pasajes -->
+                    <v-expansion-panel-text v-if="tramo.totalPasajes > 0" class="pt-2 pb-1 rounded-lg">
+                      <v-card variant="flat" class="border rounded-lg">
                         <v-data-table :headers="headersTramoMetodos" :items="tramo.totalesPorMetodo || []"
                           :items-per-page="3" density="compact" class="elevation-0 metodo-pago-table">
                           <template v-slot:item.metodo="{ item }">
-                            <v-chip :color="getMethodColor(item.metodo)" size="small" label>
+                            <v-chip :color="getMethodInfo(item.metodo).color" size="small" label
+                              class="font-weight-bold text-body-2">
+                              <v-icon start :icon="getMethodInfo(item.metodo).icon" size="small"></v-icon>
                               {{ item.metodo }}
                             </v-chip>
                           </template>
                           <template v-slot:item.cantidad="{ item }">
-                            <v-chip variant="outlined" size="small" :color="getMethodColor(item.metodo)">
+                            <v-chip variant="outlined" size="small" :color="getMethodColor(item.metodo)"
+                              class="font-weight-bold text-body-1">
                               {{ item.cantidad }}
                             </v-chip>
                           </template>
@@ -255,13 +272,10 @@
                             </span>
                           </template>
                           <template v-slot:bottom>
-                            <div class="text-right pa-2" :class="
-                                'bg-' +
-                                getMethodColor(tramo.totalesPorMetodo[0]?.metodo) +
-                                '-lighten-5'
-                              ">
-                              <span class="text-caption mr-2">Subtotal:</span>
-                              <span class="text-body-1 font-weight-bold text-success">
+                            <div class="text-right pa-2"
+                              :class="'bg-' + getMethodColor(tramo.totalesPorMetodo[0]?.metodo) + '-lighten-5'">
+                              <span class="text-body-1 font-weight-bold">Subtotal:</span>
+                              <span class="text-body-1 font-weight-bold">
                                 ${{ formatNumber(Number(tramo.totalTramo)) }}
                               </span>
                             </div>
@@ -278,8 +292,8 @@
               <v-card-actions v-if="response.tramos?.length > 0" class="bg-blue-grey-lighten-5">
                 <v-spacer></v-spacer>
                 <div class="text-right">
-                  <span class="text-subtitle-1 mr-2">TOTAL GENERAL:</span>
-                  <span class="text-h5 text-green-darken-2 font-weight-bold">
+                  <span class="text-body-1 font-weight-bold">Total General:</span>
+                  <span class="text-body-1 font-weight-bold">
                     ${{
                     formatNumber(
                     Number(
@@ -413,6 +427,27 @@ export default {
 
       return methodColors[normalized] || "grey";
     },
+    getMethodInfo(metodo) {
+  if (!metodo) return { color: "grey", icon: "mdi-help-circle" };
+
+  const normalized = metodo
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  const methodData = {
+    efectivo: { color: "green", icon: "mdi-cash" },
+    debito: { color: "blue", icon: "mdi-credit-card-outline" },
+    credito: { color: "orange", icon: "mdi-credit-card" },
+    "tarjeta debito": { color: "blue", icon: "mdi-credit-card-outline" },
+    "tarjeta credito": { color: "orange", icon: "mdi-credit-card" },
+    // ... más métodos
+  };
+
+  return methodData[normalized] || { color: "grey", icon: "mdi-help-circle" };
+},
     async showBranches() {
       try {
         const result = await handleRequest({
@@ -526,14 +561,6 @@ export default {
       rows.push(["FECHA:", this.response.fecha]);
       rows.push([]); // Fila vacía para separar
 
-      // 3. Resumen
-      rows.push(["RESUMEN:"]);
-      rows.push([]); // Fila vacía para separar
-
-      // 4. Emisión de pasajes
-      rows.push(["EMISIÓN DE PASAJES:"]);
-      rows.push([]); // Fila vacía para separar
-
       // 5. Pasajes emitidos y reimpresiones
       rows.push(["Pasajes emitidos:", this.response.pasajesEmitidos]);
       rows.push(["Reimpresiones:", this.response.reimpresiones]);
@@ -561,7 +588,7 @@ export default {
 
       // 10. Sección de tramos
       rows.push(["---------------------------------------------"]);
-      rows.push(["TRAMOS:"]);
+      rows.push(["Rutas:"]);
       rows.push(["---------------------------------------------"]);
       rows.push([]); // Fila vacía para separar
 
@@ -579,7 +606,7 @@ export default {
         });
 
         // Total del tramo
-        rows.push(["Total Tramo:", tramo.totalTramo]);
+        rows.push(["Total Ruta:", tramo.totalTramo]);
 
         // Totales por método de pago (monto) en el tramo
         tramo.totalesPorMetodo.forEach((total) => {

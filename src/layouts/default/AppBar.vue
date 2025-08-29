@@ -142,7 +142,7 @@
           <div v-bind="{...tooltipProps, ...menuProps}" class="mobile-avatar-wrapper">
             <v-avatar class="mr-2" size="40">
               <v-img 
-                :src="`${$axios.defaults.baseURL}images/${imageUrl}`" 
+                :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" 
                 alt="Avatar"
               />
             </v-avatar>
@@ -173,7 +173,7 @@
         <template v-slot:prepend>
           <v-avatar class="mr-2">
             <v-img 
-              :src="`${$axios.defaults.baseURL}images/${imageUrl}`" 
+              :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" 
               alt="Avatar"
             />
           </v-avatar>      

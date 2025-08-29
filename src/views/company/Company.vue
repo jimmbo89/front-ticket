@@ -11,7 +11,7 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-4" elevation="0" style="background-color: #f9f9f9">
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-office-building</v-icon>
@@ -26,19 +26,50 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn color="primary" class="text-subtitle-1 ml-12" variant="tonal" elevation="2" prepend-icon="mdi-plus-circle"
-      @click="showAddBussines">
+    <v-btn v-if="companies.length <= 0" class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal"
+      elevation="2" prepend-icon="mdi-plus-circle" @click="showAddBussines">
       Agregar Empresa
     </v-btn>
   </v-card>
-
   <v-container fluid>
-    <v-card elevation="0" class="">
+    <!-- Encabezado alineado con v-col (para que coincida con filas posteriores) -->
+    <v-card elevation="0">
       <v-card-text>
+        <v-card color="blue-grey-lighten-5" class="mb-2 rounded-lg"
+          style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px;" density="comfortable">
+          <v-card-text class="pa-0" style="height: 100%">
+            <v-row no-gutters align="center" class="text-body-2 font-weight-bold" style="height: 40px; padding: 0 16px">
+              <!-- Vehículo (10%) -->
+              <v-col cols="auto" class="text-left">
+
+              </v-col>
+
+              <!-- Marca (7%) -->
+              <v-col cols="5" class="text-left">
+                Nombre/Dirección
+              </v-col>
+
+              <!-- Recorrido (30%) -->
+              <v-col cols="3" class="text-left">
+                Rut
+              </v-col>
+
+              <!-- Fecha (10%) -->
+              <v-col cols="2" class="text-left">
+                Teléfono
+              </v-col>
+
+              <!-- Horario (10%) -->
+              <v-col cols="2" class="text-left">
+
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
         <v-card v-for="(company, index) in companies" :key="index" class="mb-4 rounded-lg pa-2" density="comfortable"
           elevation="2">
           <v-row>
-            <v-col cols="auto" class="d-flex justify-start">
+            <v-col cols="auto" class="d-flex text-left">
               <v-dialog max-width="500" class="rounded-lg">
                 <!-- Activator: Solo el avatar es clickeable -->
                 <template v-slot:activator="{ props: activatorProps }">
@@ -108,12 +139,12 @@
               </div>
             </v-col>
             <v-col cols="2" class="d-flex align-center justify-end">
-              <v-btn variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }" class="me-1"
-                :color="paleteColors.primary" @click="editItem(company)" size="small" title="Editar">
+              <v-btn icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                :color="paleteColors.primary" @click="editItem(company)" size="35" title="Editar">
                 <v-icon size="20">mdi-pencil</v-icon>
               </v-btn>
-              <v-btn variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
-                :color="paleteColors.error" @click="deleteItem(company)" size="small" title="Eliminar">
+              <v-btn icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                :color="paleteColors.error" @click="deleteItem(company)" size="35" title="Eliminar" class="ml-1">
                 <v-icon size="20">mdi-delete</v-icon>
               </v-btn>
             </v-col>
@@ -626,7 +657,7 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 .icono-concavo {
   width: 45px;
   height: 45px;
@@ -650,5 +681,30 @@ export default {
   bottom: 2px;
   border-radius: 8px;
   background: transparent;
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
+/* Máxima especificidad para ocultar el thead */
+.v-data-table > .v-data-table__wrapper > table > thead,
+.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
+.v-data-table__content > table > thead,
+.v-data-table__content > thead,
+table.v-table > thead,
+.v-table > .v-table__wrapper > table > thead {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+.hidden-header .v-data-table__content > table > thead {
+  display: none !important;
 }
 </style>

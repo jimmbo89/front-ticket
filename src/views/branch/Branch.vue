@@ -13,7 +13,7 @@
   </v-snackbar>
   <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
     <!-- Icono -->
-   <v-avatar :color="paleteColors.primary" class="icono-concavo">
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-store</v-icon>
     </v-avatar>
 
@@ -36,7 +36,7 @@
       <!--<v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
           hide-details>
         </v-text-field>-->
-      <v-card-title class="d-flex align-center">
+      <v-card-title class="d-flex align-center text-body-1">
         <!--<v-avatar :color="paleteColors.primary" size="40">
       <v-icon>mdi-store</v-icon>
     </v-avatar> &nbsp;-->
@@ -48,23 +48,78 @@
           variant="solo-filled" hide-details single-line flat></v-text-field>
       </v-card-title>
 
-      <v-divider class="my-2"></v-divider>
       <v-data-table :headers="headers" :items="branches" :search="search" :items-per-page-text="'Elementos por páginas'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
-        <!-- Slot para cada fila -->
+        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." class="elevation-1"
+         style="max-height: 68vh; overflow-y: auto; background: transparent" :hide-default-header="true">
+        <!-- Header como tarjeta (fuera de thead) -->
+       <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) 
+              <div style="width: 20%; min-width: 0" class="text-left text-subtitle-2">
+                Empresa
+              </div>-->
+
+              <!-- Nombre (20%) -->
+              <div style="width: 25%; min-width: 0" class="text-left text-subtitle-2">
+                Nombre
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 15%; min-width: 0" class="text-left text-subtitle-2">
+                Teléfono
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 35%; min-width: 0" class="text-left text-subtitle-2">
+                Dirección
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 25%; min-width: 0" class="d-flex justify-left text-subtitle-2">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
+
+        <!-- Fila personalizada (tu código actual, sin cambios) -->
         <template v-slot:item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-               <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+            <td style="padding: 0; border: none">
+              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
                 <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Columna 1: Nombre -->
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                  <!-- Negocio -->
+                  <!--<div class="d-flex align-center" style="width: 20%; min-width: 0">
+                    <v-avatar class="mr-3 icono-concavo">
+                      <v-img
+                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.companyImage}?t=${getCacheTimestamp()}`"
+                        class="icono-concavo" cover></v-img>
+                    </v-avatar>
+                    <span class="text-truncate">{{ slotProps.item.companyName }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Empresa: {{ slotProps.item.companyName }}
+                      </span>
+                    </v-tooltip>
+                  </div>-->
+
+                  <!-- Nombre -->
+                  <div class="d-flex align-center" style="width: 25%; min-width: 0">
                     <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                          slotProps.item.image
-                        }?t=${getCacheTimestamp()}`" class="icono-concavo" cover>
-                      </v-img>
+                      <v-img
+                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
+                        class="icono-concavo" cover></v-img>
                     </v-avatar>
                     <span class="text-truncate">{{ slotProps.item.name }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -74,23 +129,8 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Columna 2: Compañía -->
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo">
-                      <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                          slotProps.item.companyImage
-                        }?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.companyName }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Empresa: {{ slotProps.item.companyName }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Columna 3: Teléfono -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                  <!-- Teléfono -->
+                  <div style="width: 15%; min-width: 0" class="text-truncate">
                     <span>{{ slotProps.item.phone }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -99,8 +139,8 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Columna 4: Dirección -->
-                  <div style="width: 25%; min-width: 0" class="text-truncate">
+                  <!-- Dirección -->
+                  <div style="width: 35%; min-width: 0" class="text-truncate">
                     <span>{{ slotProps.item.address }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -109,29 +149,29 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Columna 5: Acciones -->
+                  <!-- Acciones -->
                   <div class="d-flex gap-1" style="width: 25%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.green" @click="showAddWorker(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Agregar trabajador">
                       <v-icon size="20">mdi-account-plus</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.orange" @click="showAddVehicle(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Agregar vehículo">
                       <v-icon size="20">mdi-car</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.route" @click="showAddRoute(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Agregar ruta">
                       <v-icon size="20">mdi-map-marker</v-icon>
                     </v-btn>
-                    <v-btn size="small" :style="{ 'border-width': '2px', 'border-style': 'solid' }" variant="outlined"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar">
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar">
                       <v-icon size="20">mdi-delete</v-icon>
@@ -155,7 +195,7 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="12" md="12">
+              <!--<v-col cols="12" md="12">
                 <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.company_id"
                   :items="companies" label="Negocios" prepend-icon="mdi-store-outline" item-title="name" item-value="id"
                   variant="underlined" :rules="selectRules">
@@ -165,7 +205,7 @@
                       :title="item.raw.name"></v-list-item>
                   </template>
                 </v-autocomplete>
-              </v-col>
+              </v-col>-->
               <v-col cols="12" md="12">
                 <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-store"
                   variant="underlined" :rules="nameRules"></v-text-field>
@@ -309,12 +349,12 @@ export default {
     dialogBranchVehicle: null,
     dialogBranchRoute: null,
     headers: [
-      { title: "Negocio", value: "companyName" },
-      { title: "Nombre", value: "name", width: "20%" },
-      //{ title: "Rut", value: "rut", width: "10%" },
-      { title: "Teléfono", value: "phone" },
-      { title: "Dirección", value: "address" },
-      { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+      { title: "Negocio", key: "companyName" },
+      { title: "Nombre", key: "name",},
+      //{ title: "Rut", key: "rut", width: "10%" },
+      { title: "Teléfono", key: "phone" },
+      { title: "Dirección", key: "address" },
+      { title: "Acciones", key: "actions", sortable: false,},
     ],
 
     editedItem: {
@@ -457,6 +497,7 @@ export default {
       this.loading = true;
       if (this.editedIndex === -1) {
         this.valid = false;
+        this.data = {};
         this.data.name = this.editedItem.name;
         this.data.company_id = this.editedItem.company_id;
         this.data.address = this.editedItem.address;
@@ -759,7 +800,7 @@ export default {
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
+/*.v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
 .v-data-table__content > thead,
@@ -776,6 +817,6 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
-}
+}*/
 
 </style>

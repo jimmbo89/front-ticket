@@ -33,7 +33,7 @@
   </v-card>
     <v-container style="min-width: 100%;">
     <v-card flat>
-      <v-card-title class="d-flex align-center">
+      <v-card-title class="d-flex align-center text-body-1">
         Listado de roles
         <v-spacer></v-spacer>
 
@@ -43,8 +43,44 @@
 
       <v-divider class="my-2"></v-divider>
       <v-data-table :headers="headers" :items="roles" :search="search" :items-per-page-text="'Elementos por páginas'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+
+       <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Nombre
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Tipo
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 50%; min-width: 0" class="text-left font-weight-bold">
+                Descripción
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
         <!-- Slot para cada fila -->
         <template v-slot:item="slotProps">
           <tr>
@@ -62,7 +98,7 @@
                   </div>
 
                   <!-- Columna 3: tipo -->
-                  <div style="width: 15%; min-width: 0" class="text-truncate text-center">
+                  <div style="width: 15%; min-width: 0" class="text-truncate text-left">
                     <v-avatar class="mr-1  avatar-border" elevation="3" size="small">
                       <v-icon :title=" slotProps.item.type">
                         {{ getTypeIcon( slotProps.item.type) }}
@@ -88,17 +124,17 @@
 
                   <!-- Columna 5: Acciones -->
                   <div class="d-flex gap-1" style="width: 15%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="small" :style="{ 'border-width': '2px', 'border-style': 'solid' }" variant="outlined"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar">
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.green" @click="showAddPermission(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Asignar permisosr">
                       <v-icon size="20">mdi-shield-check</v-icon>
                     </v-btn>
-                    <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar">
                       <v-icon size="20">mdi-delete</v-icon>

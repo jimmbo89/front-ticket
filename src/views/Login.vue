@@ -335,7 +335,7 @@ export default {
 
           // Redirigir al Dashboard
           setTimeout(() => {
-            router.push({ name: 'Dashboard' });
+            router.push({ name: 'Home' });
           }, 1000);
         } else {
           this.loading = false; // Detener el loader

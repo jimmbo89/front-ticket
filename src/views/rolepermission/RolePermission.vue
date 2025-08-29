@@ -61,7 +61,7 @@
         </v-card>
     </v-container>-->
     <v-card flat>
-    <v-card-title class="d-flex align-center">
+    <v-card-title class="d-flex align-center text-body-1">
       Listado de permisos
 
       <v-spacer></v-spacer>
@@ -70,12 +70,45 @@
         variant="solo-filled" hide-details single-line flat></v-text-field>
     </v-card-title>
 
-    <v-divider class="my-2"></v-divider>
-
     <v-data-table :headers="headers" :items="rolepermissions" :search="search"
       :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." hide-default-header class="elevation-1 hidden-header"
+      loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
       style="max-height: 68vh; overflow-y: auto; background: transparent">
+      <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Nombre
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Módulo
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
+                Descripción
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
       <!-- Slot personalizado para cada fila -->
       <template v-slot:item="slotProps">
         <tr>
@@ -115,7 +148,7 @@
                 <!-- Columna 5: Acciones -->
                 <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
                   <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                       <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                       <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                       title="Eliminar Permiso">
                       <v-icon size="20">mdi-delete</v-icon>

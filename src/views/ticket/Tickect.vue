@@ -100,7 +100,7 @@
   <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-h6 font-weight-bold">Tickets Vendidos</div>
+    <div class="text-subtitle-1 font-weight-bold">Listado deTickets Vendidos</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -136,8 +136,74 @@
 
   <!-- Tabla de viajes con filas personalizadas -->
   <v-data-table :headers="headers" :items="tickets" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Ruta
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Origen
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Destino
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+                Fecha
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Horario
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+                Método
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Pasajes
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Asientos
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+                Precio
+              </div>
+
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+                Total
+              </div>
+
+
+
+              <!-- Acciones (25%) -->
+              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Fila personalizada -->
     <template v-slot:item="slotProps">
       <tr>
@@ -145,7 +211,7 @@
           <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
             <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
 
-              <div style="width: 12%; min-width: 0" class="text-truncate">
+              <div style="width: 10%; min-width: 0" class="text-truncate">
                 <span>{{ slotProps.item.tripName }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -178,7 +244,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 7%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.date }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -187,7 +253,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.schedule }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -196,7 +262,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.method }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -205,7 +271,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 3%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.quantity }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -214,7 +280,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 3%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.seats }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -223,7 +289,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -232,7 +298,7 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ formatNumber(Number(slotProps.item.total)) }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -242,20 +308,20 @@
               </div>
 
               <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 12%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+              <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Editar Ticket">
                   <v-icon size="20">mdi-pencil</v-icon>
                 </v-btn>
 
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.green" @click="printerItem(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Reimprimir Ticket">
                   <v-icon size="20">mdi-printer</v-icon>
                 </v-btn>
 
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                   title="Eliminar Ticket">
                   <v-icon size="20">mdi-delete</v-icon>
@@ -447,18 +513,16 @@
                                         <v-row align="center">
                                             <v-col cols="12" md="6">
                                                 <v-text-field
-                                                    :model-value="ticket.cant"
-                                                    @update:modelValue="(val) => handleQuantityChange(ticket, val)"
+                                                    v-model.number="ticket.cant"
+                                                    @update:model-value="handleQuantityChange(ticket, $event)"
                                                     @blur="validateQuantity(ticket)"
                                                     :label="ticket.name"
                                                     variant="underlined"
                                                     density="compact"
                                                     type="number"
                                                     min="0"
-                                                    :max="getMaxQuantity(ticket)"
                                                     :error-messages="(currentlyEditing === ticket.id && seatError) || quantityErrors[ticket.id]"
                                                     hide-details="auto"
-                                                    @keypress="onlyNumbers"
                                                 ></v-text-field>
                                             </v-col>
                                             <v-col cols="12" md="6" class="d-flex align-center">
@@ -669,7 +733,7 @@
             
             <!-- Información de la sucursal -->
             <div class="text-center">
-            <div class="text-h6 font-weight-bold">{{ selectedBranch?.name || 'Nombre Sucursal' }}</div>
+            <div class="text-subtitle-1 font-weight-bold">{{ selectedBranch?.name || 'Nombre Sucursal' }}</div>
             <div class="text-body-2" v-if="selectedBranch?.rut">RUT: {{ selectedBranch.rut }}</div>
             <div class="text-body-2" v-if="selectedBranch?.address">Dirección: {{ selectedBranch.address }}</div>
             <div class="text-body-2" v-if="selectedBranch?.phone">Teléfono: {{ selectedBranch.phone }}</div>
@@ -827,19 +891,19 @@ export default {
         showSeatsMenu: false,
         showTicketDialog: false,
         headers: [
-            { title: "Ruta", value: "tripName", },
-            { title: "Origen", value: "tripOrigin", },
-            { title: "Destino", value: "tripDestination", },
-            { title: "Fecha", value: "date", },
-            { title: "Horario", value: "schedule", },
-            { title: "Metodo", value: "method", },
-            { title: "Pasajes", value: "quantity", },
-            //{ title: "Adultos", value: "adults", },
-            //{ title: "Menores", value: "minors", },
-            { title: "Asientos", value: "seats", },
-            { title: "Precio", value: "price", },
-            { title: "Total", value: "total", },
-            { title: "Acciones", value: "actions", sortable: false, width: "15%" },
+            { title: "Ruta", key: "tripName", },
+            { title: "Origen", key: "tripOrigin", },
+            { title: "Destino", key: "tripDestination", },
+            { title: "Fecha", key: "date", },
+            { title: "Horario", key: "schedule", },
+            { title: "Metodo", key: "method", },
+            { title: "Pasajes", key: "quantity", },
+            //{ title: "Adultos", key: "adults", },
+            //{ title: "Menores", key: "minors", },
+            { title: "Asientos", key: "seats", },
+            { title: "Precio", key: "price", },
+            { title: "Total", key: "total", },
+            { title: "Acciones", key: "actions", sortable: false, width: "15%" },
         ],
 
         editedItem: {

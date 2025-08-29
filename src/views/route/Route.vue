@@ -1,6 +1,14 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -11,7 +19,11 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+  <v-card
+    class="d-flex align-center pa-3"
+    elevation="0"
+    style="background-color: #f9f9f9"
+  >
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-road-variant</v-icon>
@@ -26,12 +38,18 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      class="text-subtitle-1 ml-12"
+      :color="paleteColors.primary"
+      variant="tonal"
+      elevation="2"
+      prepend-icon="mdi-plus-circle"
+      @click="showAdd()"
+    >
       Agregar Ruta
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
+  <v-container style="min-width: 100%">
     <!--<v-card elevation="6" class="mx-2">
       <v-card-text>
         <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
@@ -62,111 +80,219 @@
       </v-card-text>
     </v-card>-->
     <v-card flat class="mt-4">
-  <!-- Barra superior con título y búsqueda -->
-  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-    <!-- Título -->
-    <div class="text-h6 font-weight-bold">Listado de rutas</div>
+      <!-- Barra superior con título y búsqueda -->
+      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+        <!-- Título -->
+        <div class="text-subtitle-1 font-weight-bold">Listado de rutas</div>
 
-    <!-- Spacer (solo visible en md+) -->
-    <v-spacer class="d-none d-md-block"></v-spacer>
+        <!-- Spacer (solo visible en md+) -->
+        <v-spacer class="d-none d-md-block"></v-spacer>
 
-    <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 300px">
-      <v-text-field v-model="search" density="compact" label="Buscar ruta" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </div>
-  </v-card-title>
+        <!-- Campo de búsqueda global -->
+        <div class="flex-grow-1" style="max-width: 30%">
+          <v-text-field
+            v-model="search"
+            density="compact"
+            label="Buscar ruta"
+            prepend-inner-icon="mdi-magnify"
+            variant="solo-filled"
+            hide-details
+            single-line
+            flat
+          ></v-text-field>
+        </div>
+      </v-card-title>
 
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
-
-  <!-- Tabla de rutas con filas personalizadas -->
-  <v-data-table :headers="headers" :items="routes" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-    class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
-    <!-- Fila personalizada -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              <!-- Nombre -->
-              <div style="width: 15%; min-width: 0" class="text-truncate">
-                <span>{{ slotProps.item.name }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Nombre: {{ slotProps.item.name }}
-                  </span>
-                </v-tooltip>
+      <!-- Tabla de rutas con filas personalizadas -->
+      <v-data-table
+        :headers="headers"
+        :items="routes"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="elevation-1"
+        style="max-height: 68vh; overflow-y: auto; background: transparent"
+      >
+        <template v-slot:top>
+          <!-- Tarjeta de encabezado con alto fijo -->
+          <v-card
+            flat
+            color="blue-grey-lighten-5"
+            class="mb-2 mx-1 rounded-lg"
+            elevation="1"
+            style="
+              border: 1px solid #eceff1;
+              height: 56px;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <v-card-text
+              class="d-flex pa-2"
+              style="
+                width: 100%;
+                min-width: 0;
+                height: 100%;
+                padding: 0 16px !important;
+                display: flex;
+                align-items: center;
+              "
+            >
+              <!-- Negocio (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Nombre de la ruta
               </div>
 
-              <!-- Origen con avatar -->
-              <div class="d-flex align-center" style="width: 30%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.originAddress }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Origen: {{ slotProps.item.originAddress }}
-                  </span>
-                </v-tooltip>
+              <!-- Nombre (20%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+                Origen
               </div>
 
-              <!-- Destino con avatar -->
-              <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.destinationAddress }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Destino: {{ slotProps.item.destinationAddress }}
-                  </span>
-                </v-tooltip>
+              <!-- Teléfono (10%) -->
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
+                Destino
               </div>
 
-              <!-- Distancia -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
-                <span>{{ slotProps.item.distance }} km</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Distancia: {{ slotProps.item.distance }} km
-                  </span>
-                </v-tooltip>
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Distancia
               </div>
 
-              <!-- Duración -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
-                <span>{{ slotProps.item.estimated }} min</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Duración: {{ slotProps.item.estimated }} minutos
-                  </span>
-                </v-tooltip>
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Duración
               </div>
 
-              <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
-                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                  title="Editar Ruta">
-                  <v-icon size="20">mdi-pencil</v-icon>
-                </v-btn>
-
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
-                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                  title="Eliminar Ruta">
-                  <v-icon size="20">mdi-delete</v-icon>
-                </v-btn>
-              </div>
+              <!-- Acciones (25%) -->
+              <div
+                style="width: 10%; min-width: 0"
+                class="d-flex justify-left font-weight-bold"
+              ></div>
             </v-card-text>
           </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-</v-card>
+        </template>
+        <!-- Fila personalizada -->
+        <template v-slot:item="slotProps">
+          <tr>
+            <td colspan="100%" style="padding: 0; border: none">
+              <v-card
+                class="mb-2 mx-1 rounded-lg"
+                elevation="1"
+                density="comfortable"
+                flat
+              >
+                <v-card-text
+                  class="d-flex align-center pa-2"
+                  style="width: 100%; min-width: 0"
+                >
+                  <!-- Nombre -->
+                  <div style="width: 15%; min-width: 0" class="text-truncate">
+                    <span>{{ slotProps.item.name }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Nombre: {{ slotProps.item.name }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Origen con avatar -->
+                  <div class="d-flex align-center" style="width: 30%; min-width: 0">
+                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                      <v-img
+                        :src="`${this.$axios.defaults.baseURL}images/${
+                          slotProps.item.originImage
+                        }?t=${getCacheTimestamp()}`"
+                        cover
+                      ></v-img>
+                    </v-avatar>
+                    <span class="text-truncate">{{ slotProps.item.originAddress }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Origen: {{ slotProps.item.originAddress }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Destino con avatar -->
+                  <div class="d-flex align-center" style="width: 25%; min-width: 0">
+                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                      <v-img
+                        :src="`${this.$axios.defaults.baseURL}images/${
+                          slotProps.item.destinationImage
+                        }?t=${getCacheTimestamp()}`"
+                        cover
+                      ></v-img>
+                    </v-avatar>
+                    <span class="text-truncate">{{
+                      slotProps.item.destinationAddress
+                    }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Destino: {{ slotProps.item.destinationAddress }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Distancia -->
+                  <div style="width: 10%; min-width: 0" class="text-truncate">
+                    <span>{{ slotProps.item.distance }} km</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Distancia: {{ slotProps.item.distance }} km
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Duración -->
+                  <div style="width: 10%; min-width: 0" class="text-truncate">
+                    <span>{{ slotProps.item.estimated }} min</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Duración: {{ slotProps.item.estimated }} minutos
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Acciones -->
+                  <div
+                    class="d-flex gap-1"
+                    style="width: 10%; justify-content: flex-end; flex-wrap: nowrap"
+                  >
+                    <v-btn
+                      size="35"
+                      icon
+                      variant="outlined"
+                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                      :color="paleteColors.primary"
+                      @click="editItem(slotProps.item)"
+                      class="flex-shrink-0 mr-1"
+                      title="Editar Ruta"
+                    >
+                      <v-icon size="20">mdi-pencil</v-icon>
+                    </v-btn>
+
+                    <v-btn
+                      size="35"
+                      icon
+                      variant="outlined"
+                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                      :color="paleteColors.error"
+                      @click="deleteItem(slotProps.item)"
+                      class="flex-shrink-0"
+                      title="Eliminar Ruta"
+                    >
+                      <v-icon size="20">mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
   </v-container>
   <v-dialog v-model="dialog" max-width="500px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
@@ -178,38 +304,76 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-store"
-                  variant="underlined" :rules="nameRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.name"
+                  clearable
+                  label="Nombre"
+                  prepend-icon="mdi-store"
+                  variant="underlined"
+                  :rules="nameRules"
+                ></v-text-field>
               </v-col>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.origin_id"
-                  :items="locations" label="Origen" prepend-icon="mdi-arrow-up-circle" item-title="address"
-                  item-value="id" variant="underlined" :rules="selectRules">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="editedItem.origin_id"
+                  :items="locations"
+                  label="Origen"
+                  prepend-icon="mdi-arrow-up-circle"
+                  item-title="address"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                >
                   <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
+                    <v-list-item
+                      v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.address"></v-list-item>
+                      :title="item.raw.address"
+                    ></v-list-item>
                   </template>
                 </v-autocomplete>
               </v-col>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.destination_id"
-                  :items="locations" label="Destino" prepend-icon="mdi-arrow-down-circle" item-title="address"
-                  item-value="id" variant="underlined" :rules="selectRules">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="editedItem.destination_id"
+                  :items="locations"
+                  label="Destino"
+                  prepend-icon="mdi-arrow-down-circle"
+                  item-title="address"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                >
                   <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
+                    <v-list-item
+                      v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.address"></v-list-item>
+                      :title="item.raw.address"
+                    ></v-list-item>
                   </template>
                 </v-autocomplete>
               </v-col>
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.distance" clearable label="Distancia (Km)" prepend-icon="mdi-ruler"
-                  variant="underlined" :rules="distanceRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.distance"
+                  clearable
+                  label="Distancia (Km)"
+                  prepend-icon="mdi-ruler"
+                  variant="underlined"
+                  :rules="distanceRules"
+                ></v-text-field>
               </v-col>
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.estimated" clearable label="Duración (Minutos)"
-                  prepend-icon="mdi-timer" variant="underlined" :rules="durationRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.estimated"
+                  clearable
+                  label="Duración (Minutos)"
+                  prepend-icon="mdi-timer"
+                  variant="underlined"
+                  :rules="durationRules"
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -218,7 +382,14 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid" :loading="loading">Aceptar</v-btn>
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="save"
+            :disabled="!valid"
+            :loading="loading"
+            >Aceptar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-form>
@@ -233,8 +404,12 @@
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete"> Cancelar </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm"> Aceptar </v-btn>
+        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+          Cancelar
+        </v-btn>
+        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+          Aceptar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -381,7 +556,11 @@ export default {
       } catch (error) {
         this.loading = false;
         // Captura de errores no controlados
-        this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
       } finally {
         this.loading = false;
       }
@@ -389,7 +568,6 @@ export default {
     async save() {
       this.loading = true;
       if (this.editedIndex === -1) {
-
         this.valid = false;
         const fieldsToUpdate = [
           "name",

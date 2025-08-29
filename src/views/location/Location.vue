@@ -59,7 +59,7 @@
   <!-- Barra superior con título y búsqueda -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-h6 font-weight-bold">Listado de lugares</div>
+    <div class="text-subtitle-1 font-weight-bold">Listado de lugares</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -70,13 +70,54 @@
 
   </v-card-title>
 
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
-
   <!-- Tabla de lugares con filas personalizadas -->
   <v-data-table :headers="headers" :items="locations" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-    class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+    class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 50%; min-width: 0" class="text-left font-weight-bold">
+                Dirección
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Longitud
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Latitud
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                País
+              </div>
+
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Ciudad
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Fila personalizada -->
     <template v-slot:item="slotProps">
       <tr>
@@ -138,13 +179,13 @@
 
               <!-- Acciones -->
               <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Editar Lugar">
                   <v-icon size="20">mdi-pencil</v-icon>
                 </v-btn>
 
-                <v-btn size="small" variant="outlined" :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
                   title="Eliminar Lugar">
                   <v-icon size="20">mdi-delete</v-icon>

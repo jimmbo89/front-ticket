@@ -57,37 +57,67 @@
         </v-data-table>
       </v-card-text>-->
       <v-card flat>
-  <v-card-title class="d-flex align-center">
-    Listado de trabajadores
+      <v-card-title class="d-flex align-center text-body-1">
+        Listado de trabajadores
 
-    <v-spacer></v-spacer>
+        <v-spacer></v-spacer>
 
-    <v-text-field
-      v-model="search"
-      density="compact"
-      label="Buscar trabajador"
-      prepend-inner-icon="mdi-magnify"
-      variant="solo-filled"
-      hide-details
-      single-line
-      flat
-    ></v-text-field>
-  </v-card-title>
+        <v-text-field
+          v-model="search"
+          density="compact"
+          label="Buscar trabajador"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo-filled"
+          hide-details
+          single-line
+          flat
+        ></v-text-field>
+      </v-card-title>
 
-  <v-divider class="my-2"></v-divider>
+      <v-divider class="my-2"></v-divider>
 
-  <v-data-table
-    :headers="headers"
-    :items="branchworkers"
-    :search="search"
-    :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles"
-    :loading="loading"
-    loading-text="Cargando datos..."
-    hide-default-header
-    class="elevation-1 hidden-header"
-    style="max-height: 68vh; overflow-y: auto; background: transparent"
+      <v-data-table
+        :headers="headers"
+        :items="branchworkers"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        class="elevation-1"
+        :hide-default-header="true"
+      style="max-height: 68vh; overflow-y: auto; background: transparent"
+      >
+          <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
   >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
+                Nombre del Trabajador
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+                Rol
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 30%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Slot personalizado para cada fila -->
     <template v-slot:item="slotProps">
       <tr>
@@ -96,7 +126,7 @@
             <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
               
               <!-- Columna 1: Nombre del trabajador con avatar -->
-              <div class="d-flex align-center" style="width: 30%; min-width: 0">
+              <div class="d-flex align-center" style="width: 40%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img
                     :src="`${$axios.defaults.baseURL}images/${slotProps.item.workerImage}?t=${getCacheTimestamp()}`"
@@ -114,7 +144,7 @@
               </div>
 
               <!-- Columna 2: Rol -->
-              <div style="width: 40%; min-width: 0" class="text-truncate">
+              <div style="width: 30%; min-width: 0" class="text-truncate">
                 <span>{{ slotProps.item.roleName }}</span>
                 <v-tooltip activator="parent" location="top" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -126,9 +156,7 @@
               <!-- Columna 3: Acciones -->
               <div class="d-flex gap-1" style="width: 30%; justify-content: flex-end; flex-wrap: nowrap">
                 <v-btn
-                  size="small"
-                  variant="outlined"
-                  :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary"
                   @click="editItem(slotProps.item)"
                   class="flex-shrink-0 mr-1"
@@ -137,9 +165,7 @@
                   <v-icon size="20">mdi-pencil</v-icon>
                 </v-btn>
                 <v-btn
-                  size="small"
-                  variant="outlined"
-                  :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error"
                   @click="deleteItem(slotProps.item)"
                   class="flex-shrink-0"
@@ -246,9 +272,9 @@ export default {
     branch_id: "",
     data: {},
     headers: [
-      { title: "Nombre del trabajdor", value: "workerName", width: "30%" },
-      { title: "Rol", value: "roleName", width: "40%" },
-      { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+      { title: "Nombre del trabajdor", key: "workerName", width: "40%" },
+      { title: "Rol", key: "roleName", width: "30%" },
+      { title: "Acciones", key: "actions", sortable: false, width: "20%" },
     ],
 
     editedItem: {
@@ -534,7 +560,7 @@ export default {
   },
 };
 </script>
-<style scope>
+<style>
 .icono-concavo {
   width: 45px;
   height: 45px;
@@ -566,7 +592,7 @@ export default {
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
+/*.v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
 .v-data-table__content > thead,
@@ -583,5 +609,5 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
-}
+}*/
 </style>

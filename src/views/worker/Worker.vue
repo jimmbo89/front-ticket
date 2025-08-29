@@ -59,7 +59,7 @@
   </v-card>
   -->
   <v-card flat>
-  <v-card-title class="d-flex align-center">
+  <v-card-title class="d-flex align-center text-body-1">
     Listado de trabajadores
 
     <v-spacer></v-spacer>
@@ -75,9 +75,6 @@
       flat
     ></v-text-field>
   </v-card-title>
-
-  <v-divider class="my-2"></v-divider>
-
   <v-data-table
     :headers="headers"
     :items="workers"
@@ -86,10 +83,62 @@
     no-data-text="No hay datos disponibles"
     :loading="loading"
     loading-text="Cargando datos..."
-    hide-default-header
+    :hide-default-header="true"
     class="elevation-1 hidden-header"
     style="max-height: 68vh; overflow-y: auto; background: transparent"
   >
+  <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
+                Nombre
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Usuario
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Correo
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Teléfono
+              </div>
+
+               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Rut
+              </div>
+
+               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Rol
+              </div>
+
+               <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Dirección
+              </div>
+
+              <!-- Acciones (25%) -->
+              <div style="width: 20%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Slot personalizado para cada fila -->
     <template v-slot:item="slotProps">
       <tr>
@@ -177,9 +226,7 @@
               <!-- Columna 8: Acciones -->
               <div class="d-flex gap-1" style="width: 20%; justify-content: flex-end; flex-wrap: nowrap">
                 <v-btn
-                  size="small"
-                  variant="outlined"
-                  :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.primary"
                   @click="editItem(slotProps.item)"
                   class="flex-shrink-0 mr-1"
@@ -189,9 +236,7 @@
                 </v-btn>
 
                 <v-btn
-                  size="small"
-                  variant="outlined"
-                  :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.teal"
                   @click="changePass(slotProps.item)"
                   class="flex-shrink-0 mr-1"
@@ -201,9 +246,7 @@
                 </v-btn>
 
                 <v-btn
-                  size="small"
-                  variant="outlined"
-                  :style="{ 'border-width': '2px', 'border-style': 'solid' }"
+                  size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.error"
                   @click="deleteItem(slotProps.item)"
                   class="flex-shrink-0"
@@ -348,8 +391,8 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="#DA7171" variant="flat" @click="closePass">Cancelar</v-btn>
-          <v-btn color="#1976D2" variant="flat" :loading="loading" @click="savePass" :disabled="editedPass.newPassword !== editedPass.newPassword1 || editedItem.newPassword === ''">Aceptar</v-btn>
+          <v-btn :color="paleteColors.gris" variant="flat" @click="closePass">Cancelar</v-btn>
+          <v-btn :color="paleteColors.primary" variant="flat" :loading="loading" @click="savePass" :disabled="editedPass.newPassword !== editedPass.newPassword1 || editedItem.newPassword === ''">Aceptar</v-btn>
         </v-card-actions>
       </v-card>
     </v-form>

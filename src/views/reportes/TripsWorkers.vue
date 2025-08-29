@@ -36,7 +36,7 @@
   <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-h6 font-weight-bold">Listado de viajes realizados</div>
+    <div class="text-subtitle-1 font-weight-bold">Listado de viajes realizados</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -136,13 +136,61 @@
     </div>
   </v-card-title>
 
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
-
   <!-- Tabla de viajes con filas personalizadas -->
   <v-data-table :headers="headers" :items="response" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." hide-default-header
-        class="elevation-1 hidden-header" style="max-height: 68vh; overflow-y: auto; background: transparent">
+    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
+        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <template v-slot:top>
+  <!-- Tarjeta de encabezado con alto fijo -->
+  <v-card
+    flat
+    color="blue-grey-lighten-5"
+    class="mb-2 mx-1 rounded-lg"
+    elevation="1"
+    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+  >
+    <v-card-text
+      class="d-flex pa-2"
+      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    >
+              <!-- Negocio (20%) -->
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+                Ruta
+              </div>
+
+              <!-- Nombre (20%) -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Fecha
+              </div>
+
+              <!-- Teléfono (10%) -->
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
+                Origen
+              </div>
+
+              <!-- Dirección (25%) -->
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
+                Destino
+              </div>
+
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Vehículo
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Salida
+              </div>
+
+             <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Llegada
+              </div>
+
+              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+                Pasajeros
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
     <!-- Fila personalizada -->
     <template v-slot:item="slotProps">
       <tr>
@@ -160,7 +208,7 @@
               </div>
 
               <!-- Fecha -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 10%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.date }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -209,7 +257,7 @@
               </div>
 
               <!-- Salida -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.start }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -219,7 +267,7 @@
               </div>
 
               <!-- Llegada -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.end }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -228,11 +276,11 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-truncate text-center">
+              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.passenger }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
-                    Pasajes: {{ slotProps.item.passenger }}
+                    Pasajeros: {{ slotProps.item.passenger }}
                   </span>
                 </v-tooltip>
               </div>
