@@ -22,13 +22,18 @@
   <v-container style="min-width: 100%;">
     <v-card flat>
       <v-card-text>
-        <v-row dense>
-          <v-col cols="12" md="2">
+        <v-row class="align-center" style="gap: 4px;" no-gutters>
+        <v-col cols="auto" class="text-subtitle-1 font-weight-medium pa-1"> Fecha: {{ response.fecha }} </v-col>
+        <v-spacer></v-spacer>
+          <v-col cols="auto">
             <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
               offset-y min-width="290px">
               <template v-slot:activator="{ props }">
-                <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
-                  prepend-inner-icon="mdi-calendar" label="Fecha de inicio" density="compact"></v-text-field>
+                <v-text-field v-bind="props" :modelValue="dateFormatted" variant="solo-filled"
+            hide-details
+            single-line
+            flat
+                  prepend-inner-icon="mdi-calendar" label="Fecha de inicio" density="compact" style="min-width: 150px;"></v-text-field>
               </template>
               <v-locale-provider locale="es">
                 <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
@@ -36,12 +41,15 @@
               </v-locale-provider>
             </v-menu>
           </v-col>
-          <v-col cols="12" md="2">
+          <v-col cols="auto">
             <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
               offset-y min-width="290px">
               <template v-slot:activator="{ props }">
-                <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="underlined"
-                  prepend-inner-icon="mdi-calendar" label="Fecha Terminación" density="compact"></v-text-field>
+                <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="solo-filled"
+            hide-details
+            single-line
+            flat
+                  prepend-inner-icon="mdi-calendar" label="Fecha Terminación" density="compact" style="min-width: 150px;"></v-text-field>
               </template>
               <v-locale-provider locale="es">
                 <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
@@ -50,8 +58,11 @@
               </v-locale-provider>
             </v-menu>
           </v-col>
-          <v-col cols="12" md="2">
-            <v-select v-model="type" :items="options" label="Seleccione una opción" variant="underlined"
+          <v-col cols="auto">
+            <v-select v-model="type" :items="options" label="Seleccione una opción" variant="solo-filled"
+            hide-details
+            single-line
+            flat
               density="compact" item-title="title" item-value="value">
               <!-- Personalizar cómo se muestran las opciones en la lista -->
               <template v-slot:item="{ props, item }">
@@ -68,16 +79,19 @@
               </template>
             </v-select>
           </v-col>
-          <v-col cols="12" md="3" v-if="type === 'Sucursal' && mostrarFila">
+          <v-col cols="auto" v-if="type === 'Sucursal' && mostrarFila">
             <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
               label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
-              variant="underlined" :rules="selectRules" density="compact">
+              variant="solo-filled"
+            hide-details
+            single-line
+            flat :rules="selectRules" density="compact">
               <template v-slot:item="{ props, item }">
                 <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
                 </v-list-item>
               </template> </v-autocomplete><!-- @update:model-value="initialize()">-->
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="auto">
             <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
               <v-icon>mdi-magnify</v-icon></v-btn>
           </v-col>
@@ -87,8 +101,8 @@
             {{ response.nombre }}
           </v-col>-->
 
-          <!-- Fecha -->
-          <v-col cols="12" class="text-subtitle-1 font-weight-medium pa-1"> Fecha: {{ response.fecha }} </v-col>
+          <!-- Fecha 
+          <v-col cols="12" class="text-subtitle-1 font-weight-medium pa-1"> Fecha: {{ response.fecha }} </v-col>-->
 
           <v-col cols="12" md="4" class="pa-1 text-body-1">
             <v-card class="h-100 text-body-1 font-weight-medium rounded-lg">
@@ -364,29 +378,23 @@ export default {
     date: null,
     endDate: null,
     options: [
-      { title: "Negocio", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
+      { title: "Empresa", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
       { title: "Sucursal", value: "Sucursal", icon: "mdi-store" }, // Opción Sucursal con ícono
     ],
   }),
   computed: {
     dateFormatted() {
       const date = this.input ? new Date(this.input) : new Date();
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${year}-${month}-${day}`;
-    },
-    dateFormatted1() {
-      const date = this.input2 ? new Date(this.input2) : new Date();
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${year}-${month}-${day}`;
+      return date.toISOString().split("T")[0];
     },
     getDate() {
       return this.input ? new Date(this.input) : new Date();
     },
-    getDate2() {
+    dateFormatted1() {
+      const date = this.input2 ? new Date(this.input2) : new Date();
+      return date.toISOString().split("T")[0];
+    },
+    getDate1() {
       return this.input2 ? new Date(this.input2) : new Date();
     },
   },
@@ -481,12 +489,16 @@ export default {
           this.type === "Company" ? Number(this.company_id) : Number(this.branch_id);
         this.data.type = this.type;
         // Formatear las fechas
-        const formattedDate = this.date
+        /*const formattedDate = this.date
           ? format(new Date(this.date), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd");
         const formattedEndDate = this.endDate
           ? format(new Date(this.endDate), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd");
+          : format(new Date(), "yyyy-MM-dd");*/
+           const formattedDate =
+        this.date ?? new Date().toISOString().split("T")[0];
+      const formattedEndDate =
+        this.endDate ?? new Date().toISOString().split("T")[0];
 
         // Comparar las fechas
         if (formattedDate === formattedEndDate) {
@@ -521,6 +533,12 @@ export default {
       }
     },
     formatNumber(value) {
+       const numberValue = parseFloat(value);
+
+    // Si no es un número válido, devolvemos '0.00'
+    if (isNaN(numberValue)) {
+      return '0.00';
+    }
       // Si el valor es menor que 1000, devuelve el valor original con dos decimales
       if (value < 1000) {
         return (Math.round((value + Number.EPSILON) * 100) / 100).toLocaleString(

@@ -11,17 +11,15 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
+  <v-card class="d-flex align-center pa-3" elevation="0">
+    <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-bus-side</v-icon>
     </v-avatar>
-
-    <!-- Texto -->
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Estructura de Asientos</div>
       <div class="text-body-2 text-grey">Gestionar Estructura de Asientos</div>
-    </div>
+    </div>-->
 
     <!-- Botones -->
     <v-spacer></v-spacer>
@@ -95,38 +93,6 @@
                       </span>
                     </v-tooltip>
                   </div>
-
-                  <!-- Destino con avatar 
-                                    <div class="d-flex align-center" style="width: 50%; min-width: 0">
-                                       <div class="seat-map-container">
-                                          <div v-for="(row, rowIndex) in slotProps.item.seatMap" :key="rowIndex" class="seat-row">
-                                          <div v-for="(seat, seatIndex) in row" :key="seatIndex" class="seat-container">
-                                            <div v-if="seat.type === 'seat'" 
-                                                :style="{ color: getSeatColor(seat) }" 
-                                                @click="handleSeatClick(rowIndex, seatIndex)" 
-                                                class="seat-icon-card" 
-                                                style="cursor: pointer; position: relative;">
-                                              <v-icon size="40">mdi-seat</v-icon>
-                                              <span class="seat-label-card">{{ seat.label }}</span>
-                                            </div>
-
-                                            <div v-else-if="seat.type === 'aisle'" 
-                                                :style="{ color: getSeatColor(seat) }" 
-                                                @click="handleSeatClick(rowIndex, seatIndex)" 
-                                                class="aisle-icon-card" 
-                                                style="cursor: pointer; position: relative; opacity: 0.6;">
-                                              <v-icon size="small">' '</v-icon>
-                                              <span class="aisle-label-card"> </span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        </div>
-                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
-                                            <span style="white-space: normal; word-break: break-word">
-                                                Asientos: {{ slotProps.item.seatCount }}
-                                            </span>
-                                        </v-tooltip>
-                                    </div>-->
                   <div class="d-flex align-center gap-1" style="width: 10%; min-width: 0; cursor: pointer;"
                     @click="openDialog(slotProps.item)">
                     <v-icon size="18" color="primary">mdi-seat-outline</v-icon>
@@ -169,6 +135,17 @@
           </tr>
         </template>
       </v-data-table>
+      <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
     </v-card>
   </v-container>
   <!-- Diálogo para crear una nueva estructura-->

@@ -27,7 +27,7 @@
       <v-col cols="12" md="6">
         <v-row align="stretch">
           <v-col cols="12" sm="6" md="6" v-for="(stat, index) in sales" :key="index">
-            <v-card class="mx-1 ma-sm-1" :style="{ borderRadius: '8px', border: 'none' }">
+            <v-card class="mx-1 ma-sm-1" :style="{ borderRadius: '8px', border: 'none' }" @click="$router.push(stat.to)">
               <template v-slot:title>
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                   <span>{{ stat.title }}</span>

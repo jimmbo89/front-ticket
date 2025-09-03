@@ -32,69 +32,6 @@
     </v-btn>
   </v-card>
   <v-container style="min-width: 100%;">
-    <!--<v-card elevation="6" class="mx-2">
-      <v-card-text>
-      <v-row>
-                    <v-container fluid>
-                        <v-cols cols="12" md="12">
-                            <v-row v-if="mostrarFila" dense>
-                                <v-col cols="12" md="3">
-                                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id"
-                                        v-if="mostrarFila" :items="branches" label="Seleccione una Sucursal"
-                                        prepend-inner-icon="mdi-store" item-title="name" item-value="id"
-                                        variant="underlined" :rules="selectRules" density="compact">
-                                        <template v-slot:item="{ props, item }">
-                                            <v-list-item v-bind="props"
-                                                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                                            </v-list-item>
-                                        </template>
-                                    </v-autocomplete>
-                                </v-col>
-                                <v-col cols="12" md="2">
-                                    <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
-                                        <v-icon>mdi-magnify</v-icon></v-btn>
-                                </v-col>
-                            </v-row>
-                        </v-cols>
-                    </v-container>
-                </v-row>
-               <v-row dense>
-                    <v-col cols="12">
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="devices" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-              elevation="1" title="Editar Dispositivo"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-              elevation="1" title="Eliminar Dispositivo"></v-btn>
-          </template>
-          <template v-slot:item.name="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?t=${Date.now()}`" alt="image"></v-img>
-            </v-avatar>
-            {{ item.name }}
-          </template>
-          <template v-slot:item.branchName="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.branchImage}?t=${Date.now()}`"
-                alt="image"></v-img>
-            </v-avatar>
-            {{ item.companyName }}
-          </template>
-          <template v-slot:item.status="{ item }">
-            <v-chip :color="item.status === 1 ? paleteColors.active : paleteColors.inactive" :text-color="paleteColors.white">
-                            {{ item.status === 1 ? "Activo" : "Inactivo" }}
-                        </v-chip>
-          </template>
-        </v-data-table>
-        </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>-->
     <v-card flat>
       <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
       <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
@@ -108,19 +45,19 @@
         <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
           <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
               </v-list-item>
             </template>
           </v-autocomplete>
 
-          <!-- Botón de búsqueda (actualizar datos) -->
+          <!-- Botón de búsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
-          </v-btn>
+          </v-btn>-->
         </div>
 
         <!-- Campo de búsqueda global -->
@@ -310,6 +247,17 @@
           </tr>
         </template>
       </v-data-table>
+      <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
     </v-card>
   </v-container>
   <v-dialog v-model="dialog" max-width="700px">
@@ -322,9 +270,9 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="6">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.branch_id"
+                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.branch_id" v-if="mostrarFila"
                   :items="branches" label="Sucursal" prepend-icon="mdi-store-outline" item-title="name" item-value="id"
-                  variant="underlined" :rules="selectRules">
+                  variant="underlined" :rules="selectRules" :disabled="editedIndex !== -1">
                   <template v-slot:item="{ props, item }">
                     <v-list-item v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
@@ -652,6 +600,12 @@ export default {
       }
     },
     async showAdd() {
+       this.editedItem.branch_id = 
+  (this.editedItem.branch_id !== null && 
+   this.editedItem.branch_id !== undefined && 
+   this.editedItem.branch_id !== '') 
+    ? this.editedItem.branch_id 
+    : this.branch_id;
       this.dialog = true;
     },
     close() {
@@ -722,7 +676,6 @@ export default {
             return obj;
           }, {});
         if (Object.keys(updatedFields).length > 0) {
-          updatedFields.branch_id = this.branch_id;
           updatedFields.acquisition = this.editedItem.acquisition
             ? this.editedItem.acquisition
             : new Date();
@@ -748,6 +701,7 @@ export default {
             if (result.success) {
               this.loading = false;
               this.showAlert("success", result.message, 3000);
+              this.branch_id = this.editedItem.branch_id;
               this.initialize();
             } else {
               this.loading = false;

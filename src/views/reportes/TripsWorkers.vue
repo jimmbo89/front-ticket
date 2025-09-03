@@ -26,7 +26,7 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.green" variant="tonal" elevation="2"
       prepend-icon="mdi-file-excel-box" @click="exportToExcel()">
       Exportar a Excel
     </v-btn>
@@ -448,26 +448,20 @@ export default {
         endDate: null,
     }),
     computed: {
-        dateFormatted() {
-            const date = this.input ? new Date(this.input) : new Date();
-            const day = date.getDate().toString().padStart(2, "0");
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            const year = date.getFullYear();
-            return `${year}-${month}-${day}`;
-        },
-        dateFormatted1() {
-            const date = this.input2 ? new Date(this.input2) : new Date();
-            const day = date.getDate().toString().padStart(2, "0");
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-            const year = date.getFullYear();
-            return `${year}-${month}-${day}`;
-        },
-        getDate() {
-            return this.input ? new Date(this.input) : new Date();
-        },
-        getDate2() {
-            return this.input2 ? new Date(this.input2) : new Date();
-        },
+       dateFormatted() {
+      const date = this.input ? new Date(this.input) : new Date();
+      return date.toISOString().split("T")[0];
+    },
+    getDate() {
+      return this.input ? new Date(this.input) : new Date();
+    },
+    dateFormatted1() {
+      const date = this.input2 ? new Date(this.input2) : new Date();
+      return date.toISOString().split("T")[0];
+    },
+    getDate1() {
+      return this.input2 ? new Date(this.input2) : new Date();
+    },
     },
     mounted() {
         this.role = JSON.parse(LocalStorageService.getItem('role'));
@@ -534,9 +528,12 @@ export default {
                 this.data = {};
                 this.data.branch_id = Number(this.branch_id);
                 // Formatear las fechas
-                const formattedDate = this.date ? format(new Date(this.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
-                const formattedEndDate = this.endDate ? format(new Date(this.endDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
-
+               /* const formattedDate = this.date ? format(new Date(this.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+                const formattedEndDate = this.endDate ? format(new Date(this.endDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');*/
+              const formattedDate =
+        this.date ?? new Date().toISOString().split("T")[0];
+      const formattedEndDate =
+        this.endDate ?? new Date().toISOString().split("T")[0];
                 // Comparar las fechas
                 if (formattedDate === formattedEndDate) {
                     this.data.date = formattedDate; // Solo enviar una fecha si son iguales

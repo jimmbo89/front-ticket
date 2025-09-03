@@ -1,14 +1,6 @@
 <template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
+  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
+    :multi-line="true" vertical v-model="snackbar">
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -19,11 +11,7 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-    style="background-color: #f9f9f9"
-  >
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-alert</v-icon>
@@ -55,289 +43,181 @@
 
         <!-- Grupo: Autocomplete + Botón buscar -->
         <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
+          <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+            offset-y min-width="290px">
+            <template v-slot:activator="{ props }">
+              <v-text-field v-bind="props" :modelValue="dateFormatted" variant="solo-filled" hide-details single-line
+                flat prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" class="ml-1"></v-text-field>
+            </template>
+            <v-locale-provider locale="es">
+              <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"></v-date-picker>
+            </v-locale-provider>
+          </v-menu>
+
+          <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+            offset-y min-width="290px">
+            <template v-slot:activator="{ props }">
+              <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="solo-filled" hide-details single-line
+                flat prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" class="ml-1"></v-text-field>
+            </template>
+            <v-locale-provider locale="es">
+              <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                :modelValue="input2" @update:model-value="updateDate1" format="yyyy-MM-dd"
+                :min="dateFormatted"></v-date-picker>
+            </v-locale-provider>
+          </v-menu>
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete
-            :no-data-text="'No hay datos disponibles'"
-            v-model="branch_id"
-            v-if="mostrarFila"
-            :items="branches"
-            label="Seleccione una Sucursal"
-            prepend-inner-icon="mdi-store"
-            item-title="name"
-            item-value="id"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-            :rules="selectRules"
-            density="compact"
-          >
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact"
+            class="ml-1">
             <template v-slot:item="{ props, item }">
-              <v-list-item
-                v-bind="props"
-                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-              >
+              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
               </v-list-item>
             </template>
           </v-autocomplete>
-
-          <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="290px"
-          >
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :modelValue="dateFormatted"
-                variant="solo-filled"
-                hide-details
-                single-line
-                flat
-                prepend-inner-icon="mdi-calendar"
-                label="Fecha"
-                density="compact"
-                class="ml-1"
-              ></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker
-                header="Calendario"
-                title="Seleccione la fecha"
-                :color="paleteColors.primary"
-                :modelValue="input"
-                @update:model-value="updateDate"
-                format="yyyy-MM-dd"
-              ></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-
-          <v-menu
-            v-model="menu2"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="290px"
-          >
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :modelValue="dateFormatted1"
-                variant="solo-filled"
-                hide-details
-                single-line
-                flat
-                prepend-inner-icon="mdi-calendar"
-                label="Fecha"
-                density="compact"
-                class="ml-1"
-              ></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker
-                header="Calendario"
-                title="Seleccione la fecha"
-                :color="paleteColors.primary"
-                :modelValue="input2"
-                @update:model-value="updateDate1"
-                format="yyyy-MM-dd"
-                :min="dateFormatted"
-              ></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-
           <!-- Botón de búsqueda (actualizar datos) -->
-          <v-btn
-            icon
-            @click="getIncidents"
-            :color="paleteColors.primary"
-            density="comfortable"
-            :disabled="!branch_id"
-            class="mt-2 mt-md-0 mr-5 ml-1"
-          >
+          <v-btn icon @click="getIncidents" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
+            class="mt-2 mt-md-0 mr-1 ml-1">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>
         </div>
 
         <!-- Campo de búsqueda global -->
         <div class="flex-grow-1" style="max-width: 300px">
-          <v-text-field
-            v-model="search"
-            density="compact"
-            label="Buscar incidencia"
-            prepend-inner-icon="mdi-magnify"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-          ></v-text-field>
+          <v-text-field v-model="search" density="compact" label="Buscar incidencia" prepend-inner-icon="mdi-magnify"
+            variant="solo-filled" hide-details single-line flat></v-text-field>
         </div>
       </v-card-title>
-      <v-data-table
-        :headers="headers"
-        :items="incidents"
-        v-model:expanded="expandedItems"
-        item-value="id"
-        :items-per-page-text="'Elementos por página'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-              class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent"
-        show-expand
-      >
+      <v-data-table :headers="headers" :items="incidents" v-model:expanded="expandedItems" item-value="id"
+        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+        loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
+        style="max-height: 68vh; overflow-y: auto; background: transparent" show-expand>
 
-      <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-                    <!-- Negocio (20%) -->
-                    <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
-                      Nombre del Trabajdor
-                    </div>
+        <template v-slot:top>
+          <!-- Tarjeta de encabezado con alto fijo -->
+          <v-card flat color="blue-grey-lighten-5" class="mb-2 mx-1 rounded-lg" elevation="1"
+            style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center">
+            <v-card-text class="d-flex pa-2"
+              style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center">
+              <!-- Negocio (20%) -->
+              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
+                Nombre del Trabajdor
+              </div>
 
-                    <!-- Nombre (20%) -->
-                    <div style="width: 22%; min-width: 0" class="text-left font-weight-bold">
-                      Título
-                    </div>
+              <!-- Nombre (20%) -->
+              <div style="width: 22%; min-width: 0" class="text-left font-weight-bold">
+                Título
+              </div>
 
-                    <!-- Teléfono (10%) -->
-                    <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
-                      Fecha
-                    </div>
+              <!-- Teléfono (10%) -->
+              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
+                Fecha
+              </div>
 
-                    <!-- Dirección (25%) -->
-                    <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
-                      Descripción
-                    </div>
+              <!-- Dirección (25%) -->
+              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+                Descripción
+              </div>
 
-                    <!-- Acciones (25%) -->
-                    <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                      
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </template>
-              <!-- Personalización completa de la fila con v-slot:row -->
-            <template v-slot:row="{ item }">  
-            <tr>
-              <td colspan="100%" style="padding: 0; border: none">
-                <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                  <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                <!-- Avatar + Nombre -->
-                <div class="d-flex align-center" style="width: 20%; min-width: 0; gap: 8px">
-                  <v-avatar class="icono-concavo" color="grey-lighten-4" size="40">
-                    <v-img
-                      :src="`${this.$axios.defaults.baseURL}images/${item.image}`"
-                      class="icono-concavo"
-                      cover
-                    ></v-img>
-                  </v-avatar>
-                  <div class="d-inline-block" style="min-width: 0; flex: 1">
-                    <span class="text-truncate d-inline-block" style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                      {{ item.workerName }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Trabajador: {{ item.workerName }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-                </div>
+              <!-- Acciones (25%) -->
+              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
 
-                <!-- Título con ícono -->
-                <div style="width: 25%; min-width: 0; flex: 1">
-                  <div class="d-flex align-center" style="gap: 6px">
-                    <v-icon
-                      v-if="item.title.includes('Retraso')"
-                      color="warning"
-                      size="20"
-                    >
-                      mdi-clock-alert
-                    </v-icon>
-                    <v-icon
-                      v-else-if="item.title.includes('Escaneo')"
-                      color="success"
-                      size="20"
-                    >
-                      mdi-qrcode-scan
-                    </v-icon>
-                    <v-icon
-                      v-else-if="item.title.includes('Reimpresión')"
-                      color="info"
-                      size="20"
-                    >
-                      mdi-printer
-                    </v-icon>
+              </div>
+            </v-card-text>
+          </v-card>
+        </template>
+        <!-- Personalización completa de la fila con v-slot:row -->
+        <template v-slot:row="{ item }">
+          <tr>
+            <td colspan="100%" style="padding: 0; border: none">
+              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+                  <!-- Avatar + Nombre -->
+                  <div class="d-flex align-center" style="width: 20%; min-width: 0; gap: 8px">
+                    <v-avatar class="icono-concavo" color="grey-lighten-4" size="40">
+                      <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}`" class="icono-concavo"
+                        cover></v-img>
+                    </v-avatar>
                     <div class="d-inline-block" style="min-width: 0; flex: 1">
-                      <span
-                        class="text-truncate d-inline-block"
-                        style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-                      >
-                        {{ item.title }}
+                      <span class="text-truncate d-inline-block"
+                        style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                        {{ item.workerName }}
                       </span>
                       <v-tooltip activator="parent" location="bottom" max-width="350px">
                         <span style="white-space: normal; word-break: break-word">
-                          {{ item.title }}
+                          Trabajador: {{ item.workerName }}
                         </span>
                       </v-tooltip>
                     </div>
                   </div>
-                </div>
 
-                <!-- Fecha -->
-                <div style="width: 10%; min-width: 0; text-align: left">
-                  <span class="text-truncate d-inline-block" style="max-width: 100%">
-                    {{ item.date }}
-                  </span>
-                  <v-tooltip activator="parent" location="bottom">
-                    Fecha: {{ item.date }}
-                  </v-tooltip>
-                </div>
+                  <!-- Título con ícono -->
+                  <div style="width: 25%; min-width: 0; flex: 1">
+                    <div class="d-flex align-center" style="gap: 6px">
+                      <v-icon v-if="item.title.includes('Retraso')" color="warning" size="20">
+                        mdi-clock-alert
+                      </v-icon>
+                      <v-icon v-else-if="item.title.includes('Escaneo')" color="success" size="20">
+                        mdi-qrcode-scan
+                      </v-icon>
+                      <v-icon v-else-if="item.title.includes('Reimpresión')" color="info" size="20">
+                        mdi-printer
+                      </v-icon>
+                      <div class="d-inline-block" style="min-width: 0; flex: 1">
+                        <span class="text-truncate d-inline-block"
+                          style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                          {{ item.title }}
+                        </span>
+                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                          <span style="white-space: normal; word-break: break-word">
+                            {{ item.title }}
+                          </span>
+                        </v-tooltip>
+                      </div>
+                    </div>
+                  </div>
 
-                <!-- Descripción -->
-                <div style="width: 30%; min-width: 0; text-align: left">
-                  <span class="text-truncate d-inline-block" style="max-width: 100%">
-                    {{ item.description }}
-                  </span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Descripción: {{ item.description }}
+                  <!-- Fecha -->
+                  <div style="width: 10%; min-width: 0; text-align: left">
+                    <span class="text-truncate d-inline-block" style="max-width: 100%">
+                      {{ item.date }}
                     </span>
-                  </v-tooltip>
-                </div>
+                    <v-tooltip activator="parent" location="bottom">
+                      Fecha: {{ item.date }}
+                    </v-tooltip>
+                  </div>
 
-                <!-- Botón de expansión -->
-                <div style="width: 10%; min-width: 0; text-align: right">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :color="getDetailsButtonColor(item)"
-                    @click.stop="toggleExpand(item)"
-                  >
-                    <v-icon start size="18">
-                      {{ isExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
-                    </v-icon>
-                    <span class="text-caption">
-                      {{ isExpanded(item) ? "Ocultar" : "Ver" }}
+                  <!-- Descripción -->
+                  <div style="width: 30%; min-width: 0; text-align: left">
+                    <span class="text-truncate d-inline-block" style="max-width: 100%">
+                      {{ item.description }}
                     </span>
-                  </v-btn>
-                </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Descripción: {{ item.description }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Botón de expansión -->
+                  <div style="width: 10%; min-width: 0; text-align: right">
+                    <v-btn size="small" variant="text" :color="getDetailsButtonColor(item)"
+                      @click.stop="toggleExpand(item)">
+                      <v-icon start size="18">
+                        {{ isExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
+                      </v-icon>
+                      <span class="text-caption">
+                        {{ isExpanded(item) ? "Ocultar" : "Ver" }}
+                      </span>
+                    </v-btn>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
 
         <!-- Contenido expandido -->
         <template v-slot:expanded-row="{ item }">

@@ -45,19 +45,19 @@
    <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
           <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
               </v-list-item>
             </template>
           </v-autocomplete>
 
-          <!-- Botón de búsqueda (actualizar datos) -->
+          <!-- Botón de búsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
-          </v-btn>
+          </v-btn>-->
         </div>
 
     <!-- Campo de búsqueda global -->

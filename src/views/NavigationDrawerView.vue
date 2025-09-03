@@ -25,7 +25,39 @@
         class="menu-item"
       ></v-list-item>
 
-      <!-- Administración -->
+      <v-list-item
+        prepend-icon="mdi-office-building"
+        title="Empresa"
+        to="company"
+        value="company"
+        class="menu-item"
+        permission= "view_business"
+      ></v-list-item>
+
+      <v-list-item
+        prepend-icon="mdi-steering"
+        title="Viajes y Plantillas"
+        to="trip-home"
+        value="trip-home"
+        class="menu-item"
+        permission= "view_trips"
+      ></v-list-item>
+      <!-- Tickets -->
+      <v-list-group value="Mantenedores" v-if="filteredMenuTickets.length">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" prepend-icon="mdi-progress-wrench" title="Tickets"></v-list-item>
+        </template>
+        <v-list-item
+          v-for="item in filteredMenuTickets"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+          :value="item.value"
+          class="sub-menu-item"
+        ></v-list-item>
+      </v-list-group>
+      <!-- Administración 
       <v-list-group value="Admin" v-if="filteredMenuAdministracion.length">
         <template v-slot:activator="{ props }">
           <v-list-item v-bind="props" prepend-icon="mdi-cog-outline" title="Administración"></v-list-item>
@@ -39,7 +71,7 @@
           :value="item.value"
           class="sub-menu-item"
         ></v-list-item>
-      </v-list-group>
+      </v-list-group>-->
 
       <!-- Seguridad -->
       <v-list-group value="Seguridad" v-if="filteredMenuSecurity.length">
@@ -73,21 +105,7 @@
         ></v-list-item>
       </v-list-group>
 
-      <!-- Mantenedores -->
-      <v-list-group value="Mantenedores" v-if="filteredMenuMainteiners.length">
-        <template v-slot:activator="{ props }">
-          <v-list-item v-bind="props" prepend-icon="mdi-progress-wrench" title="Mantenedores"></v-list-item>
-        </template>
-        <v-list-item
-          v-for="item in filteredMenuMainteiners"
-          :key="item.title"
-          :prepend-icon="item.icon"
-          :title="item.title"
-          :to="item.to"
-          :value="item.value"
-          class="sub-menu-item"
-        ></v-list-item>
-      </v-list-group>
+     
     </v-list>
   </v-card>
 </template>
@@ -98,11 +116,12 @@ import LocalStorageService from "@/LocalStorageService";
 export default {
   data: () => ({
     open: ["Admin"],
-    mainteiners: [
-      { title: "Estructuras de asientos", icon: "mdi-bus-side", to: "structure", permission: "view_structures" },
+    tickets: [
+      //{ title: "Estructuras de asientos", icon: "mdi-bus-side", to: "structure", permission: "view_structures" },
       { title: "Promociones", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
       { title: "Tipos de Pasajes", icon: "mdi-ticket-confirmation-outline", to: "ticket-type", permission: "view_tickettype" },
       //{ title: "Plantillas de Viajes", icon: "mdi-map-marker-path", to: "trip-template", permission: "view_triptemplates" },
+      { icon: "mdi-ticket", title: "Venta de Tickets", to: "ticket", value: "ticket", permission: "view_tickets" },
     ],
     security: [
       { title: "Roles", icon: "mdi-account-cog-outline", to: "role", permission: "view_roles" },
@@ -113,7 +132,7 @@ export default {
       //{ icon: "mdi-store", title: "Sucursales", to: "branch", value: "branch", permission: "view_branches" },
       //{ icon: "mdi-account", title: "Trabajadores", to: "worker", value: "worker", permission: "view_workers" },
       //{ icon: "mdi-devices", title: "Dispositivos", to: "device", value: "devices", permission: "view_devices" },
-      //{ icon: "mdi-bus", title: "Vehículos", to: "vehicle", value: "vehicle", permission: "view_vehicles" },
+      //{ icon: "mdi-bus", title: "Estructura de Asientos y Vehículos", to: "structure-vehicle", value: "structure-vehicle", permission: "view_vehicles" },
       //{ icon: "mdi-map-marker", title: "Lugares", to: "location", value: "location", permission: "view_locations" },
       //{ icon: "mdi-road-variant", title: "Rutas", to: "route", value: "route", permission: "view_routes" },
       { icon: "mdi-steering", title: "Viajes y Plantillas", to: "trip-home", value: "trip-home", permission: "view_trips" },
@@ -145,8 +164,8 @@ export default {
     filteredMenuSecurity() {
       return this.security.filter(item => this.permissions.includes(item.permission));
     },
-    filteredMenuMainteiners() {
-      return this.mainteiners.filter(item => this.permissions.includes(item.permission));
+    filteredMenuTickets() {
+      return this.tickets.filter(item => this.permissions.includes(item.permission));
     },
     filteredMenuReports() {
       return this.reports.filter(item => this.permissions.includes(item.permission));

@@ -11,24 +11,23 @@
       </v-col>
     </v-row>
   </v-snackbar>
-<v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
+<v-card class="d-flex align-center pa-3" elevation="0">
+    <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-map-marker</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Lugares</div>
       <div class="text-body-2 text-grey">Gestionar Lugares</div>
-    </div>
+    </div>-->
 
     <!-- Botones -->
     <v-spacer></v-spacer>
 
     <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
       prepend-icon="mdi-plus-circle" @click="showAdd()">
-      Agregar Lugar
+      Agregar Ubicación
     </v-btn>
   </v-card>
   <v-container style="min-width: 100%;">
@@ -59,13 +58,13 @@
   <!-- Barra superior con título y búsqueda -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-subtitle-1 font-weight-bold">Listado de lugares</div>
+    <div class="text-subtitle-1 font-weight-bold">Listado de ubicaciones</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
 
     <!-- Campo de búsqueda global -->
-      <v-text-field v-model="search" density="compact" label="Buscar lugar" prepend-inner-icon="mdi-magnify"
+      <v-text-field v-model="search" density="compact" label="Buscar ubicación" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" hide-details single-line flat></v-text-field>
 
   </v-card-title>
@@ -197,6 +196,17 @@
       </tr>
     </template>
   </v-data-table>
+  <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
 </v-card>
 </v-container>
 
@@ -259,10 +269,10 @@
     <v-card>
 
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar un Lugar</span>
+        <span class="text-subtitle-2 ml-4"> Eliminar una Ubicación</span>
       </v-toolbar>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el lugar seleccionado?</v-card-text>
+      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la ubicación seleccionado?</v-card-text>
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -355,7 +365,7 @@ export default {
   }),
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? 'Agregar Lugar' : 'Editar Lugar';
+      return this.editedIndex === -1 ? 'Agregar Ubicación' : 'Editar Ubicación';
     },
     imgedit() {
       return this.imgMiniatura;

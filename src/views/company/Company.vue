@@ -151,21 +151,29 @@
           </v-row>
         </v-card>
         <v-row>
-          <v-col cols="12" md="12">
-            <v-row>
-              <v-col v-for="item_menu in administracion" :key="item_menu.value" cols="12" sm="2" md="2">
-                <v-card class="d-flex flex-column align-center pa-3" elevation="2" rounded="lg"
-                  @click="$router.push(item_menu.to)">
-                  <v-avatar size="48" class="mb-3" color="grey-lighten-4">
-                    <v-icon :icon="item_menu.icon" color="primary" size="28" />
-                  </v-avatar>
-                  <span class="text-body-1 font-weight-medium">{{
-                    item_menu.title
-                    }}</span>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-col>
+          <v-col cols="12">
+  <v-row style="gap: 8px;">
+    <v-col
+      v-for="item_menu in administracion"
+      :key="item_menu.value"
+      class="flex-grow-1"
+      style="max-width: none;"
+    >
+      <v-card
+        class="d-flex flex-column align-center pa-4"
+        elevation="2"
+        rounded="lg"
+        @click="$router.push(item_menu.to)"
+        style="width: 100%; cursor: pointer;"
+      >
+        <v-avatar size="48" class="mb-2" color="grey-lighten-4">
+          <v-icon :icon="item_menu.icon" color="primary" size="28" />
+        </v-avatar>
+        <span class="text-body-1 font-weight-medium">{{ item_menu.title }}</span>
+      </v-card>
+    </v-col>
+  </v-row>
+</v-col>
         </v-row>
 
         <!--<br /><br />
@@ -316,22 +324,22 @@ export default {
       {
         icon: "mdi-bus",
         title: "Vehículos",
-        to: "/vehicle",
-        value: "vehicle",
+        to: "/structure-vehicle",
+        value: "structure-vehicle",
         permission: "view_vehicles",
       },
-      {
+      /*{
         icon: "mdi-map-marker",
         title: "Lugares",
         to: "/location",
         value: "location",
         permission: "view_locations",
-      },
+      },*/
       {
         icon: "mdi-road-variant",
         title: "Rutas",
-        to: "/route",
-        value: "route",
+        to: "/location-route",
+        value: "location-route",
         permission: "view_routes",
       },
       {

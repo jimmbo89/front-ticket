@@ -295,7 +295,7 @@ export default {
           data: this.data,
           includeToken: false
         });
-
+        console.log(result);
         if (result.success) {
           // Manejo en caso de éxito
           this.showAlert('success', 'Inicio de sesión exitoso', 2000);
@@ -303,6 +303,28 @@ export default {
 
           // Guardar datos en LocalStorage
           const user = this.user;
+          // Manejo de branch: es un array vacío []
+            let branch_id = null;
+            let nameBranch = null;
+            let imageBranch = null;
+
+            if (Array.isArray(user.branch) && user.branch.length > 0) {
+              const firstBranch = user.branch[0];
+              branch_id = firstBranch.id || null;
+              nameBranch = firstBranch.name || null;
+              imageBranch = firstBranch.image || null;
+            }
+
+            // Manejo de company: puede no existir
+            let business_id = null;
+            let nameBusiness = null;
+            let imageBusiness = null;
+
+            if (user.company) {
+              business_id = user.company.id || null;
+              nameBusiness = user.company.name || null;
+              imageBusiness = user.company.image || null;
+            }
           LocalStorageService.setItem('token', user.token);
           LocalStorageService.setItem('authenticateUser', true);
           LocalStorageService.setItem('role_id', user.roleId);
@@ -312,12 +334,12 @@ export default {
           LocalStorageService.setItem('name', user.name);
           LocalStorageService.setItem('role', user.nameRole);
           LocalStorageService.setItem('worker_id', user.workerId);
-          LocalStorageService.setItem('branch_id', user.branch.id);
-          LocalStorageService.setItem('nameBranch', user.branch.name);
-          LocalStorageService.setItem('imageBranch', user.branch.image);
-          LocalStorageService.setItem('business_id', user.company.id);
-          LocalStorageService.setItem('nameBusiness', user.company.name);
-          LocalStorageService.setItem('imageBusiness', user.company.image);
+          LocalStorageService.setItem('branch_id', branch_id);
+          LocalStorageService.setItem('nameBranch', nameBranch);
+          LocalStorageService.setItem('imageBranch', imageBranch);
+          LocalStorageService.setItem('business_id', business_id);
+          LocalStorageService.setItem('nameBusiness', nameBusiness);
+          LocalStorageService.setItem('imageBusiness', imageBusiness);
           // Puedes descomentar los siguientes si son necesarios
           // LocalStorageService.setItem('branch_id', user.branch_id);
           // LocalStorageService.setItem('charge', user.charge);

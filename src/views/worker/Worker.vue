@@ -67,7 +67,7 @@
     <v-text-field
       v-model="search"
       density="compact"
-      label="Buscar"
+      label="Buscar Trabajador"
       prepend-inner-icon="mdi-magnify"
       variant="solo-filled"
       hide-details
@@ -261,6 +261,17 @@
       </tr>
     </template>
   </v-data-table>
+  <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
 </v-card>
 </v-container>
   <v-dialog v-model="dialog" max-width="700px">

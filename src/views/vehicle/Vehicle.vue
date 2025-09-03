@@ -11,17 +11,15 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
+  <v-card class="d-flex align-center pa-3" elevation="0">
+    <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-bus</v-icon>
     </v-avatar>
-
-    <!-- Texto -->
     <div class="ml-4">
       <div class="text-h6 font-weight-medium">Vehículos</div>
       <div class="text-body-2 text-grey">Gestionar Vehículos</div>
-    </div>
+    </div>-->
 
     <!-- Botones -->
     <v-spacer></v-spacer>
@@ -211,6 +209,17 @@
       </tr>
     </template>
   </v-data-table>
+  <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
 </v-card>
   </v-container>
   <v-dialog v-model="dialog" max-width="700px">

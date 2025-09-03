@@ -44,7 +44,7 @@
 
         <v-spacer></v-spacer>
 
-        <v-text-field v-model="search" density="compact" label="Search" prepend-inner-icon="mdi-magnify"
+        <v-text-field v-model="search" density="compact" label="Buscar Sucursal" prepend-inner-icon="mdi-magnify"
           variant="solo-filled" hide-details single-line flat></v-text-field>
       </v-card-title>
 
@@ -161,11 +161,11 @@
                       title="Agregar vehículo">
                       <v-icon size="20">mdi-car</v-icon>
                     </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    <!--<v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.route" @click="showAddRoute(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Agregar ruta">
                       <v-icon size="20">mdi-map-marker</v-icon>
-                    </v-btn>
+                    </v-btn>-->
                     <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar">
@@ -183,6 +183,17 @@
           </tr>
         </template>
       </v-data-table>
+      <v-card-actions class="pa-4">
+    <v-spacer></v-spacer>
+    <v-btn
+      variant="flat"
+      :color="paleteColors.gris"
+      to="/company"
+      aria-label="Volver a Empresa"
+    >
+      Volver
+    </v-btn>
+  </v-card-actions>
     </v-card>
   </v-container>
 
