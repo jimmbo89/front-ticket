@@ -382,6 +382,7 @@ export default {
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
     async showAdd() {
+      this.editedIndex === -1;
       this.dialog = true;
     },
     close() {

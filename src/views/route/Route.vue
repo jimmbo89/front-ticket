@@ -596,6 +596,7 @@ export default {
         if (result.success) {
           this.locations = result.data?.destinations || [];
           this.locationsOrigins = result.data?.origins || [];
+          
           const branchroutes = result.data?.branchroutes || [];
           if (this.locationsOrigins.length > 0 && branchroutes.length > 0) {
           this.editedItem.origin_id = this.locationsOrigins[0].id;

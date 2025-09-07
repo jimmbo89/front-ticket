@@ -296,21 +296,21 @@
               </v-col>
               <v-col cols="12" md="4">
                 <v-switch 
-  v-model="editedItem.status" 
-  :true-value=1 
-  :false-value=0
-  :color="paleteColors.active"
-  hide-details 
-  inset 
-  class="custom-switch"
->
-  <template v-slot:label>
-    <span class="text-body-1"
-      :style="{ color: editedItem.status ? paleteColors.active : paleteColors.grey }">
-      {{ editedItem.status ? 'Activo' : 'Inactivo' }}
-    </span>
-  </template>
-</v-switch>
+                  v-model="editedItem.status" 
+                  :true-value=1 
+                  :false-value=0
+                  :color="paleteColors.active"
+                  hide-details 
+                  inset 
+                  class="custom-switch"
+                >
+                  <template v-slot:label>
+                    <span class="text-body-1"
+                      :style="{ color: editedItem.status ? paleteColors.active : paleteColors.grey }">
+                      {{ editedItem.status ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </template>
+                </v-switch>
               </v-col>
             </v-row>
             <v-row>
