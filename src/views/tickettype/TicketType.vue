@@ -95,40 +95,40 @@
                 loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
                 style="max-height: 68vh; overflow-y: auto; background: transparent">
                 <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+            flat
+            color="blue-grey-lighten-5"
+            class="mb-2 mx-1 rounded-lg"
+            elevation="1"
+            style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+        >
+            <v-card-text
+            class="d-flex pa-2"
+            style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+            >
+                    <!-- Negocio (20%) -->
+                    <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                        Nombre
+                    </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 60%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
+                    <!-- Nombre (20%) -->
+                    <div style="width: 60%; min-width: 0" class="text-left font-weight-bold">
+                        Descripción
+                    </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Estado
-              </div>
+                    <!-- Teléfono (10%) -->
+                    <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                        Estado
+                    </div>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
+                    <!-- Acciones (25%) -->
+                    <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
+                        
+                    </div>
+                    </v-card-text>
+                </v-card>
+                </template>
                 <!-- Fila personalizada -->
                 <template v-slot:item="slotProps">
                     <tr>
@@ -207,59 +207,22 @@
                                     :rules="nameRules"></v-text-field>
                             </v-col>
                             <v-col cols="12" md="6">
-                                <!--<v-autocomplete 
-                            :no-data-text="'No hay datos disponibles'" 
-                            v-model="editedItem.active"
-                            :items="[
-                                { id: 1, name: 'Activo', icon: 'mdi-check-circle-outline', color: 'green' },
-                                { id: 0, name: 'Inactivo', icon: 'mdi-close-circle-outline', color: 'red' },
-                            ]" 
-                            label="Estado" 
-                            item-title="name" 
-                            item-value="id" 
-                            variant="underlined"
-                            :rules="selectRules"
-                            >
-                            <template v-slot:prepend>
-                                <v-icon :color="editedItem.active ? 'green' : 'red'">
-                                {{ editedItem.active ? "mdi-toggle-switch" : "mdi-toggle-switch-off-outline" }}
-                                </v-icon>
-                            </template>
-                            
-                            <template v-slot:item="{ props, item }">
-                                <v-list-item
-                                v-bind="props"
-                                :prepend-icon="item.raw.icon"
-                                :color="item.raw.color"
-                                ></v-list-item>
-                            </template>
-                            
-                            <template v-slot:selection="{ item }">
-                                <v-chip
-                                :color="item.raw.color"
-                                variant="tonal"
-                                >
-                                <v-icon start :icon="item.raw.icon"></v-icon>
-                                {{ item.title }}
-                                </v-chip>
-                            </template>
-                            </v-autocomplete>-->
                                 <v-switch 
-  v-model="editedItem.active" 
-  :true-value="true" 
-  :false-value="false"
-  :color="paleteColors.active"
-  hide-details 
-  inset 
-  class="custom-switch"
->
-  <template v-slot:label>
-    <span class="text-body-1"
-      :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
-      {{ editedItem.active ? 'Activo' : 'Inactivo' }}
-    </span>
-  </template>
-</v-switch>
+                                v-model="editedItem.active" 
+                                :true-value="true" 
+                                :false-value="false"
+                                :color="paleteColors.active"
+                                hide-details 
+                                inset 
+                                class="custom-switch"
+                                >
+                                <template v-slot:label>
+                                    <span class="text-body-1"
+                                    :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
+                                    {{ editedItem.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </template>
+                                </v-switch>
                             </v-col>
                             <v-col cols="12" md="12">
                                 <v-textarea v-model="editedItem.description" clearable label="Descripción"

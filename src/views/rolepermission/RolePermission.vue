@@ -8,9 +8,6 @@
             <v-col md="10">
                 <h4>{{ sb_title }}</h4>
                 {{ sb_message }}
-                <div v-if="vehicle">
-                    <!-- Aquí puedes agregar más información sobre la sucursal -->
-                </div>
             </v-col>
         </v-row>
     </v-snackbar>

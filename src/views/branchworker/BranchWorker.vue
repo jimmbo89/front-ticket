@@ -485,6 +485,21 @@ export default {
             !this.branchworkers.some((branchworker) => branchworker.worker_id === worker.id) ||
             worker.id === this.editedItem.worker_id
           ) || [];
+          // Luego, si estás editando, buscas y agregas el trabajador desde branchworkers
+          if (this.editedItem?.worker_id) {
+            const editedWorker = this.branchworkers.find(
+              bw => bw.worker_id == this.editedItem.worker_id
+            );
+            
+            if (editedWorker && !this.workers.some(w => w.id == editedWorker.worker_id)) {
+              this.workers.push({
+                id: editedWorker.worker_id,
+                worker_id: editedWorker.worker_id,
+                name: editedWorker.workerName,
+                image: editedWorker.workerImage,
+              });
+            }
+          }
         } else {
           // Si no hay datos, asignamos un array vacío
           this.roles = [];
