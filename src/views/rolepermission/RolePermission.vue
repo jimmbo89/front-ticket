@@ -159,7 +159,7 @@
       </template>
     </v-data-table>
   </v-card>
-    <v-dialog v-model="dialog" max-width="400px">
+    <v-dialog v-model="dialog" max-width="450px">
         <v-form ref="form" v-model="valid" enctype="multipart/form-data">
             <v-card>
                 <v-toolbar :color="paleteColors.primary">
@@ -172,15 +172,19 @@
                                 <v-autocomplete :no-data-text="'No hay datos disponibles'"
                                     v-model="editedItem.permission_id" :items="permissions" label="Permisos"
                                     prepend-icon="mdi-shield-check" item-title="name" item-value="id"
-                                    variant="underlined" :rules="selectRules">
+                                    variant="underlined" :rules="selectRules" :menu-props="{
+                                        maxWidth: '100%',
+                                        minWidth: '450px',
+                                        contentClass: 'permission-menu'
+                                    }">
                                     <template v-slot:item="{ props, item }">
                                         <v-list-item v-bind="props">
                                             <v-list-item-subtitle class="d-flex flex-column">
                                                 <div><strong>Módulo:</strong> {{ item.raw.module }}</div>
                                                 <v-tooltip bottom>
                                                     <template v-slot:activator="{ props }">
-                                                        <div class="truncate" v-bind="props"
-                                                            style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        <div class="text-truncate" v-bind="props"
+                                                            style="width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                             <strong>Descripción:</strong> {{ item.raw.description }}
                                                         </div>
                                                     </template>

@@ -47,30 +47,30 @@
         class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
 
        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+          flat
+          color="blue-grey-lighten-5"
+          class="mb-2 mx-1 rounded-lg"
+          elevation="1"
+          style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
+        >
+          <v-card-text
+            class="d-flex pa-2"
+            style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+          >
               <!-- Negocio (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
                 Nombre
               </div>
 
-              <!-- Nombre (20%) -->
+              <!-- Nombre (20%) 
               <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
                 Tipo
-              </div>
+              </div>-->
 
               <!-- Teléfono (10%) -->
-              <div style="width: 50%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 60%; min-width: 0" class="text-left font-weight-bold">
                 Descripción
               </div>
 
@@ -88,7 +88,7 @@
                <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
                 <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
                   <!-- Columna 1: Nombre -->
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                  <div class="d-flex align-center" style="width: 25%; min-width: 0">
                    <span class="text-truncate">{{ slotProps.item.name }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -97,7 +97,7 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Columna 3: tipo -->
+                  <!-- Columna 3: tipo 
                   <div style="width: 15%; min-width: 0" class="text-truncate text-left">
                     <v-avatar class="mr-1  avatar-border" elevation="3" size="small">
                       <v-icon :title=" slotProps.item.type">
@@ -110,10 +110,10 @@
                         Tipo: {{ slotProps.item.type }}
                       </span>
                     </v-tooltip>
-                  </div>
+                  </div>-->
 
                   <!-- Columna 4: descripción -->
-                  <div style="width: 50%; min-width: 0" class="text-truncate">
+                  <div style="width: 60%; min-width: 0" class="text-truncate">
                     <span>{{ slotProps.item.description }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -158,11 +158,11 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-tag-outline"
                   variant="underlined" :rules="nameRules"></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <!--<v-col cols="12" md="6">
                 <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.type"
                   :items="typeOptions" label="Tipos" prepend-icon="mdi-label-outline" item-title="name" item-value="id"
                   variant="underlined" :rules="selectRules">
@@ -172,7 +172,7 @@
                       :title="item.raw.name"></v-list-item>
                   </template>
                 </v-autocomplete>
-              </v-col>
+              </v-col>-->
               <v-col cols="12" md="12">
                 <v-text-field v-model="editedItem.description" clearable label="Descripción" prepend-icon="mdi-note"
                   variant="underlined"></v-text-field>
@@ -267,13 +267,13 @@ export default {
       id: '',
       name: '',
       description: '',
-      type: '',
+      type: 'Sistema',
     },
     defaultItem: {
       id: '',
       name: '',
       description: '',
-      type: '',
+      type: 'Sistema',
     },
     originalItem: {
       id: '',

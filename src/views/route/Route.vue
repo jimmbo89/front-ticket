@@ -425,6 +425,7 @@ export default {
     data: {},
     branch_id: '',
     mostrarFila: false,
+    permissions: '',
     headers: [
       { title: "Nombre", value: "name", width: "15%" },
       { title: "Origen", value: "originAddress", width: "30%" },
@@ -511,7 +512,8 @@ export default {
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
-    if (this.role === "Administrador") {
+    this.permissions = LocalStorageService.getItem('permissions');
+    if (this.hasPermission('view_branches')) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
@@ -520,6 +522,9 @@ export default {
     }
   },
   methods: {
+     hasPermission(permission) {
+      return this.permissions.includes(permission);
+    },
     formatNumber(value) {
       const numberValue = parseFloat(value);
 

@@ -152,28 +152,28 @@
         </v-card>
         <v-row>
           <v-col cols="12">
-  <v-row style="gap: 8px;">
-    <v-col
-      v-for="item_menu in administracion"
-      :key="item_menu.value"
-      class="flex-grow-1"
-      style="max-width: none;"
-    >
-      <v-card
-        class="d-flex flex-column align-center pa-4"
-        elevation="2"
-        rounded="lg"
-        @click="$router.push(item_menu.to)"
-        style="width: 100%; cursor: pointer;"
-      >
-        <v-avatar size="48" class="mb-2" color="grey-lighten-4">
-          <v-icon :icon="item_menu.icon" color="primary" size="28" />
-        </v-avatar>
-        <span class="text-body-1 font-weight-medium">{{ item_menu.title }}</span>
-      </v-card>
-    </v-col>
-  </v-row>
-</v-col>
+            <v-row style="gap: 8px;">
+              <v-col
+                v-for="item_menu in filteredAdministracion"
+                :key="item_menu.value"
+                class="flex-grow-1"
+                style="max-width: none;"
+              >
+                <v-card
+                  class="d-flex flex-column align-center pa-4"
+                  elevation="2"
+                  rounded="lg"
+                  @click="$router.push(item_menu.to)"
+                  style="width: 100%; cursor: pointer;"
+                >
+                  <v-avatar size="48" class="mb-2" color="grey-lighten-4">
+                    <v-icon :icon="item_menu.icon" color="primary" size="28" />
+                  </v-avatar>
+                  <span class="text-body-1 font-weight-medium">{{ item_menu.title }}</span>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
         </v-row>
 
         <!--<br /><br />
@@ -278,6 +278,7 @@
 <script>
 import { paleteColors } from "@/assets/colors";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import LocalStorageService from "@/LocalStorageService";
 export default {
   data: () => ({
     snackbar: false,
@@ -288,7 +289,7 @@ export default {
     sb_icon: "",
     paleteColors: paleteColors,
     valid: true,
-
+    permissions: '',
     mostrar: false,
     file: null,
     imgMiniatura: "",
@@ -397,6 +398,9 @@ export default {
     ],
   }),
   computed: {
+    filteredAdministracion() {
+    return this.administracion.filter(item => this.hasPermission(item.permission));
+  },
     formTitle() {
       return this.editedIndex === -1 ? "Agregar Empresa" : "Editar Empresa";
     },
@@ -405,9 +409,13 @@ export default {
     },
   },
   mounted() {
+    this.permissions = LocalStorageService.getItem('permissions');
     this.initialize();
   },
   methods: {
+     hasPermission(permission) {
+      return this.permissions.includes(permission);
+    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();

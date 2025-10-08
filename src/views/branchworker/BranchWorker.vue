@@ -201,17 +201,18 @@
                       :title="item.raw.name">
                       <v-list-item-subtitle class="d-flex flex-column">
                         <div>Correo: {{ item.raw.email }}</div>
+                        <div>Rol: {{ item.raw.roleName }}</div>
                       </v-list-item-subtitle>
                     </v-list-item>
                   </template>
                 </v-autocomplete>
               </v-col>
-              <v-col cols="12" md="12">
+              <!--<v-col cols="12" md="12">
                 <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.role_id" :items="roles"
                   label="Roles" prepend-icon="mdi-account-tie" item-title="name" item-value="id" variant="underlined"
                   :rules="selectRules">
                 </v-autocomplete>
-              </v-col>
+              </v-col>-->
             </v-row>
           </v-container>
         </v-card-text>
@@ -303,6 +304,16 @@ export default {
     formTitle() {
       return this.editedIndex === -1 ? "Agregar Trabajador" : "Editar Trabajador";
     },
+  },
+   watch: {
+    'editedItem.worker_id'(newWorkerId) {
+      if (newWorkerId) {
+        const selectedWorker = this.workers.find(w => w.id === newWorkerId);
+        this.editedItem.role_id = selectedWorker ? selectedWorker.role_id : null;
+      } else {
+        this.editedItem.role_id = null;
+      }
+    }
   },
   mounted() {
     this.branch_id = this.branch.id;

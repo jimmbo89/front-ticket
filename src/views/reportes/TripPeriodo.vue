@@ -348,6 +348,7 @@ export default {
     loading: false,
     mostrar: false,
     mostrarFila: false,
+    permissions: '',
     dialog: false,
     type: "Sucursal",
     branch_id: "",
@@ -381,6 +382,7 @@ export default {
       { title: "Empresa", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
       { title: "Sucursal", value: "Sucursal", icon: "mdi-store" }, // Opción Sucursal con ícono
     ],
+    selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
   }),
   computed: {
     dateFormatted() {
@@ -401,7 +403,8 @@ export default {
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
-    if (this.role === "Administrador") {
+    this.permissions = LocalStorageService.getItem('permissions');
+    if (this.hasPermission('view_branches')) {
       this.showBranches();
       this.type = "Company";
       this.mostrarFila = true;
@@ -411,6 +414,9 @@ export default {
     }
   },
   methods: {
+    hasPermission(permission) {
+        return this.permissions.includes(permission);
+        },
     getMethodColor(metodo) {
       if (!metodo) return "grey"; // Manejo de valores nulos/undefined
 

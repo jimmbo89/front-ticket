@@ -426,6 +426,7 @@ export default {
     dialog: false,
     dialogDelete: false,
     mostrarFila: false,
+    permissions: '',
     devices: [],
     branches: [],
     role: "",
@@ -546,14 +547,19 @@ export default {
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-    if (this.role === "Administrador") {
+    this.permissions = LocalStorageService.getItem('permissions');
+    if (this.hasPermission('view_branches')) {
       this.showBranches();
+      this.mostrarFila = true;
     } else {
       this.branch_id = LocalStorageService.getItem("branch_id");
       this.initialize();
     }
   },
   methods: {
+     hasPermission(permission) {
+      return this.permissions.includes(permission);
+    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();

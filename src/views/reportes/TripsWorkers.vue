@@ -431,7 +431,7 @@ export default {
             { title: 'LLegada', value: 'end', },
             { title: 'Pasajes', value: 'passenger', },
         ],
-
+        search: '',
         branch_id: '',
         worker_id: '',
         workers: [],
@@ -439,6 +439,7 @@ export default {
         response: [],
         branches: [],
         mostrarFila: false,
+        permissions: '',
         data: {},
         menu: false,
         menu2: false,
@@ -466,13 +467,17 @@ export default {
     mounted() {
         this.role = JSON.parse(LocalStorageService.getItem('role'));
         this.worker_id = LocalStorageService.getItem('worker_id');
-        if (this.role === 'Administrador') {
+        this.permissions = LocalStorageService.getItem('permissions');
+        if (this.hasPermission('view_branches'))  {
             this.showBranches();
         } else {
             this.branch_id = LocalStorageService.getItem('branch_id');
         }
     },
     methods: {
+      hasPermission(permission) {
+        return this.permissions.includes(permission);
+        },
          getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();

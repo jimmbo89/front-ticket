@@ -285,6 +285,7 @@ export default {
     estimated: 0,
     timeSlotsKey: 0,
     mostrarFila: false,
+    permissions: '',
     incidents: [],
     branches: [],
     data: {},
@@ -352,7 +353,8 @@ export default {
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-    if (this.role === "Administrador") {
+    this.permissions = LocalStorageService.getItem('permissions');
+    if (this.hasPermission('view_branches')) {
       this.showBranches();
     } else {
       this.branch_id = LocalStorageService.getItem("branch_id");
@@ -361,6 +363,9 @@ export default {
   },
 
   methods: {
+    hasPermission(permission) {
+        return this.permissions.includes(permission);
+        },
      toggleExpand(item) {
     const index = this.expandedItems.findIndex(i => i.id === item.id);
     if (index > -1) {

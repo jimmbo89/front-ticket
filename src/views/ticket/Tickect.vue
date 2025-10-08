@@ -831,6 +831,7 @@ export default {
         loading: false,
         mostrar: false,
         mostrarFila: false,
+        permissions: '',
         dialog: false,
         dialogDelete: false,
         branch_id: '',
@@ -1054,14 +1055,19 @@ export default {
         mounted() {
             this.role = JSON.parse(LocalStorageService.getItem('role'));
             this.nameUser = JSON.parse(LocalStorageService.getItem('name'));
-            if (this.role === 'Administrador') {
-                this.showBranches();
+            this.permissions = LocalStorageService.getItem('permissions');
+            if (this.hasPermission('view_branches')) {
+            this.showBranches();
+            this.mostrarFila = true;
             } else {
                 this.branch_id = LocalStorageService.getItem('branch_id');
                 this.initialize();
             }
         },
         methods: {
+        hasPermission(permission) {
+        return this.permissions.includes(permission);
+        },
         getCacheTimestamp() {
         // Usamos medianoche (00:00:00) del día actual
         const now = new Date();
@@ -1698,7 +1704,7 @@ export default {
                 if (result.success) {
                     // Si la solicitud es exitosa, asignamos las sucursales
                     //this.trips = result.data?.trips || [];
-                    this.trips = (result.data?.trips || []).filter(trip => trip.start == null || trip.start === "");
+                    this.trips = (result.data?.trips || []).filter(trip => trip.start === null || trip.start === "");
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {
@@ -2291,9 +2297,17 @@ export default {
                 });
 
                 if (result.success) {
-                    // Si la solicitud es exitosa, asignamos las sucursales
-                    //this.trips = result.data?.trips || [];
-                    this.trips = (result.data?.trips || []).filter(trip => trip.start == null || trip.start === "");
+                    const currentTripId = item.trip_id; // El viaje al que pertenece este ticket
+
+                    this.trips = (result.data?.trips || []).filter(trip => {
+                        // Incluir si:
+                        // 1. El viaje NO ha salido (start es null o vacío), O
+                        // 2. Es el viaje al que pertenece el ticket actual (aunque ya haya salido)
+                        return (
+                        (trip.start === null || trip.start === "") ||
+                        trip.id === currentTripId
+                        );
+                    });
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {
