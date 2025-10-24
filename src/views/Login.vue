@@ -308,11 +308,10 @@ export default {
             let nameBranch = null;
             let imageBranch = null;
 
-            if (Array.isArray(user.branch) && user.branch.length > 0) {
-              const firstBranch = user.branch[0];
-              branch_id = firstBranch.id || null;
-              nameBranch = firstBranch.name || null;
-              imageBranch = firstBranch.image || null;
+            if (user.branch) {
+              branch_id = user.branch.id || null;
+              nameBranch = user.branch.name || null;
+              imageBranch = user.branch.image || null;
             }
 
             // Manejo de company: puede no existir
@@ -350,8 +349,7 @@ export default {
           // LocalStorageService.setItem('business_id', user.business_id);
           const permissions = user.permissions.map(permission => permission.split(',')[0].trim());
           LocalStorageService.setItem('permissions', permissions);
-          //LocalStorageService.setItem('permissions', user.permissions);
-          console.log();
+ 
           // Reiniciar el formulario
           this.editedItem = Object.assign({}, this.defaultItem);
 

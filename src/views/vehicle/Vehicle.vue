@@ -277,7 +277,7 @@
                 <v-text-field v-model="editedItem.seats" label="Asientos" prepend-icon="mdi-seat" variant="underlined"
                   :rules="[v => !!v || 'El número de asientos es requerido',
                   v => !isNaN(v) || 'Debe ser un número'
-                  ]" disabled="true"></v-text-field>
+                  ]" :disabled="true"></v-text-field>
               </v-col>
               <v-col cols="12" md="4">
                 <v-switch 
@@ -482,6 +482,7 @@ export default {
       console.log();
     },
     async showAdd() {
+      this.close();
       try {
         const result = await handleRequest({
           endpoint: "structure",

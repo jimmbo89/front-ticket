@@ -193,7 +193,7 @@
             <v-row>
               <v-col cols="12" md="12">
                 <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.worker_id"
-                  :items="workers" label="Personas" prepend-icon="mdi-account" item-title="name" item-value="id"
+                  :items="workers" label="Trabajadores" prepend-icon="mdi-account" item-title="name" item-value="id"
                   variant="underlined" :rules="selectRules" :disabled="this.editedIndex === 1">
                   <template v-slot:item="{ props, item }">
                     <v-list-item v-bind="props"

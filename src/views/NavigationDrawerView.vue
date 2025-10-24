@@ -35,6 +35,7 @@
       ></v-list-item>
 
       <v-list-item
+      v-if="this.hasPermission(['view_trips', 'view_trips_company', 'view_triptemplates_company', 'view_triptemplates'])"
         prepend-icon="mdi-steering"
         title="Viajes y Plantillas"
         to="trip-home"
@@ -121,7 +122,7 @@ export default {
       { title: "Promociones", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
       { title: "Tipos de Pasajes", icon: "mdi-ticket-confirmation-outline", to: "ticket-type", permission: "view_tickettype" },
       //{ title: "Plantillas de Viajes", icon: "mdi-map-marker-path", to: "trip-template", permission: "view_triptemplates" },
-      { icon: "mdi-ticket", title: "Venta de Tickets", to: "ticket", value: "ticket", permission: "view_tickets" },
+      { icon: "mdi-ticket", title: "Venta de Tickets", to: "ticket", value: "ticket", permission: ["view_tickets", "view_tickets_company"] },
     ],
     security: [
       { title: "Roles", icon: "mdi-account-cog-outline", to: "role", permission: "view_roles" },
@@ -139,10 +140,10 @@ export default {
       { icon: "mdi-ticket", title: "Tickets", to: "ticket", value: "ticket", permission: "view_tickets" },
     ],
     reports: [
-      { title: "Monto generado", icon: "mdi-finance", to: "ticketdate", permission: "view_ticketsdate" },
-      { title: "Monto por viajes", icon: "mdi-map-marker-path", to: "tickettripdate", permission: "view_tickettripsdate" },
-      { title: "Viajes por trabajador", icon: "mdi-bus-marker", to: "tripsworker", permission: "view_tripsworker" },
-      { title: "Incidentes", icon: "mdi-alert",  to: "incident", permission: "view_incidents" }
+      { title: "Monto generado", icon: "mdi-finance", to: "ticketdate", permission: ["view_ticketsdate", "view_ticketsdate_company"] },
+      { title: "Monto por viajes", icon: "mdi-map-marker-path", to: "tickettripdate", permission: ["view_tickettripsdate", "view_tickettripsdate_company"] },
+      { title: "Viajes por trabajador", icon: "mdi-bus-marker", to: "tripsworker", permission: ["view_tripsworker", "view_tripsworker_company"] },
+      { title: "Incidentes", icon: "mdi-alert",  to: "incident", permission: ["view_incidents", "view_incidents_company"] }
     ],
     title: '',
     imageBranch: '',
@@ -159,16 +160,16 @@ export default {
       }
     },
     filteredMenuAdministracion() {
-      return this.administracion.filter(item => this.permissions.includes(item.permission));
+      return this.administracion.filter(item => this.hasPermission(item.permission));
     },
     filteredMenuSecurity() {
-      return this.security.filter(item => this.permissions.includes(item.permission));
+      return this.security.filter(item => this.hasPermission(item.permission));
     },
     filteredMenuTickets() {
-      return this.tickets.filter(item => this.permissions.includes(item.permission));
+      return this.tickets.filter(item => this.hasPermission(item.permission));
     },
     filteredMenuReports() {
-      return this.reports.filter(item => this.permissions.includes(item.permission));
+      return this.reports.filter(item => this.hasPermission(item.permission));
     },
   },
   mounted() {
@@ -183,6 +184,17 @@ export default {
       this.subtitle = 'Sucursal';
     }
   },
+  methods: {
+  hasPermission(requiredPermissions) {
+    // Si es un string, lo convertimos a array
+    const perms = Array.isArray(requiredPermissions) 
+      ? requiredPermissions 
+      : [requiredPermissions];
+    
+    // Retorna true si al menos uno coincide
+    return perms.some(p => this.permissions.includes(p));
+  }
+}
 };
 </script>
 

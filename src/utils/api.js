@@ -21,6 +21,7 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
 
   } catch (error) {
     if (error.response) {
+      const getMessage = (d) => d?.message || d?.msg || 'Error desconocido';
       const status = error.response.status;
       switch (status) {
         case 400:
@@ -34,6 +35,9 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
           }
         case 401:
           return { success: false, message: `Acceso no autorizado: Revocado o no válido.:${error.response}` };
+          case 404:
+          // ✅ Manejo específico para 404 con mensaje del backend
+          return { success: false, message: getMessage(data) };
         case 500:
           return { success: false, message: 'Error interno del servidor.' };
         default:

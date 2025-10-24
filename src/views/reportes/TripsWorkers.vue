@@ -44,14 +44,6 @@
     <!-- Grupo: Autocomplete + Botón buscar -->
    <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
 
            <v-menu
             v-model="menu"
@@ -122,9 +114,29 @@
             </v-locale-provider>
           </v-menu>
 
+          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="this.mostrarFila"
+            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
+            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" class="ml-1 mr-1">
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :prepend-avatar="this.getImageUrl(item.raw.image)">
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="this.selectedWorker" v-if="this.mostrarFila"
+                  :items="workers" label="Trabajadores" prepend-inner-icon="mdi-account" item-title="name" item-value="id"
+                  variant="solo-filled" hide-details single-line flat density="compact" :rules="selectRules">
+                  <template v-slot:item="{ props, item }">
+                    <v-list-item v-bind="props"
+                      :prepend-avatar="getImageUrl(item.raw.image)"
+                      :title="item.raw.name">
+                      <v-list-item-subtitle class="d-flex flex-column">
+                        <div>Rol: {{ item.raw.role.name }}</div>
+                      </v-list-item-subtitle>
+                    </v-list-item>
+                  </template>
+                </v-autocomplete>
           <!-- Botón de búsqueda (actualizar datos) -->
-          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id" 
-            class="mt-2 mt-md-0 mr-5 ml-1">
+          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>
         </div>
@@ -290,118 +302,8 @@
       </tr>
     </template>
   </v-data-table>
-</v-card>
+  </v-card>
   </v-container>
-    <!--<v-container style="min-width: 100%; min-height: 100%;">
-
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <v-row align="center">
-                    <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Viajes Realizados</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="3" class="text-right">
-                        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-                            prepend-icon="mdi-file-excel-box" @click="exportToExcel">
-                            Exportar a Excel
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-toolbar>
-            <v-card-text>
-                <v-row>
-                    <v-col cols="12" md="3">
-                        <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40"
-                            transition="scale-transition" offset-y min-width="290px">
-                            <template v-slot:activator="{ props }">
-                                <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
-                                    prepend-icon="mdi-calendar" label="Fecha de inicio"
-                                    density="compact"></v-text-field>
-                            </template>
-                            <v-locale-provider locale="es">
-                                <v-date-picker header="Calendario" title="Seleccione la fecha"
-                                    :color="paleteColors.primary" :modelValue="input" @update:model-value="updateDate"
-                                    format="yyyy-MM-dd"></v-date-picker>
-                            </v-locale-provider>
-                        </v-menu>
-                    </v-col>
-                    <v-col cols="12" md="3">
-                        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40"
-                            transition="scale-transition" offset-y min-width="290px">
-                            <template v-slot:activator="{ props }">
-                                <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="underlined"
-                                    prepend-icon="mdi-calendar" label="Fecha Terminación"
-                                    density="compact"></v-text-field>
-                            </template>
-                            <v-locale-provider locale="es">
-                                <v-date-picker header="Calendario" title="Seleccione la fecha"
-                                    :color="paleteColors.primary" :modelValue="input2" format="yyyy-MM-dd"
-                                    :min="dateFormatted"
-                                    @update:model-value="updateDate1"></v-date-picker>
-                            </v-locale-provider>
-                        </v-menu>
-                    </v-col>
-
-                    <v-col cols="12" md="3"  v-if="mostrarFila">
-                        <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
-                            label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-                            item-value="id" variant="underlined" :rules="selectRules" density="compact">
-                            <template v-slot:item="{ props, item }">
-                                <v-list-item v-bind="props"
-                                    :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                                    <template v-slot:title>
-                                        {{ item.raw.name }} 
-                                    </template>
-                                    <template v-slot:subtitle>
-                                        Rol: {{ item.raw.role }} 
-                                    </template>
-                                </v-list-item>
-                            </template>
-                        </v-autocomplete>
-                    </v-col>
-                    <v-col cols="12" md="3">
-                        <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
-                            <v-icon>mdi-magnify</v-icon></v-btn>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-card-text>
-                        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar"
-                            single-line hide-details>
-                        </v-text-field>
-                        <v-data-table :headers="headers" :search="search" :items="response" class="elevation-1"
-                            style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-                            no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                            <template v-slot:item.vehicleName="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                                    <v-img
-                                        :src="`${this.$axios.defaults.baseURL}images/${item.vehicleImage}?t=${Date.now()}`"
-                                        alt="image"></v-img>
-                                </v-avatar>
-                                {{ item.vehicleName }}
-                            </template>
-                            <template v-slot:item.origin="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                                    <v-img
-                                        :src="`${this.$axios.defaults.baseURL}images/${item.originImage}?t=${Date.now()}`"
-                                        alt="image"></v-img>
-                                </v-avatar>
-                                {{ item.origin }}
-                            </template>
-                            <template v-slot:item.destination="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                                    <v-img
-                                        :src="`${this.$axios.defaults.baseURL}images/${item.destinationImage}?t=${Date.now()}`"
-                                        alt="image"></v-img>
-                                </v-avatar>
-                                {{ item.destination }}
-                            </template>
-                        </v-data-table>
-                    </v-card-text>
-                </v-row>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
 </template>
 
 <script>
@@ -434,6 +336,7 @@ export default {
         search: '',
         branch_id: '',
         worker_id: '',
+        selectedWorker: '',
         workers: [],
         role: '',
         response: [],
@@ -447,6 +350,7 @@ export default {
         input2: null,
         date: null,
         endDate: null,
+        selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     }),
     computed: {
        dateFormatted() {
@@ -464,26 +368,50 @@ export default {
       return this.input2 ? new Date(this.input2) : new Date();
     },
     },
+    watch: {
+    branch_id(newBranchId) {
+      if (newBranchId) {
+        // Buscar la sucursal seleccionada
+        const selectedBranch = this.branches.find(b => b.id === newBranchId);
+        // Asignar sus trabajadores al array `workers`
+        this.workers = selectedBranch?.workers || [];
+        this.selectedWorker = this.worker_id;
+      } else {
+        this.workers = [];
+        this.selectedWorker = this.worker_id;
+      }
+    }
+  },
     mounted() {
         this.role = JSON.parse(LocalStorageService.getItem('role'));
-        this.worker_id = LocalStorageService.getItem('worker_id');
+        this.worker_id =  parseInt(LocalStorageService.getItem('worker_id'), 10);
+        this.selectedWorker = this.worker_id;
         this.permissions = LocalStorageService.getItem('permissions');
-        if (this.hasPermission('view_branches'))  {
+        if (this.hasPermission('view_tripsworker_company'))  {
             this.showBranches();
+            this.mostrarFila = true;
         } else {
-            this.branch_id = LocalStorageService.getItem('branch_id');
+          this.mostrarFila = false,
+            this.branch_id =  parseInt(LocalStorageService.getItem('branch_id'), 10);
+            this.initialize();
         }
+
+        console.log('LocalStorageService.getItem(branch_id)');
+        console.log(LocalStorageService.getItem('branch_id'));
     },
     methods: {
-      hasPermission(permission) {
-        return this.permissions.includes(permission);
-        },
-         getCacheTimestamp() {
+      getImageUrl(imagePath) {
+      return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
+    },
+    getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
+      hasPermission(permission) {
+        return this.permissions.includes(permission);
+        },
         formatNumber(value) {
             // Si el valor es menor que 1000, devuelve el valor original con dos decimales
             if (value < 1000) {
@@ -501,6 +429,7 @@ export default {
         async showBranches() {
             try {
                 this.data = {};
+                this.data.worker_id = this.worker_id;
                 //this.data.worker_id = this.worker_id;
                 const result = await handleRequest({
                     endpoint: 'worker-branches',
@@ -529,16 +458,22 @@ export default {
             }
         },
         async initialize() {
+           if (this.branch_id === 'null') {
+              this.response = [];
+              this.loading = false;
+              return;
+            }
             try {
                 this.data = {};
-                this.data.branch_id = Number(this.branch_id);
+                this.data.branch_id = this.branch_id;
+                this.data.worker_id = this.selectedWorker;
                 // Formatear las fechas
                /* const formattedDate = this.date ? format(new Date(this.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
                 const formattedEndDate = this.endDate ? format(new Date(this.endDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');*/
-              const formattedDate =
-        this.date ?? new Date().toISOString().split("T")[0];
-      const formattedEndDate =
-        this.endDate ?? new Date().toISOString().split("T")[0];
+                const formattedDate =
+                this.date ?? new Date().toISOString().split("T")[0];
+              const formattedEndDate =
+                this.endDate ?? new Date().toISOString().split("T")[0];
                 // Comparar las fechas
                 if (formattedDate === formattedEndDate) {
                     this.data.date = formattedDate; // Solo enviar una fecha si son iguales

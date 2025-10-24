@@ -500,12 +500,6 @@ export default {
         /^\+569\d{8}$/.test(v) ||
         "Formato de número móvil inválido. Ejemplo: +56912345678",
     ],
-    macRules: [
-      (v) => !!v || "La dirección MAC es requerida", // Verifica que el campo no esté vacío
-      (v) =>
-        /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(v) ||
-        "La dirección MAC debe tener el formato correcto (ej. XX:XX:XX:XX:XX:XX o XX-XX-XX-XX-XX-XX)", // Valida el formato de la MAC
-    ],
     serialRules: [
       (v) => !!v || "El número de serie es requerido", // Verifica que el campo no esté vacío
       (v) =>
@@ -513,9 +507,25 @@ export default {
         "El número de serie debe ser alfanumérico y tener entre 8 y 16 caracteres", // Valida que sea alfanumérico y tenga la longitud correcta
     ],
     androidVersionRules: [
-      (v) => !!v || "La versión de Android es obligatoria", // Reglas básicas
-      (v) => /^\d{1,2}(\.\d{1,2})?$/.test(v) || "Formato inválido. Ejemplo: 11.0 o 12.1", // Validación para formato numérico
-    ],
+  (v) => {
+    // Permitir vacío o solo espacios
+    if (!v || v.trim() === '') return true;
+    // Validar formato si hay valor
+    return /^\d{1,2}(\.\d{1,2})?$/.test(v.trim()) || 
+           "Formato inválido. Ejemplo: 11.0 o 12.1";
+  }
+],
+
+macRules: [
+  (v) => {
+    // Permitir vacío o solo espacios
+    if (!v || v.trim() === '') return true;
+    // Validar formato MAC si hay valor
+    const trimmed = v.trim();
+    return /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(trimmed) || 
+           "La dirección MAC debe tener el formato correcto (ej. XX:XX:XX:XX:XX:XX o XX-XX-XX-XX-XX-XX)";
+  }
+]
   }),
   computed: {
     formTitle() {
@@ -545,21 +555,29 @@ export default {
       return this.input2 ? new Date(this.input2) : new Date();
     },
   },
+  created() {
+  },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_branches')) {
+    if (this.hasPermission('view_devices_company')) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
-      this.branch_id = LocalStorageService.getItem("branch_id");
+      this.branch_id = LocalStorageService.getItem("branch_id");    
       this.initialize();
     }
   },
   methods: {
-     hasPermission(permission) {
-      return this.permissions.includes(permission);
-    },
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -606,6 +624,7 @@ export default {
       }
     },
     async showAdd() {
+      this.close();
        this.editedItem.branch_id = 
   (this.editedItem.branch_id !== null && 
    this.editedItem.branch_id !== undefined && 
@@ -625,6 +644,11 @@ export default {
       this.imgMiniatura = "";
     },
     async initialize() {
+       if (this.branch_id === 'null') {
+        this.devices = [];
+        this.loading = false;
+        return;
+      }
       try {
         this.data = {};
         this.data.branch_id = this.branch_id;

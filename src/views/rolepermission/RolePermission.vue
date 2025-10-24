@@ -174,24 +174,26 @@
                                     prepend-icon="mdi-shield-check" item-title="name" item-value="id"
                                     variant="underlined" :rules="selectRules" :menu-props="{
                                         maxWidth: '100%',
-                                        minWidth: '450px',
+                                        minWidth: '500px',
                                         contentClass: 'permission-menu'
                                     }">
                                     <template v-slot:item="{ props, item }">
-                                        <v-list-item v-bind="props">
-                                            <v-list-item-subtitle class="d-flex flex-column">
-                                                <div><strong>Módulo:</strong> {{ item.raw.module }}</div>
-                                                <v-tooltip bottom>
-                                                    <template v-slot:activator="{ props }">
-                                                        <div class="text-truncate" v-bind="props"
-                                                            style="width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                            <strong>Descripción:</strong> {{ item.raw.description }}
-                                                        </div>
-                                                    </template>
-                                                    <span>{{ item.raw.description }}</span>
-                                                </v-tooltip>
-                                            </v-list-item-subtitle>
-                                        </v-list-item>
+                                    <v-list-item v-bind="props">
+                                        <v-list-item-subtitle class="d-flex flex-column">
+                                        <div><strong>Módulo:</strong> {{ item.raw.module }}</div>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props: tooltipProps }">
+                                            <div
+                                                v-bind="tooltipProps"
+                                                class="two-line-clamp"
+                                            >
+                                                <strong>Descripción:</strong> {{ item.raw.description }}
+                                            </div>
+                                            </template>
+                                            <span>{{ item.raw.description }}</span>
+                                        </v-tooltip>
+                                        </v-list-item-subtitle>
+                                    </v-list-item>
                                     </template>
                                 </v-autocomplete>
                             </v-col>
@@ -517,3 +519,15 @@ export default {
     },
 };
 </script>
+<style scoped>
+.two-line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;        /* Máximo 2 líneas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;          /* Permite saltos de línea */
+  line-height: 1.4em;           /* Ajusta según tu diseño */
+  max-height: 2.8em;            /* 2 líneas × line-height */
+}
+</style>

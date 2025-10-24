@@ -1056,7 +1056,7 @@ export default {
             this.role = JSON.parse(LocalStorageService.getItem('role'));
             this.nameUser = JSON.parse(LocalStorageService.getItem('name'));
             this.permissions = LocalStorageService.getItem('permissions');
-            if (this.hasPermission('view_branches')) {
+            if (this.hasPermission('view_tickets_company')) {
             this.showBranches();
             this.mostrarFila = true;
             } else {
@@ -1065,9 +1065,15 @@ export default {
             }
         },
         methods: {
-        hasPermission(permission) {
-        return this.permissions.includes(permission);
-        },
+        hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
         getCacheTimestamp() {
         // Usamos medianoche (00:00:00) del día actual
         const now = new Date();
@@ -1680,19 +1686,64 @@ export default {
             this.editedItem.date = this.dateFormatted;
             this.menu = false;
         },
+        obtenerHoraChile() {
+        return new Date().toLocaleTimeString('en-GB', {
+            timeZone: 'America/Santiago',
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        },
+        timeToMinutes(timeStr) {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+        },
+        filterTripsWithin30Minutes(trips, currentDate, currentTripId = null) {
+            const horaActualChile = this.obtenerHoraChile();
+            const ahoraMinutos = this.timeToMinutes(horaActualChile);
+
+            return trips.filter(trip => {
+                // ✅ Siempre incluir el viaje actual (el que se está editando)
+                if (currentTripId !== null && trip.id === currentTripId) {
+                return true;
+                }
+
+                // ❌ Excluir si ya ha salido
+                if (trip.start !== null && trip.start !== '') {
+                return false;
+                }
+
+                // ❌ Excluir si no es hoy
+                if (trip.date !== currentDate) {
+                return false;
+                }
+
+                const scheduleMinutos = this.timeToMinutes(trip.schedule);
+
+                // ✅ Solo permitir si la hora programada es AHORA o en los próximos 30 min
+                if (scheduleMinutos < ahoraMinutos) {
+                // La hora ya pasó → excluir
+                return false;
+                }
+
+                const diffMinutes = scheduleMinutos - ahoraMinutos; // siempre positivo o cero
+                return diffMinutes <= 30;
+            });
+            },
+           getChileDate() {
+            return new Date().toLocaleDateString('en-CA', {
+                timeZone: 'America/Santiago'
+            });
+            },
         async showAdd() {
+            this.close();
             this.aviable = '';
             this.normal = '';
             this.selectedPromotion = '';
             this.data = {};
             this.seatMap = [];
             this.data.branch_id = Number(this.branch_id);
-            const today = new Date();
-            const formattedDate = [
-                today.getFullYear(),
-                (today.getMonth() + 1).toString().padStart(2, '0'),
-                today.getDate().toString().padStart(2, '0')
-            ].join('-');
+            const formattedDate = this.getChileDate();
             this.data.date = formattedDate;
             try {
                 const result = await handleRequest({
@@ -1703,8 +1754,8 @@ export default {
 
                 if (result.success) {
                     // Si la solicitud es exitosa, asignamos las sucursales
-                    //this.trips = result.data?.trips || [];
-                    this.trips = (result.data?.trips || []).filter(trip => trip.start === null || trip.start === "");
+
+                this.trips = this.filterTripsWithin30Minutes(result.data.trips || [], formattedDate, null);
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {
@@ -1730,6 +1781,11 @@ export default {
             this.reservedSeats = [];
         },
         async initialize() {
+            if (this.branch_id === 'null') {
+                this.tickets = [];
+                this.loading = false;
+                return;
+            }
             try {
                 this.loading = true;
                 this.data = {};
@@ -2054,12 +2110,23 @@ export default {
                     margin-bottom: 15px;
                 }
                 .branch-logo {
-                    width: 80px;
-                    height: 80px;
-                    margin: 0 auto 10px;
-                    display: block;
-                    object-fit: contain;
-                }
+                        width: 80px;
+                        height: 80px;
+                        margin: 0 auto 10px;
+                        display: block;
+                        object-fit: contain;
+                    }
+
+                    @media print {
+                        body {
+                            padding: 5px;
+                        }
+                        .branch-logo {
+                            width: 40px !important;
+                            height: 40px !important;
+                            margin: 0 auto 8px !important;
+                        }
+                    }
                 .branch-name {
                     font-size: 1.25rem;
                     font-weight: bold;
@@ -2282,12 +2349,7 @@ export default {
             // Inicializar las variables de promoción
             this.selectedPromotion = null;
            
-            const today = new Date();
-            const formattedDate = [
-                today.getFullYear(),
-                (today.getMonth() + 1).toString().padStart(2, '0'),
-                today.getDate().toString().padStart(2, '0')
-            ].join('-');
+           const formattedDate = this.getChileDate();
             this.data.date = formattedDate;
             try {
                 const result = await handleRequest({
@@ -2299,15 +2361,7 @@ export default {
                 if (result.success) {
                     const currentTripId = item.trip_id; // El viaje al que pertenece este ticket
 
-                    this.trips = (result.data?.trips || []).filter(trip => {
-                        // Incluir si:
-                        // 1. El viaje NO ha salido (start es null o vacío), O
-                        // 2. Es el viaje al que pertenece el ticket actual (aunque ya haya salido)
-                        return (
-                        (trip.start === null || trip.start === "") ||
-                        trip.id === currentTripId
-                        );
-                    });
+                    this.trips = this.filterTripsWithin30Minutes(result.data.trips || [], formattedDate, currentTripId);
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {

@@ -59,7 +59,7 @@
             </v-menu>
           </v-col>
           <v-col cols="auto">
-            <v-select v-model="type" :items="options" label="Seleccione una opción" variant="solo-filled"
+            <v-select v-if="this.mostrarFila" v-model="type" :items="options" label="Seleccione una opción" variant="solo-filled"
             hide-details
             single-line
             flat
@@ -404,7 +404,7 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_branches')) {
+    if (this.hasPermission('view_tickettripsdate_company')) {
       this.showBranches();
       this.type = "Company";
       this.mostrarFila = true;
@@ -414,9 +414,15 @@ export default {
     }
   },
   methods: {
-    hasPermission(permission) {
-        return this.permissions.includes(permission);
-        },
+     hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     getMethodColor(metodo) {
       if (!metodo) return "grey"; // Manejo de valores nulos/undefined
 
@@ -487,6 +493,11 @@ export default {
       }
     },
     async initialize() {
+      if (this.branch_id === 'null' && this.type === 'Sucursal') {
+        this.response = [];
+        this.loading = false;
+        return;
+      }
       this.response = [];
       try {
         this.loading = true;

@@ -290,6 +290,7 @@ export default {
     },
     methods: {
         showAdd() {
+          this.close();
             this.editedIndex = -1
             this.dialog = true;
         },

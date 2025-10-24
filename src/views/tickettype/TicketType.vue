@@ -327,6 +327,7 @@ export default {
     },
     methods: {
         showAdd() {
+            this.close();
             this.dialog = true;
         },
         close() {

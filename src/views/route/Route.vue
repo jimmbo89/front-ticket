@@ -261,7 +261,7 @@
   </v-card-actions>
     </v-card>
   </v-container>
-  <v-dialog v-model="dialog" max-width="500px">
+  <v-dialog v-model="dialog" max-width="500px" persistent>
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card>
         <v-toolbar :color="paleteColors.primary">
@@ -513,7 +513,7 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_branches')) {
+    if (this.hasPermission('view_routes_company')) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
@@ -522,9 +522,15 @@ export default {
     }
   },
   methods: {
-     hasPermission(permission) {
-      return this.permissions.includes(permission);
-    },
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     formatNumber(value) {
       const numberValue = parseFloat(value);
 
@@ -582,6 +588,7 @@ export default {
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
     async showAdd() {
+      //this.close();
       this.data = {};
       this.editedIndex = -1;
       this.editedItem.branch_id = 
@@ -635,6 +642,11 @@ export default {
       this.editedIndex = -1;
     },
     async initialize() {
+      if (this.branch_id === 'null') {
+        this.branchRoutes = [];
+        this.loading = false;
+        return;
+      }
       this.data = {};
       this.data.branch_id = this.branch_id;
       try {

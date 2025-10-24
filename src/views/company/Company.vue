@@ -313,21 +313,21 @@ export default {
         title: "Sucursales",
         to: "/branch",
         value: "branch",
-        permission: "view_branches",
+        permission: ["view_branches", "view_branches_company"],
       },
       {
         icon: "mdi-account",
         title: "Trabajadores",
         to: "/worker",
         value: "worker",
-        permission: "view_workers",
+        permission: ["view_workers"],
       },
       {
         icon: "mdi-bus",
         title: "Vehículos",
         to: "/structure-vehicle",
         value: "structure-vehicle",
-        permission: "view_vehicles",
+        permission: ["view_vehicles"],
       },
       /*{
         icon: "mdi-map-marker",
@@ -341,14 +341,14 @@ export default {
         title: "Rutas",
         to: "/location-route",
         value: "location-route",
-        permission: "view_routes",
+        permission: ["view_routes", "view_routes_company"],
       },
       {
         icon: "mdi-devices",
         title: "Dispositivos",
         to: "/device",
         value: "devices",
-        permission: "view_devices",
+        permission: ["view_devices", "view_devices_company"],
       },
     ],
 
@@ -413,9 +413,18 @@ export default {
     this.initialize();
   },
   methods: {
-     hasPermission(permission) {
+    /* hasPermission(permission) {
       return this.permissions.includes(permission);
-    },
+    },*/
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -423,6 +432,7 @@ export default {
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
     showAddBussines() {
+      this.close();
       this.dialog = true;
     },
     close() {
@@ -464,6 +474,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      //this.$refs.form.reset();
       if (this.editedIndex === -1) {
         this.valid = false;
         this.data.name = this.editedItem.name;

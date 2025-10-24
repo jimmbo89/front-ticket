@@ -567,6 +567,7 @@ export default {
       }
     },*/
     async showAdd() {
+      this.close();
       const request = {
         type: 'Sistema'
       }
@@ -626,6 +627,7 @@ export default {
       }
     },
     async save() {
+      //this.$refs.form.reset();
       this.loading = true;
       if (this.editedIndex === -1) {
         this.loading = true;

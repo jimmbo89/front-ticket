@@ -354,7 +354,7 @@ export default {
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_branches')) {
+    if (this.hasPermission('view_incidents_company')) {
       this.showBranches();
     } else {
       this.branch_id = LocalStorageService.getItem("branch_id");
@@ -363,9 +363,15 @@ export default {
   },
 
   methods: {
-    hasPermission(permission) {
-        return this.permissions.includes(permission);
-        },
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
      toggleExpand(item) {
     const index = this.expandedItems.findIndex(i => i.id === item.id);
     if (index > -1) {
@@ -435,6 +441,11 @@ export default {
       this.menu2 = false;
     },
     async initialize() {
+      if (this.branch_id === 'null') {
+        this.incidents = [];
+        this.loading = false;
+        return;
+      }
       this.data = {};
       this.data.branch_id = this.branch_id;
       const today = new Date();

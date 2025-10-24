@@ -656,7 +656,7 @@
                                     <v-col cols="12" md="3">
                                         <v-text-field v-model="editedItem.price" label="Precio"
                                             prepend-icon="mdi-currency-usd" variant="underlined" :rules="priceRules"
-                                            type="number" density="compact" min="0" disabled="true"></v-text-field>
+                                            type="number" density="compact" min="0" :disabled="true"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" md="3">
                                         <v-text-field v-model="editedItem.duration" label="Duración (Minutos)"
@@ -1028,7 +1028,7 @@ export default {
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
    this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_branches')) {
+    if (this.hasPermission('view_triptemplates_company')) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
@@ -1051,9 +1051,15 @@ export default {
   }
 },
   methods: {
-    hasPermission(permission) {
-      return this.permissions.includes(permission);
-    },
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -1302,6 +1308,7 @@ export default {
       this.menu = false;
     },
     async showAdd() {
+      this.close();
       this.step = 1;
       this.data = {};
       this.filteredWorkers = [];
@@ -1414,6 +1421,11 @@ export default {
       });
     },
     async initialize() {
+      if (this.branch_id === 'null') {
+        this.templates = [];
+        this.loading = false;
+        return;
+      }
       this.data = {};
       this.data.branch_id = this.branch_id;
       try {

@@ -883,6 +883,7 @@ export default {
       });
     },
     showAdd() {
+      this.close();
       this.dialog = true;
     },
     // Guarda la estructura en el array estático

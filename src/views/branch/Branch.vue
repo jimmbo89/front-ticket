@@ -326,6 +326,7 @@
 </template>
 
 <script>
+import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import BranchWorker from "../branchworker/BranchWorker.vue";
 import BranchVehicle from "../branchvehicle/BranchVehicle.vue";
@@ -355,6 +356,8 @@ export default {
     dialogDelete: false,
     companies: [],
     branches: [],
+    branch_id: '',
+    permissions: '',
     data: {},
     dialogBranchWorker: null,
     dialogBranchVehicle: null,
@@ -425,9 +428,20 @@ export default {
     },
   },
   mounted() {
+    this.permissions = LocalStorageService.getItem('permissions');
+    this.branch_id = LocalStorageService.getItem('branch_id');
     this.initialize();
   },
   methods: {
+    hasPermission(requiredPermissions) {
+        // Si es un string, lo convertimos a array
+        const perms = Array.isArray(requiredPermissions) 
+          ? requiredPermissions 
+          : [requiredPermissions];
+        
+        // Retorna true si al menos uno coincide
+        return perms.some(p => this.permissions.includes(p));
+      },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -435,6 +449,7 @@ export default {
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
     async showAddBranch() {
+      this.close();
       try {
         const result = await handleRequest({
           endpoint: "company",
@@ -486,8 +501,14 @@ export default {
         });
 
         if (result.success) {
+          if(this.hasPermission(['view_branches_company'])){            
           // Si la solicitud es exitosa, asignamos las sucursales
           this.branches = result.data?.branches || [];
+          }else{
+            this.branches = (result.data?.branches || []).filter(branch => 
+              branch.id == this.branch_id
+            );
+          }
         } else {
           // Si no hay datos, asignamos un array vacío
           this.branches = [];
@@ -506,6 +527,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      //this.$refs.form.reset();
       if (this.editedIndex === -1) {
         this.valid = false;
         this.data = {};

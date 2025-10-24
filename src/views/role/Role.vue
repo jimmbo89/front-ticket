@@ -302,6 +302,7 @@ export default {
   },
   methods: {
     showAddRole() {
+      this.close();
       this.dialog = true;
     },
     close() {
