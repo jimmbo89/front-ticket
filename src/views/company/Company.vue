@@ -662,7 +662,7 @@ export default {
       }
       return false; // Si la URL de la imagen no está definida o está vacía, devuelve false
     },
-    onFileSelected(event) {
+    async onFileSelected(event) {
       let file = event.target.files[0];
       // Validar el tamaño del archivo (500 KB máximo)
       const maxSize = 500 * 1024; // 500 KB en bytes
@@ -670,9 +670,56 @@ export default {
         this.showAlert("warning", "El archivo de imagen debe ser de máximo 500 KB", 3000);
         return; // Detener el proceso si el archivo es demasiado grande
       }
+      // 3. Validar dimensiones (160x160 máximo)
+  try {
+        const dimensions = await this.getImageDimensions(file);
+        if (dimensions.width > 160 || dimensions.height > 160) {
+          this.showAlert(
+            "warning",
+            `La imagen debe tener un tamaño máximo de 160x160 píxeles. La imagen seleccionada mide ${dimensions.width}x${dimensions.height}.`,
+            4000
+          );
+          this.clearFileInput();
+          return;
+        }
+
+        // Si todo está bien, asignar la imagen
+        this.editedItem.image = file;
+        this.cargarImage(file);
+      } catch (error) {
+        console.error("Error al leer la imagen:", error);
+        this.showAlert("error", "No se pudo cargar la imagen. Formato inválido.", 3000);
+        this.clearFileInput();
+      }
       this.editedItem.image = file;
       //console.log(this.editedItem.image_cardgift);
       this.cargarImage(file);
+    },
+    async getImageDimensions(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl); // Liberar memoria
+          resolve({ width: img.width, height: img.height });
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("No se pudo cargar la imagen."));
+        };
+
+        img.src = objectUrl;
+      });
+    },
+    clearFileInput() {
+      this.file = null;
+      this.editedItem.image = null;
+      this.imgMiniatura = "";
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.reset();
+      }
     },
     cargarImage(file) {
       let reader = new FileReader();

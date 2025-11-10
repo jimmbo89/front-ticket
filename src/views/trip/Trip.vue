@@ -42,13 +42,13 @@
     <v-spacer class="d-none d-md-block"></v-spacer>
 
     <!-- Grupo: Autocomplete + Botón buscar -->
-   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
           <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
             :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
             item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              <v-list-item v-bind="props" :prepend-avatar="getImageUrl(item.raw.image)">
               </v-list-item>
             </template>
           </v-autocomplete>
@@ -60,8 +60,25 @@
           </v-btn>-->
         </div>
 
+        <div class="flex-grow-1 mr-1" style="max-width: 15%">
+        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+                    offset-y min-width="290px">
+                    <template v-slot:activator="{ props }">
+                      <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" variant="solo-filled"
+            hide-details
+            single-line
+            flat></v-text-field>
+                    </template>
+                    <v-locale-provider locale="es">
+                      <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                        :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
+                        :min="new Date().toISOString().split('T')[0]"></v-date-picker>
+                    </v-locale-provider>
+                  </v-menu>
+        </div>
+
     <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 300px">
+    <div class="flex-grow-1" style="max-width: 20%">
       <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" hide-details single-line flat></v-text-field>
     </div>
@@ -150,7 +167,7 @@
               <!-- Origen con avatar -->
               <div class="d-flex align-left" style="width: 20%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                  <v-img :src="getImageUrl(slotProps.item.originImage)" class="icono-concavo" cover></v-img>
                 </v-avatar>
                 <span class="text-truncate">{{ slotProps.item.origin }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -163,7 +180,7 @@
               <!-- Destino con avatar -->
               <div class="d-flex align-left" style="width: 20%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                  <v-img :src="getImageUrl(slotProps.item.destinationImage)" class="icono-concavo" cover></v-img>
                 </v-avatar>
                 <span class="text-truncate">{{ slotProps.item.destination }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -176,7 +193,7 @@
               <!-- Vehículo con avatar -->
               <div class="d-flex align-left" style="width: 10%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
+                  <v-img :src="getImageUrl(slotProps.item.vehicleImage)" class="icono-concavo" cover></v-img>
                 </v-avatar>
                 <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -279,7 +296,7 @@
                               <!-- Columna 1: Origen -->
                               <v-col cols="12" md="4" class="d-flex align-center">
                                 <v-avatar>
-                                  <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
+                                  <v-img :src="getImageUrl(item.raw.originImage)"
                                     max-width="40" />
                                 </v-avatar>
                                 <div class="ml-2">
@@ -302,7 +319,7 @@
                               <!-- Columna 2: Destino -->
                               <v-col cols="12" md="4" class="d-flex align-center">
                                 <v-avatar>
-                                  <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
+                                  <v-img :src="getImageUrl(item.raw.destinationImage)"
                                     max-width="40" />
                                 </v-avatar>
                                 <div class="ml-2">
@@ -321,6 +338,16 @@
                                   </v-tooltip>
                                 </div>
                               </v-col>
+                              <!-- Duración estimada -->
+                              <v-col cols="12" md="4" class="align-center justify-md-left justify-center text-left">
+                                <div class="text-caption text-grey ml-1">
+                                  Duración estimada
+                                </div>
+                                <div class="text-body-2 font-weight-medium">
+                                  <v-icon small class="mr-1" color="primary">mdi-clock-time-four-outline</v-icon>
+                                  {{ formatDuration(item.raw.estimated) }}
+                                </div>
+                              </v-col>
                             </v-row>
                           </v-list-item>
                         </v-list-item>
@@ -335,7 +362,7 @@
                     @update:model-value="filterWorkers">
                     <template v-slot:item="{ props, item }">
                       <v-list-item v-bind="props"
-                        :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.vehicleImage}`"
+                        :prepend-avatar="getImageUrl(item.raw.vehicleImage)"
                         :title="item.raw.vehicleName">
                         <v-list-item-subtitle class="d-flex flex-column">
                           <div>Marca: {{ item.raw.brand }}</div>
@@ -429,9 +456,7 @@
                     </template>-->
                     <template v-slot:item.workerName="{ item }">
                       <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                        <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                            item.workerImage
-                          }?t=${getCacheTimestamp()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
+                        <v-img :src="getImageUrl(item.workerImage)" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
                       {{ item.workerName }}
                     </template>
                     <template v-slot:item.actions="{ item }">
@@ -502,7 +527,7 @@
                   item-value="id" variant="underlined" :rules="selectRules">
                   <template v-slot:item="{ props, item }">
                     <v-list-item v-bind="props"
-                      :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.workerImage}`"
+                      :prepend-avatar="getImageUrl(item.raw.workerImage)"
                       :title="item.raw.workerName">
                       <v-list-item-subtitle class="d-flex flex-column">
                         <div>Rol: {{ item.raw.roleName }}</div>
@@ -657,6 +682,16 @@ export default {
     getDate() {
       return this.input ? new Date(this.input) : new Date();
     },
+    dateFormattedSearch() {
+      const date = this.input2 ? new Date(this.input2) : new Date();
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${year}-${month}-${day}`;
+    },
+    getDateSearch() {
+      return this.input2 ? new Date(this.input2) : new Date();
+    },
     filteredTimeSlots() {
     return this.generateTimeSlots();
   },
@@ -679,6 +714,19 @@ export default {
   },
   },
   methods: {
+    formatDuration(minutes) {
+    if (minutes == null || minutes <= 0) return '—';
+    
+    const mins = Math.floor(minutes);
+    const hours = Math.floor(mins / 60);
+    const remainingMinutes = mins % 60;
+
+    const parts = [];
+    if (hours > 0) parts.push(`${hours} h`);
+    if (remainingMinutes > 0) parts.push(`${remainingMinutes} min`);
+    
+    return parts.length ? parts.join(' ') : '0 min';
+  },
      hasPermission(requiredPermissions) {
         // Si es un string, lo convertimos a array
         const perms = Array.isArray(requiredPermissions) 
@@ -688,6 +736,11 @@ export default {
         // Retorna true si al menos uno coincide
         return perms.some(p => this.permissions.includes(p));
       },
+    getImageUrl(imagePath) {
+      return `${
+        this.$axios.defaults.baseURL
+      }images/${imagePath}?t=${this.getCacheTimestamp()}`;
+    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -797,11 +850,6 @@ export default {
       this.editedItem.schedule = null;
     },
     updateArrival() {
-      console.log("updateArrival triggered");
-      console.log("schedule:", this.editedItem.schedule);
-      console.log("estimated:", this.estimated);
-      console.log("current arrival:", this.editedItem.arrival);
-
       // Validación mejorada
       if (!this.editedItem.schedule || !this.estimated || 
           !this.editedItem.schedule.match(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)) {
@@ -838,68 +886,6 @@ export default {
         this.editedItem.arrival = null;
       }
     },
-    /*updateArrival() {
-      console.log("updateArrival triggered");
-      console.log("schedule:", this.editedItem.schedule);
-      console.log("estimated:", this.estimated);
-      console.log("current arrival:", this.editedItem.arrival);
-
-      // Validación básica
-      if (!this.editedItem.schedule || !this.estimated) {
-        this.editedItem.arrival = null;
-        return;
-      }
-
-      // Usar fecha del item o fecha actual si es null
-      const baseDate = this.editedItem.date ? new Date(this.editedItem.date) : new Date();
-
-      // Extraer horas y minutos del schedule
-      const [hours, minutes] = this.editedItem.schedule.split(":").map(Number);
-
-      // Configurar la hora en la fecha base
-      baseDate.setHours(hours, minutes, 0, 0);
-
-      // Sumar los minutos estimados (convertidos a milisegundos)
-      const arrivalDate = new Date(baseDate.getTime() + this.estimated * 60000);
-
-      // Formatear a YYYY-MM-DD HH:MM:SS
-      const formattedArrival = arrivalDate
-        .toISOString()
-        .replace("T", " ")
-        .replace(/\.\d{3}Z$/, "");
-
-      this.editedItem.arrival = formattedArrival;
-      console.log("Hora de llegada calculada:", this.editedItem.arrival);
-    },*/
-    /*generateTimeSlots() {
-      const slots = [];
-      const now = new Date();
-      const selectedDate = this.editedItem.date
-        ? this.editedItem.date
-        : new Date().toISOString().split("T")[0];
-
-      // Comparar solo día/mes/año
-      const isToday = this.today(selectedDate);
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      console.log("isToday");
-      console.log(isToday);
-      for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 5) {
-          const slotMinutes = hour * 60 + minute;
-
-          // Si es hoy, saltar slots pasados
-          if (isToday && slotMinutes <= currentMinutes) {
-            continue;
-          }
-
-          slots.push(
-            `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
-          );
-        }
-      }
-
-      return slots;
-    },*/
 
     today(date) {
       // Obtener la fecha actual
@@ -918,6 +904,12 @@ export default {
       this.input = val;
       this.editedItem.date = this.dateFormatted;
       this.menu = false;
+    },
+     updateDateSearch(val) {
+      this.input2 = val;
+      //this.editedItem.date = this.dateFormatted;
+      this.menu2 = false;
+      this.initialize();
     },
     async showAdd() {
       this.close();
@@ -1047,7 +1039,7 @@ export default {
           month: '2-digit',
           day: '2-digit'
       }).split('-').reverse().join('-'); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
-      this.data.date = formattedDate;
+      this.data.date = this.dateFormattedSearch;
       try {
         this.loading = true;
         const result = await handleRequest({

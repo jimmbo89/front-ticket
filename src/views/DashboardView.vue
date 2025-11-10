@@ -4,7 +4,7 @@
       <!-- Barra de navegación superior -->
       <AppBarView app style="flex-shrink: 0;" @toggle-drawer="drawer = !drawer" 
       :drawer-visible="drawer"></AppBarView>
-      <v-navigation-drawer class="pt-4 my-1" color="white"
+      <v-navigation-drawer class="pt-0 my-1" color="white"
       v-model="drawer"
       :permanent="$vuetify.display.mdAndUp"
       :temporary="!$vuetify.display.mdAndUp"
@@ -13,7 +13,7 @@
       <NavigationDrawerView />
     </v-navigation-drawer>
 
-      <v-main class="mt-1" style="max-width: 100vw; overflow-x: hidden;">
+      <v-main class="mt-0" style="max-width: 100vw; overflow-x: hidden;">
           <router-view />
       </v-main>
 

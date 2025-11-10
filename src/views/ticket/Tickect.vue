@@ -31,70 +31,6 @@
             Vender ticket
         </v-btn>
     </v-card>
-    <!--<v-container style="min-width: 100%; min-height: 100%;">
-        <v-card elevation="6" class="mx-2">
-              <v-card-text>
-                <v-row>
-                        <v-cols cols="12" md="12">
-                            <v-row v-if="mostrarFila" dense>
-                                <v-col cols="12" md="3">
-                                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id"
-                                        v-if="mostrarFila" :items="branches" label="Seleccione una Sucursal"
-                                        prepend-inner-icon="mdi-store" item-title="name" item-value="id"
-                                        variant="underlined" :rules="selectRules" density="compact">
-                                        <template v-slot:item="{ props, item }">
-                                            <v-list-item v-bind="props"
-                                                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                                            </v-list-item>
-                                        </template>
-                                    </v-autocomplete>
-                                </v-col>
-                                <v-col cols="12" md="2">
-                                    <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
-                                        <v-icon>mdi-magnify</v-icon></v-btn>
-                                </v-col>
-                            </v-row>
-                        </v-cols>
-                    <v-col cols="12">
-                        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar"
-                            single-line hide-details>
-                        </v-text-field>
-
-                        <v-data-table :headers="headers" :search="search" :items="tickets" class="elevation-1"
-                            style="max-height: 65vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-                            no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                            <template v-slot:item.actions="{ item }">
-                                <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)"
-                                    :color="paleteColors.primary" variant="tonal" elevation="1"
-                                    title="Editar Ticket"></v-btn>
-                                <v-btn density="comfortable" icon="mdi-printer" @click="printerItem(item)"
-                                    :color="paleteColors.green" variant="tonal" elevation="1"
-                                    title="Reimprimir Ticket"></v-btn>
-                                <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)"
-                                    :color="paleteColors.error" variant="tonal" elevation="1"
-                                    title="Eliminar Ticket"></v-btn>
-                            </template>
-                            <template v-slot:item.tripOrigin="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.originImage
-                                        }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                {{ item.tripOrigin }}
-                            </template>
-                            <template v-slot:item.tripDestination="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.destinationImage
-                                        }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                {{ item.tripDestination }}
-                            </template>
-                            <template v-slot:item.price="{ item }">
-                                {{ formatNumber(Number(item.price))}}
-                            </template>
-                        </v-data-table>
-                    </v-col>
-                </v-row>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
     <v-container style="min-width: 100%;">
         <v-card flat>
             <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
@@ -106,7 +42,7 @@
                 <v-spacer class="d-none d-md-block"></v-spacer>
 
                 <!-- Grupo: Autocomplete + Botón buscar -->
-                <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+                <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
                     <!-- Autocomplete de sucursales (mismo estilo que el original) -->
                     <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
                         :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store"
@@ -126,8 +62,25 @@
           </v-btn>-->
                 </div>
 
+                <div class="flex-grow-1 mr-1" style="max-width: 15%">
+                <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
+                            offset-y min-width="290px">
+                            <template v-slot:activator="{ props }">
+                            <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" variant="solo-filled"
+                    hide-details
+                    single-line
+                    flat></v-text-field>
+                            </template>
+                            <v-locale-provider locale="es">
+                            <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+                                :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
+                                :min="new Date().toISOString().split('T')[0]"></v-date-picker>
+                            </v-locale-provider>
+                        </v-menu>
+                </div>
+
                 <!-- Campo de búsqueda global -->
-                <div class="flex-grow-1" style="max-width: 300px">
+                <div class="flex-grow-1" style="max-width: 20%">
                     <v-text-field v-model="search" density="compact" label="Buscar ticket"
                         prepend-inner-icon="mdi-magnify" variant="solo-filled" hide-details single-line
                         flat></v-text-field>
@@ -973,6 +926,16 @@ export default {
         getDate() {
             return this.input ? new Date(this.input) : new Date();
         },
+        dateFormattedSearch() {
+        const date = this.input2 ? new Date(this.input2) : new Date();
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`;
+        },
+        getDateSearch() {
+        return this.input2 ? new Date(this.input2) : new Date();
+        },
         evenSeats() {
             return this.availableSeats.filter((seat, index) => index % 2 === 0);
         },
@@ -1056,7 +1019,7 @@ export default {
             this.role = JSON.parse(LocalStorageService.getItem('role'));
             this.nameUser = JSON.parse(LocalStorageService.getItem('name'));
             this.permissions = LocalStorageService.getItem('permissions');
-            if (this.hasPermission('view_tickets_company')) {
+                if (this.hasPermission('view_tickets_company')) {
             this.showBranches();
             this.mostrarFila = true;
             } else {
@@ -1686,6 +1649,12 @@ export default {
             this.editedItem.date = this.dateFormatted;
             this.menu = false;
         },
+        updateDateSearch(val) {
+        this.input2 = val;
+        //this.editedItem.date = this.dateFormatted;
+        this.menu2 = false;
+        this.initialize();
+        },
         obtenerHoraChile() {
         return new Date().toLocaleTimeString('en-GB', {
             timeZone: 'America/Santiago',
@@ -1698,38 +1667,46 @@ export default {
         const [h, m] = timeStr.split(':').map(Number);
         return h * 60 + m;
         },
-        filterTripsWithin30Minutes(trips, currentDate, currentTripId = null) {
-            const horaActualChile = this.obtenerHoraChile();
-            const ahoraMinutos = this.timeToMinutes(horaActualChile);
+       filterTripsForReservation(trips, currentDate, currentTripId = null) {
+        const horaActualChile = this.obtenerHoraChile(); // Ej: '14:25'
+        const ahoraMinutos = this.timeToMinutes(horaActualChile); // Ej: 865
 
-            return trips.filter(trip => {
-                // ✅ Siempre incluir el viaje actual (el que se está editando)
-                if (currentTripId !== null && trip.id === currentTripId) {
-                return true;
-                }
+        return trips.filter(trip => {
+            // ✅ 1. Siempre incluir el viaje que se está editando
+            if (currentTripId !== null && trip.id === currentTripId) {
+            return true;
+            }
 
-                // ❌ Excluir si ya ha salido
-                if (trip.start !== null && trip.start !== '') {
-                return false;
-                }
+            // ❌ 2. Excluir si no tiene fecha o schedule
+            if (!trip.date || !trip.schedule) {
+            return false;
+            }
 
-                // ❌ Excluir si no es hoy
-                if (trip.date !== currentDate) {
-                return false;
-                }
+            // 📅 Comparar fechas: asumimos formato 'YYYY-MM-DD'
+            const esHoy = trip.date === currentDate;
+            const esFuturo = trip.date > currentDate;
 
-                const scheduleMinutos = this.timeToMinutes(trip.schedule);
+            // ❌ Si es una fecha pasada (menor que hoy), excluir
+            if (trip.date < currentDate) {
+            return false;
+            }
 
-                // ✅ Solo permitir si la hora programada es AHORA o en los próximos 30 min
-                if (scheduleMinutos < ahoraMinutos) {
-                // La hora ya pasó → excluir
-                return false;
-                }
+            // ✅ Si es futuro, incluir sin importar la hora
+            if (esFuturo) {
+            return true;
+            }
 
-                const diffMinutes = scheduleMinutos - ahoraMinutos; // siempre positivo o cero
-                return diffMinutes <= 30;
-            });
-            },
+            // 🕒 Si es HOY, verificar que la hora de salida aún no ha pasado
+            if (esHoy) {
+            const scheduleMinutos = this.timeToMinutes(trip.schedule);
+            // Incluir solo si la hora de salida es >= hora actual
+            return scheduleMinutos >= ahoraMinutos;
+            }
+
+            // Por defecto, excluir (esto no debería ocurrir si las fechas son válidas)
+            return false;
+        });
+        },
            getChileDate() {
             return new Date().toLocaleDateString('en-CA', {
                 timeZone: 'America/Santiago'
@@ -1743,8 +1720,8 @@ export default {
             this.data = {};
             this.seatMap = [];
             this.data.branch_id = Number(this.branch_id);
-            const formattedDate = this.getChileDate();
-            this.data.date = formattedDate;
+            this.data.date = this.dateFormattedSearch;
+            const formattedDate = this.dateFormattedSearch;
             try {
                 const result = await handleRequest({
                     endpoint: "get-trip-date",
@@ -1754,8 +1731,7 @@ export default {
 
                 if (result.success) {
                     // Si la solicitud es exitosa, asignamos las sucursales
-
-                this.trips = this.filterTripsWithin30Minutes(result.data.trips || [], formattedDate, null);
+                this.trips = this.filterTripsForReservation(result.data.allTrips || [], formattedDate, null);
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {
@@ -1796,7 +1772,7 @@ export default {
                     month: '2-digit',
                     day: '2-digit'
                 }).split('-').reverse().join('-'); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
-                this.data.date = formattedDate;
+                this.data.date = this.dateFormattedSearch;
                 this.data.branch_id = Number(this.branch_id);
                 const result = await handleRequest({
                     endpoint: "get-tickets-date",
@@ -2349,8 +2325,8 @@ export default {
             // Inicializar las variables de promoción
             this.selectedPromotion = null;
            
-           const formattedDate = this.getChileDate();
-            this.data.date = formattedDate;
+           const formattedDate = this.dateFormattedSearch;
+            this.data.date = this.dateFormattedSearch;
             try {
                 const result = await handleRequest({
                     endpoint: "get-trip-date",
@@ -2361,7 +2337,7 @@ export default {
                 if (result.success) {
                     const currentTripId = item.trip_id; // El viaje al que pertenece este ticket
 
-                    this.trips = this.filterTripsWithin30Minutes(result.data.trips || [], formattedDate, currentTripId);
+                    this.trips = this.filterTripsForReservation(result.data.allTrips || [], formattedDate, currentTripId);
                     this.promotions = result.data?.promotions || [];
                     this.tickettypes = result.data?.tickettypes || [];
                 } else {
