@@ -167,45 +167,6 @@
             </v-data-table>
         </v-card>
     </v-container>
-    <!--<v-container style="min-width: 100%; min-height: 100%;">
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <v-row align="center">
-                    <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Listado de Promociones</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="3" class="text-right">
-                        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-                            prepend-icon="mdi-plus-circle" @click="showAdd">
-                            Agregar Promoción
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-toolbar>
-
-            <v-card-text>
-                <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-                    hide-details>
-                </v-text-field>
-                <v-data-table :headers="headers" :search="search" :items="promotions" class="elevation-1"
-                    style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-                    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                    <template v-slot:item.actions="{ item }">
-                        <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
-                            variant="tonal" elevation="1" title="Editar Promoción"></v-btn>
-                        <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
-                            variant="tonal" elevation="1" title="Eliminar Promoción"></v-btn>
-                    </template>
-                    <template v-slot:item.active="{ item }">
-                        <v-chip :color="item.active ? paleteColors.active : paleteColors.inactive" :text-color="paleteColors.white">
-                            {{ item.active ? "Activa" : "Inactiva" }}
-                        </v-chip>
-                    </template>
-                </v-data-table>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
-
     <v-dialog v-model="dialog" max-width="600px">
         <v-form ref="form" v-model="valid">
             <v-card>
@@ -222,21 +183,21 @@
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-switch 
-  v-model="editedItem.active" 
-  :true-value="true" 
-  :false-value="false"
-  :color="paleteColors.active"
-  hide-details 
-  inset 
-  class="custom-switch"
->
-  <template v-slot:label>
-    <span class="text-body-1"
-      :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
-      {{ editedItem.active ? 'Activa' : 'Inactiva' }}
-    </span>
-  </template>
-</v-switch>
+                                v-model="editedItem.active" 
+                                :true-value="true" 
+                                :false-value="false"
+                                :color="paleteColors.active"
+                                hide-details 
+                                inset 
+                                class="custom-switch"
+                                >
+                                <template v-slot:label>
+                                    <span class="text-body-1"
+                                    :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
+                                    {{ editedItem.active ? 'Activa' : 'Inactiva' }}
+                                    </span>
+                                </template>
+                                </v-switch>
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-text-field v-model="editedItem.percentage" clearable label="Descuento (%)"
@@ -248,7 +209,7 @@
                             </v-col>
                             <v-col cols="12" md="12">
                                 <v-textarea v-model="editedItem.description" clearable label="Descripción"
-                                    prepend-icon="mdi-text-box-outline" variant="underlined"></v-textarea>
+                                    prepend-icon="mdi-text-box-outline" variant="underlined" :rules="descriptionRules"></v-textarea>
                             </v-col>
                         </v-row>
                     </v-container>
@@ -347,6 +308,9 @@ export default {
                 "El campo debe tener menos de 51 caracteres",
             (v) => (v && v.length >= 3) ||
                 "El campo debe tener al menos 3 caracteres",
+        ],
+        descriptionRules: [
+            (v) => !!v || "El campo es requerido",
         ],
         selectRules: [
             (v) => v !== null && v !== undefined || "Seleccionar al menos un elemento",
