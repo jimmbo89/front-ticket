@@ -26,10 +26,10 @@
         <!-- Botones -->
         <v-spacer></v-spacer>
 
-        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
+        <!--<v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
             prepend-icon="mdi-plus-circle" @click="showAdd()">
             Vender ticket
-        </v-btn>
+        </v-btn>-->
     </v-card>
     <v-container style="min-width: 100%;">
         <v-card flat>
@@ -264,12 +264,12 @@
                                     <!-- Acciones -->
                                     <div class="d-flex gap-1"
                                         style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                                        <v-btn size="35" icon variant="outlined"
+                                        <!--<v-btn size="35" icon variant="outlined"
                                             :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                                             :color="paleteColors.primary" @click="editItem(slotProps.item)"
                                             class="flex-shrink-0 mr-1" title="Editar Ticket">
                                             <v-icon size="20">mdi-pencil</v-icon>
-                                        </v-btn>
+                                        </v-btn>-->
 
                                         <v-btn size="35" icon variant="outlined"
                                             :style="{ 'border-width': '1px', 'border-style': 'solid' }"

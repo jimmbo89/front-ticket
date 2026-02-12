@@ -243,7 +243,7 @@
                 <!-- Tabla de detalles -->
                 <table class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4">
                   <tbody>
-                    <tr v-for="(value, key) in JSON.parse(item.details)" :key="key">
+                    <tr v-for="(value, key) in getDetailsObject(item.details)" :key="key">
                       <td class="font-weight-bold" style="width: 200px">
                         {{ formatDetailKey(key) }}:
                       </td>
@@ -363,6 +363,27 @@ export default {
   },
 
   methods: {
+     getDetailsObject(details) {
+    if (!details) return {};
+    
+    // Ya es objeto
+    if (typeof details === 'object' && !Array.isArray(details)) {
+      return details;
+    }
+    
+    // Es string, intentar parsear
+    if (typeof details === 'string') {
+      try {
+        return JSON.parse(details);
+      } catch (e) {
+        console.warn('Error parseando details:', details, e);
+        return { error: 'Datos inválidos' };
+      }
+    }
+    
+    // Tipo desconocido
+    return { error: `Tipo no soportado: ${typeof details}` };
+  },
     hasPermission(requiredPermissions) {
         // Si es un string, lo convertimos a array
         const perms = Array.isArray(requiredPermissions) 
