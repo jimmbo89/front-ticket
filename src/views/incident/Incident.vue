@@ -243,7 +243,7 @@
                 <!-- Tabla de detalles -->
                 <table class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4">
                   <tbody>
-                    <tr v-for="(value, key) in getDetailsObject(item.details)" :key="key">
+                    <tr v-for="(value, key) in getFilteredDetails(item.details)" :key="key">
                       <td class="font-weight-bold" style="width: 200px">
                         {{ formatDetailKey(key) }}:
                       </td>
@@ -540,7 +540,7 @@ export default {
       if (item.title.includes("Escaneo")) return "success";
       return "primary";
     },
-    formatDetailKey(key) {
+    /*formatDetailKey(key) {
       const keysMap = {
         qr: "Código QR",
         action: "Acción",
@@ -566,8 +566,8 @@ export default {
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ")
       );
-    },
-    formatDetailValue(key, value) {
+    },*/
+    /*formatDetailValue(key, value) {
       if (key === "qr") return "";
       if (key === "difference" && typeof value === "number") {
         const hours = Math.floor(value / 60);
@@ -589,7 +589,7 @@ export default {
         }).format(value);
       }
       return value;
-    },
+    },*/
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type;
 
@@ -650,6 +650,144 @@ export default {
           '<span class="error-text">Error al generar código QR</span>';
       }
     },
+    // Reemplaza el método getDetailsObject por este nuevo método que filtra y ordena los campos
+getFilteredDetails(details) {
+  if (!details) return {};
+  
+  // Parsear si es string JSON
+  let parsed = details;
+  if (typeof details === 'string') {
+    try {
+      parsed = JSON.parse(details);
+    } catch (e) {
+      console.warn('Error parseando details:', details, e);
+      return { error: 'Datos inválidos' };
+    }
+  }
+  
+  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { error: `Tipo no soportado: ${typeof parsed}` };
+  }
+
+  // === FILTRAR: Excluir campos que NO queremos mostrar ===
+  const { ticket_id, trip_id, sequenceNumber, branchName, ...cleanDetails } = parsed;
+
+  // === ORDENAR: Definir orden preferido de visualización ===
+  const preferredOrder = [
+    'transactionNumber',
+    'routeName',
+    'routeOrigin',
+    'routeDestination',
+    'departureTime',
+    'arrivalTime',
+    'print',
+    'method',
+    'quantity',
+    'price',
+    'total'
+  ];
+
+  const result = {};
+  
+  // Primero agregar campos en el orden preferido (si existen y tienen valor)
+  preferredOrder.forEach(key => {
+    if (cleanDetails[key] !== undefined && cleanDetails[key] !== null && cleanDetails[key] !== '') {
+      result[key] = cleanDetails[key];
+    }
+  });
+  
+  // Luego agregar cualquier otro campo restante que no esté en preferredOrder
+  Object.keys(cleanDetails).forEach(key => {
+    if (!preferredOrder.includes(key) && 
+        cleanDetails[key] !== undefined && 
+        cleanDetails[key] !== null && 
+        cleanDetails[key] !== '') {
+      result[key] = cleanDetails[key];
+    }
+  });
+  
+  return result;
+},
+
+// Actualiza formatDetailKey para incluir los nuevos campos
+formatDetailKey(key) {
+  const keysMap = {
+    qr: "Código QR",
+    action: "Acción",
+    ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
+    trip_id: "ID Viaje",    // Ya no se mostrará, pero se mantiene por compatibilidad
+    new_status: "Nuevo Estado",
+    previous_status: "Estado Anterior",
+    arrival: "Llegada Programada",
+    actualEnd: "Llegada Real",
+    difference: "Diferencia",
+    actualStart: "Inicio Real",
+    scheduledStart: "Inicio Programado",
+    print: "Reimpresiones",
+    method: "Método de Pago",
+    quantity: "Cantidad",
+    price: "Precio Unitario",
+    total: "Total",
+    
+    // === NUEVOS CAMPOS ===
+    transactionNumber: "N° Transacción",
+    //sequenceNumber: "N° Secuencia",
+    routeName: "Ruta",
+    routeOrigin: "Origen",
+    routeDestination: "Destino",
+    departureTime: "Hora de Salida",
+    arrivalTime: "Hora de Llegada",
+  };
+  return (
+    keysMap[key] ||
+    key
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+  );
+},
+
+// Actualiza formatDetailValue para formatear horas cuando existan
+formatDetailValue(key, value) {
+  if (key === "qr") return "";
+  
+  // === FORMATEO DE HORAS ===
+  if (["departureTime", "arrivalTime"].includes(key) && value) {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    }
+    return value; // Si no es fecha válida, mostrar tal cual
+  }
+  
+  if (key === "difference" && typeof value === "number") {
+    const hours = Math.floor(value / 60);
+    const minutes = value % 60;
+    return `${hours}h ${minutes}m`;
+  }
+  if (key === "method") {
+    const methods = {
+      cash: "Efectivo",
+      card: "Tarjeta",
+      transfer: "Transferencia",
+      "Efectivo": "Efectivo", // Por si ya viene formateado desde backend
+    };
+    return methods[value] || value;
+  }
+  if (["price", "total"].includes(key)) {
+    return new Intl.NumberFormat("es-CL", { // Ajustado a CLP según contexto
+      style: "currency",
+      currency: "CLP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+  return value;
+},
   },
 };
 </script>
