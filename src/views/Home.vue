@@ -11,6 +11,26 @@
       </v-col>
     </v-row>
   </v-snackbar>
+
+  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+    <!-- Icono -->
+    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+      <v-icon cover>mdi-office-building</v-icon>
+    </v-avatar>
+
+    <!-- Texto -->
+    <div class="ml-4">
+      <div class="text-h6 font-weight-medium">Dashboard</div>
+      <div class="text-body-2 text-grey">Resumen general</div>
+    </div>
+
+    <!-- Botones -->
+    <v-spacer></v-spacer>
+
+    <v-chip class="ma-2" prepend-icon="mdi-clock-outline" label color="primary">
+      {{ currentDateTime }}
+    </v-chip>
+  </v-card>
   <v-container style="min-width: 100%; min-height: 100%; background-color: #F5F5F5;">
     <v-row v-if="showWelcomeMessage" align="stretch">
       <v-col cols="12" class="text-center">
@@ -24,36 +44,36 @@
     </v-row>
     <v-row v-else align="stretch">
       <!-- Información general de viajes -->
-      <v-col cols="12" md="6">
-        <v-row align="stretch">
-          <v-col cols="12" sm="6" md="6" v-for="(stat, index) in sales" :key="index">
-            <v-card class="mx-1 ma-sm-1" :style="{ borderRadius: '8px', border: 'none' }" @click="$router.push(stat.to)">
-              <template v-slot:title>
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                  <span>{{ stat.title }}</span>
-                  <v-avatar size="48">
-                    <v-icon :color="stat.color" size="28">{{ stat.icon }}</v-icon>
-                  </v-avatar>
+      <v-col cols="12" md="12">
+        <v-row>
+          <v-col cols="12" sm="3" md="3" v-for="(stat, index) in sales" :key="index">
+            <v-card class="kpi-card-stat pl-5 pt-3" elevation="1" rounded="lg" @click="$router.push(stat.to)">
+              <div class="kpi-info">
+                <div class="kpi-label">
+                  {{ stat.title }}
                 </div>
-              </template>
-              <v-card-text>
-                <v-col cols="12">
-                  <v-row no-gutters>
-                    <v-col cols="12" class="text-left">
-                      <span v-if="stat.title !== 'Boletos Vendidos' && stat.title !== 'Incidentes'"
-                        class="text-h4 font-weight-black">
-                        {{ this.formatNumber(stat.value) }}
-                      </span>
-                      <span v-else class="text-h4 font-weight-black">
-                        {{ stat.value }}
-                      </span>
-                    </v-col>
-                    <v-col cols="12" class="text-left">
-                      <span class="font-weight-black">Ver más</span>
-                    </v-col>
-                  </v-row>
-                </v-col>
-              </v-card-text>
+
+                <div class="kpi-number">
+                  <span v-if="stat.title !== 'Boletos Vendidos' && stat.title !== 'Incidentes'">
+                    {{ formatNumber(stat.value) }}
+                  </span>
+                  <span v-else>
+                    {{ stat.value }}
+                  </span>
+                </div>
+
+                <div class="kpi-trend">
+                  <v-icon size="20" color="success">mdi-arrow-top-right</v-icon>
+                  <span class="kpi-trend-value">8.1%</span>
+                  <span class="kpi-trend-text">vs. periodo anterior</span>
+                </div>
+              </div>
+
+              <div class="kpi-icon-circle" :style="{ background: `${stat.color}18` }">
+                <v-icon :color="stat.color" size="28">
+                  {{ stat.icon }}
+                </v-icon>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -61,282 +81,196 @@
 
       <!-- Gráfica -->
       <v-col cols="12" md="6">
-        <v-card class="mx-1 ma-sm-1" align="center">
-          <template v-slot:title>
-            <div class="d-flex align-center">
-              <v-icon color="#1976D2" class="mr-2">mdi-information</v-icon>
-              <span>Información</span>
+        <v-card class="chart-card pa-2" rounded="lg" elevation="3">
+
+          <!-- HEADER -->
+          <div class="chart-header">
+
+            <div class="kpi-label">
+              <v-icon size="18" class="mr-2">mdi-chart-bar</v-icon>
+              Performance operacional - Flujo de ventas
             </div>
-          </template>
-          <Bar :dataArray="earlyYear" />
-          <v-card-text class="py-1"></v-card-text>
+          </div>
+
+          <!-- BODY -->
+          <div class="chart-body">
+            <Bar :dataArray="earlyYear" />
+          </div>
+
         </v-card>
       </v-col>
-    </v-row>
 
+      <v-col cols="12" md="6">
+
+
+        <v-card flat elevation="2" rounded="lg" class="">
+
+          <!-- HEADER -->
+          <v-card-title class="d-flex align-center px-5 py-4">
+
+            <div class="kpi-label">
+              Próximos viajes
+            </div>
+
+            <v-spacer />
+
+            <v-btn variant="text" color="primary" append-icon="mdi-arrow-right" class="view-all-btn"
+              @click="$router.push('trip-home')">
+              Ver todos
+            </v-btn>
+
+          </v-card-title>
+
+          <v-card-text><!-- TABLE -->
+            <v-data-table class="mt-0 pt-0" :headers="headers" :items="trips" :loading="loading"
+              loading-text="Cargando datos..." hide-default-header hide-default-footer :items-per-page="-1"
+              :items-per-page-options="[]" no-data-text="Sin operaciones registradas">
+              <template #bottom></template>
+
+
+              <!-- ROW -->
+              <template v-slot:item="slotProps">
+
+                <div class="busgo-row">
+
+                  <!-- MARCA -->
+                  <div class="col col-brand text-truncate">
+                    <v-chip color="primary" variant="tonal" size="small" rounded="lg" class="font-weight-bold px-2">
+                      {{ slotProps.item.internal_number }}
+                    </v-chip>
+                  </div>
+                  <!-- VEHÍCULO -->
+                  <div class="col col-vehicle d-flex align-center">
+
+                    <span class="text-truncate">{{ slotProps.item.vehiclePlate }} </span>
+                  </div>
+
+
+
+                  <!-- RUTA -->
+                  <div class="col col-route">
+                    <div class="font-weight-medium text-truncate">
+                      {{ slotProps.item.route }}
+                    </div>
+                    <div class="route-meta">
+                      <v-icon size="x-small">mdi-clock-outline</v-icon>
+                      <span>{{ slotProps.item.estimated }} min</span>
+                      <span>{{ formatTimeRange(slotProps.item.horario) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- OCUPACIÓN -->
+                  <div class="col col-occupancy">
+                    <div class="occupancy-main">
+                      {{ slotProps.item.asientosVendidos }}
+                      <span class="occupancy-separator">/</span>
+                      {{ slotProps.item.capacidad }}
+                    </div>
+
+                    <div class="occupancy-percent">
+                      {{
+                        Math.round(
+                          (slotProps.item.asientosVendidos * 100) /
+                      slotProps.item.capacidad
+                      )
+                      }}%
+                    </div>
+                  </div>
+                  <!-- MONTO -->
+                  <div class="col col-money">
+                    <span class="">
+                      $ {{ formatNumber(slotProps.item.dineroGenerado) }}
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </v-data-table>
+          </v-card-text>
+
+        </v-card>
+
+      </v-col>
+
+    
+    </v-row>
     <!-- Tabla de viajes -->
     <v-row align="stretch" v-if="!showWelcomeMessage">
-        <!--<v-card class="elevation-4 mx-1 ma-sm-1">
-          <v-container fluid>
-            <v-toolbar color="white">
-              <v-row align="center">
-                <v-col cols="12" md="8" class="grow">
-                  <span class="text-subtitle-1"><strong>Viajes</strong></span>
-                </v-col>
-              </v-row>
-            </v-toolbar>
-            <v-divider />
-            <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-              hide-details>
-            </v-text-field>
-            <v-data-table :headers="headers" :items="trips" :search="search" fixed-header class="elevation-1"
-              :items-per-page="5" no-data-text="No hay datos disponibles" :loading="loading"
-              loading-text="Cargando datos...">
-              <template v-slot:item.vehiclePlate="{ item }">
-                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${item.vehicleImage}?t=${Date.now()}`"
-                    alt="image"></v-img>
-                </v-avatar>
-                {{ item.vehiclePlate }}
-              </template>
-              <template v-slot:item.dineroGenerado="{ item }">
-                <span style="font-weight: bold;">{{ this.formatNumber(item.dineroGenerado) }}</span>
-              </template>
-              <template v-slot:item.horario="{ item }">
-                <v-tooltip location="top">
-                  <template v-slot:activator="{ props }">
-                    <div v-bind="props" class="d-flex flex-column time-cell">
-                      <div class="d-flex flex-column time-cell">
-                        <v-icon small color="primary" class="mr-1">mdi-clock-outline</v-icon>
-                        <span class="font-weight-medium">
-                          {{ formatTimeRange(item.horario) }}
-                        </span>
-                      </div>
-                      <span class="text-caption text-grey">
-                        {{ item.estimated }} minutos
-                      </span>
-                    </div>
-                  </template>
-                  <span>Horario completo:<br>{{ item.horario }}</span>
-                </v-tooltip>
-              </template>
-              <--noooo<template v-slot:item.horario="{ item }">
-      <div class="d-flex flex-column time-cell">
-        <div class="d-flex align-center">
-          <v-icon small color="primary" class="mr-1">mdi-clock-outline</v-icon>
-          <span class="font-weight-medium">
-            {{ formatTimeRange(item.horario) }}
-          </span>
-        </div>
-        <span v-if="showDuration(item)" class="text-caption text-grey">
-          {{ calculateDuration(item.horario) }}
-        </span>
-      </div>
-    </template>--noooo
-            </v-data-table>
-          </v-container>
-        </v-card>-->
-        <v-container style="min-width: 100%;">
-   <v-card flat elevation="1">
-  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-    <!-- Título -->
-    <div class="text-subtitle-1 font-weight-bold">Viajes</div>
-
-    <!-- Spacer (solo visible en md+) -->
-    <v-spacer class="d-none d-md-block"></v-spacer>
-
-    <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 300px">
-      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </div>
-  </v-card-title>
-
-  <!-- Separador -->
-  <v-divider class="my-2"></v-divider>
-
-  <!-- Tabla de viajes con filas personalizadas -->
-  <v-data-table :headers="headers" :items="trips" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent" :items-per-page="5">
-        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Vehiculo
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-                Marca
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
-                Ruta
-              </div>
-
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Fecha
-              </div>
-
-              <div style="width: 0; min-width: 0; overflow: hidden; display: none" class="text-left font-weight-bold">
-                Emisión
-              </div>
-
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Capacidad
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Asientos Vendidos
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Monto
-              </div>
-
-            </v-card-text>
-          </v-card>
-        </template>
-    <!-- Fila personalizada -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-             <!-- Vehículo con avatar -->
-              <div class="d-flex align-center" style="width: 10%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.vehiclePlate }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Vehículo: {{ slotProps.item.vehiclePlate }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.vehicleBrand }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Marca: {{ slotProps.item.vehicleBrand }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <div style="width: 40%; min-width: 0" class="text-truncate text-left">
-                <div class="font-weight-medium text-truncate">{{ slotProps.item.route }}</div>
-                <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
-                  <div class="d-flex align-center mr-3">
-                    <v-icon size="small" color="primary" class="mr-1">mdi-clock-outline</v-icon>
-                    <span class="text-no-wrap">{{ slotProps.item.estimated }} minutos</span>
-                  </div>
-                  <span class="text-no-wrap">{{ formatTimeRange(slotProps.item.horario) }}</span>
-                </div>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    <strong>Ruta:</strong> {{ slotProps.item.route }}<br>
-                    <strong>Duración:</strong> {{ slotProps.item.estimated }} minutos<br>
-                    <strong>Horario completo:</strong><br>{{ slotProps.item.horario }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Fecha -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.date }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Fecha: {{ slotProps.item.date }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Emisión -->
-              <div style="width: 0; min-width: 0; overflow: hidden; display: none" class="text-truncate">
-                <v-tooltip location="top">
-                  <!-- Activator -->
-                  <template v-slot:activator="{ props }">
-                    <div
-                      v-bind="props"
-                      class="d-flex flex-column"
-                      style="cursor: default; padding: 4px 0;"
-                    >
-                      <!-- Fila superior: ícono + minutos alineados horizontalmente -->
-                      <div class="d-flex align-left gap-1">
-                        <v-icon size="small" color="primary" class="mr-1">mdi-clock-outline</v-icon>
-                        <span class="text-grey">
-                          {{ slotProps.item.estimated }} minutos
-                        </span>
-                      </div>
-
-                      <!-- Horario debajo del ícono (alineado con el ícono, no con los minutos) -->
-                      <span class="ml-1 mt-1">
-                        {{ formatTimeRange(slotProps.item.horario) }}
-                      </span>
-                    </div>
-                  </template>
-
-                  <!-- Tooltip -->
-                  <span>
-                    <strong>Horario completo:</strong><br>{{ slotProps.item.horario }}
-                  </span>
-                </v-tooltip>
-              </div>
-              <!-- Capacidad -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.capacidad }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Capacidad: {{ slotProps.item.capacidad }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Asientos -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.asientosVendidos }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Asientos vendidos: {{ slotProps.item.asientosVendidos }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Precio -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                <span style="font-weight: bold;">{{ formatNumber(slotProps.item.dineroGenerado) }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Dinero Generado: {{ formatNumber(slotProps.item.dineroGenerado) }}
-                  </span>
-                </v-tooltip>
-              </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-</v-card>
-  </v-container>
+  <v-col cols="12">
+  <v-card flat elevation="2" rounded="lg" class="">
+    <!-- HEADER -->
+    <v-card-title class="d-flex align-center px-5 py-4">
+      <div>
+        <div class="kpi-label">Últimas incidencias</div>
       
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        variant="text"
+        color="primary"
+        append-icon="mdi-arrow-right"
+        class="view-all-btn"
+        @click="$router.push('incident')"
+      >
+        Ver todas
+      </v-btn>
+    </v-card-title>
+
+    <v-card-text>
+      <div class="incident-header">
+        <div>Sucursal</div>
+        <div>Trabajador</div>
+        <div>Incidencia</div>
+        <div>Fecha</div>
+        <div>Descripción</div>
+      </div>
+
+      <div
+        v-for="incident in incidents.slice(0, 5)"
+        :key="incident.id"
+        class="incident-row"
+      >
+        <div class="incident-branch text-truncate">
+          <v-chip
+            color="primary"
+            variant="tonal"
+            size="small"
+            rounded="lg"
+            class="font-weight-bold"
+          >
+            {{ incident.sucursal }}
+          </v-chip>
+        </div>
+
+        <div class="incident-worker text-truncate">
+          <v-icon size="16" class="mr-1">mdi-account-outline</v-icon>
+          {{ incident.trabajador }}
+        </div>
+
+        <div class="incident-title text-truncate">
+          <v-icon size="17" color="warning" class="mr-2">
+            mdi-alert-circle-outline
+          </v-icon>
+          {{ incident.titulo }}
+        </div>
+
+        <div class="incident-date">
+          {{ incident.fecha }}
+        </div>
+
+        <div class="incident-description text-truncate">
+          {{ incident.descripcion }}
+        </div>
+      </div>
+
+      <div v-if="!incidents.length" class="incident-empty">
+        Sin incidencias registradas
+      </div>
+    </v-card-text>
+  </v-card>
+</v-col>
+
     </v-row>
   </v-container>
 </template>
@@ -352,6 +286,50 @@ export default {
   components: { Bar, Doughnut, },
   data() {
     return {
+
+      incidents: [
+  {
+    id: 1,
+    sucursal: "Terminal Puerto Montt",
+    trabajador: "Juan Pérez",
+    titulo: "Retraso en salida",
+    fecha: "24/06/2026 08:15",
+    descripcion: "El viaje presentó un retraso de 15 minutos por demora en embarque."
+  },
+  {
+    id: 2,
+    sucursal: "Terminal Osorno",
+    trabajador: "María González",
+    titulo: "Pasajero sin boleto",
+    fecha: "24/06/2026 09:40",
+    descripcion: "Se detectó un pasajero abordando sin ticket válido."
+  },
+  {
+    id: 3,
+    sucursal: "Terminal Puerto Varas",
+    trabajador: "Carlos Muñoz",
+    titulo: "Problema mecánico",
+    fecha: "24/06/2026 11:20",
+    descripcion: "Se reportó falla menor en el sistema de climatización del bus."
+  },
+  {
+    id: 4,
+    sucursal: "Terminal Calbuco",
+    trabajador: "Ana Soto",
+    titulo: "Exceso de equipaje",
+    fecha: "24/06/2026 13:05",
+    descripcion: "Pasajero transportaba equipaje superior al permitido."
+  },
+  {
+    id: 5,
+    sucursal: "Terminal Ancud",
+    trabajador: "Pedro Ramírez",
+    titulo: "Cambio de andén",
+    fecha: "24/06/2026 15:30",
+    descripcion: "Se realizó cambio de andén por congestión operativa."
+  }
+],
+      currentDateTime: '',
       snackbar: false,
       sb_type: '',
       sb_message: '',
@@ -383,6 +361,9 @@ export default {
   },
 
   mounted() {
+    this.updateDateTime();
+    setInterval(this.updateDateTime, 1000);
+
     this.role = JSON.parse(LocalStorageService.getItem('role'));
     this.permissions = JSON.parse(LocalStorageService.getItem('permissions')); // Recuperar permisos
 
@@ -400,6 +381,18 @@ export default {
     }
   },
   methods: {
+
+    updateDateTime() {
+      this.currentDateTime = new Date().toLocaleString('es-CL', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -407,33 +400,33 @@ export default {
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
     formatTimeRange(timeRange) {
-    if (!timeRange) return '--';
-    
-    const [start, end] = timeRange.split(' - ');
-    return `${this.formatTime(start)} → ${this.formatTime(end)}`;
-  },
-  
-  formatTime(datetime) {
-    if (!datetime) return '--';
-    return datetime.split(' ')[1].substring(0, 5); // Extrae solo HH:MM
-  },
-  
-  showDuration(item) {
-    return item.horario && item.horario.includes(' - ');
-  },
-  
-  calculateDuration(timeRange) {
-    if (!timeRange) return '';
-    
-    const [startStr, endStr] = timeRange.split(' - ');
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    
-    const diffMs = end - start;
-    const diffMins = Math.round(diffMs / 60000);
-    
-    return `${diffMins} min`;
-  },
+      if (!timeRange) return '--';
+
+      const [start, end] = timeRange.split(' - ');
+      return `${this.formatTime(start)} → ${this.formatTime(end)}`;
+    },
+
+    formatTime(datetime) {
+      if (!datetime) return '--';
+      return datetime.split(' ')[1].substring(0, 5); // Extrae solo HH:MM
+    },
+
+    showDuration(item) {
+      return item.horario && item.horario.includes(' - ');
+    },
+
+    calculateDuration(timeRange) {
+      if (!timeRange) return '';
+
+      const [startStr, endStr] = timeRange.split(' - ');
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+
+      const diffMs = end - start;
+      const diffMins = Math.round(diffMs / 60000);
+
+      return `${diffMins} min`;
+    },
     formatNumber(value) {
       // Si el valor es menor que 1000, devuelve el valor original con dos decimales
       if (value < 1000) {
@@ -519,6 +512,7 @@ export default {
 .text-white {
   color: white !important;
 }
+
 .icono-concavo {
   width: 45px;
   height: 45px;
@@ -543,19 +537,21 @@ export default {
   border-radius: 8px;
   background: transparent;
 }
+
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
+.v-data-table>.v-data-table__wrapper>table>thead,
+.v-data-table>.v-data-table__wrapper>.v-table>table>thead,
+.v-data-table__content>table>thead,
+.v-data-table__content>thead,
+table.v-table>thead,
+.v-table>.v-table__wrapper>table>thead {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -565,7 +561,319 @@ table.v-table > thead,
   border-spacing: 0 !important;
   border-collapse: collapse !important;
 }
-.hidden-header .v-data-table__content > table > thead {
+
+.hidden-header .v-data-table__content>table>thead {
   display: none !important;
 }
+
+.kpi-card {
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+
+
+.kpi-avatar {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kpi-value {
+  font-size: 30px;
+  font-weight: 800;
+  margin-top: 12px;
+
+  /* 👇 esto es lo importante */
+  color: #111827;
+  /* casi negro elegante */
+  letter-spacing: -0.02em;
+}
+
+.kpi-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.chart-card {
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.chart-header {
+  padding: 16px 16px 0 16px;
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.chart-body {
+  padding: 10px 14px 16px 14px;
+}
+
+.busgo-table-shell {
+  border-radius: 14px;
+  background: #0b1220;
+  overflow: hidden;
+}
+
+
+.header-title {
+  color: #e5e7eb;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.header-sub {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* TABLE HEADER */
+.table-head {
+  background: rgba(173, 41, 41, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.col {
+  font-size: 12px;
+  color: #000000bd;
+  padding: 6px 8px;
+}
+
+/* ROW */
+.busgo-row {
+  display: flex;
+  align-items: center;
+  padding: 2.6px 8px;
+
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: 0.2s;
+}
+
+.busgo-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+/* COLUMN WIDTHS (CLAVE PARA LOOK PRO) */
+.col-vehicle {
+  width: 14%;
+}
+
+.col-brand {
+  width: 10%;
+}
+
+.col-route {
+  width: 50%;
+}
+
+.col-date {
+  width: 10%;
+}
+
+.col-cap {
+  width: 8%;
+}
+
+.col-sold {
+  width: 10%;
+}
+
+.col-money {
+  width: 14%;
+}
+
+/* ROUTE META */
+.route-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* MONEY */
+.money-badge {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: white;
+  font-size: 12px;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
+}
+
+.kpi-card-stat {
+  position: relative;
+  height: 128px;
+  padding: 24px 26px;
+  background: #ffffff;
+  border: 1px solid #edf1f5;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.kpi-card-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
+}
+
+.kpi-info {
+  width: calc(100% - 72px);
+}
+
+.kpi-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.kpi-number {
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  margin-bottom: 18px;
+}
+
+.kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kpi-trend-value {
+  color: #22c55e;
+}
+
+.kpi-trend-text {
+  color: #94a3b8;
+}
+
+.kpi-icon-circle {
+  position: absolute;
+  top: 24px;
+  right: 26px;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-occupancy {
+  width: 100px;
+}
+
+.occupancy-main {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.occupancy-separator {
+  color: #94a3b8;
+  margin: 0 2px;
+}
+
+.occupancy-percent {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.view-all-btn {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.view-all-btn:hover {
+  background: rgba(var(--v-theme-primary), 0.06);
+}
+
+.incident-subtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.incident-header,
+.incident-row {
+  display: grid;
+  grid-template-columns: 150px 170px 220px 120px minmax(260px, 1fr);
+  align-items: center;
+  column-gap: 14px;
+}
+
+.incident-header {
+  padding: 0 16px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.incident-row {
+  min-height: 58px;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #edf1f5;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  transition: 0.18s ease;
+}
+
+
 </style>

@@ -1,58 +1,84 @@
 <template>
-   <v-container style="height: 300px;" fluid> <!-- Ajusta la altura aquí -->
-    <Bar :options="chartOptions" :data="chartData" />
-    </v-container>
-  </template>
-  <script>
-  import { Bar } from "vue-chartjs";
-  import {
-    Chart as ChartJS,
-    Title,
-    Tooltip,
-    Legend,
-    BarElement,
-    CategoryScale,
-    LinearScale,
-  } from "chart.js";
-  
-  ChartJS.register(
-    Title,
-    Tooltip,
-    Legend,
-    BarElement,
-    CategoryScale,
-    LinearScale
-  );
-  
-  export default {
-    name: "BarChart",
-    props: {
+  <v-container style="height: 300px;" fluid>
+    <Line :options="chartOptions" :data="chartData" />
+  </v-container>
+</template>
+
+<script>
+import { Line } from "vue-chartjs";
+
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Filler
+} from "chart.js";
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Filler
+);
+
+export default {
+  name: "LineChart",
+
+  props: {
     dataArray: {
       type: Array,
       required: true,
     },
   },
+
+  components: {
+    Line,
+  },
+
   data() {
     return {
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
+
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+
         scales: {
           x: {
             grid: {
-              display: false, // Oculta la cuadrícula del eje X
+              display: false,
             },
-            barThickness: 30, // Ancho fijo de las barras en píxeles
           },
+
           y: {
             grid: {
-              display: true, // Muestra la cuadrícula del eje Y
+              color: "#E5E7EB",
             },
+            beginAtZero: true,
           },
         },
       },
     };
   },
+
   computed: {
     chartData() {
       return {
@@ -70,19 +96,34 @@
           "Noviembre",
           "Diciembre",
         ],
+
         datasets: [
           {
             label: "Ingresado",
-            backgroundColor: "#1976D2",
-            data: this.dataArray, // Usamos el array pasado como prop
+            borderWidth: 0.5,
+            data: this.dataArray,
+
+            borderColor: "#1976D2",
+
+            backgroundColor: "rgba(25,118,210,0.15)",
+
+            fill: true,
+
+            tension: 0.4,
+
+            pointRadius: 5,
+
+            pointHoverRadius: 8,
+
+            pointBackgroundColor: "#1976D2",
+
+            pointBorderColor: "#FFFFFF",
+
+            pointBorderWidth: 2,
           },
         ],
       };
     },
   },
-    components: {
-      Bar,
-    },
-  };
-  </script>
-  <style scoped></style>
+};
+</script>

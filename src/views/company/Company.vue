@@ -35,170 +35,165 @@
     <!-- Encabezado alineado con v-col (para que coincida con filas posteriores) -->
     <v-card elevation="0">
       <v-card-text>
-        <v-card color="blue-grey-lighten-5" class="mb-2 rounded-lg"
-          style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px;" density="comfortable">
-          <v-card-text class="pa-0" style="height: 100%">
-            <v-row no-gutters align="center" class="text-body-2 font-weight-bold" style="height: 40px; padding: 0 16px">
-              <!-- Vehículo (10%) -->
-              <v-col cols="auto" class="text-left">
+     <v-card
+  class="mb-2 rounded-lg company-header"
+  elevation="0"
+>
+  <v-card-text class="py-2 px-4">
+    <div class="d-flex align-center text-caption font-weight-bold text-medium-emphasis">
 
-              </v-col>
+      <div style="width: 48px"></div>
 
-              <!-- Marca (7%) -->
-              <v-col cols="5" class="text-left">
-                Nombre/Dirección
-              </v-col>
+      <div class="flex-grow-1 pl-3">
+        Nombre / Dirección
+      </div>
 
-              <!-- Recorrido (30%) -->
-              <v-col cols="3" class="text-left">
-                Rut
-              </v-col>
+      <div style="width: 160px">
+        RUT
+      </div>
 
-              <!-- Fecha (10%) -->
-              <v-col cols="2" class="text-left">
-                Teléfono
-              </v-col>
+      <div style="width: 140px">
+        Teléfono
+      </div>
 
-              <!-- Horario (10%) -->
-              <v-col cols="2" class="text-left">
+      <div style="width: 110px" class="text-right">
+        Acciones
+      </div>
 
-              </v-col>
-            </v-row>
-          </v-card-text>
+    </div>
+  </v-card-text>
+</v-card>
+       <v-card
+  v-for="(company, index) in companies"
+  :key="index"
+  class="mb-3 rounded-lg company-row"
+  elevation="1"
+>
+  <v-card-text class="py-3 px-4">
+
+    <div class="d-flex align-center">
+
+      <!-- LOGO -->
+      <v-dialog max-width="500">
+        <template #activator="{ props }">
+          <v-avatar
+            v-bind="props"
+            size="44"
+            class="mr-3"
+            style="cursor:pointer"
+          >
+            <v-img
+              :src="`${$axios.defaults.baseURL}images/${company.image}?t=${getCacheTimestamp()}`"
+              cover
+            />
+          </v-avatar>
+        </template>
+
+        <v-card>
+          <v-img
+            :src="`${$axios.defaults.baseURL}images/${company.image}`"
+            max-height="500"
+            contain
+          />
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="text" @click="$emit('close')">Cerrar</v-btn>
+          </v-card-actions>
         </v-card>
-        <v-card v-for="(company, index) in companies" :key="index" class="mb-4 rounded-lg pa-2" density="comfortable"
-          elevation="2">
-          <v-row>
-            <v-col cols="auto" class="d-flex text-left">
-              <v-dialog max-width="500" class="rounded-lg">
-                <!-- Activator: Solo el avatar es clickeable -->
-                <template v-slot:activator="{ props: activatorProps }">
-                  <v-avatar v-bind="activatorProps" class="mr-1 icono-concavo" elevation="3" color="grey-lighten-4"
-                    style="cursor: pointer">
-                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                        company.image
-                      }?t=${getCacheTimestamp()}`" alt="Logo de la compañía" cover />
-                  </v-avatar>
-                </template>
+      </v-dialog>
 
-                <!-- Diálogo con la imagen expandida -->
-                <template v-slot:default="{ isActive }">
-                  <v-card class="modal-imagen">
-                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                        company.image
-                      }?t=${getCacheTimestamp()}`" max-height="500" contain />
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn text="Cerrar" variant="flat" @click="isActive.value = false" />
-                    </v-card-actions>
-                  </v-card>
-                </template>
-              </v-dialog>
-            </v-col>
-            <v-col cols="4" class="d-flex align-center justify-start">
-              <v-row align="center" class="gap-3">
-                <div>
-                  <div class="font-weight-bold text-body-2">
-                    {{ company.name }}
-                  </div>
-                  <div class="text-body-2 d-flex align-center text-grey-darken-1 text-truncate">
-                    {{ company.address }}
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Dirección: {{ company.address }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-                </div>
-              </v-row>
-            </v-col>
+      <!-- INFO -->
+      <div class="flex-grow-1 min-width-0">
 
-            <v-col cols="3" class="d-flex align-center justify-start">
-              <div class="text-body-2 d-flex align-center text-truncate">
-                {{ company.rut }}
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Rut: {{ company.rut }}
-                  </span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Rut: {{ company.rut }}
-                    </span>
-                  </v-tooltip>
-                </v-tooltip>
-              </div>
-            </v-col>
-            <v-col cols="2" class="d-flex align-center justify-start">
-              <div class="text-body-2 d-flex align-center text-truncate">
-                {{ company.phone }}
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Teléfono: {{ company.phone }}
-                  </span>
-                </v-tooltip>
-              </div>
-            </v-col>
-            <v-col cols="2" class="d-flex align-center justify-end">
-              <v-btn icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                :color="paleteColors.primary" @click="editItem(company)" size="35" title="Editar">
-                <v-icon size="20">mdi-pencil</v-icon>
-              </v-btn>
-              <v-btn icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                :color="paleteColors.error" @click="deleteItem(company)" size="35" title="Eliminar" class="ml-1">
-                <v-icon size="20">mdi-delete</v-icon>
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card>
-        <v-row>
-          <v-col cols="12">
-            <v-row style="gap: 8px;">
-              <v-col
-                v-for="item_menu in filteredAdministracion"
-                :key="item_menu.value"
-                class="flex-grow-1"
-                style="max-width: none;"
-              >
-                <v-card
-                  class="d-flex flex-column align-center pa-4"
-                  elevation="2"
-                  rounded="lg"
-                  @click="$router.push(item_menu.to)"
-                  style="width: 100%; cursor: pointer;"
-                >
-                  <v-avatar size="48" class="mb-2" color="grey-lighten-4">
-                    <v-icon :icon="item_menu.icon" color="primary" size="28" />
-                  </v-avatar>
-                  <span class="text-body-1 font-weight-medium">{{ item_menu.title }}</span>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
+        <div class="font-weight-medium text-body-2">
+          {{ company.name }}
+        </div>
 
-        <!--<br /><br />
+        <div class="text-caption text-medium-emphasis text-truncate">
+          {{ company.address }}
+        </div>
 
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="companies" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
-              variant="tonal" elevation="1" title="Editar Empresa"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
-              variant="tonal" elevation="1" title="Eliminar Empresa"></v-btn>
-          </template>
-          <template v-slot:item.name="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                  item.image
-                }?t=${getCacheTimestamp()}`" alt="image"></v-img>
-            </v-avatar>
-            {{ item.name }}
-          </template>
-        </v-data-table>-->
+      </div>
+
+      <!-- RUT -->
+      <div class="company-col">
+        <span class="text-body-2">{{ company.rut }}</span>
+      </div>
+
+      <!-- TELÉFONO -->
+      <div class="company-col">
+        <span class="text-body-2">{{ company.phone }}</span>
+      </div>
+
+      <!-- ACCIONES -->
+      <div class="d-flex align-center justify-end" style="width: 110px">
+
+        <v-btn
+          icon="mdi-pencil"
+          size="small"
+          variant="text"
+          @click="editItem(company)"
+        />
+
+        <v-btn
+          icon="mdi-delete"
+          size="small"
+          variant="text"
+          color="error"
+          @click="deleteItem(company)"
+        />
+
+      </div>
+
+    </div>
+  </v-card-text>
+</v-card>
+  
+<v-card class="pa-4 launchpad-card" elevation="2" rounded="lg">
+
+  <!-- Header del card -->
+  <div class="d-flex align-center mb-4">
+    <v-icon icon="mdi-office-building-cog" class="mr-2" size="22" />
+    <div class="flex-grow-1 pl-3">
+      Administración
+    </div>
+  </div>
+
+  <v-divider class="mb-4" />
+
+  <!-- Grid de items -->
+  <div class="launchpad-wrapper">
+   <v-row class="launchpad-grid" dense justify="start">
+
+      <v-col
+        v-for="item_menu in filteredAdministracion"
+        :key="item_menu.value"
+        cols="4"
+        sm="3"
+        md="2"
+        lg="2"
+         class="d-flex justify-start pa-1"
+      >
+        <div
+          class="launchpad-item"
+          @click="$router.push(item_menu.to)"
+        >
+          <div class="launchpad-icon">
+            <v-icon :icon="item_menu.icon" size="26" />
+          </div>
+
+          <div class="launchpad-label">
+            {{ item_menu.title }}
+          </div>
+        </div>
+      </v-col>
+
+    </v-row>
+  </div>
+
+</v-card>
+
+       
       </v-card-text>
     </v-card>
   </v-container>
@@ -780,5 +775,90 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.company-header {
+  background: #f5f7f9;
+  border: 1px solid #eceff1;
+}
+
+.company-row {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.company-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(25, 118, 210, 0.2);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.company-col {
+  width: 160px;
+  display: flex;
+  align-items: center;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+.launchpad-card {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.launchpad-grid {
+  margin: 0;
+}
+
+.launchpad-item {
+  width: 100px;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: all 0.18s ease;
+  background: #f7f8fa;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.launchpad-item:hover {
+  transform: translateY(-3px) scale(1.03);
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.launchpad-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+  color: white;
+  margin-bottom: 8px;
+}
+
+.launchpad-label {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.1;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.launchpad-wrapper {
+  display: flex;
+  justify-content: flex-start;
 }
 </style>

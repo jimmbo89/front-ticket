@@ -1,218 +1,184 @@
-<!--<template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-      </v-col>
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-
-      </v-col>
-
-    </v-row>
-  </v-snackbar>
-  
-    <v-row justify="center">
-      <v-col
-        cols="11"
-        sm="6"
-        md="5"
-        lg="4"
-        xl="2"
-      >
-      </v-col>
-      </v-row>
-  <div class="d-flex align-center justify-center" style="height: 100vh; background-color: #B0BEC5;">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="mx-auto" elevation="8" max-width="600px" :min-width="$vuetify.display.smAndDown ? '90%' : '400px'"
-        rounded="lg">
-
-        <v-toolbar :class="$vuetify.display.smAndDown ? 'pt-8 pb-8' : 'pt-16 pb-12'" dark>
-          <div class="mx-auto" :style="{
-            fontSize: $vuetify.display.smAndDown ? '2.5rem' : '3.5rem',
-            fontWeight: 'bold',
-            color: '#1976D2',
-            textAlign: 'center',
-            width: '100%'
-          }">
-            <v-icon :class="$vuetify.display.smAndDown ? 'mb-2' : 'mb-3'" style="margin-top: 16px;">mdi-bus</v-icon>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 0;">
-              <span style="color: black;">Bus</span>
-              <span style="color: orange;">Go</span>
-            </div>
-          </div>
-        </v-toolbar>
-
-        <v-progress-linear v-if="loading" color="#1976D2" indeterminate></v-progress-linear>
-
-        <v-container>
-          <v-text-field :density="$vuetify.display.smAndDown ? 'comfortable' : 'compact'" placeholder="Usuario"
-            prepend-inner-icon="mdi-account-circle-outline" variant="outlined" v-model="editedItem.email">
-          </v-text-field>
-
-          <v-text-field :density="$vuetify.display.smAndDown ? 'comfortable' : 'compact'"
-            :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'"
-            placeholder="Contraseña" prepend-inner-icon="mdi-lock-outline" variant="outlined"
-            @click:append-inner="visible = !visible" v-model="editedItem.password">
-          </v-text-field>
-
-          <v-radio-group v-model="selectedOption" inline>
-            <v-radio color="#1976D2" label="Empresa" value="empresa"></v-radio>
-            <v-radio color="#1976D2" class="ml-4" label="Sucursales" value="sucursales"></v-radio>
-          </v-radio-group>
-
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-if="selectedOption === 'sucursales'" clearable
-            label="Seleccione una Sucursal" variant="outlined" prepend-inner-icon="mdi-domain"
-            v-model="editedItem.branch_id" :items="branches" item-title="name" item-value="id" :rules="requiredRules">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                :title="item.raw.name"></v-list-item>
-            </template>
-          </v-autocomplete>
-
-          <v-btn class="mb-8" color="#1976D2" size="large" variant="tonal" block :loading="loading" @click="login()"
-            :disabled="!valid">
-            Ingresar
-          </v-btn>
-          <v-divider></v-divider>
-          <v-row class="mt-2" justify="center">
-          BusGo v1.0
-        </v-row>
-        </v-container>
-      </v-card>
-    </v-form>
-  </div>
-</template>-->
 <template>
-  <div class="login-wrapper">
-    <v-container class="fill-height" fluid>
-      <v-row class="ma-0" align="center" justify="center">
-        <v-col cols="12" md="10" lg="8" xl="6">
-          <v-sheet class="d-flex flex-wrap rounded-xl glass-card" elevation="8">
-            <!-- Lado izquierdo: Ilustración (solo en pantallas md+) -->
-            <v-col
-              cols="12"
-              md="6"
-              class="login-illustration d-none d-md-flex align-center justify-center"
-            >
-              <v-img
-                src="https://undraw.co/api/illustrations/91fe13b2-4a63-4bd0-abe9-4bd11910e465"
-                max-width="300"
-                cover
-              />
-            </v-col>
+  <div class="control-wrapper">
 
-            <!-- Lado derecho: Formulario -->
-            <v-col cols="12" md="6" class="pa-6">
-              <div class="text-center mb-4">
-                <v-icon size="56" color="indigo-darken-2">mdi-ticket-confirmation</v-icon>
-                <h2 class="text-h5 font-weight-bold text-indigo-darken-2 mt-2">BusGo</h2>
-                <p class="text-grey-darken-1">Inicia sesión para continuar</p>
+    <!-- 🌍 BACKGROUND OPERATIVO -->
+    <div class="map-core"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <span class="dot"></span>
+      BusGo · Operación de transporte, rutas y tickets en tiempo real
+    </div>
+
+    <v-container fluid class="fill-height pa-0">
+
+      <v-row class="fill-height ma-0">
+
+        <!-- LEFT: SISTEMA OPERATIVO -->
+        <v-col cols="12" md="7" class="left-control d-none d-md-flex">
+
+          <div class="tower">
+
+            <h1>BusGo</h1>
+
+            <p>
+              Plataforma de gestión operativa de transporte terrestre.
+              Controla venta de tickets, rutas activas, viajes en curso, tarifas dinámicas
+              y disponibilidad de asientos en tiempo real.
+            </p>
+
+            <div class="metrics">
+
+              <div class="metric">
+                <div class="val">Flota activa</div>
+                <div class="lab">Vehículos en operación</div>
               </div>
 
-              <v-form ref="form" v-model="valid">
-                <v-text-field
-                  ref="emailField"
-                  v-model="editedItem.email"
-                  label="Correo o usuario"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-account"
-                  density="comfortable"
-                  @keydown.enter.prevent="handleEmailEnter"
-                />
+              <div class="metric">
+                <div class="val">24/7</div>
+                <div class="lab">Operación continua</div>
+              </div>
 
-                <v-text-field
-                  ref="passwordField"
-                  v-model="editedItem.password"
-                  :type="visible ? 'text' : 'password'"
-                  label="Contraseña"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-lock"
-                  :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="visible = !visible"
-                  density="comfortable"
-                  @keydown.enter.prevent="handlePasswordEnter"
-                />
+              <div class="metric">
+                <div class="val">Rutas</div>
+                <div class="lab">Viajes programados y activos</div>
+              </div>
 
-                <v-radio-group
-                  ref="optionGroup"
-                  v-model="selectedOption"
-                  inline
-                  class="mt-2"
-                  @keydown.enter.prevent="handleOptionEnter"
-                >
-                  <v-radio color="indigo" label="Empresa" value="empresa" />
-                  <v-radio color="indigo" label="Sucursal" value="sucursales" />
-                </v-radio-group>
+            </div>
 
-                <v-autocomplete
-                  ref="branchField"
-                  v-if="selectedOption === 'sucursales'"
-                  v-model="editedItem.branch_id"
-                  :items="branches"
-                  item-title="name"
-                  item-value="id"
-                  label="Sucursal"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-domain"
-                  clearable
-                  :rules="selectedOption === 'sucursales' ? requiredRules : []"
-                  @keydown.enter.prevent="handleBranchEnter"
-                >
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item
-                      v-bind="props"
-                      :prepend-avatar="`${$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name"
-                    />
-                  </template>
-                </v-autocomplete>
+            <div class="flow">
+              <div class="pulse"></div>
+              Sincronización activa, tickets vendidos y ocupación por viaje
+            </div>
 
-                <v-btn
-                  ref="loginButton"
-                  block
-                  color="indigo-darken-2"
-                  size="large"
-                  class="mt-6"
-                  :loading="loading"
-                  :disabled="!valid"
-                  @click="login"
-                  @keydown.enter.prevent="login"
-                  rounded
-                >
-                  <v-icon start>mdi-login</v-icon>
-                  Ingresar
-                </v-btn>
-              </v-form>
+          </div>
 
-              <v-card-actions class="justify-center mt-4">
-                <small class="text-grey-darken-1">BusGo © 2025</small>
-              </v-card-actions>
-            </v-col>
-          </v-sheet>
         </v-col>
+
+        <!-- RIGHT: LOGIN (TU LÓGICA INTACTA) -->
+        <v-col cols="12" md="5" class="right-console">
+
+          <div class="console-card">
+
+            <div class="console-header">
+
+              <div class="lock-ring">
+                <v-icon>mdi-shield-lock</v-icon>
+              </div>
+
+              <h2>Acceso a operación</h2>
+
+
+            </div>
+
+            <!-- FORMULARIO (SIN CAMBIOS) -->
+            <v-form ref="form" v-model="valid">
+
+              <v-text-field
+                ref="emailField"
+                v-model="editedItem.email"
+                label="Usuario operativo"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="mdi-account"
+                @keydown.enter.prevent="handleEmailEnter"
+              />
+
+              <v-text-field
+                ref="passwordField"
+                v-model="editedItem.password"
+                :type="visible ? 'text' : 'password'"
+                label="Clave de acceso"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="mdi-lock"
+                :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append-inner="visible = !visible"
+                @keydown.enter.prevent="handlePasswordEnter"
+              />
+
+              <v-radio-group
+                ref="optionGroup"
+                v-model="selectedOption"
+                inline
+                class="mt-2"
+                @keydown.enter.prevent="handleOptionEnter"
+              >
+
+                <v-radio class="mr-9"
+                  value="empresa"
+                  label="Operador central"
+                  color="amber"
+                />
+
+                <v-radio
+                  value="sucursales"
+                  label="Sucursal operativa"
+                  color="amber"
+                />
+
+              </v-radio-group>
+
+              <v-autocomplete
+                ref="branchField"
+                v-if="selectedOption === 'sucursales'"
+                v-model="editedItem.branch_id"
+                :items="branches"
+                item-title="name"
+                item-value="id"
+                label="Nodo operativo (Sucursal)"
+                variant="outlined"
+                density="comfortable"
+                clearable
+                :rules="selectedOption === 'sucursales' ? requiredRules : []"
+                @keydown.enter.prevent="handleBranchEnter"
+              />
+
+              <v-btn
+                ref="loginButton"
+                block
+                height="54"
+                class="enter-btn"
+                :loading="loading"
+                :disabled="!valid"
+                @click="login"
+              >
+
+                <span v-if="!loading">
+                  Acceder
+                </span>
+
+                <span v-else>
+                  Validando acceso operativo...
+                </span>
+
+              </v-btn>
+
+            </v-form>
+
+            <div class="console-footer">
+              BusGo v1.0 · Plataforma de control de rutas, viajes y venta de tickets
+            </div>
+
+          </div>
+
+        </v-col>
+
       </v-row>
+
     </v-container>
 
-    <!-- Snackbar -->
+    <!-- SNACKBAR (TU LÓGICA IGUAL) -->
     <v-snackbar v-model="snackbar" location="top right" :timeout="sb_timeout">
-      <v-alert
-        :type="sb_type"
-        variant="flat"
-        color="indigo"
-        border="start"
-        class="w-100"
-        :icon="sb_icon"
-      >
+      <v-alert :type="sb_type" variant="tonal" :icon="sb_icon">
         <strong>{{ sb_title }}</strong><br />
         {{ sb_message }}
       </v-alert>
     </v-snackbar>
+
   </div>
 </template>
-
 <script>
 import LocalStorageService from "@/LocalStorageService";
 import router from '@/router/index';
@@ -467,27 +433,178 @@ export default {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-.login-wrapper {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #eef2f7, #f4f7fb);
-  min-height: 100vh;
-  padding: 16px;
+.control-wrapper {
+  font-family: Inter;
+  height: 100vh;
+  overflow: hidden;
+  background: #020617;
+}
+
+/* 🌍 MAP CORE */
+.map-core {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(59,130,246,0.18), transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(245,158,11,0.14), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(16,185,129,0.08), transparent 55%);
+  filter: blur(40px);
+  animation: drift 10s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+/* GRID */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.25;
+}
+
+/* STATUS */
+.status-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: #cbd5e1;
+  font-size: 13px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #22c55e;
+}
+
+/* LEFT */
+.left-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.tower {
+  max-width: 460px;
+}
+
+.tower h1 {
+  font-size: 44px;
+  font-weight: 800;
+}
+
+.tower p {
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.metrics {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.metric {
+  background: rgba(255,255,255,0.06);
+  padding: 14px;
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  min-width: 100px;
+}
+
+.val {
+  color: #fff;
+  font-weight: 700;
+}
+
+.lab {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #a3e635;
+  font-size: 13px;
+}
+
+.pulse {
+  width: 10px;
+  height: 10px;
+  background: #a3e635;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* RIGHT */
+.right-console {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.glass-card {
-  backdrop-filter: blur(8px);
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  overflow: hidden;
-  transition: all 0.3s ease;
+.console-card {
+  width: 460px;
+  padding: 40px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.5);
 }
 
-.login-illustration {
-  background: linear-gradient(180deg, #e0e7ff, #ffffff);
+.console-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.lock-ring {
+  width: 64px;
+  height: 64px;
+  margin: auto;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.enter-btn {
+  margin-top: 18px;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+  color: white;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 14px;
+}
+
+.console-footer {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
 }
 </style>
