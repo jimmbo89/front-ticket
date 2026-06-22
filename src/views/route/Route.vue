@@ -56,25 +56,6 @@
         <!-- Spacer (solo visible en md+) -->
          <v-spacer class="d-none d-md-block"></v-spacer>
 
-    <!-- Grupo: Autocomplete + Botón buscar -->
-   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
-
-          <!-- Botón de búsqueda (actualizar datos) 
-          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
-            class="mt-2 mt-md-0 mr-5 ml-1">
-            <v-icon>mdi-magnify</v-icon>
-          </v-btn>-->
-        </div>
-
         <!-- Campo de búsqueda global -->
         <div class="flex-grow-1" style="max-width: 30%">
           <v-text-field
@@ -131,16 +112,12 @@
                 Destino
               </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Precio
-              </div>
 
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
                 Distancia
               </div>
 
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
                 Duración
               </div>
 
@@ -193,16 +170,6 @@
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Destino: {{ slotProps.item.destinationName }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Columna 4: Precio -->
-                <div style="width: 10%; min-width: 0" class="text-truncate">
-                  <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Precio: {{ formatNumber(Number(slotProps.item.price)) }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -271,16 +238,6 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.branch_id" v-if="mostrarFila"
-                :items="branches" label="Seleccione una Sucursal" prepend-icon="mdi-store" item-title="name"
-                item-value="id" variant="underlined" hide-details single-line flat :rules="selectRules" @update:modelValue="showAdd" :disabled="editedIndex !== -1">
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                  </v-list-item>
-                </template>
-          </v-autocomplete>
-              </v-col>
-              <v-col cols="12" md="12">
                 <v-text-field
                   v-model="editedItem.name"
                   label="Nombre"
@@ -299,8 +256,6 @@
                   item-title="address"
                   item-value="id"
                   variant="underlined"
-                  :rules="selectRules"
-                  :disabled="!!editedItem.origin_id"
                 >
                   <template v-slot:item="{ props, item }">
                     <v-list-item
@@ -331,12 +286,6 @@
                     ></v-list-item>
                   </template>
                 </v-autocomplete>
-              </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.price" label="Precio" type="number" variant="underlined"
-                  density="compact" prepend-icon="mdi-cash" :rules="[(v) => v > 0 || 'Debe ser un precio válido']"
-                  placeholder="Ingrese el precio del pasaje" min="0" step="1.00">
-                </v-text-field>
               </v-col>
               <v-col cols="12" md="6">
                 <v-text-field
@@ -420,11 +369,9 @@ export default {
     locationsOrigins: [],
     filteredDestinations: [],
     routes: [],
-    branches: [],
     branchRoutes: [],
     data: {},
     branch_id: '',
-    mostrarFila: false,
     permissions: '',
     headers: [
       { title: "Nombre", value: "name", width: "15%" },
@@ -444,7 +391,6 @@ export default {
       estimated: "",
       status: "1",
       route_id: "",
-      price: "",
       branch_id: "",
     },
     originalItem: {
@@ -456,7 +402,6 @@ export default {
       estimated: "",
       status: "1",
       route_id: "",
-      price: "",
       branch_id: "",
     },
     defaultItem: {
@@ -468,7 +413,6 @@ export default {
       estimated: "",
       status: "1",
       route_id: "",
-      price: "",
       branch_id: "",
     },
     editedIndex: -1,
@@ -497,29 +441,13 @@ export default {
     },
   },
   watch: {
-  'editedItem.origin_id'(newOriginId) {
-    if (newOriginId) {
-      // Filtrar locations para excluir el origen seleccionado
-      this.filteredDestinations = this.locations.filter(
-        location => location.id !== newOriginId
-      );
-    } else {
-      // Si no hay origen, mostrar todos los destinos
-      this.filteredDestinations = this.locations;
-    }
-  }
 },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
+    this.branch_id = LocalStorageService.getItem("branch_id");
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_routes_company')) {
-      this.showBranches();
-      this.mostrarFila = true;
-    } else {
-      this.branch_id = LocalStorageService.getItem("branch_id");
-      this.initialize();
-    }
+    this.initialize();
   },
   methods: {
     hasPermission(requiredPermissions) {
@@ -557,30 +485,6 @@ export default {
 
       return formattedValue;
     },
-    async showBranches() {
-      try {
-        const result = await handleRequest({
-          endpoint: "branch",
-          method: "GET",
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.branches = result.data?.branches || [];
-          this.branch_id = this.branches[0].id;
-        } else {
-          // Si no hay datos, asignamos un array vacío
-          this.branches = [];
-        }
-      } catch (error) {
-        this.loading = false;
-        // Captura de errores no controlados
-        //this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
-      } finally {
-        this.loading = false;
-        this.initialize();
-      }
-    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -591,13 +495,6 @@ export default {
       //this.close();
       this.data = {};
       this.editedIndex = -1;
-      this.editedItem.branch_id = 
-  (this.editedItem.branch_id !== null && 
-   this.editedItem.branch_id !== undefined && 
-   this.editedItem.branch_id !== '') 
-    ? this.editedItem.branch_id 
-    : this.branch_id;
-      this.data.branch_id = this.editedItem.branch_id;
       try {
         const result = await handleRequest({
           endpoint: "location-route",
@@ -608,15 +505,9 @@ export default {
         if (result.success) {
           this.locations = result.data?.destinations || [];
           this.locationsOrigins = result.data?.origins || [];
-          
-          const branchroutes = result.data?.branchroutes || [];
-          if (this.locationsOrigins.length > 0 && branchroutes.length > 0) {
-          this.editedItem.origin_id = this.locationsOrigins[0].id;
-        }else{
+
           this.editedItem.origin_id = null;
-        }
-        // Inicializar filteredDestinations (sin filtrar al inicio)
-        this.filteredDestinations = this.locations;
+          this.filteredDestinations = this.locations;
         } else {
           // Si no hay datos, asignamos un array vacío
           this.locations = [];
@@ -642,19 +533,13 @@ export default {
       this.editedIndex = -1;
     },
     async initialize() {
-      if (this.branch_id === 'null') {
-        this.branchRoutes = [];
-        this.loading = false;
-        return;
-      }
       this.data = {};
-      this.data.branch_id = this.branch_id;
       try {
         this.loading = true;
         const result = await handleRequest({
           endpoint: "branch-routes",
           method: "POST",
-          data: this.data,
+          data: {},
         });
 
         if (result.success) {
@@ -688,8 +573,7 @@ export default {
           "estimated",
           "status",
           "branch_id",
-          "route_id",
-          "price"
+          "route_id"
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -741,8 +625,7 @@ export default {
           "estimated",
           "status",
           "branch_id",
-          "route_id",
-          "price"
+          "route_id"
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
@@ -793,7 +676,6 @@ export default {
       this.originalItem = Object.assign({}, item);
       this.editedItem = Object.assign({}, item);
       this.data = {};
-      this.data.branch_id = this.branch_id;
       try {
         const result = await handleRequest({
           endpoint: "location-route",

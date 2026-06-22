@@ -1,6 +1,14 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -11,7 +19,11 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+  <v-card
+    class="d-flex align-center pa-3"
+    elevation="0"
+    style="background-color: #f9f9f9"
+  >
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-alert</v-icon>
@@ -43,173 +55,285 @@
 
         <!-- Grupo: Autocomplete + Botón buscar -->
         <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
-          <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-            offset-y min-width="290px">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-bind="props" :modelValue="dateFormatted" variant="solo-filled" hide-details single-line
-                flat prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" class="ml-1"></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-
-          <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-            offset-y min-width="290px">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="solo-filled" hide-details single-line
-                flat prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" class="ml-1"></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                :modelValue="input2" @update:model-value="updateDate1" format="yyyy-MM-dd"
-                :min="dateFormatted"></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact"
-            class="ml-1">
+          <ReportDateRangeFilter
+            v-model:start-date="editedItem.startDate"
+            v-model:end-date="editedItem.endDate"
+          />
+          <v-select
+            v-if="mostrarFila"
+            v-model="type"
+            :items="options"
+            label="Seleccione una opción"
+            variant="solo-filled"
+            hide-details
+            single-line
+            flat
+            density="compact"
+            item-title="title"
+            item-value="value"
+            class="ml-2"
+            style="min-width: 220px"
+          >
             <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
+              <v-list-item v-bind="props">
+                <template v-slot:prepend>
+                  <v-icon :icon="item.raw.icon"></v-icon>
+                </template>
+              </v-list-item>
+            </template>
+            <template v-slot:prepend-inner>
+              <v-icon icon="mdi-form-dropdown"></v-icon>
+            </template>
+          </v-select>
+          <v-autocomplete
+            :no-data-text="'No hay datos disponibles'"
+            v-model="branch_id"
+            v-if="type === 'Sucursal' && mostrarFila"
+            :items="branches"
+            label="Seleccione una Sucursal"
+            prepend-inner-icon="mdi-store"
+            item-title="name"
+            item-value="id"
+            variant="solo-filled"
+            hide-details
+            single-line
+            flat
+            :rules="selectRules"
+            density="compact"
+            class="ml-1"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item
+                v-bind="props"
+                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+              >
               </v-list-item>
             </template>
           </v-autocomplete>
           <!-- Botón de búsqueda (actualizar datos) -->
-          <v-btn icon @click="getIncidents" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
-            class="mt-2 mt-md-0 mr-1 ml-1">
+          <v-btn
+            icon
+            @click="getIncidents"
+            :color="paleteColors.primary"
+            density="comfortable"
+            :disabled="type === 'Sucursal' && !branch_id"
+            class="mt-2 mt-md-0 mr-1 ml-1"
+          >
             <v-icon>mdi-magnify</v-icon>
           </v-btn>
         </div>
 
         <!-- Campo de búsqueda global -->
         <div class="flex-grow-1" style="max-width: 300px">
-          <v-text-field v-model="search" density="compact" label="Buscar incidencia" prepend-inner-icon="mdi-magnify"
-            variant="solo-filled" hide-details single-line flat></v-text-field>
+          <v-text-field
+            v-model="search"
+            density="compact"
+            label="Buscar incidencia"
+            prepend-inner-icon="mdi-magnify"
+            variant="solo-filled"
+            hide-details
+            single-line
+            flat
+          ></v-text-field>
         </div>
       </v-card-title>
-      <v-data-table :headers="headers" :items="incidents" v-model:expanded="expandedItems" item-value="id"
-        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-        loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent" show-expand>
-
+      <v-data-table
+        :headers="headers"
+        :items="incidents"
+        v-model:expanded="expandedItems"
+        item-value="id"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="elevation-1"
+        style="max-height: 68vh; overflow-y: auto; background: transparent"
+        show-expand
+      >
         <template v-slot:top>
           <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card flat color="blue-grey-lighten-5" class="mb-2 mx-1 rounded-lg" elevation="1"
-            style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center">
-            <v-card-text class="d-flex pa-2"
-              style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center">
-              <!-- Negocio (20%) -->
-              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
-                Nombre del Trabajdor
+          <v-card
+            flat
+            color="blue-grey-lighten-5"
+            class="mb-2 mx-1 rounded-lg"
+            elevation="1"
+            style="
+              border: 1px solid #eceff1;
+              height: 40px;
+              min-height: 40px;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <v-card-text
+              class="d-flex pa-2"
+              style="
+                width: 100%;
+                min-width: 0;
+                height: 100%;
+                padding: 0 16px !important;
+                display: flex;
+                align-items: center;
+              "
+            >
+              <!-- Sucursal -->
+              <div style="width: 24%; min-width: 0" class="text-left font-weight-bold">
+                Sucursal
               </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 22%; min-width: 0" class="text-left font-weight-bold">
-                Título
+              <!-- Trabajador -->
+              <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
+                Trabajador
               </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
+              <!-- Titulo -->
+              <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
+                Titulo
+              </div>
+
+              <!-- Fecha -->
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Fecha
               </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
+              <!-- Descripcion -->
+              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+                Descripcion
               </div>
 
               <!-- Acciones (25%) -->
-              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-
-              </div>
+              <div
+                style="width: 10%; min-width: 0"
+                class="d-flex justify-left font-weight-bold"
+              ></div>
             </v-card-text>
           </v-card>
         </template>
         <!-- Personalización completa de la fila con v-slot:row -->
-        <template v-slot:row="{ item }">
+        <template v-slot:item="slotProps">
           <tr>
             <td colspan="100%" style="padding: 0; border: none">
-              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Avatar + Nombre -->
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0; gap: 8px">
-                    <v-avatar class="icono-concavo" color="grey-lighten-4" size="40">
-                      <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}`" class="icono-concavo"
-                        cover></v-img>
+              <v-card
+                class="mb-2 mx-1 rounded-lg"
+                elevation="1"
+                density="comfortable"
+                flat
+              >
+                <v-card-text
+                  class="d-flex align-center pa-2"
+                  style="width: 100%; min-width: 0"
+                >
+                  <!-- Sucursal + imagen -->
+                  <div class="d-flex align-center" style="width: 24%; min-width: 0">
+                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                      <v-img
+                        :src="
+                          slotProps.item.imageBranch
+                            ? `${this.$axios.defaults.baseURL}images/${slotProps.item.imageBranch}`
+                            : ''
+                        "
+                        class="icono-concavo"
+                        cover
+                      ></v-img>
                     </v-avatar>
-                    <div class="d-inline-block" style="min-width: 0; flex: 1">
-                      <span class="text-truncate d-inline-block"
-                        style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                        {{ item.workerName }}
+                    <span class="text-truncate">
+                      {{ slotProps.item.nameBranch || slotProps.item.branchName }}
+                    </span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Sucursal: {{ slotProps.item.nameBranch || slotProps.item.branchName }}
                       </span>
-                      <v-tooltip activator="parent" location="bottom" max-width="350px">
-                        <span style="white-space: normal; word-break: break-word">
-                          Trabajador: {{ item.workerName }}
-                        </span>
-                      </v-tooltip>
-                    </div>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Avatar + Nombre -->
+                  <div class="d-flex align-center" style="width: 18%; min-width: 0">
+                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                      <v-img
+                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}`"
+                        class="icono-concavo"
+                        cover
+                      ></v-img>
+                    </v-avatar>
+                    <span class="text-truncate">
+                      {{ slotProps.item.workerName }}
+                    </span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Trabajador: {{ slotProps.item.workerName }}
+                      </span>
+                    </v-tooltip>
                   </div>
 
                   <!-- Título con ícono -->
-                  <div style="width: 25%; min-width: 0; flex: 1">
-                    <div class="d-flex align-center" style="gap: 6px">
-                      <v-icon v-if="item.title.includes('Retraso')" color="warning" size="20">
-                        mdi-clock-alert
-                      </v-icon>
-                      <v-icon v-else-if="item.title.includes('Escaneo')" color="success" size="20">
-                        mdi-qrcode-scan
-                      </v-icon>
-                      <v-icon v-else-if="item.title.includes('Reimpresión')" color="info" size="20">
-                        mdi-printer
-                      </v-icon>
-                      <div class="d-inline-block" style="min-width: 0; flex: 1">
-                        <span class="text-truncate d-inline-block"
-                          style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                          {{ item.title }}
-                        </span>
-                        <v-tooltip activator="parent" location="bottom" max-width="350px">
-                          <span style="white-space: normal; word-break: break-word">
-                            {{ item.title }}
-                          </span>
-                        </v-tooltip>
-                      </div>
-                    </div>
+                  <div style="width: 18%; min-width: 0" class="text-truncate">
+                    <v-icon
+                      v-if="slotProps.item.title.includes('Retraso')"
+                      color="warning"
+                      size="20"
+                    >
+                      mdi-clock-alert
+                    </v-icon>
+                    <v-icon
+                      v-else-if="slotProps.item.title.includes('Escaneo')"
+                      color="success"
+                      size="20"
+                    >
+                      mdi-qrcode-scan
+                    </v-icon>
+                    <v-icon
+                      v-else-if="slotProps.item.title.includes('Reimpresión')"
+                      color="info"
+                      size="20"
+                    >
+                      mdi-printer
+                    </v-icon>
+                    <span>
+                      {{ slotProps.item.title }}
+                    </span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        {{ slotProps.item.title }}
+                      </span>
+                    </v-tooltip>
                   </div>
 
                   <!-- Fecha -->
-                  <div style="width: 10%; min-width: 0; text-align: left">
-                    <span class="text-truncate d-inline-block" style="max-width: 100%">
-                      {{ item.date }}
+                  <div style="width: 10%; min-width: 0" class="text-truncate">
+                    <span>
+                      {{ slotProps.item.date }}
                     </span>
                     <v-tooltip activator="parent" location="bottom">
-                      Fecha: {{ item.date }}
+                      Fecha: {{ slotProps.item.date }}
                     </v-tooltip>
                   </div>
 
                   <!-- Descripción -->
-                  <div style="width: 30%; min-width: 0; text-align: left">
-                    <span class="text-truncate d-inline-block" style="max-width: 100%">
-                      {{ item.description }}
+                  <div style="width: 20%; min-width: 0" class="text-truncate">
+                    <span>
+                      {{ slotProps.item.description }}
                     </span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ item.description }}
+                        Descripción: {{ slotProps.item.description }}
                       </span>
                     </v-tooltip>
                   </div>
 
                   <!-- Botón de expansión -->
-                  <div style="width: 10%; min-width: 0; text-align: right">
-                    <v-btn size="small" variant="text" :color="getDetailsButtonColor(item)"
-                      @click.stop="toggleExpand(item)">
+                  <div style="width: 10%; min-width: 0" class="text-truncate">
+                    <v-btn
+                      size="small"
+                      variant="text"
+                      :color="getDetailsButtonColor(slotProps.item)"
+                      @click.stop="toggleExpand(slotProps.item)"
+                    >
                       <v-icon start size="18">
-                        {{ isExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
+                        {{ isExpanded(slotProps.item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
                       </v-icon>
                       <span class="text-caption">
-                        {{ isExpanded(item) ? "Ocultar" : "Ver" }}
+                        {{ isExpanded(slotProps.item) ? "Ocultar" : "Ver" }}
                       </span>
                     </v-btn>
                   </div>
@@ -228,22 +352,39 @@
 
                 <!-- Título con ícono -->
                 <div class="d-flex align-center mb-3">
-                  <v-icon v-if="item.title.includes('Retraso')" color="warning" class="mr-2">
+                  <v-icon
+                    v-if="item.title.includes('Retraso')"
+                    color="warning"
+                    class="mr-2"
+                  >
                     mdi-clock-alert
                   </v-icon>
-                  <v-icon v-else-if="item.title.includes('Escaneo')" color="success" class="mr-2">
+                  <v-icon
+                    v-else-if="item.title.includes('Escaneo')"
+                    color="success"
+                    class="mr-2"
+                  >
                     mdi-qrcode-scan
                   </v-icon>
-                  <v-icon v-else-if="item.title.includes('Reimpresión')" color="info" class="mr-2">
+                  <v-icon
+                    v-else-if="item.title.includes('Reimpresión')"
+                    color="info"
+                    class="mr-2"
+                  >
                     mdi-printer
                   </v-icon>
                   <strong>{{ item.title }}</strong>
                 </div>
 
                 <!-- Tabla de detalles -->
-                <table class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4">
+                <table
+                  class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4"
+                >
                   <tbody>
-                    <tr v-for="(value, key) in getFilteredDetails(item.details)" :key="key">
+                    <tr
+                      v-for="(value, key) in getFilteredDetails(item.details)"
+                      :key="key"
+                    >
                       <td class="font-weight-bold" style="width: 200px">
                         {{ formatDetailKey(key) }}:
                       </td>
@@ -268,7 +409,11 @@ import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import QRCode from "qrcode";
+import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 export default {
+  components: {
+    ReportDateRangeFilter,
+  },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -282,20 +427,27 @@ export default {
     mostrar: false,
     dialog: false,
     dialogDelete: false,
+    type: "Sucursal",
     estimated: 0,
     timeSlotsKey: 0,
     mostrarFila: false,
-    permissions: '',
+    permissions: "",
     incidents: [],
     branches: [],
     data: {},
+    company_id: "",
     branch_id: "",
+    options: [
+      { title: "Empresa", value: "Company", icon: "mdi-office-building" },
+      { title: "Sucursal", value: "Sucursal", icon: "mdi-store" },
+    ],
     headers: [
+      { title: "Sucursal", key: "nameBranch" },
       { title: "Trabajador", key: "workerName" },
-      { title: "Título", key: "title" },
+      { title: "Titulo", key: "title" },
       { title: "Fecha", key: "date" },
-      { title: "Descripción", key: "description" },
-       { title: "Acciones", key: "data-table-expand" },
+      { title: "Descripcion", key: "description" },
+      { title: "Acciones", key: "data-table-expand" },
     ],
     editedItem: {
       startDate: null,
@@ -314,13 +466,9 @@ export default {
     },
     editedIndex: -1,
     search: "",
-    menu: false,
-    menu2: false,
-    input: null,
-    input2: null,
     tab: null,
-     expandedItems: [],
-     expanded: [],
+    expandedItems: [],
+    expanded: [],
     nameRules: [
       (v) => !!v || "El campo es requerido",
       (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
@@ -335,77 +483,66 @@ export default {
       (v) => v > 0 || "El precio debe ser un número positivo", // El precio debe ser positivo
     ],
   }),
-  computed: {
-    dateFormatted() {
-      const date = this.input ? new Date(this.input) : new Date();
-      return date.toISOString().split("T")[0];
-    },
-    getDate() {
-      return this.input ? new Date(this.input) : new Date();
-    },
-    dateFormatted1() {
-      const date = this.input2 ? new Date(this.input2) : new Date();
-      return date.toISOString().split("T")[0];
-    },
-    getDate1() {
-      return this.input2 ? new Date(this.input2) : new Date();
-    },
-  },
+  computed: {},
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-    this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_incidents_company')) {
+    this.company_id = LocalStorageService.getItem("business_id");
+    this.permissions = LocalStorageService.getItem("permissions");
+    if (this.hasPermission("view_incidents_company")) {
       this.showBranches();
+      this.type = "Company";
+      this.mostrarFila = true;
     } else {
+      this.type = "Sucursal";
       this.branch_id = LocalStorageService.getItem("branch_id");
       this.initialize();
     }
   },
 
   methods: {
-     getDetailsObject(details) {
-    if (!details) return {};
-    
-    // Ya es objeto
-    if (typeof details === 'object' && !Array.isArray(details)) {
-      return details;
-    }
-    
-    // Es string, intentar parsear
-    if (typeof details === 'string') {
-      try {
-        return JSON.parse(details);
-      } catch (e) {
-        console.warn('Error parseando details:', details, e);
-        return { error: 'Datos inválidos' };
-      }
-    }
-    
-    // Tipo desconocido
-    return { error: `Tipo no soportado: ${typeof details}` };
-  },
-    hasPermission(requiredPermissions) {
-        // Si es un string, lo convertimos a array
-        const perms = Array.isArray(requiredPermissions) 
-          ? requiredPermissions 
-          : [requiredPermissions];
-        
-        // Retorna true si al menos uno coincide
-        return perms.some(p => this.permissions.includes(p));
-      },
-     toggleExpand(item) {
-    const index = this.expandedItems.findIndex(i => i.id === item.id);
-    if (index > -1) {
-      this.expandedItems = this.expandedItems.filter(i => i.id !== item.id);
-    } else {
-      this.expandedItems = [...this.expandedItems, item];
-    }
-  },
+    getDetailsObject(details) {
+      if (!details) return {};
 
-  isExpanded(item) {
-    if (!item || !item.id) return false;
-    return this.expandedItems.some(i => i.id === item.id);
-  },
+      // Ya es objeto
+      if (typeof details === "object" && !Array.isArray(details)) {
+        return details;
+      }
+
+      // Es string, intentar parsear
+      if (typeof details === "string") {
+        try {
+          return JSON.parse(details);
+        } catch (e) {
+          console.warn("Error parseando details:", details, e);
+          return { error: "Datos inválidos" };
+        }
+      }
+
+      // Tipo desconocido
+      return { error: `Tipo no soportado: ${typeof details}` };
+    },
+    hasPermission(requiredPermissions) {
+      // Si es un string, lo convertimos a array
+      const perms = Array.isArray(requiredPermissions)
+        ? requiredPermissions
+        : [requiredPermissions];
+
+      // Retorna true si al menos uno coincide
+      return perms.some((p) => this.permissions.includes(p));
+    },
+    toggleExpand(item) {
+      const index = this.expandedItems.findIndex((id) => id === item.id);
+      if (index > -1) {
+        this.expandedItems = this.expandedItems.filter((id) => id !== item.id);
+      } else {
+        this.expandedItems = [...this.expandedItems, item.id];
+      }
+    },
+
+    isExpanded(item) {
+      if (!item || !item.id) return false;
+      return this.expandedItems.includes(item.id);
+    },
     isValidJSON(str) {
       try {
         JSON.parse(str);
@@ -451,27 +588,18 @@ export default {
         this.initialize();
       }
     },
-    updateDate(val) {
-      this.input = val;
-      this.editedItem.startDate = this.dateFormatted;
-      this.menu = false;
-    },
-    updateDate1(val) {
-      this.input2 = val;
-      this.editedItem.endDate = this.dateFormatted1;
-      this.menu2 = false;
-    },
     async initialize() {
-      if (this.branch_id === 'null') {
+      if (this.type === "Sucursal" && this.branch_id === "null") {
         this.incidents = [];
         this.loading = false;
         return;
       }
       this.data = {};
-      this.data.branch_id = this.branch_id;
-      const today = new Date();
-      const formattedDate = today.toISOString().split("T")[0]; // Formato: YYYY-MM-DD
-      //this.data.date = formattedDate;
+      if (this.type === "Company") {
+        this.data.company_id = Number(this.company_id);
+      } else {
+        this.data.branch_id = Number(this.branch_id);
+      }
       try {
         this.loading = true;
         const result = await handleRequest({
@@ -501,7 +629,11 @@ export default {
     },
     async getIncidents() {
       this.data = {};
-      this.data.branch_id = this.branch_id;
+      if (this.type === "Company") {
+        this.data.company_id = Number(this.company_id);
+      } else {
+        this.data.branch_id = Number(this.branch_id);
+      }
       this.data.startDate =
         this.editedItem.startDate ?? new Date().toISOString().split("T")[0];
       this.data.endDate =
@@ -651,143 +783,150 @@ export default {
       }
     },
     // Reemplaza el método getDetailsObject por este nuevo método que filtra y ordena los campos
-getFilteredDetails(details) {
-  if (!details) return {};
-  
-  // Parsear si es string JSON
-  let parsed = details;
-  if (typeof details === 'string') {
-    try {
-      parsed = JSON.parse(details);
-    } catch (e) {
-      console.warn('Error parseando details:', details, e);
-      return { error: 'Datos inválidos' };
-    }
-  }
-  
-  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return { error: `Tipo no soportado: ${typeof parsed}` };
-  }
+    getFilteredDetails(details) {
+      if (!details) return {};
 
-  // === FILTRAR: Excluir campos que NO queremos mostrar ===
-  const { ticket_id, trip_id, sequenceNumber, branchName, ...cleanDetails } = parsed;
+      // Parsear si es string JSON
+      let parsed = details;
+      if (typeof details === "string") {
+        try {
+          parsed = JSON.parse(details);
+        } catch (e) {
+          console.warn("Error parseando details:", details, e);
+          return { error: "Datos inválidos" };
+        }
+      }
 
-  // === ORDENAR: Definir orden preferido de visualización ===
-  const preferredOrder = [
-    'transactionNumber',
-    'routeName',
-    'routeOrigin',
-    'routeDestination',
-    'departureTime',
-    'arrivalTime',
-    'print',
-    'method',
-    'quantity',
-    'price',
-    'total'
-  ];
+      if (typeof parsed !== "object" || Array.isArray(parsed)) {
+        return { error: `Tipo no soportado: ${typeof parsed}` };
+      }
 
-  const result = {};
-  
-  // Primero agregar campos en el orden preferido (si existen y tienen valor)
-  preferredOrder.forEach(key => {
-    if (cleanDetails[key] !== undefined && cleanDetails[key] !== null && cleanDetails[key] !== '') {
-      result[key] = cleanDetails[key];
-    }
-  });
-  
-  // Luego agregar cualquier otro campo restante que no esté en preferredOrder
-  Object.keys(cleanDetails).forEach(key => {
-    if (!preferredOrder.includes(key) && 
-        cleanDetails[key] !== undefined && 
-        cleanDetails[key] !== null && 
-        cleanDetails[key] !== '') {
-      result[key] = cleanDetails[key];
-    }
-  });
-  
-  return result;
-},
+      // === FILTRAR: Excluir campos que NO queremos mostrar ===
+      const { ticket_id, trip_id, sequenceNumber, branchName, ...cleanDetails } = parsed;
 
-// Actualiza formatDetailKey para incluir los nuevos campos
-formatDetailKey(key) {
-  const keysMap = {
-    qr: "Código QR",
-    action: "Acción",
-    ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
-    trip_id: "ID Viaje",    // Ya no se mostrará, pero se mantiene por compatibilidad
-    new_status: "Nuevo Estado",
-    previous_status: "Estado Anterior",
-    arrival: "Llegada Programada",
-    actualEnd: "Llegada Real",
-    difference: "Diferencia",
-    actualStart: "Inicio Real",
-    scheduledStart: "Inicio Programado",
-    print: "Reimpresiones",
-    method: "Método de Pago",
-    quantity: "Cantidad",
-    price: "Precio Unitario",
-    total: "Total",
-    
-    // === NUEVOS CAMPOS ===
-    transactionNumber: "N° Transacción",
-    //sequenceNumber: "N° Secuencia",
-    routeName: "Ruta",
-    routeOrigin: "Origen",
-    routeDestination: "Destino",
-    departureTime: "Hora de Salida",
-    arrivalTime: "Hora de Llegada",
-  };
-  return (
-    keysMap[key] ||
-    key
-      .split("_")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ")
-  );
-},
+      // === ORDENAR: Definir orden preferido de visualización ===
+      const preferredOrder = [
+        "transactionNumber",
+        "routeName",
+        "routeOrigin",
+        "routeDestination",
+        "departureTime",
+        "arrivalTime",
+        "print",
+        "method",
+        "quantity",
+        "price",
+        "total",
+      ];
 
-// Actualiza formatDetailValue para formatear horas cuando existan
-formatDetailValue(key, value) {
-  if (key === "qr") return "";
-  
-  // === FORMATEO DE HORAS ===
-  if (["departureTime", "arrivalTime"].includes(key) && value) {
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
+      const result = {};
+
+      // Primero agregar campos en el orden preferido (si existen y tienen valor)
+      preferredOrder.forEach((key) => {
+        if (
+          cleanDetails[key] !== undefined &&
+          cleanDetails[key] !== null &&
+          cleanDetails[key] !== ""
+        ) {
+          result[key] = cleanDetails[key];
+        }
       });
-    }
-    return value; // Si no es fecha válida, mostrar tal cual
-  }
-  
-  if (key === "difference" && typeof value === "number") {
-    const hours = Math.floor(value / 60);
-    const minutes = value % 60;
-    return `${hours}h ${minutes}m`;
-  }
-  if (key === "method") {
-    const methods = {
-      cash: "Efectivo",
-      card: "Tarjeta",
-      transfer: "Transferencia",
-      "Efectivo": "Efectivo", // Por si ya viene formateado desde backend
-    };
-    return methods[value] || value;
-  }
-  if (["price", "total"].includes(key)) {
-    return new Intl.NumberFormat("es-CL", { // Ajustado a CLP según contexto
-      style: "currency",
-      currency: "CLP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  }
-  return value;
-},
+
+      // Luego agregar cualquier otro campo restante que no esté en preferredOrder
+      Object.keys(cleanDetails).forEach((key) => {
+        if (
+          !preferredOrder.includes(key) &&
+          cleanDetails[key] !== undefined &&
+          cleanDetails[key] !== null &&
+          cleanDetails[key] !== ""
+        ) {
+          result[key] = cleanDetails[key];
+        }
+      });
+
+      return result;
+    },
+
+    // Actualiza formatDetailKey para incluir los nuevos campos
+    formatDetailKey(key) {
+      const keysMap = {
+        qr: "Código QR",
+        action: "Acción",
+        ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
+        trip_id: "ID Viaje", // Ya no se mostrará, pero se mantiene por compatibilidad
+        new_status: "Nuevo Estado",
+        previous_status: "Estado Anterior",
+        arrival: "Llegada Programada",
+        actualEnd: "Llegada Real",
+        difference: "Diferencia",
+        actualStart: "Inicio Real",
+        scheduledStart: "Inicio Programado",
+        print: "Reimpresiones",
+        method: "Método de Pago",
+        quantity: "Cantidad",
+        price: "Precio Unitario",
+        total: "Total",
+
+        // === NUEVOS CAMPOS ===
+        transactionNumber: "N° Transacción",
+        //sequenceNumber: "N° Secuencia",
+        routeName: "Ruta",
+        routeOrigin: "Origen",
+        routeDestination: "Destino",
+        departureTime: "Hora de Salida",
+        arrivalTime: "Hora de Llegada",
+      };
+      return (
+        keysMap[key] ||
+        key
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ")
+      );
+    },
+
+    // Actualiza formatDetailValue para formatear horas cuando existan
+    formatDetailValue(key, value) {
+      if (key === "qr") return "";
+
+      // === FORMATEO DE HORAS ===
+      if (["departureTime", "arrivalTime"].includes(key) && value) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        }
+        return value; // Si no es fecha válida, mostrar tal cual
+      }
+
+      if (key === "difference" && typeof value === "number") {
+        const hours = Math.floor(value / 60);
+        const minutes = value % 60;
+        return `${hours}h ${minutes}m`;
+      }
+      if (key === "method") {
+        const methods = {
+          cash: "Efectivo",
+          card: "Tarjeta",
+          transfer: "Transferencia",
+          Efectivo: "Efectivo", // Por si ya viene formateado desde backend
+        };
+        return methods[value] || value;
+      }
+      if (["price", "total"].includes(key)) {
+        return new Intl.NumberFormat("es-CL", {
+          // Ajustado a CLP según contexto
+          style: "currency",
+          currency: "CLP",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(value);
+      }
+      return value;
+    },
   },
 };
 </script>

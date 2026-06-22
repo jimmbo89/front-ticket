@@ -184,8 +184,8 @@
               </div>
 
               <!-- Teléfono (10%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
-                Recorrido
+              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
+                Ruta
               </div>
 
               <!-- Dirección (25%) -->
@@ -193,8 +193,8 @@
                 Fecha
               </div>
 
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Horario
+              <div style="width: 0; min-width: 0; overflow: hidden; display: none" class="text-left font-weight-bold">
+                Emisión
               </div>
 
               <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
@@ -206,7 +206,7 @@
               </div>
 
               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Dinero Generado
+                Monto
               </div>
 
             </v-card-text>
@@ -240,11 +240,20 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 30%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.route }}</span>
+              <div style="width: 40%; min-width: 0" class="text-truncate text-left">
+                <div class="font-weight-medium text-truncate">{{ slotProps.item.route }}</div>
+                <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                  <div class="d-flex align-center mr-3">
+                    <v-icon size="small" color="primary" class="mr-1">mdi-clock-outline</v-icon>
+                    <span class="text-no-wrap">{{ slotProps.item.estimated }} minutos</span>
+                  </div>
+                  <span class="text-no-wrap">{{ formatTimeRange(slotProps.item.horario) }}</span>
+                </div>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
-                    Recorrido: {{ slotProps.item.route }}
+                    <strong>Ruta:</strong> {{ slotProps.item.route }}<br>
+                    <strong>Duración:</strong> {{ slotProps.item.estimated }} minutos<br>
+                    <strong>Horario completo:</strong><br>{{ slotProps.item.horario }}
                   </span>
                 </v-tooltip>
               </div>
@@ -259,8 +268,8 @@
                 </v-tooltip>
               </div>
 
-              <!-- Horario -->
-              <div style="width: 10%; min-width: 0" class="text-truncate">
+              <!-- Emisión -->
+              <div style="width: 0; min-width: 0; overflow: hidden; display: none" class="text-truncate">
                 <v-tooltip location="top">
                   <!-- Activator -->
                   <template v-slot:activator="{ props }">
@@ -363,9 +372,9 @@ export default {
       headers: [
         { title: 'Patente', value: 'vehiclePlate' },
         { title: 'Marca', value: 'vehicleBrand' },
-        { title: 'Recorrido', value: 'route' },
+        { title: 'Ruta', value: 'route' },
         { title: 'Fecha', value: 'date' },
-        { title: 'Horario', value: 'horario' },
+        { title: 'Emisión', value: 'horario' },
         { title: 'Capacidad', value: 'capacidad' },
         { title: 'Asientos Vendidos', value: 'asientosVendidos' },
         { title: 'Dinero Generado', value: 'dineroGenerado' },

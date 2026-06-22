@@ -48,15 +48,24 @@
         <template v-slot:activator="{ props }">
           <v-list-item v-bind="props" prepend-icon="mdi-progress-wrench" title="Tickets"></v-list-item>
         </template>
-        <v-list-item
+        <v-tooltip
           v-for="item in filteredMenuTickets"
           :key="item.title"
-          :prepend-icon="item.icon"
-          :title="item.title"
-          :to="item.to"
-          :value="item.value"
-          class="sub-menu-item"
-        ></v-list-item>
+          :text="item.title"
+          location="right"
+          open-delay="300"
+        >
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :to="item.to"
+              :value="item.value"
+              class="sub-menu-item"
+            ></v-list-item>
+          </template>
+        </v-tooltip>
       </v-list-group>
       <!-- Administración 
       <v-list-group value="Admin" v-if="filteredMenuAdministracion.length">
@@ -79,15 +88,24 @@
         <template v-slot:activator="{ props }">
           <v-list-item v-bind="props" prepend-icon="mdi-shield-account" title="Seguridad"></v-list-item>
         </template>
-        <v-list-item
+        <v-tooltip
           v-for="item in filteredMenuSecurity"
           :key="item.title"
-          :prepend-icon="item.icon"
-          :title="item.title"
-          :to="item.to"
-          :value="item.value"
-          class="sub-menu-item"
-        ></v-list-item>
+          :text="item.title"
+          location="right"
+          open-delay="300"
+        >
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :to="item.to"
+              :value="item.value"
+              class="sub-menu-item"
+            ></v-list-item>
+          </template>
+        </v-tooltip>
       </v-list-group>
 
       <!-- Reportes -->
@@ -95,15 +113,24 @@
         <template v-slot:activator="{ props }">
           <v-list-item v-bind="props" prepend-icon="mdi-file-chart" title="Reportes"></v-list-item>
         </template>
-        <v-list-item
+        <v-tooltip
           v-for="item in filteredMenuReports"
           :key="item.title"
-          :prepend-icon="item.icon"
-          :title="item.title"
-          :to="item.to"
-          :value="item.value"
-          class="sub-menu-item"
-        ></v-list-item>
+          :text="item.title"
+          location="right"
+          open-delay="300"
+        >
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :to="item.to"
+              :value="item.value"
+              class="sub-menu-item"
+            ></v-list-item>
+          </template>
+        </v-tooltip>
       </v-list-group>
 
      
@@ -119,7 +146,7 @@ export default {
     open: ["Admin"],
     tickets: [
       //{ title: "Estructuras de asientos", icon: "mdi-bus-side", to: "structure", permission: "view_structures" },
-      { title: "Promociones", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
+      { title: "Tarifas", icon: "mdi-tag-outline", to: "promotion", permission: "view_promotions" },
       { title: "Tipos de Pasajes", icon: "mdi-ticket-confirmation-outline", to: "ticket-type", permission: "view_tickettype" },
       //{ title: "Plantillas de Viajes", icon: "mdi-map-marker-path", to: "trip-template", permission: "view_triptemplates" },
       { icon: "mdi-ticket", title: "Venta de Tickets", to: "ticket", value: "ticket", permission: ["view_tickets", "view_tickets_company"] },
@@ -140,9 +167,9 @@ export default {
       { icon: "mdi-ticket", title: "Tickets", to: "ticket", value: "ticket", permission: "view_tickets" },
     ],
     reports: [
-      { title: "Monto generado", icon: "mdi-finance", to: "ticketdate", permission: ["view_ticketsdate", "view_ticketsdate_company"] },
-      { title: "Monto por viajes", icon: "mdi-map-marker-path", to: "tickettripdate", permission: ["view_tickettripsdate", "view_tickettripsdate_company"] },
-      { title: "Viajes por trabajador", icon: "mdi-bus-marker", to: "tripsworker", permission: ["view_tripsworker", "view_tripsworker_company"] },
+      { title: "Recaudación", icon: "mdi-cash-multiple", to: "ticketdate", permission: ["view_ticketsdate", "view_ticketsdate_company"] },
+      //{ title: "Monto por viajes", icon: "mdi-map-marker-path", to: "tickettripdate", permission: ["view_tickettripsdate", "view_tickettripsdate_company"] },
+      { title: "Recaudación por Trabajador", icon: "mdi-account-cash-outline", to: "tripsworker", permission: ["view_tripsworker", "view_tripsworker_company"] },
       { title: "Incidentes", icon: "mdi-alert",  to: "incident", permission: ["view_incidents", "view_incidents_company"] }
     ],
     title: '',

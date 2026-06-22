@@ -19,8 +19,8 @@
 
     <!-- Texto -->
     <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Viajes Realizados</div>
-      <div class="text-body-2 text-grey">Gestionar Viajes Realizados</div>
+      <div class="text-h6 font-weight-medium">Recaudación por Trabajador</div>
+      <div class="text-body-2 text-grey">Gestionar recaudación por trabajador</div>
     </div>
 
     <!-- Botones -->
@@ -36,7 +36,7 @@
   <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
   <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
     <!-- Título -->
-    <div class="text-subtitle-1 font-weight-bold">Listado de viajes realizados</div>
+    <div class="text-subtitle-1 font-weight-bold">Listado de recaudación por trabajador</div>
 
     <!-- Spacer (solo visible en md+) -->
     <v-spacer class="d-none d-md-block"></v-spacer>
@@ -45,74 +45,10 @@
    <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
 
-           <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="290px"
-          >
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :modelValue="dateFormatted"
-                variant="solo-filled"
-                hide-details
-                single-line
-                flat
-                prepend-inner-icon="mdi-calendar"
-                label="Fecha"
-                density="compact"
-                class="ml-1"
-              ></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker
-                header="Calendario"
-                title="Seleccione la fecha"
-                :color="paleteColors.primary"
-                :modelValue="input"
-                @update:model-value="updateDate"
-                format="yyyy-MM-dd"
-              ></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-
-          <v-menu
-            v-model="menu2"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="290px"
-          >
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :modelValue="dateFormatted1"
-                variant="solo-filled"
-                hide-details
-                single-line
-                flat
-                prepend-inner-icon="mdi-calendar"
-                label="Fecha"
-                density="compact"
-                class="ml-1"
-              ></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker
-                header="Calendario"
-                title="Seleccione la fecha"
-                :color="paleteColors.primary"
-                :modelValue="input2"
-                @update:model-value="updateDate1"
-                format="yyyy-MM-dd"
-                :min="dateFormatted"
-              ></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
+          <ReportDateRangeFilter
+            v-model:start-date="date"
+            v-model:end-date="endDate"
+          />
 
           <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="this.mostrarFila"
             :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
@@ -146,10 +82,20 @@
       <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
         variant="solo-filled" hide-details single-line flat></v-text-field>
     </div>
+
+    <v-chip
+      class="ml-2"
+      color="green-darken-2"
+      variant="tonal"
+      label
+      size="large"
+    >
+      Total general: ${{ formatNumber(Number(totalGeneral || 0)) }}
+    </v-chip>
   </v-card-title>
 
   <!-- Tabla de viajes con filas personalizadas -->
-  <v-data-table :headers="headers" :items="response" :search="search" :items-per-page-text="'Elementos por página'"
+  <v-data-table :headers="headers" :items="sortedResponse" :search="search" :items-per-page-text="'Elementos por página'"
     no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
         class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
         <template v-slot:top>
@@ -165,40 +111,60 @@
       class="d-flex pa-2"
       style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+              <!-- Ruta -->
+              <div
+                style="width: 44%; min-width: 0; cursor: pointer"
+                class="text-left font-weight-bold d-flex align-center"
+                @click="toggleSort('name')"
+              >
                 Ruta
+                <v-icon size="16" class="ml-1">
+                  {{
+                    sortBy === 'name'
+                      ? sortOrder === 'asc'
+                        ? 'mdi-arrow-up'
+                        : 'mdi-arrow-down'
+                      : 'mdi-swap-vertical'
+                  }}
+                </v-icon>
               </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <!-- Fecha -->
+              <div
+                style="width: 10%; min-width: 0; cursor: pointer"
+                class="text-left font-weight-bold d-flex align-center"
+                @click="toggleSort('date')"
+              >
                 Fecha
+                <v-icon size="16" class="ml-1">
+                  {{
+                    sortBy === 'date'
+                      ? sortOrder === 'asc'
+                        ? 'mdi-arrow-up'
+                        : 'mdi-arrow-down'
+                      : 'mdi-swap-vertical'
+                  }}
+                </v-icon>
               </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
-                Origen
-              </div>
-
-              <!-- Dirección (25%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
-                Destino
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
                 Vehículo
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
                 Salida
               </div>
 
-             <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+             <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
                 Llegada
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
                 Pasajeros
+              </div>
+
+              <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
+                Monto
               </div>
             </v-card-text>
           </v-card>
@@ -210,11 +176,19 @@
           <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
             <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
               <!-- Ruta -->
-              <div style="width: 15%; min-width: 0" class="text-truncate">
-                <span>{{ slotProps.item.name }}</span>
+              <div style="width: 44%; min-width: 0" class="text-truncate">
+                <div class="font-weight-medium text-truncate">{{ slotProps.item.name }}</div>
+                <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                  <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+                  <span class="text-truncate">Origen: {{ slotProps.item.origin }}</span>
+                  <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+                  <span class="text-truncate">Destino: {{ slotProps.item.destination }}</span>
+                </div>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
-                    Ruta: {{ slotProps.item.name }}
+                    Ruta: {{ slotProps.item.name }}<br />
+                    Origen: {{ slotProps.item.origin }}<br />
+                    Destino: {{ slotProps.item.destination }}
                   </span>
                 </v-tooltip>
               </div>
@@ -229,38 +203,22 @@
                 </v-tooltip>
               </div>
 
-              <!-- Origen con avatar -->
-              <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.origin }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Origen: {{ slotProps.item.origin }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Destino con avatar -->
-              <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.destination }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Destino: {{ slotProps.item.destination }}
-                  </span>
-                </v-tooltip>
-              </div>
-
               <!-- Vehículo con avatar -->
-              <div class="d-flex align-center" style="width: 10%; min-width: 0">
+              <div class="d-flex align-center" style="width: 13%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
                 </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                <div class="text-truncate">
+                  <div class="font-weight-medium text-truncate">
+                    {{ slotProps.item.plate || slotProps.item.vehicleName }}
+                  </div>
+                  <div
+                    v-if="slotProps.item.vehicleName && slotProps.item.vehicleName !== slotProps.item.plate"
+                    class="text-caption text-grey text-truncate"
+                  >
+                    {{ slotProps.item.vehicleName }}
+                  </div>
+                </div>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
                     Vehículo: {{ slotProps.item.vehicleName }}
@@ -269,7 +227,7 @@
               </div>
 
               <!-- Salida -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.start }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -279,7 +237,7 @@
               </div>
 
               <!-- Llegada -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.end }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -288,11 +246,20 @@
                 </v-tooltip>
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                 <span>{{ slotProps.item.passenger }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
                     Pasajeros: {{ slotProps.item.passenger }}
+                  </span>
+                </v-tooltip>
+              </div>
+
+              <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                <span class="font-weight-medium">${{ formatNumber(Number(slotProps.item.totalAmount || 0)) }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Monto generado: ${{ formatNumber(Number(slotProps.item.totalAmount || 0)) }}
                   </span>
                 </v-tooltip>
               </div>
@@ -312,7 +279,11 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import { paleteColors } from "@/assets/colors";
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
+import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 export default {
+    components: {
+        ReportDateRangeFilter,
+    },
     data: () => ({
         snackbar: false,
         sb_type: '',
@@ -332,6 +303,7 @@ export default {
             { title: 'Salida', value: 'start', },
             { title: 'LLegada', value: 'end', },
             { title: 'Pasajes', value: 'passenger', },
+            { title: 'Monto generado', value: 'totalAmount', },
         ],
         search: '',
         branch_id: '',
@@ -340,6 +312,9 @@ export default {
         workers: [],
         role: '',
         response: [],
+        totalGeneral: 0,
+        sortBy: 'date',
+        sortOrder: 'desc',
         branches: [],
         mostrarFila: false,
         permissions: '',
@@ -353,6 +328,24 @@ export default {
         selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     }),
     computed: {
+      sortedResponse() {
+        const items = Array.isArray(this.response) ? [...this.response] : [];
+        const key = this.sortBy;
+        const direction = this.sortOrder === 'asc' ? 1 : -1;
+
+        return items.sort((a, b) => {
+          const aValue = a?.[key];
+          const bValue = b?.[key];
+
+          if (key === 'date') {
+            return direction * this.compareDates(aValue, bValue);
+          }
+
+          return direction * String(aValue ?? '').localeCompare(String(bValue ?? ''), 'es', {
+            sensitivity: 'base',
+          });
+        });
+      },
        dateFormatted() {
       const date = this.input ? new Date(this.input) : new Date();
       return date.toISOString().split("T")[0];
@@ -400,6 +393,20 @@ export default {
         console.log(LocalStorageService.getItem('branch_id'));
     },
     methods: {
+      toggleSort(key) {
+        if (this.sortBy === key) {
+          this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+          return;
+        }
+
+        this.sortBy = key;
+        this.sortOrder = key === 'date' ? 'desc' : 'asc';
+      },
+      compareDates(a, b) {
+        const aTime = new Date(a || 0).getTime();
+        const bTime = new Date(b || 0).getTime();
+        return aTime - bTime;
+      },
       getImageUrl(imagePath) {
       return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
     },
@@ -489,10 +496,15 @@ export default {
 
                 if (result.success) {
                     // Si la solicitud es exitosa, asignamos las sucursales
-                    this.response = result.data?.trips || [];
+                    this.response = (result.data?.trips || []).map((trip) => ({
+                        ...trip,
+                        vehicleName: trip.vehicleName || trip.plate || '',
+                    }));
+                    this.totalGeneral = Number(result.data?.totalGeneral || 0);
                 } else {
                     // Si no hay datos, asignamos un array vacío
                     this.response = [];
+                    this.totalGeneral = 0;
                 }
             } catch (error) {
                 this.loading = false;
@@ -555,15 +567,21 @@ export default {
 
             let nameReport = {
                 // eslint-disable-next-line vue/no-use-computed-property-like-method
-                name: 'Viajes realizados', // Asume que 'name' es una de tus claves; ajusta según sea necesario
+                name: 'Recaudación por Trabajador', // Título coherente con el reporte
                 date: '',
                 origin: '',
                 destination: '',
+                plate: '',
                 start: '',
                 end: '',
                 passenger: '',
+                totalAmount: '',
             };
             rows.push(nameReport);
+            rows.push({
+                name: 'Total general',
+                totalAmount: `$${this.formatNumber(Number(this.totalGeneral || 0))}`,
+            });
 
             // Convierte la matriz de filas en una hoja de trabajo Excel
             const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: true }); // 'skipHeader: true' porque ya agregamos manualmente los encabezados
@@ -630,3 +648,5 @@ table.v-table > thead,
   display: none !important;
 }
 </style>
+
+

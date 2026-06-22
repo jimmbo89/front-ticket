@@ -25,38 +25,11 @@
         <v-row class="align-center" style="gap: 4px;" no-gutters>
         <v-col cols="auto" class="text-subtitle-1 font-weight-medium pa-1"> Fecha: {{ response.fecha }} </v-col>
         <v-spacer></v-spacer>
-          <v-col cols="auto">
-            <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-              offset-y min-width="290px">
-              <template v-slot:activator="{ props }">
-                <v-text-field v-bind="props" :modelValue="dateFormatted" variant="solo-filled"
-            hide-details
-            single-line
-            flat
-                  prepend-inner-icon="mdi-calendar" label="Fecha de inicio" density="compact" style="min-width: 150px;"></v-text-field>
-              </template>
-              <v-locale-provider locale="es">
-                <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                  :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"></v-date-picker>
-              </v-locale-provider>
-            </v-menu>
-          </v-col>
-          <v-col cols="auto">
-            <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-              offset-y min-width="290px">
-              <template v-slot:activator="{ props }">
-                <v-text-field v-bind="props" :modelValue="dateFormatted1" variant="solo-filled"
-            hide-details
-            single-line
-            flat
-                  prepend-inner-icon="mdi-calendar" label="Fecha Terminación" density="compact" style="min-width: 150px;"></v-text-field>
-              </template>
-              <v-locale-provider locale="es">
-                <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                  :modelValue="input2" format="yyyy-MM-dd" :min="dateFormatted"
-                  @update:model-value="updateDate1"></v-date-picker><!--@update:model-value="updateDate2"-->
-              </v-locale-provider>
-            </v-menu>
+          <v-col cols="auto" class="pa-0">
+            <ReportDateRangeFilter
+              v-model:start-date="date"
+              v-model:end-date="endDate"
+            />
           </v-col>
           <v-col cols="auto">
             <v-select v-if="this.mostrarFila" v-model="type" :items="options" label="Seleccione una opción" variant="solo-filled"
@@ -335,7 +308,11 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import { paleteColors } from "@/assets/colors";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
+import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 export default {
+  components: {
+    ReportDateRangeFilter,
+  },
   data: () => ({
     snackbar: false,
     sb_type: "",

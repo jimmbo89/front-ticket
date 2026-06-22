@@ -187,10 +187,16 @@
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
                 </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                <div class="d-flex flex-column text-truncate">
+                  <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                  <span class="text-caption text-grey text-truncate">
+                    {{ getVehicleInternalNumber(slotProps.item) }}
+                  </span>
+                </div>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
-                    Vehículo: {{ slotProps.item.vehicleName }}
+                    Vehículo: {{ slotProps.item.vehicleName }}<br>
+                    Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
                   </span>
                 </v-tooltip>
               </div>
@@ -426,7 +432,12 @@
                                     <v-img :src="`${this.$axios.defaults.baseURL}images/${
                       item.vehicleImage
                     }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                {{ item.vehicleName }}
+                                <div class="d-flex flex-column">
+                                    <span>{{ item.vehicleName }}</span>
+                                    <span class="text-caption text-grey">
+                                        {{ getVehicleInternalNumber(item) }}
+                                    </span>
+                                </div>
                             </template>
                             <template v-slot:item.workers="{ item }">
                                 <div class="avatar-row">
@@ -588,6 +599,7 @@
                                                     <v-list-item-subtitle class="d-flex flex-column">
                                                         <div>Marca: {{ item.raw.brand }}</div>
                                                         <div>Asientos: {{ item.raw.seats }}</div>
+                                                        <div>Número interno: {{ getVehicleInternalNumber(item.raw) }}</div>
                                                     </v-list-item-subtitle>
                                                 </v-list-item>
                                             </template>
@@ -656,7 +668,7 @@
                                     <v-col cols="12" md="3">
                                         <v-text-field v-model="editedItem.price" label="Precio"
                                             prepend-icon="mdi-currency-usd" variant="underlined" :rules="priceRules"
-                                            type="number" density="compact" min="0" :disabled="true"></v-text-field>
+                                            type="number" density="compact" min="0"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" md="3">
                                         <v-text-field v-model="editedItem.duration" label="Duración (Minutos)"
@@ -1090,6 +1102,9 @@ export default {
 
       return formattedValue;
     },
+    getVehicleInternalNumber(vehicle) {
+      return vehicle?.internal_number ?? vehicle?.internalNumber ?? "No asignado";
+    },
     filterTimeSlots(item, queryText) {
     // Permite buscar formatos como "8:30", "0830" o "830"
     const normalizedQuery = queryText.toLowerCase().replace(/[:\s]/g, '');
@@ -1224,12 +1239,10 @@ export default {
         throw new Error('Ruta no encontrada');
       }
       
-      this.editedItem.price = selectedRoute.price || 0;
       this.editedItem.duration = selectedRoute.estimated || 0;
       
     } catch (error) {
       //console.error("Error al actualizar ruta:", error);
-      this.editedItem.price = 0;
       this.editedItem.duration = 0;
     }
   },

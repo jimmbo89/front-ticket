@@ -1,6 +1,14 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -26,464 +34,721 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      class="text-subtitle-1 ml-12"
+      :color="paleteColors.primary"
+      variant="tonal"
+      elevation="2"
+      prepend-icon="mdi-plus-circle"
+      @click="showAdd()"
+    >
       Agregar Viaje
     </v-btn>
   </v-card>
   <!--<v-container style="min-width: 100%;">-->
-   <v-card flat>
-  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-    <!-- Título -->
-    <div class="text-body-1 font-weight-bold">Listado de viajes</div>
+  <v-card flat>
+    <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+    <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+      <!-- Título -->
+      <div class="text-body-1 font-weight-bold">Listado de viajes</div>
 
-    <!-- Spacer (solo visible en md+) -->
-    <v-spacer class="d-none d-md-block"></v-spacer>
+      <!-- Spacer (solo visible en md+) -->
+      <v-spacer class="d-none d-md-block"></v-spacer>
 
-    <!-- Grupo: Autocomplete + Botón buscar -->
-   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="getImageUrl(item.raw.image)">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
+      <!-- Grupo: Autocomplete + Botón buscar -->
+      <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
+        <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+        <v-autocomplete
+          :no-data-text="'No hay datos disponibles'"
+          v-model="branch_id"
+          v-if="mostrarFila"
+          :items="branches"
+          label="Seleccione una Sucursal"
+          prepend-inner-icon="mdi-store"
+          item-title="name"
+          class="mr-1"
+          item-value="id"
+          variant="solo-filled"
+          hide-details
+          single-line
+          flat
+          :rules="selectRules"
+          density="compact"
+          @update:modelValue="initialize"
+        >
+          <template v-slot:item="{ props, item }">
+            <v-list-item v-bind="props" :prepend-avatar="getImageUrl(item.raw.image)">
+            </v-list-item>
+          </template>
+        </v-autocomplete>
 
-          <!-- Botón de búsqueda (actualizar datos) 
+        <!-- Botón de búsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>-->
-        </div>
+      </div>
 
-        <div class="flex-grow-1 mr-1" style="max-width: 15%">
-        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-                    offset-y min-width="290px">
-                    <template v-slot:activator="{ props }">
-                      <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar" label="Fecha" density="compact" variant="solo-filled"
-            hide-details
-            single-line
-            flat></v-text-field>
-                    </template>
-                    <v-locale-provider locale="es">
-                      <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                        :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
-                        :min="new Date().toISOString().split('T')[0]"></v-date-picker>
-                    </v-locale-provider>
-                  </v-menu>
-        </div>
+      <div class="flex-grow-1 mr-1" style="max-width: 15%">
+        <v-menu
+          v-model="menu2"
+          :close-on-content-click="false"
+          :nudge-right="40"
+          transition="scale-transition"
+          offset-y
+          min-width="290px"
+        >
+          <template v-slot:activator="{ props }">
+            <v-text-field
+              v-bind="props"
+              :modelValue="dateFormattedSearch"
+              prepend-inner-icon="mdi-calendar"
+              label="Fecha"
+              density="compact"
+              variant="solo-filled"
+              hide-details
+              single-line
+              flat
+            ></v-text-field>
+          </template>
+          <v-locale-provider locale="es">
+            <v-date-picker
+              header="Calendario"
+              title="Seleccione la fecha"
+              :color="paleteColors.primary"
+              :modelValue="input2"
+              @update:model-value="updateDateSearch"
+              format="yyyy-MM-dd"
+              :min="new Date().toISOString().split('T')[0]"
+            ></v-date-picker>
+          </v-locale-provider>
+        </v-menu>
+      </div>
 
-    <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 20%">
-      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </div>
-  </v-card-title>
+      <!-- Campo de búsqueda global -->
+      <div class="flex-grow-1" style="max-width: 20%">
+        <v-text-field
+          v-model="search"
+          density="compact"
+          label="Buscar viaje"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo-filled"
+          hide-details
+          single-line
+          flat
+        ></v-text-field>
+      </div>
+    </v-card-title>
 
-  <!-- Tabla de viajes con filas personalizadas -->
-  <v-data-table :headers="headers" :items="trips" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
-        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    <!-- Tabla de viajes con filas personalizadas -->
+    <v-data-table
+      :headers="headers"
+      :items="trips"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      :hide-default-header="true"
+      class="elevation-1"
+      style="max-height: 68vh; overflow-y: auto; background: transparent"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Ruta
-              </div>
+      <template v-slot:top>
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+          flat
+          color="blue-grey-lighten-5"
+          class="mb-2 mx-1 rounded-lg"
+          elevation="1"
+          style="
+            border: 1px solid #eceff1;
+            height: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+          "
+        >
+          <v-card-text
+            class="d-flex pa-2"
+            style="
+              width: 100%;
+              min-width: 0;
+              height: 100%;
+              padding: 0 16px !important;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <!-- Negocio (20%) -->
+            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              Ruta
+            </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Origen
-              </div>
+            <!-- Nombre (20%) -->
+            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              Origen
+            </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Destino
-              </div>
+            <!-- Teléfono (10%) -->
+            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              Destino
+            </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Vehículo
-              </div>
+            <!-- Dirección (25%) -->
+            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              Vehículo
+            </div>
 
-              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-                Fecha
-              </div>
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+              Fecha
+            </div>
 
-              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-                Horario
-              </div>
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+              Horario
+            </div>
 
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Precio
-              </div>
+            <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+              Precio
+            </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Salida
-              </div>
+            <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              Salida
+            </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Llegada
-              </div>
+            <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              Llegada
+            </div>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 8%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
-    <!-- Fila personalizada -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              <!-- Ruta -->
-              <div style="width: 10%; min-width: 0" class="text-truncate">
-                <span>{{ slotProps.item.name }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Ruta: {{ slotProps.item.name }}
-                  </span>
-                </v-tooltip>
-              </div>
+            <!-- Acciones (25%) -->
+            <div
+              style="width: 8%; min-width: 0"
+              class="d-flex justify-left font-weight-bold"
+            ></div>
+          </v-card-text>
+        </v-card>
+      </template>
+      <!-- Fila personalizada -->
+      <template v-slot:item="slotProps">
+        <tr>
+          <td colspan="100%" style="padding: 0; border: none">
+            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+              <v-card-text
+                class="d-flex align-center pa-2"
+                style="width: 100%; min-width: 0"
+              >
+                <!-- Ruta -->
+                <div style="width: 10%; min-width: 0" class="text-truncate">
+                  <span>{{ slotProps.item.name }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Ruta: {{ slotProps.item.name }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Origen con avatar -->
-              <div class="d-flex align-left" style="width: 20%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="getImageUrl(slotProps.item.originImage)" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.origin }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Origen: {{ slotProps.item.origin }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Origen con avatar -->
+                <div class="d-flex align-left" style="width: 20%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="getImageUrl(slotProps.item.originImage)"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                  <span class="text-truncate">{{ slotProps.item.origin }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Origen: {{ slotProps.item.origin }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Destino con avatar -->
-              <div class="d-flex align-left" style="width: 20%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="getImageUrl(slotProps.item.destinationImage)" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.destination }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Destino: {{ slotProps.item.destination }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Destino con avatar -->
+                <div class="d-flex align-left" style="width: 20%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="getImageUrl(slotProps.item.destinationImage)"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                  <span class="text-truncate">{{ slotProps.item.destination }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Destino: {{ slotProps.item.destination }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Vehículo con avatar -->
-              <div class="d-flex align-left" style="width: 10%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="getImageUrl(slotProps.item.vehicleImage)" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Vehículo: {{ slotProps.item.vehicleName }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Vehículo con avatar -->
+                <div class="d-flex align-left" style="width: 10%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="getImageUrl(slotProps.item.vehicleImage)"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                  <div class="text-truncate vehicle-details">
+                    <div class="text-truncate">{{ slotProps.item.vehicleName }}</div>
+                    <div class="text-caption text-grey text-truncate">
+                      {{ vehicleInternalNumber(slotProps.item) }}
+                    </div>
+                  </div>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Vehículo: {{ slotProps.item.vehicleName }}
+                      <br />
+                      Número interno: {{ vehicleInternalNumber(slotProps.item) }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Fecha -->
-              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.date }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Fecha: {{ slotProps.item.date }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Fecha -->
+                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.date }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Fecha: {{ slotProps.item.date }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Horario -->
-              <div style="width: 7%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.schedule }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Horario: {{ slotProps.item.schedule }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Horario -->
+                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.schedule }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Horario: {{ slotProps.item.schedule }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Precio -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.price }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Precio: {{ slotProps.item.price }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Precio -->
+                <div style="width: 8%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.price }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Precio: {{ slotProps.item.price }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Salida -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.start }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Salida: {{ slotProps.item.start }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Salida -->
+                <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.start }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Salida: {{ slotProps.item.start }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Llegada -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.end }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Llegada: {{ slotProps.item.end }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Llegada -->
+                <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.end }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Llegada: {{ slotProps.item.end }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 8%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                  title="Editar Viaje">
-                  <v-icon size="20">mdi-pencil</v-icon>
-                </v-btn>
+                <!-- Acciones -->
+                <div
+                  class="d-flex gap-1"
+                  style="width: 8%; justify-content: flex-end; flex-wrap: nowrap"
+                >
+                  <v-btn
+                    size="35"
+                    icon
+                    variant="outlined"
+                    :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    class="flex-shrink-0 mr-1"
+                    title="Editar Viaje"
+                  >
+                    <v-icon size="20">mdi-pencil</v-icon>
+                  </v-btn>
 
-                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                  title="Eliminar Viaje">
-                  <v-icon size="20">mdi-delete</v-icon>
-                </v-btn>
-              </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-</v-card>
+                  <v-btn
+                    size="35"
+                    icon
+                    variant="outlined"
+                    :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    class="flex-shrink-0"
+                    title="Eliminar Viaje"
+                  >
+                    <v-icon size="20">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+  </v-card>
   <!--</v-container>-->
 
-  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
-    <v-card style="display: flex; flex-direction: column; min-height: 100vh;">
-    <v-card-text style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-      <v-form v-model="valid" enctype="multipart/form-data" style="flex: 1; display: flex; flex-direction: column;">
-          <v-stepper elevation="6" bg-color="" v-model="step" :items="items" hide-actions style="max-height: 100vh; min-height: 95vh; overflow-y: auto">
+  <v-dialog
+    v-model="dialog"
+    fullscreen
+    transition="dialog-bottom-transition"
+    :no-click-animation="true"
+  >
+    <v-card style="display: flex; flex-direction: column; min-height: 100vh">
+      <v-card-text
+        style="flex: 1; display: flex; flex-direction: column; overflow: hidden"
+      >
+        <v-form
+          v-model="valid"
+          enctype="multipart/form-data"
+          style="flex: 1; display: flex; flex-direction: column"
+        >
+          <v-stepper
+            elevation="6"
+            bg-color=""
+            v-model="step"
+            :items="items"
+            hide-actions
+            style="max-height: 100vh; min-height: 95vh; overflow-y: auto"
+          >
             <template v-slot:item.1>
-              <div style="flex: 1; overflow-y: auto; padding: 16px;">
-              <v-row style="margin-top: 5px">
-                <v-col cols="12" md="12">
-                  <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.route_id"
-                    :items="routes" label="Ruta" prepend-icon="mdi-road" item-title="name" item-value="id"
-                    variant="underlined" :rules="selectRules" density="compact" @update:model-value="updateStimated">
-                    <template v-slot:item="{ props, item }">
-                      <v-card class="mx-1 my-2" elevation="2">
-                        <v-list-item v-bind="props">
-                          <v-list-item>
-                            <v-row align="center" no-gutters>
-                              <!-- Columna 1: Origen -->
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img :src="getImageUrl(item.raw.originImage)"
-                                    max-width="40" />
-                                </v-avatar>
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">mdi-map-marker</v-icon>
-                                    Origen
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-row style="margin-top: 5px">
+                  <v-col cols="12" md="12">
+                    <v-autocomplete
+                      :no-data-text="'No hay datos disponibles'"
+                      v-model="editedItem.route_id"
+                      :items="routes"
+                      label="Ruta"
+                      prepend-icon="mdi-road"
+                      item-title="name"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                      @update:model-value="updateStimated"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-card class="mx-1 my-2" elevation="2">
+                          <v-list-item v-bind="props">
+                            <v-list-item>
+                              <v-row align="center" no-gutters>
+                                <!-- Columna 1: Origen -->
+                                <v-col cols="12" md="4" class="d-flex align-center">
+                                  <v-avatar>
+                                    <v-img
+                                      :src="getImageUrl(item.raw.originImage)"
+                                      max-width="40"
+                                    />
+                                  </v-avatar>
+                                  <div class="ml-2">
+                                    <div class="text-caption text-grey">
+                                      <v-icon small class="mr-1">mdi-map-marker</v-icon>
+                                      Origen
+                                    </div>
+                                    <v-tooltip location="top">
+                                      <template
+                                        v-slot:activator="{ props: tooltipProps }"
+                                      >
+                                        <div
+                                          v-bind="tooltipProps"
+                                          class="text-truncate"
+                                          style="max-width: 100%"
+                                        >
+                                          {{ item.raw.originAddress }}
+                                        </div>
+                                      </template>
+                                      <span>{{ item.raw.originAddress }}</span>
+                                      <!-- Texto completo en el tooltip -->
+                                    </v-tooltip>
                                   </div>
-                                  <v-tooltip location="top">
-                                    <template v-slot:activator="{ props: tooltipProps }">
-                                      <div v-bind="tooltipProps" class="text-truncate" style="max-width: 100%">
-                                        {{ item.raw.originAddress }}
-                                      </div>
-                                    </template>
-                                    <span>{{ item.raw.originAddress }}</span>
-                                    <!-- Texto completo en el tooltip -->
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
+                                </v-col>
 
-                              <!-- Columna 2: Destino -->
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img :src="getImageUrl(item.raw.destinationImage)"
-                                    max-width="40" />
-                                </v-avatar>
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">mdi-map-marker-check</v-icon>
-                                    Destino
+                                <!-- Columna 2: Destino -->
+                                <v-col cols="12" md="4" class="d-flex align-center">
+                                  <v-avatar>
+                                    <v-img
+                                      :src="getImageUrl(item.raw.destinationImage)"
+                                      max-width="40"
+                                    />
+                                  </v-avatar>
+                                  <div class="ml-2">
+                                    <div class="text-caption text-grey">
+                                      <v-icon small class="mr-1"
+                                        >mdi-map-marker-check</v-icon
+                                      >
+                                      Destino
+                                    </div>
+                                    <v-tooltip location="top">
+                                      <template
+                                        v-slot:activator="{ props: tooltipProps }"
+                                      >
+                                        <div
+                                          v-bind="tooltipProps"
+                                          class="text-truncate"
+                                          style="max-width: 100%"
+                                        >
+                                          {{ item.raw.destinationAddress }}
+                                        </div>
+                                      </template>
+                                      <span>{{ item.raw.destinationAddress }}</span>
+                                      <!-- Texto completo en el tooltip -->
+                                    </v-tooltip>
                                   </div>
-                                  <v-tooltip location="top">
-                                    <template v-slot:activator="{ props: tooltipProps }">
-                                      <div v-bind="tooltipProps" class="text-truncate" style="max-width: 100%">
-                                        {{ item.raw.destinationAddress }}
-                                      </div>
-                                    </template>
-                                    <span>{{ item.raw.destinationAddress }}</span>
-                                    <!-- Texto completo en el tooltip -->
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
-                              <!-- Duración estimada -->
-                              <v-col cols="12" md="4" class="align-center justify-md-left justify-center text-left">
-                                <div class="text-caption text-grey ml-1">
-                                  Duración estimada
-                                </div>
-                                <div class="text-body-2 font-weight-medium">
-                                  <v-icon small class="mr-1" color="primary">mdi-clock-time-four-outline</v-icon>
-                                  {{ formatDuration(item.raw.estimated) }}
-                                </div>
-                              </v-col>
-                            </v-row>
+                                </v-col>
+                                <!-- Duración estimada -->
+                                <v-col
+                                  cols="12"
+                                  md="4"
+                                  class="align-center justify-md-left justify-center text-left"
+                                >
+                                  <div class="text-caption text-grey ml-1">
+                                    Duración estimada
+                                  </div>
+                                  <div class="text-body-2 font-weight-medium">
+                                    <v-icon small class="mr-1" color="primary"
+                                      >mdi-clock-time-four-outline</v-icon
+                                    >
+                                    {{ formatDuration(item.raw.estimated) }}
+                                  </div>
+                                </v-col>
+                              </v-row>
+                            </v-list-item>
                           </v-list-item>
+                        </v-card>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-autocomplete
+                      :no-data-text="'No hay datos disponibles'"
+                      v-model="editedItem.vehicle_id"
+                      :items="vehicles"
+                      label="Vehículo"
+                      prepend-icon="mdi-car-side"
+                      item-title="vehicleName"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                      @update:model-value="filterWorkers"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item
+                          v-bind="props"
+                          :prepend-avatar="getImageUrl(item.raw.vehicleImage)"
+                          :title="item.raw.vehicleName"
+                        >
+                          <v-list-item-subtitle class="d-flex flex-column">
+                            <div>{{ vehicleInternalNumber(item.raw) }}</div>
+                            <div>Marca: {{ item.raw.brand }}</div>
+                            <div>Asientos: {{ item.raw.seats }}</div>
+                          </v-list-item-subtitle>
                         </v-list-item>
-                      </v-card>
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.vehicle_id"
-                    :items="vehicles" label="Vehículo" prepend-icon="mdi-car-side" item-title="vehicleName"
-                    item-value="id" variant="underlined" :rules="selectRules" density="compact"
-                    @update:model-value="filterWorkers">
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props"
-                        :prepend-avatar="getImageUrl(item.raw.vehicleImage)"
-                        :title="item.raw.vehicleName">
-                        <v-list-item-subtitle class="d-flex flex-column">
-                          <div>Marca: {{ item.raw.brand }}</div>
-                          <div>Asientos: {{ item.raw.seats }}</div>
-                        </v-list-item-subtitle>
-                      </v-list-item>
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-                    offset-y min-width="290px">
-                    <template v-slot:activator="{ props }">
-                      <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
-                        prepend-icon="mdi-calendar" label="Fecha" density="compact"></v-text-field>
-                    </template>
-                    <v-locale-provider locale="es">
-                      <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                        :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"
-                        :min="new Date().toISOString().split('T')[0]"></v-date-picker>
-                    </v-locale-provider>
-                  </v-menu>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="12" md="4">
-                  <v-select 
-                  v-model="editedItem.schedule" 
-                  :items="filteredTimeSlots"
-                  label="Hora de salida"
-                  variant="underlined"
-                  density="compact"
-                  prepend-icon="mdi-calendar-clock"
-                  @update:modelValue="updateArrival"
-                  :disabled="!editedItem.route_id"
-                  :rules="selectRules"
-                  :key="'timeslot-' + (editedItem.date || '') + (editedItem.schedule || '')"
-                ></v-select>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field v-model="editedItem.arrival" label="Hora de llegada" :disabled="true"
-                    variant="underlined" density="compact" prepend-icon="mdi-calendar-clock"></v-text-field>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field v-model="editedItem.price" label="Precio" prepend-icon="mdi-currency-usd"
-                    variant="underlined" :rules="priceRules" type="number" density="compact" min="0"></v-text-field>
-                </v-col>
-              </v-row>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-menu
+                      v-model="menu"
+                      :close-on-content-click="false"
+                      :nudge-right="40"
+                      transition="scale-transition"
+                      offset-y
+                      min-width="290px"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-text-field
+                          v-bind="props"
+                          :modelValue="dateFormatted"
+                          variant="underlined"
+                          prepend-icon="mdi-calendar"
+                          label="Fecha"
+                          density="compact"
+                        ></v-text-field>
+                      </template>
+                      <v-locale-provider locale="es">
+                        <v-date-picker
+                          header="Calendario"
+                          title="Seleccione la fecha"
+                          :color="paleteColors.primary"
+                          :modelValue="input"
+                          @update:model-value="updateDate"
+                          format="yyyy-MM-dd"
+                          :min="new Date().toISOString().split('T')[0]"
+                        ></v-date-picker>
+                      </v-locale-provider>
+                    </v-menu>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="editedItem.schedule"
+                      :items="filteredTimeSlots"
+                      label="Hora de salida"
+                      variant="underlined"
+                      density="compact"
+                      prepend-icon="mdi-calendar-clock"
+                      @update:modelValue="updateArrival"
+                      :disabled="!editedItem.route_id"
+                      :rules="selectRules"
+                      :key="
+                        'timeslot-' +
+                        (editedItem.date || '') +
+                        (editedItem.schedule || '')
+                      "
+                    ></v-select>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="editedItem.arrival"
+                      label="Hora de llegada"
+                      :disabled="true"
+                      variant="underlined"
+                      density="compact"
+                      prepend-icon="mdi-calendar-clock"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="editedItem.price"
+                      label="Precio"
+                      prepend-icon="mdi-currency-usd"
+                      variant="underlined"
+                      :rules="priceRules"
+                      type="number"
+                      density="compact"
+                      min="0"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
               </div>
               <v-divider></v-divider>
-              <div style="padding: 16px; border-top: 1px solid #eee;">
+              <div style="padding: 16px; border-top: 1px solid #eee">
                 <!-- BOTONES -->
                 <v-row class="mt-1">
                   <v-btn color="#E7E9E9" variant="flat" @click="close()">Salir</v-btn>
                   <v-spacer></v-spacer>
-                  <v-btn color="#E7E9E9" variant="flat" @click="nextStep" :disabled="
+                  <v-btn
+                    color="#E7E9E9"
+                    variant="flat"
+                    @click="nextStep"
+                    :disabled="
                       !editedItem.vehicle_id ||
                       !editedItem.route_id ||
                       !editedItem.schedule ||
                       !editedItem.price
-                    ">
+                    "
+                  >
                     Siguiente
                   </v-btn>
                 </v-row>
               </div>
             </template>
             <template v-slot:item.2>
-              <div style="flex: 1; overflow-y: auto; padding: 16px;">
-              <v-sheet border>
-                <v-toolbar :color="paleteColors.primary">
-                  <v-row align="center">
-                    <v-col cols="12" md="7" class="grow ml-4">
-                      <span class="text-subtitle-1"><strong>Relación de Trabajadores</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="4" class="text-right">
-                      <v-btn class="text-subtitle-1" :color="paleteColors.white" variant="tonal" elevation="2"
-                        prepend-icon="mdi-plus-circle" @click="showAssiegnedWorker">
-                        Asignar Trabajador
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </v-toolbar>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
+                          ><strong>Relación de Trabajadores</strong></span
+                        >
+                      </v-col>
+                      <v-col cols="12" md="4" class="text-right">
+                        <v-btn
+                          class="text-subtitle-1"
+                          :color="paleteColors.white"
+                          variant="tonal"
+                          elevation="2"
+                          prepend-icon="mdi-plus-circle"
+                          @click="showAssiegnedWorker"
+                        >
+                          Asignar Trabajador
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
 
-                <v-card-text>
-                  <v-data-table :headers="headersWorkers" :items="filteredWorkers" class="elevation-1"
-                    style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-                    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                    <!--<template v-slot:item.actions="{ item }">
+                  <v-card-text>
+                    <v-data-table
+                      :headers="headersWorkers"
+                      :items="filteredWorkers"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                    >
+                      <!--<template v-slot:item.actions="{ item }">
                       <v-btn density="comfortable" icon="mdi-delete" @click="deleteItemWorker(item)"
                         :color="paleteColors.error" variant="tonal" elevation="1" title="Eliminar Relación"></v-btn>
                     </template>-->
-                    <template v-slot:item.workerName="{ item }">
-                      <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-                        <v-img :src="getImageUrl(item.workerImage)" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
-                      {{ item.workerName }}
-                    </template>
-                    <template v-slot:item.actions="{ item }">
-                    <v-btn 
-                      density="comfortable" 
-                      :icon="isWorkerAssociated(item) ? 'mdi-delete' : 'mdi-plus'" 
-                      @click="isWorkerAssociated(item) ? deleteItemWorker(item) : saveAssignedWorker(item)"
-                      :color="isWorkerAssociated(item) ? paleteColors.error : paleteColors.success" 
-                      variant="tonal" 
-                      elevation="1" 
-                      :title="isWorkerAssociated(item) ? 'Eliminar Relación' : 'Agregar Relación'"
-                    ></v-btn>
-                  </template>
-                  </v-data-table>
-                </v-card-text>
-              </v-sheet>
+                      <template v-slot:item.workerName="{ item }">
+                        <v-avatar
+                          class="mr-1"
+                          elevation="3"
+                          color="grey-lighten-4"
+                          size="large"
+                        >
+                          <v-img
+                            :src="getImageUrl(item.workerImage)"
+                            alt="image"
+                          ></v-img> </v-avatar
+                        ><!--+'?$'+Date.now()-->
+                        {{ item.workerName }}
+                      </template>
+                      <template v-slot:item.actions="{ item }">
+                        <v-btn
+                          density="comfortable"
+                          :icon="isWorkerAssociated(item) ? 'mdi-delete' : 'mdi-plus'"
+                          @click="
+                            isWorkerAssociated(item)
+                              ? deleteItemWorker(item)
+                              : saveAssignedWorker(item)
+                          "
+                          :color="
+                            isWorkerAssociated(item)
+                              ? paleteColors.error
+                              : paleteColors.success
+                          "
+                          variant="tonal"
+                          elevation="1"
+                          :title="
+                            isWorkerAssociated(item)
+                              ? 'Eliminar Relación'
+                              : 'Agregar Relación'
+                          "
+                        ></v-btn>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
               </div>
               <v-divider></v-divider>
-              <div style="padding: 16px; border-top: 1px solid #eee;">
+              <div style="padding: 16px; border-top: 1px solid #eee">
                 <!-- BOTONES -->
                 <v-row class="mt-1">
                   <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
                   <v-spacer></v-spacer>
                   <!--<v-btn color="#E7E9E9" :disabled="hasInvalidState" variant="flat"
                     @click="dialogDeleteDiario = true">Siguiente</v-btn>-->
-                  <v-btn :color="paleteColors.primary" variant="flat" @click="save()"
-                    :disabled="!valid || !editedItem.workers.length" :loading="loading">Aceptar</v-btn>
+                  <v-btn
+                    :color="paleteColors.primary"
+                    variant="flat"
+                    @click="save()"
+                    :disabled="!valid || !editedItem.workers.length"
+                    :loading="loading"
+                    >Aceptar</v-btn
+                  >
                 </v-row>
               </div>
             </template>
@@ -522,13 +787,23 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="selectedWorker"
-                  :items="filteredWorkers" label="Personas" prepend-icon="mdi-account" item-title="workerName"
-                  item-value="id" variant="underlined" :rules="selectRules">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="selectedWorker"
+                  :items="dialogAssignableWorkers"
+                  label="Personas"
+                  prepend-icon="mdi-account"
+                  item-title="workerName"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                >
                   <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
+                    <v-list-item
+                      v-bind="props"
                       :prepend-avatar="getImageUrl(item.raw.workerImage)"
-                      :title="item.raw.workerName">
+                      :title="item.raw.workerName"
+                    >
                       <v-list-item-subtitle class="d-flex flex-column">
                         <div>Rol: {{ item.raw.roleName }}</div>
                       </v-list-item-subtitle>
@@ -542,9 +817,16 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="closeAssignedWorker">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="saveAssignedWorker"
-            :disabled="!valid">Aceptar</v-btn>
+          <v-btn :color="paleteColors.gris" variant="flat" @click="closeAssignedWorker"
+            >Cancelar</v-btn
+          >
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="saveAssignedWorker()"
+            :disabled="!valid"
+            >Aceptar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-form>
@@ -575,7 +857,7 @@ export default {
     estimated: 0,
     timeSlotsKey: 0,
     mostrarFila: false,
-    permissions: '',
+    permissions: "",
     trips: [],
     routes: [],
     vehicles: [],
@@ -593,7 +875,7 @@ export default {
       { title: "Ruta", value: "name" },
       { title: "Origen", value: "origin" },
       { title: "Destino", value: "destination" },
-      { title: "Vehículo", value: "vehicleName"},
+      { title: "Vehículo", value: "vehicleName" },
       { title: "Fecha", value: "date" },
       { title: "Horario", value: "schedule" },
       { title: "Precio", value: "price" },
@@ -693,13 +975,34 @@ export default {
       return this.input2 ? new Date(this.input2) : new Date();
     },
     filteredTimeSlots() {
-    return this.generateTimeSlots();
-  },
+      return this.generateTimeSlots();
+    },
+    vehicleWorkers() {
+      const selectedVehicleId = Number(this.editedItem.vehicle_id);
+
+      if (!Number.isFinite(selectedVehicleId) || selectedVehicleId <= 0) {
+        return [];
+      }
+
+      return (this.workers || []).filter((worker) =>
+        (worker.vehicles || []).some(
+          (vehicle) => Number(vehicle.id) === Number(selectedVehicleId)
+        )
+      );
+    },
+    dialogAssignableWorkers() {
+      return (this.vehicleWorkers || []).filter(
+        (worker) =>
+          !this.editedItem.workers.some(
+            (editedWorker) => Number(editedWorker.id) === Number(worker.id)
+          )
+      );
+    },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-    this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_trips_company')) {
+    this.permissions = LocalStorageService.getItem("permissions");
+    if (this.hasPermission("view_trips_company")) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
@@ -709,33 +1012,33 @@ export default {
   },
   watch: {
     // Observar cambios en la fecha para resetear selección
-    'editedItem.date'(newDate) {
-    this.generateTimeSlots();
-  },
+    "editedItem.date"(newDate) {
+      this.generateTimeSlots();
+    },
   },
   methods: {
     formatDuration(minutes) {
-    if (minutes == null || minutes <= 0) return '—';
-    
-    const mins = Math.floor(minutes);
-    const hours = Math.floor(mins / 60);
-    const remainingMinutes = mins % 60;
+      if (minutes == null || minutes <= 0) return "—";
 
-    const parts = [];
-    if (hours > 0) parts.push(`${hours} h`);
-    if (remainingMinutes > 0) parts.push(`${remainingMinutes} min`);
-    
-    return parts.length ? parts.join(' ') : '0 min';
-  },
-     hasPermission(requiredPermissions) {
-        // Si es un string, lo convertimos a array
-        const perms = Array.isArray(requiredPermissions) 
-          ? requiredPermissions 
-          : [requiredPermissions];
-        
-        // Retorna true si al menos uno coincide
-        return perms.some(p => this.permissions.includes(p));
-      },
+      const mins = Math.floor(minutes);
+      const hours = Math.floor(mins / 60);
+      const remainingMinutes = mins % 60;
+
+      const parts = [];
+      if (hours > 0) parts.push(`${hours} h`);
+      if (remainingMinutes > 0) parts.push(`${remainingMinutes} min`);
+
+      return parts.length ? parts.join(" ") : "0 min";
+    },
+    hasPermission(requiredPermissions) {
+      // Si es un string, lo convertimos a array
+      const perms = Array.isArray(requiredPermissions)
+        ? requiredPermissions
+        : [requiredPermissions];
+
+      // Retorna true si al menos uno coincide
+      return perms.some((p) => this.permissions.includes(p));
+    },
     getImageUrl(imagePath) {
       return `${
         this.$axios.defaults.baseURL
@@ -750,41 +1053,47 @@ export default {
     generateTimeSlots() {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const isToday = this.today(this.editedItem.date || new Date().toISOString().split("T")[0]);
+      const isToday = this.today(
+        this.editedItem.date || new Date().toISOString().split("T")[0]
+      );
       const slots = [];
 
       // Generar todos los slots posibles
       for (let hour = 0; hour < 24; hour++) {
         for (let minute = 0; minute < 60; minute += 5) {
           const slotMinutes = hour * 60 + minute;
-          const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-          
+          const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(
+            2,
+            "0"
+          )}`;
+
           slots.push({
             time: timeStr,
-            minutes: slotMinutes
+            minutes: slotMinutes,
           });
         }
       }
 
       // Si estamos editando, incluir el slot actual aunque esté en el pasado
       if (this.editedIndex !== -1 && this.editedItem.schedule) {
-        const currentSlot = slots.find(s => s.time === this.editedItem.schedule);
+        const currentSlot = slots.find((s) => s.time === this.editedItem.schedule);
         if (currentSlot && isToday && currentSlot.minutes <= currentMinutes) {
-          return [this.editedItem.schedule, ...slots
-            .filter(s => s.minutes > currentMinutes)
-            .map(s => s.time)];
+          return [
+            this.editedItem.schedule,
+            ...slots.filter((s) => s.minutes > currentMinutes).map((s) => s.time),
+          ];
         }
       }
 
       // Para creación o slots futuros
-      return isToday 
-        ? slots.filter(s => s.minutes > currentMinutes).map(s => s.time)
-        : slots.map(s => s.time);
+      return isToday
+        ? slots.filter((s) => s.minutes > currentMinutes).map((s) => s.time)
+        : slots.map((s) => s.time);
     },
     // Método para verificar si un trabajador ya está asociado al viaje
-  isWorkerAssociated(worker) {
-    return this.editedItem.workers?.some(w => w.id === worker.id);
-  },
+    isWorkerAssociated(worker) {
+      return this.editedItem.workers?.some((w) => w.id === worker.id);
+    },
     async nextStep() {
       if (this.step < this.items.length) {
         this.step++;
@@ -829,17 +1138,9 @@ export default {
     },
     // Filtramos los trabajadores según el vehículo seleccionado
     filterWorkers() {
-      const selectedVehicleId = Number(this.editedItem.vehicle_id);
-      console.log('this.editedItem.vehicle_id');
-      console.log(Number(this.editedItem.vehicle_id));
-      // Filtramos los trabajadores que están relacionados con el vehículo seleccionado
-      this.filteredWorkers = this.workers.filter((worker) =>
-        worker.vehicles.some((vehicle) => vehicle.id === selectedVehicleId)
-      );
+      this.filteredWorkers = [...this.vehicleWorkers];
     },
     updateStimated() {
-      this.editedItem.vehicle_id = "";
-      this.editedItem.workers = [];
       this.estimated = null;
       const matchedRoute = this.routes.find(
         (route) => route.id === this.editedItem.route_id
@@ -847,21 +1148,27 @@ export default {
       // Si se encuentra el objeto, asignamos su propiedad 'estimated' a this.estimated
       this.estimated = matchedRoute ? matchedRoute.estimated : null;
       this.editedItem.arrival = null;
-      this.editedItem.schedule = null;
+      this.editedItem.price = null;
+      if (this.editedItem.schedule) {
+        this.updateArrival();
+      }
     },
     updateArrival() {
       // Validación mejorada
-      if (!this.editedItem.schedule || !this.estimated || 
-          !this.editedItem.schedule.match(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)) {
+      if (
+        !this.editedItem.schedule ||
+        !this.estimated ||
+        !this.editedItem.schedule.match(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)
+      ) {
         this.editedItem.arrival = null;
         return;
       }
 
       try {
         // Usar fecha del item o fecha actual si es null
-        const baseDate = this.editedItem.date ? 
-          new Date(this.editedItem.date + 'T00:00:00') : 
-          new Date();
+        const baseDate = this.editedItem.date
+          ? new Date(this.editedItem.date + "T00:00:00")
+          : new Date();
 
         // Extraer horas y minutos del schedule
         const [hours, minutes] = this.editedItem.schedule.split(":").map(Number);
@@ -874,10 +1181,11 @@ export default {
         const arrivalDate = new Date(departureDate.getTime() + this.estimated * 60000);
 
         // Formatear a YYYY-MM-DD HH:MM:SS en hora local
-        const pad = n => n.toString().padStart(2, '0');
-        const formattedArrival = 
-          `${arrivalDate.getFullYear()}-${pad(arrivalDate.getMonth() + 1)}-${pad(arrivalDate.getDate())} ` +
-          `${pad(arrivalDate.getHours())}:${pad(arrivalDate.getMinutes())}:00`;
+        const pad = (n) => n.toString().padStart(2, "0");
+        const formattedArrival =
+          `${arrivalDate.getFullYear()}-${pad(arrivalDate.getMonth() + 1)}-${pad(
+            arrivalDate.getDate()
+          )} ` + `${pad(arrivalDate.getHours())}:${pad(arrivalDate.getMinutes())}:00`;
 
         this.editedItem.arrival = formattedArrival;
         console.log("Hora de llegada calculada:", this.editedItem.arrival);
@@ -905,7 +1213,7 @@ export default {
       this.editedItem.date = this.dateFormatted;
       this.menu = false;
     },
-     updateDateSearch(val) {
+    updateDateSearch(val) {
       this.input2 = val;
       //this.editedItem.date = this.dateFormatted;
       this.menu2 = false;
@@ -960,51 +1268,67 @@ export default {
       this.editedIndex = -1;
     },
     async showAssiegnedWorker() {
-      // Clonar filteredWorkers para evitar referencias compartidas
-      const clonedFilteredWorkers = this.filteredWorkers.map((worker) => ({ ...worker }));
-
-      // Ahora puedes filtrar el arreglo clonado sin afectar a los objetos originales
-      this.filteredWorkers = clonedFilteredWorkers.filter((worker) => {
-        // Verificar si la persona no está en editedItem.workers
-        return !this.editedItem.workers.some(
-          (editedWorker) => editedWorker.id === worker.id
-        );
-      });
+      this.selectedWorker = null;
       this.dialogAssignedWorkers = true;
     },
     closeAssignedWorker() {
       this.dialogAssignedWorkers = false;
       this.selectedWorker = null;
     },
-    saveAssignedWorker(worker) {
-      //if (this.selectedWorker) {
-        //const worker = this.workers.find((p) => p.id === this.selectedWorker);
-        const newWorkers = {
-          id: worker.id,
-          workerName: worker.workerName,
-          workerImage: worker.workerImage,
-          roleId: worker.roleId,
-          roleName: worker.roleName,
-        };
-        // Verificar si la relación ya existe en editedItem.people
-        const existingPersonIndex = this.editedItem.workers.findIndex(
-          (p) => p.id === newWorkers.id
+    saveAssignedWorker(worker = null) {
+      const workerSource =
+        worker ||
+        this.workers.find((item) => Number(item.id) === Number(this.selectedWorker)) ||
+        this.dialogAssignableWorkers.find(
+          (item) => Number(item.id) === Number(this.selectedWorker)
         );
 
-        if (existingPersonIndex === -1) {
-          // No existe, por lo tanto, se agrega uno nuevo
-          this.editedItem.workers.push(newWorkers);
-        } else {
-          // Existe, por lo tanto se edita el existente
-          this.editedItem.workers.splice(existingPersonIndex, 1, newWorkers); // Actualiza el elemento en el array
-        }
-      //}
+      const workerId = Number(workerSource?.id);
 
-      // Reiniciar selección y cerrar diálogo
+      if (!workerSource || !Number.isFinite(workerId) || workerId <= 0) {
+        this.showAlert("warning", "Seleccione un trabajador válido.", 2500);
+        return;
+      }
+
+      const newWorkers = {
+        id: workerId,
+        workerName: workerSource.workerName,
+        workerImage: workerSource.workerImage,
+        roleId: workerSource.roleId,
+        roleName: workerSource.roleName,
+      };
+
+      const existingPersonIndex = this.editedItem.workers.findIndex(
+        (p) => Number(p.id) === Number(newWorkers.id)
+      );
+
+      if (existingPersonIndex === -1) {
+        this.editedItem.workers.push(newWorkers);
+      } else {
+        this.editedItem.workers.splice(existingPersonIndex, 1, newWorkers);
+      }
+
       this.filterWorkers();
+      this.closeAssignedWorker();
+    },
+    normalizeWorkersPayload(workers = []) {
+      return (Array.isArray(workers) ? workers : [])
+        .map((worker) => {
+          const workerId = Number(worker?.id ?? worker?.worker_id ?? worker?.workerId);
+          if (!Number.isFinite(workerId) || workerId <= 0) {
+            return null;
+          }
+
+          return {
+            worker_id: workerId,
+          };
+        })
+        .filter(Boolean);
     },
     deleteItemWorker(item) {
-      const index = this.editedItem.workers.findIndex((p) => p.id === item.id);
+      const index = this.editedItem.workers.findIndex(
+        (p) => Number(p.id) === Number(item.id)
+      );
       if (index !== -1) {
         this.editedItem.workers.splice(index, 1);
       }
@@ -1025,7 +1349,7 @@ export default {
       });
     },
     async initialize() {
-      if (this.branch_id === 'null') {
+      if (this.branch_id === "null") {
         this.trips = [];
         this.loading = false;
         return;
@@ -1033,12 +1357,16 @@ export default {
       this.data = {};
       this.data.branch_id = this.branch_id;
       const today = new Date();
-      const formattedDate = today.toLocaleDateString('es-CL', {
-          timeZone: 'America/Santiago',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-      }).split('-').reverse().join('-'); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
+      const formattedDate = today
+        .toLocaleDateString("es-CL", {
+          timeZone: "America/Santiago",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+        .split("-")
+        .reverse()
+        .join("-"); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
       this.data.date = this.dateFormattedSearch;
       try {
         this.loading = true;
@@ -1092,10 +1420,7 @@ export default {
           )
           .reduce((obj, key) => {
             if (key === "workers") {
-              // Transformar el campo `people`
-              obj[key] = this.editedItem.workers.map((worker) => ({
-                worker_id: Number(worker.id), // Asegurar que sea un número
-              }));
+              obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1156,10 +1481,7 @@ export default {
           )
           .reduce((obj, key) => {
             if (key === "workers") {
-              // Transformar el campo `people`
-              obj[key] = this.editedItem.workers.map((worker) => ({
-                worker_id: Number(worker.id), // Asegurar que sea un número
-              }));
+              obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1220,7 +1542,9 @@ export default {
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
 
-          const matchedRoute = this.routes.find(route => route.id === this.editedItem.route_id);
+          const matchedRoute = this.routes.find(
+            (route) => route.id === this.editedItem.route_id
+          );
           this.estimated = matchedRoute ? matchedRoute.estimated : null;
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -1280,6 +1604,14 @@ export default {
       } finally {
         this.closeDelete();
       }
+    },
+    vehicleInternalNumber(vehicle) {
+      return (
+        vehicle?.internal_number ??
+        vehicle?.internalNumber ??
+        vehicle?.vehicleInternalNumber ??
+        "No asignado"
+      );
     },
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type;
@@ -1342,6 +1674,10 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.vehicle-details {
+  min-width: 0;
+  max-width: calc(100% - 56px);
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* Máxima especificidad para ocultar el thead */

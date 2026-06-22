@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
         :multi-line="true" vertical v-model="snackbar">
         <v-row>
@@ -19,8 +19,8 @@
 
         <!-- Texto -->
         <div class="ml-4">
-            <div class="text-h6 font-weight-medium">Promociones</div>
-            <div class="text-body-2 text-grey">Gestionar Promociones</div>
+            <div class="text-h6 font-weight-medium">Tarifas</div>
+            <div class="text-body-2 text-grey">Gestionar Tarifas</div>
         </div>
 
         <!-- Botones -->
@@ -28,21 +28,21 @@
 
         <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
             prepend-icon="mdi-plus-circle" @click="showAdd()">
-            Agregar Promoción
+            Agregar Tarifa
         </v-btn>
     </v-card>
     <v-container style="min-width: 100%;">
         <v-card flat>
-            <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+            <!-- Barra superior: selecciÃ³n de sucursal + botÃ³n buscar + bÃºsqueda global -->
             <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-                <!-- Título -->
-                <div class="text-subtitle-1 font-weight-bold">Listado de promociones</div>
+                <!-- TÃ­tulo -->
+                <div class="text-subtitle-1 font-weight-bold">Listado de tarifas</div>
 
                 <!-- Spacer (solo visible en md+) -->
                 <v-spacer class="d-none d-md-block"></v-spacer>
-                <!-- Campo de búsqueda global -->
+                <!-- Campo de bÃºsqueda global -->
                 <div class="flex-grow-1" style="max-width: 300px">
-                    <v-text-field v-model="search" density="compact" label="Buscar promociones"
+                    <v-text-field v-model="search" density="compact" label="Buscar tarifas"
                         prepend-inner-icon="mdi-magnify" variant="solo-filled" hide-details single-line
                         flat></v-text-field>
                 </div>
@@ -50,7 +50,7 @@
 
             <!-- Tabla de viajes con filas personalizadas -->
             <v-data-table :headers="headers" :items="promotions" :search="search"
-                :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+                :items-per-page-text="'Elementos por pÃ¡gina'" no-data-text="No hay datos disponibles" :loading="loading"
                 loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
                 style="max-height: 68vh; overflow-y: auto; background: transparent">
                <template v-slot:top>
@@ -66,29 +66,27 @@
       class="d-flex pa-2"
       style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
     >
-                            <!-- Negocio (20%) -->
                             <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
                                 Nombre
                             </div>
 
-                            <!-- Nombre (20%) -->
                             <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                                Porciento (%)
+                                Descuento
                             </div>
 
-                            <!-- Teléfono (10%) -->
-                            <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
+                            <div style="width: 12%; min-width: 0" class="text-left font-weight-bold">
+                                Tipo
+                            </div>
+
+                            <div style="width: 43%; min-width: 0" class="text-left font-weight-bold">
                                 Descripción
                             </div>
 
-                            <!-- Dirección (25%) -->
                             <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                                 Estado
                             </div>
 
-                            <!-- Acciones (25%) -->
                             <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-
                             </div>
                         </v-card-text>
                     </v-card>
@@ -113,13 +111,21 @@
                                         <span class="text-truncate">{{ slotProps.item.percentage }}</span>
                                         <v-tooltip activator="parent" location="bottom" max-width="350px">
                                             <span style="white-space: normal; word-break: break-word">
-                                                Porciento (%): {{ slotProps.item.percentage }}
+                                                Descuento: {{ slotProps.item.percentage }}
                                             </span>
                                         </v-tooltip>
                                     </div>
 
-                                    <!-- Origen con avatar -->
-                                    <div class="d-flex align-center" style="width: 55%; min-width: 0">
+                                    <div class="d-flex align-center" style="width: 12%; min-width: 0">
+                                        <span class="text-truncate">{{ slotProps.item.discount_type === 'porcentaje' ? 'Porcentaje' : 'Monto' }}</span>
+                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                                            <span style="white-space: normal; word-break: break-word">
+                                                Tipo de descuento: {{ slotProps.item.discount_type === 'porcentaje' ? 'Porcentaje' : 'Monto' }}
+                                            </span>
+                                        </v-tooltip>
+                                    </div>
+
+                                    <div class="d-flex align-center" style="width: 43%; min-width: 0">
                                         <span class="text-truncate">{{ slotProps.item.description }}</span>
                                         <v-tooltip activator="parent" location="bottom" max-width="350px">
                                             <span style="white-space: normal; word-break: break-word">
@@ -127,7 +133,6 @@
                                             </span>
                                         </v-tooltip>
                                     </div>
-
                                     <!-- Destino con avatar -->
                                     <div class="d-flex align-center" style="width: 10%; min-width: 0">
                                         <v-chip
@@ -148,14 +153,14 @@
                                         <v-btn size="35" icon variant="outlined"
                                             :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                                             :color="paleteColors.primary" @click="editItem(slotProps.item)"
-                                            class="flex-shrink-0 mr-1" title="Editar Promoción">
+                                             class="flex-shrink-0 mr-1" title="Editar Tarifa">
                                             <v-icon size="20">mdi-pencil</v-icon>
                                         </v-btn>
 
                                         <v-btn size="35" icon variant="outlined"
                                             :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                                             :color="paleteColors.error" @click="deleteItem(slotProps.item)"
-                                            class="flex-shrink-0" title="Eliminar Promoción">
+                                             class="flex-shrink-0" title="Eliminar Tarifa">
                                             <v-icon size="20">mdi-delete</v-icon>
                                         </v-btn>
                                     </div>
@@ -167,7 +172,7 @@
             </v-data-table>
         </v-card>
     </v-container>
-    <v-dialog v-model="dialog" max-width="600px">
+    <v-dialog v-model="dialog" max-width="650px">
         <v-form ref="form" v-model="valid">
             <v-card>
                 <v-toolbar :color="paleteColors.primary">
@@ -181,32 +186,53 @@
                                     prepend-icon="mdi-tag-outline" variant="underlined"
                                     :rules="nameRules"></v-text-field>
                             </v-col>
-                            <v-col cols="12" md="6">
-                                <v-switch 
-                                v-model="editedItem.active" 
-                                :true-value="true" 
-                                :false-value="false"
-                                :color="paleteColors.active"
-                                hide-details 
-                                inset 
-                                class="custom-switch"
-                                >
-                                <template v-slot:label>
-                                    <span class="text-body-1"
-                                    :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
-                                    {{ editedItem.active ? 'Activa' : 'Inactiva' }}
+                            <v-col cols="12" md="3" class="d-flex align-center">
+                                <div class="d-flex align-center compact-switch-line">
+                                    <v-switch
+                                        v-model="editedItem.active"
+                                        :true-value="true"
+                                        :false-value="false"
+                                        :color="paleteColors.active"
+                                        :base-color="paleteColors.active"
+                                        hide-details
+                                        inset
+                                        density="compact"
+                                        class="custom-switch compact-inline-switch"
+                                    />
+                                    <span class="text-body-1 compact-switch-label">
+                                        {{ editedItem.active ? 'Activa' : 'Inactiva' }}
                                     </span>
-                                </template>
-                                </v-switch>
+                                </div>
                             </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="editedItem.percentage" clearable label="Descuento (%)"
-                                    prepend-icon="mdi-percent" variant="underlined" type="number" step="0.1" min="0"
-                                    max="100" :rules="[
+                            
+                            <v-col cols="12" md="4" class="d-flex align-center">
+                                <div class="d-flex align-center compact-switch-line">
+                                    <v-switch
+                                        v-model="editedItem.discount_type"
+                                        true-value="porcentaje"
+                                        false-value="monto"
+                                        :color="paleteColors.active"
+                                        :base-color="paleteColors.active"
+                                        :style="alwaysGreenSwitchStyle"
+                                        hide-details
+                                        inset
+                                        density="compact"
+                                        class="custom-switch compact-inline-switch always-green-switch"
+                                    />
+                                    <span class="text-body-1 compact-switch-label">
+                                        {{ editedItem.discount_type === 'porcentaje' ? 'Porcentaje' : 'Monto' }}
+                                    </span>
+                                </div>
+                            </v-col>
+                            <v-col cols="12" md="4">
+                                <v-text-field v-model="editedItem.percentage" label="Descuento"
+                                    :prepend-icon="discountFieldIcon" variant="underlined" type="number" step="0.1" min="0"
+                                    :max="editedItem.discount_type === 'porcentaje' ? 100 : undefined" :rules="[
                                         (v) => !!v || 'El descuento es requerido',
-                                        (v) => (v >= 0 && v <= 100) || 'El descuento debe estar entre 0 y 100',
+                                        (v) => v >= 0 || 'El descuento debe ser mayor o igual a 0',
                                     ]"></v-text-field>
                             </v-col>
+                            
                             <v-col cols="12" md="12">
                                 <v-textarea v-model="editedItem.description" clearable label="Descripción"
                                     prepend-icon="mdi-text-box-outline" variant="underlined" :rules="descriptionRules"></v-textarea>
@@ -228,9 +254,9 @@
     <v-dialog v-model="dialogDelete" max-width="500px">
         <v-card>
             <v-toolbar :color="paleteColors.error">
-                <span class="text-subtitle-2 ml-4"> Eliminar una promoción</span>
+                <span class="text-subtitle-2 ml-4"> Eliminar una tarifa</span>
             </v-toolbar>
-            <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la promoción seleccionada?</v-card-text>
+            <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la tarifa seleccionada?</v-card-text>
             <v-divider></v-divider>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -273,7 +299,8 @@ export default {
         ],
         headers: [
             { title: 'Nombre', value: 'name', },
-            { title: 'Porciento(%)', value: 'percentage', },
+            { title: 'Porcentaje (%)', value: 'percentage', },
+            { title: 'Tipo', value: 'discount_type', },
             { title: 'Descripción', value: 'description', },
             { title: 'Estado', value: 'active', },
             { title: 'Acciones', value: 'actions', sortable: false, width: '10%' },
@@ -284,6 +311,7 @@ export default {
             name: '',
             description: '',
             percentage: '',
+            discount_type: 'monto',
             active: true,
         },
         defaultItem: {
@@ -291,6 +319,7 @@ export default {
             name: '',
             description: '',
             percentage: '',
+            discount_type: 'monto',
             active: true,
         },
         originalItem: {
@@ -298,6 +327,7 @@ export default {
             name: '',
             description: '',
             percentage: '',
+            discount_type: 'monto',
             active: true,
         },
         editedIndex: -1,
@@ -318,7 +348,16 @@ export default {
     }),
     computed: {
         formTitle() {
-            return this.editedIndex === -1 ? 'Agregar Promoción' : 'Editar Promoción';
+            return this.editedIndex === -1 ? 'Agregar Tarifa' : 'Editar Tarifa';
+        },
+        discountFieldIcon() {
+            return this.editedItem.discount_type === 'porcentaje' ? 'mdi-percent' : 'mdi-cash-minus';
+        },
+        alwaysGreenSwitchStyle() {
+            return {
+                '--v-theme-surface-variant': '76, 175, 80',
+                '--v-theme-on-surface-variant': '255, 255, 255',
+            };
         }
     },
     mounted() {
@@ -347,10 +386,15 @@ export default {
                 });
 
                 if (result.success) {
-                    // Si la solicitud es exitosa, asignamos las sucursales
-                    this.promotions = result.data?.promotions || []; // Si no hay roles, asigna un arreglo vacío
+                    const rawPromotions = Array.isArray(result.data?.promotions)
+                        ? result.data.promotions
+                        : Object.values(result.data?.promotions || {});
+                    this.promotions = rawPromotions.map((promotion) => ({
+                        ...promotion,
+                        discount_type: promotion.discount_type ?? promotion.discountType ?? 'monto',
+                    }));
                 } else {
-                    // Si no hay datos, asignamos un array vacío
+                    // Si no hay datos, asignamos un array vacÃ­o
                     this.promotions = [];
                 }
             } catch (error) {
@@ -365,7 +409,7 @@ export default {
             this.loading = true;
             if (this.editedIndex === -1) {
                 this.valid = false;
-                const fieldsToUpdate = ['name', 'description', 'percentage', 'active'];
+                const fieldsToUpdate = ['name', 'description', 'percentage', 'discount_type', 'active'];
 
                 let updatedFields = Object.keys(this.editedItem)
                     .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
@@ -373,7 +417,7 @@ export default {
                         obj[key] = this.editedItem[key];
                         return obj;
                     }, {});
-                // Asegúrate de que el campo 'active' se incluya si ha cambiado
+                // AsegÃºrate de que el campo 'active' se incluya si ha cambiado
                 if (this.editedItem.active === this.originalItem.active) {
                     updatedFields.active = this.editedItem.active;
                 }
@@ -385,7 +429,7 @@ export default {
                             data: updatedFields
                         });
 
-                        // Manejo de la respuesta según el resultado
+                        // Manejo de la respuesta segÃºn el resultado
                         if (result.success) {
                             this.loading = false;
                             this.showAlert("success", result.message, 3000);
@@ -398,7 +442,7 @@ export default {
                     } catch (error) {
                         this.loading = false;
                         this.close();
-                        // Este bloque captura errores inesperados fuera del manejo estándar
+                        // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
                         this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
                     }
                 } else {
@@ -408,7 +452,7 @@ export default {
                 }
             } else {
                 this.valid = false;
-                const fieldsToUpdate = ['name', 'description', 'percentage', 'active'];
+                const fieldsToUpdate = ['name', 'description', 'percentage', 'discount_type', 'active'];
                 let updatedFields = Object.keys(this.editedItem)
                     .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
                     .reduce((obj, key) => {
@@ -424,7 +468,7 @@ export default {
                             data: updatedFields
                         });
 
-                        // Manejo de la respuesta según el resultado
+                        // Manejo de la respuesta segÃºn el resultado
                         if (result.success) {
                             this.loading = false;
                             this.showAlert("success", result.message, 3000);
@@ -437,7 +481,7 @@ export default {
                     } catch (error) {
                         this.loading = false;
                         this.close();
-                        // Este bloque captura errores inesperados fuera del manejo estándar
+                        // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
                         this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
                     }
                 } else {
@@ -450,8 +494,12 @@ export default {
         },
         editItem(item) {
             this.editedIndex = 1;
-            this.originalItem = Object.assign({}, item);
-            this.editedItem = Object.assign({}, item);
+            const normalizedItem = {
+                ...item,
+                discount_type: item.discount_type ?? item.discountType ?? 'monto',
+            };
+            this.originalItem = Object.assign({}, normalizedItem);
+            this.editedItem = Object.assign({}, normalizedItem);
             this.dialog = true;
         },
         deleteItem(item) {
@@ -477,7 +525,7 @@ export default {
                     data: request
                 });
 
-                // Manejo de la respuesta según el resultado
+                // Manejo de la respuesta segÃºn el resultado
                 if (result.success) {
                     this.showAlert("success", result.message, 3000);
                     this.initialize();
@@ -485,8 +533,8 @@ export default {
                     this.showAlert("warning", result.message, 3000);
                 }
             } catch (error) {
-                // Este bloque captura errores inesperados fuera del manejo estándar
-                this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
+                // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
+                        this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
             } finally {
                 this.loading = false;
                 this.closeDelete();
@@ -519,7 +567,7 @@ export default {
 <style>
 .avatar-border {
     border: 2px solid #000;
-    /* Aquí se define el borde */
+    /* AquÃ­ se define el borde */
 }
 
 .icono-concavo {
@@ -530,7 +578,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
+  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -552,7 +600,7 @@ export default {
   text-overflow: ellipsis;
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* MÃ¡xima especificidad para ocultar el thead */
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
@@ -570,5 +618,47 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.compact-inline-switch :deep(.v-selection-control) {
+  min-height: 0;
+  min-width: 0;
+}
+
+.always-green-switch :deep(.v-selection-control__input) {
+  color: #4caf50 !important;
+}
+
+.always-green-switch :deep(.v-switch__track),
+.always-green-switch :deep(.v-selection-control--dirty .v-switch__track) {
+  background-color: #4caf50 !important;
+  opacity: 1 !important;
+}
+
+.always-green-switch :deep(.v-switch__thumb),
+.always-green-switch :deep(.v-selection-control--dirty .v-switch__thumb) {
+  background-color: #ffffff !important;
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+}
+
+.compact-switch-line {
+  gap: 4px;
+}
+
+.compact-switch-label {
+  color: #4caf50 !important;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.compact-inline-switch :deep(.v-switch__track) {
+  transform: scale(0.68);
+  transform-origin: left center;
+}
+
+.compact-inline-switch :deep(.v-switch__thumb) {
+  transform: scale(0.68);
 }
 </style>

@@ -114,14 +114,17 @@
 
               <v-form ref="form" v-model="valid">
                 <v-text-field
+                  ref="emailField"
                   v-model="editedItem.email"
                   label="Correo o usuario"
                   variant="outlined"
                   prepend-inner-icon="mdi-account"
                   density="comfortable"
+                  @keydown.enter.prevent="handleEmailEnter"
                 />
 
                 <v-text-field
+                  ref="passwordField"
                   v-model="editedItem.password"
                   :type="visible ? 'text' : 'password'"
                   label="Contraseña"
@@ -130,14 +133,22 @@
                   :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
                   @click:append-inner="visible = !visible"
                   density="comfortable"
+                  @keydown.enter.prevent="handlePasswordEnter"
                 />
 
-                <v-radio-group v-model="selectedOption" inline class="mt-2">
+                <v-radio-group
+                  ref="optionGroup"
+                  v-model="selectedOption"
+                  inline
+                  class="mt-2"
+                  @keydown.enter.prevent="handleOptionEnter"
+                >
                   <v-radio color="indigo" label="Empresa" value="empresa" />
                   <v-radio color="indigo" label="Sucursal" value="sucursales" />
                 </v-radio-group>
 
                 <v-autocomplete
+                  ref="branchField"
                   v-if="selectedOption === 'sucursales'"
                   v-model="editedItem.branch_id"
                   :items="branches"
@@ -147,6 +158,8 @@
                   variant="outlined"
                   prepend-inner-icon="mdi-domain"
                   clearable
+                  :rules="selectedOption === 'sucursales' ? requiredRules : []"
+                  @keydown.enter.prevent="handleBranchEnter"
                 >
                   <template v-slot:item="{ props, item }">
                     <v-list-item
@@ -158,6 +171,7 @@
                 </v-autocomplete>
 
                 <v-btn
+                  ref="loginButton"
                   block
                   color="indigo-darken-2"
                   size="large"
@@ -165,6 +179,7 @@
                   :loading="loading"
                   :disabled="!valid"
                   @click="login"
+                  @keydown.enter.prevent="login"
                   rounded
                 >
                   <v-icon start>mdi-login</v-icon>
@@ -202,6 +217,7 @@
 import LocalStorageService from "@/LocalStorageService";
 import router from '@/router/index';
 import { handleRequest } from "@/utils/api";
+import { nextTick } from "vue";
 export default {
   data: () => ({
     visible: false,
@@ -240,6 +256,80 @@ export default {
     this.initialize();
   },
   methods: {
+    focusComponent(refName) {
+      const component = this.$refs[refName];
+
+      if (!component) {
+        return;
+      }
+
+      if (typeof component.focus === "function") {
+        component.focus();
+        return;
+      }
+
+      component.$el?.focus?.();
+      component.$el?.querySelector?.("input, button, [tabindex]")?.focus?.();
+    },
+    async focusLoginButton() {
+      await nextTick();
+      this.focusComponent("loginButton");
+    },
+    async focusBranchField() {
+      await nextTick();
+      this.focusComponent("branchField");
+    },
+    async handleEmailEnter() {
+      if (this.editedItem.email?.trim()) {
+        await nextTick();
+        this.focusComponent("passwordField");
+      }
+    },
+    async handlePasswordEnter() {
+      if (!this.editedItem.password?.trim()) {
+        return;
+      }
+
+      if (!this.selectedOption) {
+        await nextTick();
+        this.focusComponent("optionGroup");
+        return;
+      }
+
+      if (this.selectedOption === "sucursales") {
+        if (this.editedItem.branch_id) {
+          await this.focusLoginButton();
+          return;
+        }
+
+        await this.focusBranchField();
+        return;
+      }
+
+      await this.focusLoginButton();
+    },
+    async handleOptionEnter() {
+      if (!this.selectedOption) {
+        return;
+      }
+
+      if (this.selectedOption === "sucursales") {
+        if (this.editedItem.branch_id) {
+          await this.focusLoginButton();
+          return;
+        }
+
+        await this.focusBranchField();
+        return;
+      }
+
+      await this.focusLoginButton();
+    },
+    async handleBranchEnter() {
+      if (this.editedItem.branch_id) {
+        await this.focusLoginButton();
+      }
+    },
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type
 

@@ -13,7 +13,7 @@
 
     </v-row>
   </v-snackbar>
-  <v-app-bar scroll-threshold="0">
+  <v-app-bar scroll-threshold="0" v-bind="$attrs">
      <v-app-bar-nav-icon 
       @click.stop="$emit('toggle-drawer')"
       v-if="!$vuetify.display.mdAndUp"
@@ -250,6 +250,8 @@ import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import { useDisplay } from 'vuetify';
 export default {
+  inheritAttrs: false,
+  emits: ['toggle-drawer'],
   props: {
     drawerVisible: Boolean
   },

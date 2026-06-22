@@ -1,6 +1,14 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -14,11 +22,21 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+  <v-card
+    class="d-flex align-center pa-3"
+    elevation="0"
+    style="background-color: #f9f9f9"
+  >
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-img :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
-        alt="image" class="icono-concavo" cover></v-img>
+      <v-img
+        :src="`${this.$axios.defaults.baseURL}images/${
+          this.branch.image
+        }?t=${getCacheTimestamp()}`"
+        alt="image"
+        class="icono-concavo"
+        cover
+      ></v-img>
     </v-avatar>
 
     <!-- Texto -->
@@ -30,75 +48,128 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      class="text-subtitle-1 ml-12"
+      :color="paleteColors.primary"
+      variant="tonal"
+      elevation="2"
+      prepend-icon="mdi-plus-circle"
+      @click="showAdd()"
+    >
       Agregar Ruta
     </v-btn>
   </v-card>
-   <v-card flat>
+  <v-card flat>
     <v-card-title class="d-flex align-center text-body-1">
       Listado de rutas
 
       <v-spacer></v-spacer>
 
-      <v-text-field v-model="search" density="compact" label="Buscar ruta" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
+      <v-text-field
+        v-model="search"
+        density="compact"
+        label="Buscar ruta"
+        prepend-inner-icon="mdi-magnify"
+        variant="solo-filled"
+        hide-details
+        single-line
+        flat
+      ></v-text-field>
     </v-card-title>
 
-    <v-data-table :headers="headers" :items="branchroutes" :search="search"
-      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." class="elevation-1" :hide-default-header="true"
-      style="max-height: 68vh; overflow-y: auto; background: transparent">
-      <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    <v-data-table
+      :headers="headers"
+      :items="branchroutes"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      class="elevation-1"
+      :hide-default-header="true"
+      style="max-height: 68vh; overflow-y: auto; background: transparent"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Nombre de la ruta
-              </div>
+      <template v-slot:top>
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+          flat
+          color="blue-grey-lighten-5"
+          class="mb-2 mx-1 rounded-lg"
+          elevation="1"
+          style="
+            border: 1px solid #eceff1;
+            height: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+          "
+        >
+          <v-card-text
+            class="d-flex pa-2"
+            style="
+              width: 100%;
+              min-width: 0;
+              height: 100%;
+              padding: 0 16px !important;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <!-- Negocio (20%) -->
+            <div
+              style="width: 15%; min-width: 0"
+              class="text-left font-weight-bold text-subtitle-2"
+            >
+              Nombre de la ruta
+            </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Origen
-              </div>
+            <!-- Nombre (20%) -->
+            <!-- Origen -->
+            <div
+              style="width: 25%; min-width: 0"
+              class="text-left font-weight-bold text-subtitle-2"
+            >
+              Origen
+            </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Destino
-              </div>
+            <!-- Destino -->
+            <div
+              style="width: 25%; min-width: 0"
+              class="text-left font-weight-bold text-subtitle-2"
+            >
+              Destino
+            </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Precio
-              </div>
+            <!-- Distancia / Tiempo -->
+            <div
+              style="width: 20%; min-width: 0"
+              class="text-left font-weight-bold text-subtitle-2"
+            >
+              Distancia / Tiempo
+            </div>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold text-subtitle-2">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
+            <!-- Acciones -->
+            <div
+              style="width: 15%; min-width: 0"
+              class="d-flex justify-left font-weight-bold text-subtitle-2"
+            ></div>
+          </v-card-text>
+        </v-card>
+      </template>
       <!-- Slot personalizado para cada fila -->
       <template v-slot:item="slotProps">
         <tr>
           <td colspan="100%" style="padding: 0; border: none">
             <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-
+              <v-card-text
+                class="d-flex align-center pa-2"
+                style="width: 100%; min-width: 0"
+              >
                 <!-- Columna 1: Nombre de la ruta -->
                 <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
+                  <span class="text-truncate font-weight-medium">{{
+                    slotProps.item.name
+                  }}</span>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Nombre de la ruta: {{ slotProps.item.name }}
@@ -107,11 +178,16 @@
                 </div>
 
                 <!-- Columna 2: Origen (con avatar) -->
-                <div class="d-flex align-center" style="width: 30%; min-width: 0">
+                <div class="d-flex align-center" style="width: 25%; min-width: 0">
                   <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
-                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`"
-                      alt="Imagen del origen" class="icono-concavo" cover></v-img>
+                      :src="`${$axios.defaults.baseURL}images/${
+                        slotProps.item.originImage
+                      }?t=${getCacheTimestamp()}`"
+                      alt="Imagen del origen"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
                   </v-avatar>
                   <span class="text-truncate">{{ slotProps.item.originName }}</span>
                   <v-tooltip activator="parent" location="top" max-width="350px">
@@ -122,11 +198,16 @@
                 </div>
 
                 <!-- Columna 3: Destino (con avatar) -->
-                <div class="d-flex align-center" style="width: 30%; min-width: 0">
+                <div class="d-flex align-center" style="width: 25%; min-width: 0">
                   <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
-                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`"
-                      alt="Imagen del destino" class="icono-concavo" cover></v-img>
+                      :src="`${$axios.defaults.baseURL}images/${
+                        slotProps.item.destinationImage
+                      }?t=${getCacheTimestamp()}`"
+                      alt="Imagen del destino"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
                   </v-avatar>
                   <span class="text-truncate">{{ slotProps.item.destinationName }}</span>
                   <v-tooltip activator="parent" location="top" max-width="350px">
@@ -136,27 +217,45 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Columna 4: Precio -->
-                <div style="width: 10%; min-width: 0" class="text-truncate">
-                  <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
+                <!-- Columna 4: Distancia / Tiempo -->
+                <div class="d-flex align-center" style="width: 20%; min-width: 0">
+                  <div class="d-flex flex-column">
+                    <span class="text-truncate">{{
+                      formatNumber(Number(slotProps.item.distance))
+                    }}</span>
+                    <span class="text-caption text-grey text-truncate">
+                      {{ formatEstimatedTime(slotProps.item.estimated) }}
+                    </span>
+                  </div>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Precio: {{ formatNumber(Number(slotProps.item.price)) }}
+                      Distancia: {{ formatNumber(Number(slotProps.item.distance)) }}<br />
+                      Tiempo estimado: {{ formatEstimatedTime(slotProps.item.estimated) }}
                     </span>
                   </v-tooltip>
                 </div>
 
                 <!-- Columna 5: Acciones -->
-                <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
+                <div
+                  class="d-flex flex-column align-end"
+                  style="width: 15%; min-width: 0; text-align: right"
+                >
                   <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    <!--<v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar Ruta">
                       <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Ruta">
+                    </v-btn>-->
+                    <v-btn
+                      size="35"
+                      icon
+                      variant="outlined"
+                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                      :color="paleteColors.error"
+                      @click="deleteItem(slotProps.item)"
+                      class="flex-shrink-0"
+                      title="Eliminar Ruta"
+                    >
                       <v-icon size="20">mdi-delete</v-icon>
                     </v-btn>
                   </div>
@@ -178,9 +277,19 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.route_id" :items="routes"
-                  label="Ruta" prepend-icon="mdi-road" item-title="name" item-value="id" variant="underlined"
-                  :rules="selectRules" density="compact" :disabled="this.editedIndex === 1">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="editedItem.route_id"
+                  :items="routes"
+                  label="Ruta"
+                  prepend-icon="mdi-road"
+                  item-title="name"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                  density="compact"
+                  :disabled="this.editedIndex === 1"
+                >
                   <template v-slot:item="{ props, item }">
                     <v-card class="mx-1 my-2" elevation="2">
                       <v-list-item v-bind="props">
@@ -189,7 +298,9 @@
                             <!-- Columna 1: Origen -->
                             <v-col cols="12" md="6" class="d-flex align-center pa-2">
                               <v-avatar size="40">
-                                <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`" />
+                                <v-img
+                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
+                                />
                               </v-avatar>
                               <div class="ml-2 flex-grow-1">
                                 <div class="text-caption text-grey">
@@ -210,7 +321,9 @@
                             <!-- Columna 2: Destino -->
                             <v-col cols="12" md="6" class="d-flex align-center pa-2">
                               <v-avatar size="40">
-                                <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`" />
+                                <v-img
+                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
+                                />
                               </v-avatar>
                               <div class="ml-2 flex-grow-1">
                                 <div class="text-caption text-grey">
@@ -234,12 +347,6 @@
                   </template>
                 </v-autocomplete>
               </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.price" label="Precio" type="number" variant="underlined"
-                  density="compact" prepend-icon="mdi-cash" :rules="[(v) => v > 0 || 'Debe ser un precio válido']"
-                  placeholder="Ingrese el precio del pasaje" min="0" step="1.00">
-                </v-text-field>
-              </v-col>
             </v-row>
           </v-container>
         </v-card-text>
@@ -247,8 +354,14 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-            :loading="loading">Aceptar</v-btn>
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="save"
+            :disabled="!valid"
+            :loading="loading"
+            >Aceptar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-form>
@@ -307,27 +420,23 @@ export default {
       { title: "Ruta", key: "name", width: "15%" },
       { title: "Origen", key: "originName", width: "30%" },
       { title: "Destino", key: "destinationName", width: "30%" },
-      { title: "Precio", key: "price", width: "10%" },
-      { title: "Acciones", key: "actions", sortable: false, width: "15%" },
+      { title: "Acciones", key: "actions", sortable: false, width: "25%" },
     ],
 
     editedItem: {
       id: "",
       branch_id: "",
       route_id: "",
-      price: null,
     },
     originalItem: {
       id: "",
       branch_id: "",
       route_id: "",
-      price: null,
     },
     defaultItem: {
       id: "",
       branch_id: "",
       route_id: "",
-      price: null,
     },
     editedIndex: -1,
     search: "",
@@ -369,6 +478,21 @@ export default {
 
       return formattedValue;
     },
+    formatEstimatedTime(minutes) {
+      const totalMinutes = Number(minutes) || 0;
+      const hours = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+
+      if (hours === 0) {
+        return `${mins} min`;
+      }
+
+      if (mins === 0) {
+        return `${hours} h`;
+      }
+
+      return `${hours} h ${mins} min`;
+    },
     async showAdd() {
       this.data = {};
       const firstBranchRoute = this.branchroutes[0];
@@ -378,7 +502,7 @@ export default {
         const result = await handleRequest({
           endpoint: "route-index-branch",
           method: "POST",
-          data:this.data,
+          data: this.data,
         });
 
         if (result.success) {
@@ -387,7 +511,8 @@ export default {
           const targetOriginId = firstBranchRoute?.origin_id;*/
 
           // Filtramos las rutas
-          this.routes = result.data?.routes.filter(
+          this.routes =
+            result.data?.routes.filter(
               (route) =>
                 !this.branchroutes.some(
                   (branchroute) => branchroute.route_id === route.id
@@ -449,7 +574,6 @@ export default {
         this.data = {};
         this.data.branch_id = this.branch_id;
         this.data.route_id = this.editedItem.route_id;
-        this.data.price = this.editedItem.price;
 
         try {
           const result = await handleRequest({
@@ -478,7 +602,7 @@ export default {
         }
       } else {
         this.valid = false;
-        const fieldsToUpdate = ["id", "branch_id", "route_id", "price"];
+        const fieldsToUpdate = ["id", "branch_id", "route_id"];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
             (key) =>
@@ -528,7 +652,7 @@ export default {
       this.data = {};
       this.originalItem = Object.assign({}, item);
       this.editedItem = Object.assign({}, item);
-       this.data.branch_id = this.branch_id;
+      this.data.branch_id = this.branch_id;
       try {
         const result = await handleRequest({
           endpoint: "route-index-branch",

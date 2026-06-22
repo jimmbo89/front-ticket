@@ -161,11 +161,11 @@
                       title="Agregar vehículo">
                       <v-icon size="20">mdi-car</v-icon>
                     </v-btn>
-                    <!--<v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.route" @click="showAddRoute(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Agregar ruta">
-                      <v-icon size="20">mdi-map-marker</v-icon>
-                    </v-btn>-->
+                      <v-icon size="20">mdi-map-marker-path</v-icon>
+                    </v-btn>
                     <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                       :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
                       title="Editar">

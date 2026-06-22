@@ -128,10 +128,16 @@
                       :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
                       alt="Imagen del vehículo" class="icono-concavo" cover></v-img>
                   </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.plate }}</span>
+                  <div class="d-flex flex-column text-truncate" style="min-width: 0">
+                    <span class="text-truncate">{{ slotProps.item.plate }}</span>
+                    <span class="text-caption text-grey text-truncate">
+                      {{ getVehicleInternalNumber(slotProps.item) }}
+                    </span>
+                  </div>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Chapa: {{ slotProps.item.plate }}<br>
+                      Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -206,6 +212,7 @@
                       :title="item.raw.name">
                       <v-list-item-subtitle class="d-flex flex-column">
                         <div>Chapa: {{ item.raw.plate }}</div>
+                        <div>Número interno: {{ getVehicleInternalNumber(item.raw) }}</div>
                         <div>Marca: {{ item.raw.brand }}</div>
                         <div>Modelo: {{ item.raw.model }}</div>
                       </v-list-item-subtitle>
@@ -309,6 +316,9 @@ export default {
     this.initialize();
   },
   methods: {
+    getVehicleInternalNumber(vehicle) {
+      return vehicle?.internal_number ?? vehicle?.internalNumber ?? "No asignado";
+    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();

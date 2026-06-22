@@ -91,22 +91,26 @@
       style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
     >
               <!-- Negocio (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 16%; min-width: 0" class="text-left font-weight-bold">
                 Chapa
               </div>
 
+              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
+                Número interno
+              </div>
+
               <!-- Nombre (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
                 Marca
               </div>
 
               <!-- Teléfono (10%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
                 Modelo
               </div>
 
               <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
                 Asientos
               </div>
 
@@ -115,7 +119,7 @@
               </div>
 
               <!-- Acciones (25%) -->
-              <div style="width: 30%; min-width: 0" class="d-flex justify-left font-weight-bold">
+              <div style="width: 24%; min-width: 0" class="d-flex justify-left font-weight-bold">
                 
               </div>
             </v-card-text>
@@ -128,7 +132,7 @@
           <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
             <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
               <!-- Placa con avatar -->
-              <div class="d-flex align-center" style="width: 20%; min-width: 0">
+              <div class="d-flex align-center" style="width: 16%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`" cover></v-img>
                 </v-avatar>
@@ -140,8 +144,18 @@
                 </v-tooltip>
               </div>
 
+              <!-- Número interno -->
+              <div style="width: 14%; min-width: 0" class="text-truncate text-center text-start">
+                <span>{{ slotProps.item.internal_number || '-' }}</span>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Número interno: {{ slotProps.item.internal_number || 'No asignado' }}
+                  </span>
+                </v-tooltip>
+              </div>
+
               <!-- Marca -->
-              <div style="width: 15%; min-width: 0" class="text-truncate text-center text-start">
+              <div style="width: 14%; min-width: 0" class="text-truncate text-center text-start">
                 <span>{{ slotProps.item.brand }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -151,7 +165,7 @@
               </div>
 
               <!-- Modelo -->
-              <div style="width: 15%; min-width: 0" class="text-truncate text-center text-start">
+              <div style="width: 14%; min-width: 0" class="text-truncate text-center text-start">
                 <span>{{ slotProps.item.model }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -161,7 +175,7 @@
               </div>
 
               <!-- Asientos -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
+              <div style="width: 8%; min-width: 0" class="text-truncate text-center text-start">
                 <span>{{ slotProps.item.seats }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
                   <span style="white-space: normal; word-break: break-word">
@@ -184,7 +198,7 @@
               </div>
 
               <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 30%; justify-content: flex-end; flex-wrap: nowrap">
+              <div class="d-flex gap-1" style="width: 24%; justify-content: flex-end; flex-wrap: nowrap">
                 <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
                   :color="paleteColors.green" @click="showAddWorker(slotProps.item)" class="flex-shrink-0 mr-1"
                   title="Agregar Trabajador">
@@ -264,38 +278,42 @@
                 <v-text-field v-model="editedItem.model" label="Modelo" prepend-icon="mdi-car-info"
                   variant="underlined"></v-text-field>
               </v-col>
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="3">
                 <v-text-field v-model="editedItem.plate" label="Placa" prepend-icon="mdi-license" variant="underlined"
                   :rules="[v => !!v || 'La placa es requerida']"></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field v-model="editedItem.internal_number" label="Número interno" prepend-icon="mdi-pound"
+                  variant="underlined"></v-text-field>
               </v-col>
               <!--<v-col cols="12" md="6">
                 <v-text-field v-model="editedItem.rut" label="RUT" prepend-icon="mdi-identifier"
                   variant="underlined" :rules="rutRules">
                 </v-text-field>
               </v-col>-->
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="3">
                 <v-text-field v-model="editedItem.seats" label="Asientos" prepend-icon="mdi-seat" variant="underlined"
                   :rules="[v => !!v || 'El número de asientos es requerido',
                   v => !isNaN(v) || 'Debe ser un número'
                   ]" :disabled="true"></v-text-field>
               </v-col>
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="3">
                 <v-switch 
-  v-model="editedItem.state" 
-  :true-value=1
-  :false-value=0
-  :color="paleteColors.active"
-  hide-details 
-  inset 
-  class="custom-switch"
->
-  <template v-slot:label>
-    <span class="text-body-1"
-      :style="{ color: editedItem.state ? paleteColors.active : paleteColors.grey }">
-      {{ editedItem.state ? 'Activo' : 'Inactivo' }}
-    </span>
-  </template>
-</v-switch>
+                  v-model="editedItem.state" 
+                  :true-value=1
+                  :false-value=0
+                  :color="paleteColors.active"
+                  hide-details 
+                  inset 
+                  class="custom-switch"
+                >
+                  <template v-slot:label>
+                    <span class="text-body-1"
+                      :style="{ color: editedItem.state ? paleteColors.active : paleteColors.grey }">
+                      {{ editedItem.state ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </template>
+                </v-switch>
               </v-col>
             </v-row>
             <v-row>
@@ -408,6 +426,7 @@ export default {
       id: '',
       structure_id: '',
       plate: '',
+      internal_number: '',
       model: '',
       brand: '',
       image: '',
@@ -419,6 +438,7 @@ export default {
       id: '',
       structure_id: '',
       plate: '',
+      internal_number: '',
       model: '',
       brand: '',
       image: '',
@@ -430,6 +450,7 @@ export default {
       id: '',
       structure_id: '',
       plate: '',
+      internal_number: '',
       model: '',
       brand: '',
       image: '',
@@ -527,8 +548,14 @@ export default {
         });
 
         if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.vehicles = result.data?.vehicles || [];
+          // Si la solicitud es exitosa, normalizamos la lista de vehículos
+          const rawVehicles = Array.isArray(result.data?.vehicles)
+            ? result.data.vehicles
+            : Object.values(result.data?.vehicles || {});
+          this.vehicles = rawVehicles.map((vehicle) => ({
+            ...vehicle,
+            internal_number: vehicle.internal_number ?? vehicle.internalNumber ?? '',
+          }));
         } else {
           // Si no hay datos, asignamos un array vacío
           this.vehicles = [];
@@ -545,7 +572,7 @@ export default {
       this.loading = true;
       if (this.editedIndex === -1) {
         this.valid = false;
-        const fieldsToUpdate = ['brand', 'model', 'plate', 'rut', 'seats', 'state', 'image', 'structure_id'];
+        const fieldsToUpdate = ['brand', 'model', 'plate', 'internal_number', 'rut', 'seats', 'state', 'image', 'structure_id'];
 
         let updatedFields = Object.keys(this.editedItem)
           .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
@@ -589,7 +616,7 @@ export default {
         }
       } else {
         this.valid = false;
-        const fieldsToUpdate = ['brand', 'model', 'plate', 'rut', 'seats', 'state', 'image', 'structure_id'];
+        const fieldsToUpdate = ['brand', 'model', 'plate', 'internal_number', 'rut', 'seats', 'state', 'image', 'structure_id'];
         let updatedFields = Object.keys(this.editedItem)
           .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
           .reduce((obj, key) => {
@@ -635,8 +662,12 @@ export default {
     },
     async editItem(item) {
       this.editedIndex = 1;
-      this.originalItem = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item);
+      const normalizedItem = {
+        ...item,
+        internal_number: item.internal_number ?? item.internalNumber ?? '',
+      };
+      this.originalItem = Object.assign({}, normalizedItem);
+      this.editedItem = Object.assign({}, normalizedItem);
       this.file = null;
       // Crear la imagen y configurar el src
       const img = new Image();
