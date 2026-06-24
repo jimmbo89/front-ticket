@@ -125,8 +125,11 @@
             <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
               <!-- Dirección con avatar -->
               <div class="d-flex align-center" style="width: 50%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`" cover></v-img>
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                  <v-img
+                    :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
+                    cover
+                  ></v-img>
                 </v-avatar>
                 <span class="text-truncate">{{ slotProps.item.address }}</span>
                 <v-tooltip activator="parent" location="bottom" max-width="350px">
@@ -292,7 +295,7 @@
 import { paleteColors } from "@/assets/colors";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 export default {
-  data: () => ({
+    data: () => ({
     snackbar: false,
     sb_type: '',
     sb_message: '',
@@ -348,6 +351,7 @@ export default {
     },
     editedIndex: -1,
     search: '',
+    imageVersion: 0,
     nameRules: [
       (v) => !!v || "El campo es requerido",
       (v) => (v && v.length <= 250) ||
@@ -375,12 +379,6 @@ export default {
     this.initialize();
   },
   methods: {
-    getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del día actual
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
-    },
     async showAdd() {
       this.close();
       this.editedIndex === -1;
@@ -409,6 +407,7 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.locations = result.data?.locations || [];
+          this.imageVersion += 1;
         } else {
           // Si no hay datos, asignamos un array vacío
           this.locations = [];

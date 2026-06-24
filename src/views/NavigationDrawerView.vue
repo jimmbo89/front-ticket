@@ -200,27 +200,34 @@ export default {
     },
   },
   mounted() {
-    this.role = JSON.parse(LocalStorageService.getItem('role'));
-    if (this.role === 'Administrador') {
-      this.title = JSON.parse(LocalStorageService.getItem('nameBusiness'));
-      this.imageBranch = LocalStorageService.getItem('imageBusiness').replace(/['"]+/g, '');
-      this.subtitle = 'Empresa';
-    } else {
-      this.title = JSON.parse(LocalStorageService.getItem('nameBranch'));
-      this.imageBranch = LocalStorageService.getItem('imageBranch').replace(/['"]+/g, '');
-      this.subtitle = 'Sucursal';
-    }
+    this.loadBranding();
+    window.addEventListener("branding-updated", this.loadBranding);
+  },
+  beforeUnmount() {
+    window.removeEventListener("branding-updated", this.loadBranding);
   },
   methods: {
-  hasPermission(requiredPermissions) {
-    // Si es un string, lo convertimos a array
-    const perms = Array.isArray(requiredPermissions) 
-      ? requiredPermissions 
-      : [requiredPermissions];
-    
-    // Retorna true si al menos uno coincide
-    return perms.some(p => this.permissions.includes(p));
-  }
+    loadBranding() {
+      this.role = JSON.parse(LocalStorageService.getItem('role'));
+      if (this.role === 'Administrador') {
+        this.title = JSON.parse(LocalStorageService.getItem('nameBusiness')) || '';
+        this.imageBranch = (LocalStorageService.getItem('imageBusiness') || '').replace(/['"]+/g, '');
+        this.subtitle = 'Empresa';
+      } else {
+        this.title = JSON.parse(LocalStorageService.getItem('nameBranch')) || '';
+        this.imageBranch = (LocalStorageService.getItem('imageBranch') || '').replace(/['"]+/g, '');
+        this.subtitle = 'Sucursal';
+      }
+    },
+    hasPermission(requiredPermissions) {
+      // Si es un string, lo convertimos a array
+      const perms = Array.isArray(requiredPermissions) 
+        ? requiredPermissions 
+        : [requiredPermissions];
+      
+      // Retorna true si al menos uno coincide
+      return perms.some(p => this.permissions.includes(p));
+    }
 }
 };
 </script>

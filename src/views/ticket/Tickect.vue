@@ -424,7 +424,7 @@
               <v-autocomplete
                 v-model="editedItem.trip_id"
                 :items="trips"
-                label="Selecciona la ruta"
+                label="Selecciona el viaje"
                 prepend-icon="mdi-road"
                 item-title="name"
                 item-value="id"
@@ -848,7 +848,10 @@
                         v-for="method in paymentMethods"
                         :key="method.value"
                         class="payment-method-card"
-                        :class="[getCardClass(method), { 'payment-method-disabled': method.disabled }]"
+                        :class="[
+                          getCardClass(method),
+                          { 'payment-method-disabled': method.disabled },
+                        ]"
                         @click="!method.disabled && (editedItem.method = method.value)"
                       >
                         <v-card-text
@@ -1193,7 +1196,12 @@ export default {
     },
     paymentMethods: [
       { text: "Efectivo", value: "Efectivo", icon: "mdi-cash" },
-      { text: "Crédito", value: "Credito", icon: "mdi-credit-card-outline", disabled: true },
+      {
+        text: "Crédito",
+        value: "Credito",
+        icon: "mdi-credit-card-outline",
+        disabled: true,
+      },
       { text: "Débito", value: "Debito", icon: "mdi-bank-outline", disabled: true },
     ],
     editedIndex: -1,
@@ -1568,9 +1576,7 @@ export default {
       this.aviable = 0;
       this.selectedSeats = [];
 
-      const selectedTrip = this.trips.find(
-        (trip) => Number(trip.id) === Number(tripId)
-      );
+      const selectedTrip = this.trips.find((trip) => Number(trip.id) === Number(tripId));
 
       if (selectedTrip) {
         this.editedItem.price = Number(selectedTrip.price) || 0;

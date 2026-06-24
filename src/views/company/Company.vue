@@ -456,6 +456,12 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.companies = result.data?.companies || [];
+          const company = this.companies[0];
+          if (company) {
+            LocalStorageService.setItem("nameBusiness", company.name ?? "");
+            LocalStorageService.setItem("imageBusiness", company.image ?? "");
+            window.dispatchEvent(new Event("branding-updated"));
+          }
         } else {
           // Si no hay datos, asignamos un array vacío
           this.companies = [];
@@ -547,10 +553,11 @@ export default {
             });
 
             // Manejo de la respuesta según el resultado
-            if (result.success) {
-              this.showAlert("success", result.message, 3000);
-              this.initialize();
-              this.loading = false;
+          if (result.success) {
+            this.showAlert("success", result.message, 3000);
+            await this.initialize();
+            window.dispatchEvent(new Event("branding-updated"));
+            this.loading = false;
             } else {
               this.showAlert("warning", result.message, 3000);
               this.loading = false;

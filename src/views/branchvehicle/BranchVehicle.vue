@@ -1,6 +1,14 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
@@ -14,11 +22,21 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+  <v-card
+    class="d-flex align-center pa-3"
+    elevation="0"
+    style="background-color: #f9f9f9"
+  >
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-img :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
-        alt="image" class="icono-concavo" cover></v-img>
+      <v-img
+        :src="`${this.$axios.defaults.baseURL}images/${
+          this.branch.image
+        }?t=${getCacheTimestamp()}`"
+        alt="image"
+        class="icono-concavo"
+        cover
+      ></v-img>
     </v-avatar>
 
     <!-- Texto -->
@@ -30,8 +48,14 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      class="text-subtitle-1 ml-12"
+      :color="paleteColors.primary"
+      variant="tonal"
+      elevation="2"
+      prepend-icon="mdi-plus-circle"
+      @click="showAdd()"
+    >
       Agregar Vehículo
     </v-btn>
   </v-card>
@@ -66,67 +90,102 @@
 
       <v-spacer></v-spacer>
 
-      <v-text-field v-model="search" density="compact" label="Buscar vehículo" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
+      <v-text-field
+        v-model="search"
+        density="compact"
+        label="Buscar vehículo"
+        prepend-inner-icon="mdi-magnify"
+        variant="solo-filled"
+        hide-details
+        single-line
+        flat
+      ></v-text-field>
     </v-card-title>
 
-    <v-data-table :headers="headers" :items="branchvehicles" :search="search"
-      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." class="elevation-1" :hide-default-header="true"
-      style="max-height: 68vh; overflow-y: auto; background: transparent">
-       <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    <v-data-table
+      :headers="headers"
+      :items="branchvehicles"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      class="elevation-1"
+      :hide-default-header="true"
+      style="max-height: 68vh; overflow-y: auto; background: transparent"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
-                Chapa
-              </div>
+      <template v-slot:top>
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+          flat
+          color="blue-grey-lighten-5"
+          class="mb-2 mx-1 rounded-lg"
+          elevation="1"
+          style="
+            border: 1px solid #eceff1;
+            height: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+          "
+        >
+          <v-card-text
+            class="d-flex pa-2"
+            style="
+              width: 100%;
+              min-width: 0;
+              height: 100%;
+              padding: 0 16px !important;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <!-- Negocio (20%) -->
+            <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+              Patente
+            </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Marca
-              </div>
+            <!-- Nombre (20%) -->
+            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              Marca
+            </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Modelo
-              </div>
+            <!-- Teléfono (10%) -->
+            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+              Modelo
+            </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Asientos
-              </div>
+            <!-- Dirección (25%) -->
+            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              Asientos
+            </div>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 20%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
+            <!-- Acciones (25%) -->
+            <div
+              style="width: 20%; min-width: 0"
+              class="d-flex justify-left font-weight-bold"
+            ></div>
+          </v-card-text>
+        </v-card>
+      </template>
       <!-- Slot personalizado para cada fila -->
       <template v-slot:item="slotProps">
         <tr>
           <td colspan="100%" style="padding: 0; border: none">
             <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-
-                <!-- Columna 1: Chapa + Imagen -->
+              <v-card-text
+                class="d-flex align-center pa-2"
+                style="width: 100%; min-width: 0"
+              >
+                <!-- Columna 1: Patente + Imagen -->
                 <div class="d-flex align-center" style="width: 30%; min-width: 0">
                   <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
-                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
-                      alt="Imagen del vehículo" class="icono-concavo" cover></v-img>
+                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
+                      alt="Imagen del vehículo"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
                   </v-avatar>
                   <div class="d-flex flex-column text-truncate" style="min-width: 0">
                     <span class="text-truncate">{{ slotProps.item.plate }}</span>
@@ -136,7 +195,7 @@
                   </div>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Chapa: {{ slotProps.item.plate }}<br>
+                      Patente: {{ slotProps.item.plate }}<br />
                       Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
                     </span>
                   </v-tooltip>
@@ -146,7 +205,7 @@
                   <span class="text-truncate">{{ slotProps.item.brand }}</span>
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Marca: {{ slotProps.item.brand }}<br>
+                      Marca: {{ slotProps.item.brand }}<br />
                     </span>
                   </v-tooltip>
                 </div>
@@ -170,17 +229,34 @@
                 </div>
 
                 <!-- Columna 3: Asientos y Acciones -->
-                <div class="d-flex flex-column align-end" style="width: 20%; min-width: 0; text-align: right">
+                <div
+                  class="d-flex flex-column align-end"
+                  style="width: 20%; min-width: 0; text-align: right"
+                >
                   <!-- Botones de acción -->
                   <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar vehículo">
+                    <v-btn
+                      size="35"
+                      icon
+                      variant="outlined"
+                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                      :color="paleteColors.primary"
+                      @click="editItem(slotProps.item)"
+                      class="flex-shrink-0 mr-1"
+                      title="Editar vehículo"
+                    >
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar vehículo">
+                    <v-btn
+                      size="35"
+                      icon
+                      variant="outlined"
+                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                      :color="paleteColors.error"
+                      @click="deleteItem(slotProps.item)"
+                      class="flex-shrink-0"
+                      title="Eliminar vehículo"
+                    >
                       <v-icon size="20">mdi-delete</v-icon>
                     </v-btn>
                   </div>
@@ -203,16 +279,28 @@
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.vehicle_id"
-                  :items="vehicles" label="Vehículos" prepend-icon="mdi-car" item-title="plate" item-value="id"
-                  variant="underlined" :rules="selectRules">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="editedItem.vehicle_id"
+                  :items="vehicles"
+                  label="Vehículos"
+                  prepend-icon="mdi-car"
+                  item-title="plate"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                >
                   <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
+                    <v-list-item
+                      v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name">
+                      :title="item.raw.name"
+                    >
                       <v-list-item-subtitle class="d-flex flex-column">
-                        <div>Chapa: {{ item.raw.plate }}</div>
-                        <div>Número interno: {{ getVehicleInternalNumber(item.raw) }}</div>
+                        <div>Patente: {{ item.raw.plate }}</div>
+                        <div>
+                          Número interno: {{ getVehicleInternalNumber(item.raw) }}
+                        </div>
                         <div>Marca: {{ item.raw.brand }}</div>
                         <div>Modelo: {{ item.raw.model }}</div>
                       </v-list-item-subtitle>
@@ -227,8 +315,14 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-            :loading="loading">Aceptar</v-btn>
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="save"
+            :disabled="!valid"
+            :loading="loading"
+            >Aceptar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-form>
@@ -239,12 +333,18 @@
         <span class="text-subtitle-2 ml-4"> Eliminar Vehículo</span>
       </v-toolbar>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el Vehículo seleccionado?</v-card-text>
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar el Vehículo seleccionado?</v-card-text
+      >
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete"> Cancelar </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm"> Aceptar </v-btn>
+        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+          Cancelar
+        </v-btn>
+        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+          Aceptar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -280,7 +380,7 @@ export default {
     branch_id: "",
     data: {},
     headers: [
-      { title: "Chapa", key: "plate", width: "30%" },
+      { title: "Patente", key: "plate", width: "30%" },
       { title: "Marca", key: "brand", width: "20%" },
       { title: "Modelo", key: "model", width: "20%" },
       { title: "Asientos", key: "seats", width: "10%" },
@@ -304,6 +404,7 @@ export default {
     },
     editedIndex: -1,
     search: "",
+    imageVersion: 0,
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
   }),
   computed: {
@@ -329,20 +430,28 @@ export default {
       this.data = {};
       try {
         const result = await handleRequest({
-          endpoint: 'vehicle',
-          method: 'GET'
+          endpoint: "vehicle",
+          method: "GET",
         });
 
         if (result.success) {
-          this.vehicles = result.data?.vehicles.filter((vehicle) =>
-            !this.branchvehicles.some((branchvehicle) => branchvehicle.vehicle_id === vehicle.id)
-          ) || [];
+          this.vehicles =
+            result.data?.vehicles.filter(
+              (vehicle) =>
+                !this.branchvehicles.some(
+                  (branchvehicle) => branchvehicle.vehicle_id === vehicle.id
+                )
+            ) || [];
         } else {
           // Si no hay datos, asignamos un array vacío
           this.vehicles = [];
         }
       } catch (error) {
-        this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
       } finally {
         this.dialog = true;
       }
@@ -369,6 +478,7 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.branchvehicles = result.data?.branchVehicles || [];
+          this.imageVersion += 1;
           this.loading = false;
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -473,24 +583,27 @@ export default {
       this.editedItem = Object.assign({}, item);
       this.data = {};
       this.data.branch_id = this.branch_id;
-      this.data.type = 'Sucursal';
+      this.data.type = "Sucursal";
       try {
         const result = await handleRequest({
-          endpoint: 'vehicle',
-          method: 'GET'
+          endpoint: "vehicle",
+          method: "GET",
         });
 
         if (result.success) {
-          this.vehicles = result.data?.vehicles.filter((vehicle) =>
-            !this.branchvehicles.some((branchvehicle) => branchvehicle.vehicle_id === vehicle.id) ||
-            vehicle.id === this.editedItem.vehicle_id
-          ) || [];
+          this.vehicles =
+            result.data?.vehicles.filter(
+              (vehicle) =>
+                !this.branchvehicles.some(
+                  (branchvehicle) => branchvehicle.vehicle_id === vehicle.id
+                ) || vehicle.id === this.editedItem.vehicle_id
+            ) || [];
         } else {
           // Si no hay datos, asignamos un array vacío
           this.vehicles = [];
         }
       } catch (error) {
-        this.showAlert('error', 'Ocurrió un error inesperado al cargar los datos.', 3000);
+        this.showAlert("error", "Ocurrió un error inesperado al cargar los datos.", 3000);
       } finally {
         this.dialog = true;
       }

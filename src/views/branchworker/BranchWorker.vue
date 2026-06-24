@@ -51,7 +51,7 @@
           <template v-slot:item.workerName="{ item }">
             <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
               <v-img :src="`${this.$axios.defaults.baseURL}images/${item.workerImage
-                }?t=${getCacheTimestamp()}`" alt="image"></v-img> </v-avatar>
+                }?v=${imageVersion}`" alt="image"></v-img> </v-avatar>
             {{ item.workerName }}
           </template>
         </v-data-table>
@@ -129,7 +129,7 @@
               <div class="d-flex align-center" style="width: 40%; min-width: 0">
                 <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                   <v-img
-                    :src="`${$axios.defaults.baseURL}images/${slotProps.item.workerImage}?t=${getCacheTimestamp()}`"
+                    :src="`${$axios.defaults.baseURL}images/${slotProps.item.workerImage}?v=${imageVersion}`"
                     alt="Foto del trabajador"
                     class="icono-concavo"
                     cover
@@ -298,6 +298,7 @@ export default {
     },
     editedIndex: -1,
     search: "",
+    imageVersion: 0,
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
   }),
   computed: {
@@ -376,6 +377,7 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.branchworkers = result.data?.branchWorkers || [];
+          this.imageVersion += 1;
           this.loading = false;
         } else {
           // Si no hay datos, asignamos un array vacío

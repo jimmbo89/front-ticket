@@ -371,37 +371,47 @@
                   </span>
                 </div>
               </v-col>
-              <v-col cols="12" md="4" class="d-flex align-center">
-                <div class="d-flex align-center compact-switch-line">
-                  <v-switch
-                    v-model="editedItem.value_type"
-                    true-value="porcentaje"
-                    false-value="monto"
-                    :base-color="paleteColors.green"
-                    :color="paleteColors.green"
-                    :style="alwaysGreenSwitchStyle"
-                    hide-details
-                    inset
-                    density="compact"
-                    class="custom-switch compact-inline-switch always-green-switch"
-                  />
-                  <span class="text-body-1 compact-switch-label">
-                    {{ editedItem.value_type === "porcentaje" ? "Porcentaje" : "Monto" }}
-                  </span>
-                </div>
-              </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field
-                  v-model.number="editedItem.adjustment_value"
-                  clearable
-                  label="Valor del ajuste"
-                  :prepend-icon="adjustmentValueIcon"
-                  variant="underlined"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  :rules="adjustmentValueRules"
-                ></v-text-field>
+              <v-col cols="12" md="9" class="py-0">
+                <v-row class="align-center" no-gutters>
+                  <v-col cols="12" md="5" class="d-flex align-center justify-left">
+                    <div class="d-flex align-center compact-switch-line">
+                      <v-switch
+                        v-model="editedItem.value_type"
+                        true-value="porcentaje"
+                        false-value="monto"
+                        :base-color="paleteColors.green"
+                        :color="paleteColors.green"
+                        :style="alwaysGreenSwitchStyle"
+                        hide-details
+                        inset
+                        density="compact"
+                        class="custom-switch compact-inline-switch always-green-switch"
+                      />
+                      <span class="text-body-1 compact-switch-label">
+                        {{
+                          editedItem.value_type === "porcentaje" ? "Porcentaje" : "Monto"
+                        }}
+                      </span>
+                    </div>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    md
+                    class="d-flex align-center justify-left min-width-0"
+                  >
+                    <v-text-field
+                      v-model.number="editedItem.adjustment_value"
+                      clearable
+                      label="Valor del ajuste"
+                      :prepend-icon="adjustmentValueIcon"
+                      variant="underlined"
+                      type="number"
+                      min="0"
+                      step="1"
+                      :rules="adjustmentValueRules"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
               </v-col>
               <v-col cols="12" md="12">
                 <v-textarea
@@ -549,7 +559,7 @@ export default {
         (v) =>
           (v !== null && v !== undefined && v !== "") ||
           "El valor del ajuste es requerido",
-        (v) => Number(v) >= 0 || "El valor del ajuste debe ser mayor o igual a 0",
+        (v) => Number(v) > 0 || "El valor del ajuste debe ser mayor que 0",
       ];
     },
   },
@@ -761,12 +771,19 @@ export default {
       };
     },
     buildTicketTypePayload(item, includeId = false) {
+      const adjustmentValue =
+        item.adjustment_value === null ||
+        item.adjustment_value === undefined ||
+        item.adjustment_value === ""
+          ? null
+          : Number(item.adjustment_value);
+
       const payload = {
         name: item.name,
         description: item.description,
         adjustment_type: item.adjustment_type,
         value_type: item.value_type,
-        adjustment_value: Number(item.adjustment_value ?? 0),
+        adjustment_value: adjustmentValue,
         active: item.active,
       };
 

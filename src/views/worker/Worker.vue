@@ -50,7 +50,7 @@
         </template>
         <template v-slot:item.name="{ item }">
           <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-            <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?t=${Date.now()}`" alt="image"></v-img>
+            <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?v=${imageVersion}`" alt="image"></v-img>
           </v-avatar>
           {{ item.name }}
         </template>
@@ -501,6 +501,7 @@ export default {
     },
     editedIndex: -1,
     search: '',
+    imageVersion: 0,
     user_id: '',
     nameRules: [
       (v) => !!v || "El campo es requerido",
@@ -614,6 +615,7 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.workers = result.data?.workers || [];
+          this.imageVersion += 1;
         } else {
           // Si no hay datos, asignamos un array vacío
           this.workers = [];
