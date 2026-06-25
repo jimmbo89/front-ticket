@@ -1,248 +1,156 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-      </v-col>
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-
-      </v-col>
-
-    </v-row>
+  <v-snackbar
+    v-model="snackbar"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="10"
+    class="busgo-snackbar"
+  >
+    <div class="d-flex align-center ga-3">
+      <v-icon :icon="sb_icon" />
+      <div>
+        <div class="font-weight-bold">{{ sb_title }}</div>
+        <div class="text-caption">{{ sb_message }}</div>
+      </div>
+    </div>
   </v-snackbar>
-  <v-app-bar scroll-threshold="0" v-bind="$attrs">
-     <v-app-bar-nav-icon 
-      @click.stop="$emit('toggle-drawer')"
+
+  <v-app-bar class="busgo-appbar" elevation="1">
+
+    <!-- MENU MOBILE -->
+    <v-app-bar-nav-icon
       v-if="!$vuetify.display.mdAndUp"
+      @click.stop="$emit('toggle-drawer')"
     />
-    <v-app-bar-title>
-  <div style="display: flex; align-items: center; gap: 0;">
-    <!--<v-icon size="40">mdi-bus</v-icon>  Icono sin margen inferior -->
-    <span style="font-size: 1.5rem; font-weight: bold; color: black;">
-      Bus
-    </span>
-    <span style="font-size: 1.5rem; font-weight: bold; color: orange;">
-      Go
-    </span>
-  </div>
-</v-app-bar-title>
-    <v-spacer></v-spacer>
-    <!-- Campanita de notificaciones -->
-    <!--<v-btn icon variant="text" class="mr-2" style="color: #2196F3; border: 2px solid #FFF;" @click="notifications.length ? openNoti() : ''">
-          <template v-if="countNoti">
 
-            <v-badge color="primary" :content="countNoti" overlap>
-              <v-icon size="x-large" style="color: #2196F3;" icon="mdi-bell-badge-outline"></v-icon>
-            </v-badge>
-          </template>
+    <!-- BRAND -->
+    <v-app-bar-title class="busgo-brand">
+      <span class="brand-bus">Bus</span>
+      <span class="brand-go">Go</span>
+    </v-app-bar-title>
 
-          <template v-else>
+    <v-spacer />
 
-            <v-icon size="x-large" style="color: #2196F3;" icon="mdi-bell-outline"></v-icon>
-          </template>
+    <!-- USER MENU -->
+    <v-menu
+      :max-width="mobile ? 280 : 320"
+      location="bottom end"
+      :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
+    >
 
-          <v-menu v-model="menuNoti" :close-on-content-click="false" offset-y max-height="300" min-width="350px" max-width="350px"
-            content-class="rounded-menu">
-            <template v-slot:activator="{ props }">
-              <div v-bind="props"></div>
-            </template>
+      <template v-slot:activator="{ props: menuProps }">
 
-            <v-list style="max-height: 300px; overflow-y: auto;" class="notification-list">
+        <!-- MOBILE -->
+        <div
+          v-if="mobile"
+          v-bind="menuProps"
+          class="user-chip-mobile"
+        >
+          <v-avatar size="36">
+            <v-img :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" />
+          </v-avatar>
 
-              <v-list-item v-for="(notification, index) in notifications" :key="index"
-                :class="{ 'notification-unread': notification.status === 0 }" class="notification-item" @click="handleItemClickNotif(notification)">
-                <v-row align="center" no-gutters>
+          <v-btn icon="mdi-dots-vertical" variant="text" />
+        </div>
 
-                  <v-col cols="auto" class="pr-1">
-                    <v-avatar size="45" class="notification-image">
-                      <v-img :src="`${this.$axios.defaults.baseURL}images/${notification.image}`" alt="Avatar"></v-img>
-                    </v-avatar>
-                  </v-col>
+        <!-- DESKTOP -->
+        <div
+          v-else
+          v-bind="menuProps"
+          class="user-chip"
+        >
+          <v-avatar size="36">
+            <v-img :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" />
+          </v-avatar>
 
+          <div class="user-info">
+            <div class="user-name">{{ name }}</div>
+            <div class="user-role">{{ role }}</div>
+          </div>
 
-                  <v-col style="min-width: 0;">
-
-                    <v-tooltip top>
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-list-item-title v-bind="attrs" v-on="on"
-                          :class="{ 'unread-title': notification.status === 0 }" class="text-truncate title-text">
-                          {{ notification.title }}
-                        </v-list-item-title>
-                      </template>
-                      <span>{{ notification.title }}</span>
-                    </v-tooltip>
-
-
-                    <v-tooltip top>
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-list-item-subtitle v-bind="attrs" v-on="on" class="text-truncate description-text">
-                          {{ notification.description }}
-                        </v-list-item-subtitle>
-                      </template>
-                      <span>{{ notification.description }}</span>
-                    </v-tooltip>
-                  </v-col>
-                </v-row>
-              </v-list-item>
-
-
-              <v-list-item v-if="hasMore" @click="getNotifications" class="load-more-item">
-                <v-btn variant="text" color="primary" block class="load-more-btn">
-                  Ver más
-                  <v-icon right>mdi-chevron-down</v-icon>
-                </v-btn>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-btn>-->
-    <!--<v-menu>
-      <template v-slot:activator="{ props }">
-
-        <v-list-item v-bind="props" variant="tonal" class="mr-4" lines="two" :title="this.name" :subtitle="this.role"
-          :style="{ color: '#000000' }">
-          <template v-slot:prepend>
-            <v-avatar class="mr-2">
-                    <v-img :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" alt="Avatar de la persona"></v-img>
-                  </v-avatar>      
-        </template>
-          <template v-slot:append>
-            <v-btn size="small" variant="text" icon="mdi-menu-down"></v-btn>
-          </template></v-list-item>
+          <v-icon size="18">mdi-chevron-down</v-icon>
+        </div>
 
       </template>
 
-      <v-list>
-        <v-list-item v-for="(item, i) in items" :key="i" @click="handleItemClick(item)">
+      <!-- MENU -->
+      <v-list density="compact" class="user-menu">
 
+        <v-list-item
+          v-for="(item, i) in items"
+          :key="i"
+          @click="handleItemClick(item)"
+          class="menu-item"
+        >
           <template v-slot:prepend>
-            <v-icon :icon="item.icon"></v-icon>
+            <v-icon :icon="item.icon" />
           </template>
 
-
-          <v-list-item-title> {{ item.title }}</v-list-item-title>
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
+
       </v-list>
-    </v-menu>-->
-     <v-menu 
-    :max-width="mobile ? '280' : undefined" 
-    :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
-    location="bottom end"
-  >
-    <template v-slot:activator="{ props: menuProps }">
-      <!-- Versión móvil con tooltip -->
-      <v-tooltip 
-        v-if="mobile" 
-        location="bottom"
-        content-class="custom-user-tooltip"
-      >
-        <template v-slot:activator="{ props: tooltipProps }">
-          <div v-bind="{...tooltipProps, ...menuProps}" class="mobile-avatar-wrapper">
-            <v-avatar class="mr-2" size="40">
-              <v-img 
-                :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" 
-                alt="Avatar"
-              />
-            </v-avatar>
-            <v-btn 
-              size="small" 
-              variant="text" 
-              icon="mdi-dots-vertical"
-              class="mobile-menu-btn"
-            />
-          </div>
-        </template>
-        <div class="tooltip-content">
-          <div class="text-subtitle-2">{{ name }}</div>
-          <div class="text-caption text-medium-emphasis">{{ role }}</div>
-        </div>
-      </v-tooltip>
+    </v-menu>
 
-      <!-- Versión desktop -->
-      <v-list-item
-        v-if="!mobile"
-        v-bind="menuProps"
-        variant="tonal"
-        class="user-menu-activator"
-        lines="two"
-        :title="name"
-        :subtitle="role"
-      >
-        <template v-slot:prepend>
-          <v-avatar class="mr-2">
-            <v-img 
-              :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" 
-              alt="Avatar"
-            />
-          </v-avatar>      
-        </template>
-        <template v-slot:append>
-          <v-btn 
-            size="small" 
-            variant="text" 
-            icon="mdi-menu-down"
-          />
-        </template>
-      </v-list-item>
-    </template>
-
-    <v-list density="compact" nav>
-      <v-list-item
-        v-for="(item, i) in items"
-        :key="i"
-        :value="item"
-        @click="handleItemClick(item)"
-      >
-        <template v-slot:prepend>
-          <v-icon :icon="item.icon"/>
-        </template>
-        <v-list-item-title>{{ item.title }}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
   </v-app-bar>
-  <v-dialog v-model="dialogChangePass" max-width="400px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar color="#1976D2">
-          <span class="text-subtitle-2 ml-4">Actualizar Contraseña</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-text-field :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'"
-                density="compact" placeholder="Contraseña actual" prepend-inner-icon="mdi-lock-outline" variant="underlined"
-                @click:append-inner="visible = !visible" v-model="editedItem.currentPassword"></v-text-field>
-              </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field :append-inner-icon="visible1 ? 'mdi-eye-off' : 'mdi-eye'" :type="visible1 ? 'text' : 'password'"
-                density="compact" placeholder="Contraseña nueva" prepend-inner-icon="mdi-lock-outline" variant="underlined"
-                @click:append-inner="visible1 = !visible1" v-model="editedItem.newPassword" :rules="[passwordRule]"></v-text-field>
-              </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field :append-inner-icon="visible2 ? 'mdi-eye-off' : 'mdi-eye'" :type="visible2 ? 'text' : 'password'"
-                density="compact" placeholder="Contraseña nueva" prepend-inner-icon="mdi-lock-outline" variant="underlined"
-                @click:append-inner="visible2 = !visible2" v-model="editedItem.newPassword1"></v-text-field>
-              </v-col>
-              <!-- Alerta de error si las contraseñas no coinciden -->
-              <v-alert v-if="editedItem.newPassword !== editedItem.newPassword1 && editedItem.newPassword1 !== ''" type="error" dense>
-                Las contraseñas no coinciden.
-              </v-alert>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="#DA7171" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn color="#1976D2" variant="flat" :loading="loading" @click="save" :disabled="editedItem.newPassword !== editedItem.newPassword1 || editedItem.newPassword === ''">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
+
+  <!-- DIALOG PASSWORD (sin cambios de lógica) -->
+  <v-dialog v-model="dialogChangePass" max-width="420px">
+    <v-card class="password-dialog">
+
+      <v-toolbar color="#0f172a">
+        <span class="text-subtitle-2 ml-4">Actualizar contraseña</span>
+      </v-toolbar>
+
+      <v-card-text>
+        <v-text-field
+          v-model="editedItem.currentPassword"
+          type="password"
+          label="Contraseña actual"
+          variant="outlined"
+        />
+
+        <v-text-field
+          v-model="editedItem.newPassword"
+          type="password"
+          label="Nueva contraseña"
+          variant="outlined"
+          :rules="[passwordRule]"
+        />
+
+        <v-text-field
+          v-model="editedItem.newPassword1"
+          type="password"
+          label="Repetir contraseña"
+          variant="outlined"
+        />
+
+        <v-alert
+          v-if="editedItem.newPassword !== editedItem.newPassword1 && editedItem.newPassword1 !== ''"
+          type="error"
+          variant="tonal"
+        >
+          Las contraseñas no coinciden
+        </v-alert>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="close">Cancelar</v-btn>
+        <v-btn
+          color="primary"
+          :loading="loading"
+          :disabled="editedItem.newPassword !== editedItem.newPassword1 || editedItem.newPassword === ''"
+          @click="save"
+        >
+          Guardar
+        </v-btn>
+      </v-card-actions>
+
+    </v-card>
   </v-dialog>
+
 </template>
 
 <script>
@@ -408,45 +316,84 @@ export default {
 }
 </script>
 <style scoped>
-/* Estilos para móvil */
-.mobile-avatar-wrapper {
+/* APP BAR */
+.busgo-appbar {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  color: white;
+}
+
+/* BRAND */
+.busgo-brand {
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+
+.brand-bus {
+  color: rgb(0, 0, 0);
+}
+
+.brand-go {
+  color: #f59e0b;
+}
+
+/* SNACKBAR */
+.busgo-snackbar {
+  border-radius: 12px;
+}
+
+/* USER CHIP DESKTOP */
+.user-chip {
   display: flex;
   align-items: center;
-  padding: 8px;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 14px;
   cursor: pointer;
+  transition: 0.2s;
+  background: rgba(255,255,255,0.06);
 }
 
-.mobile-menu-btn {
-  margin-left: 4px;
+.user-chip:hover {
+  background: rgba(255,255,255,0.1);
 }
 
-/* Estilos para desktop */
-.user-menu-activator {
-  max-width: 300px;
-}
-
-/* Estilos del tooltip */
-:deep(.custom-user-tooltip) {
-  opacity: 1 !important;
-  background: rgba(var(--v-theme-surface-variant), 0.9) !important;
-  color: rgba(var(--v-theme-on-surface-variant)) !important;
-  padding: 8px 12px !important;
-  border-radius: 4px !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-}
-
-.tooltip-content {
+/* USER INFO */
+.user-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  line-height: 1.1;
 }
 
-@media (max-width: 600px) {
-  .v-menu__content {
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-    left: 0 !important;
-    right: 0 !important;
-  }
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* MOBILE CHIP */
+.user-chip-mobile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* MENU */
+.user-menu {
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.menu-item {
+  border-radius: 10px;
+  margin: 2px 0;
+}
+
+.menu-item:hover {
+  background: rgba(59,130,246,0.08);
 }
 </style>
