@@ -190,46 +190,40 @@
               "
             >
               <!-- Negocio (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 34%; min-width: 0" class="text-left font-weight-bold">
                 Ruta
               </div>
 
               <!-- Nombre (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Origen
-              </div>
 
               <!-- Teléfono (10%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Destino
-              </div>
 
               <!-- Dirección (25%) -->
-              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Fecha
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Horario
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
                 Método
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
                 Pasajes
               </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
                 Asientos
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
                 Precio
               </div>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
                 Total
               </div>
 
@@ -255,54 +249,26 @@
                   class="d-flex align-center pa-2"
                   style="width: 100%; min-width: 0"
                 >
-                  <div style="width: 10%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.tripName }}</span>
+                  <div style="width: 34%; min-width: 0" class="text-truncate pr-2">
+                    <div class="font-weight-medium text-truncate">
+                      {{ slotProps.item.tripName }}
+                    </div>
+                    <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                      <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+                      <span class="text-truncate">Origen: {{ slotProps.item.tripOrigin }}</span>
+                      <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+                      <span class="text-truncate">Destino: {{ slotProps.item.tripDestination }}</span>
+                    </div>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        Ruta: {{ slotProps.item.tripName }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${
-                          slotProps.item.originImage
-                        }?t=${getCacheTimestamp()}`"
-                        class="icono-concavo"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.tripOrigin }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Origen: {{ slotProps.item.tripOrigin }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${
-                          slotProps.item.destinationImage
-                        }?t=${getCacheTimestamp()}`"
-                        class="icono-concavo"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{
-                      slotProps.item.tripDestination
-                    }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
+                        Ruta: {{ slotProps.item.tripName }}<br />
+                        Origen: {{ slotProps.item.tripOrigin }}<br />
                         Destino: {{ slotProps.item.tripDestination }}
                       </span>
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.date }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -311,7 +277,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.schedule }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -320,7 +286,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.method }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -329,7 +295,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.quantity }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -338,7 +304,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 5%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
                     <span>{{ slotProps.item.seats }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -347,7 +313,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                     <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -356,7 +322,7 @@
                     </v-tooltip>
                   </div>
 
-                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
+                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                     <span>{{ formatNumber(Number(slotProps.item.total)) }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -691,8 +657,12 @@
                             >
                               <template v-slot:item="{ props, item }">
                                 <v-list-item v-bind="props">
+                                  <template v-slot:prepend>
+                                    <v-icon :icon="getPromotionDiscountIcon(item.raw)"></v-icon>
+                                  </template>
                                   <v-list-item-subtitle>
-                                    <strong>Descuento:</strong> {{ item.raw.percentage }}%
+                                    <strong>Descuento:</strong>
+                                    {{ formatPromotionDiscount(item.raw) }}
                                   </v-list-item-subtitle>
                                 </v-list-item>
                               </template>
@@ -708,9 +678,9 @@
                             <v-chip
                               variant="outlined"
                               color="primary"
-                              prepend-icon="mdi-tag"
+                              :prepend-icon="getPromotionDiscountIcon(ticket)"
                             >
-                              {{ ticket.namePromotion }} ({{ ticket.percentage }}%)
+                              {{ ticket.namePromotion }} ({{ formatPromotionDiscount(ticket) }})
                             </v-chip>
                             <v-btn
                               @click="removePromotion(ticket)"
@@ -1475,11 +1445,15 @@ export default {
             this.getSelectedTripBasePrice()
         ) || 0;
       const cant = Math.max(0, Number(ticket.cant) || 0);
+      const discountType = this.getPromotionDiscountType(promotion);
       const percentage = Number(promotion?.percentage) || 0;
-      const discountPerUnit = (unitPrice * percentage) / 100;
+      const discountPerUnit =
+        discountType === "porcentaje" ? (unitPrice * percentage) / 100 : percentage;
       const discount = discountPerUnit * cant;
 
       return {
+        promotion_discount_type: discountType,
+        promotionDiscountType: discountType,
         promotion_base_price: unitPrice,
         promotionBasePrice: unitPrice,
         promotion_unit_discount: discountPerUnit,
@@ -1488,6 +1462,38 @@ export default {
         promotionDiscount: discount,
         percentage,
       };
+    },
+    normalizePromotions(promotions = []) {
+      return (Array.isArray(promotions) ? promotions : Object.values(promotions || {})).map(
+        (promotion) => ({
+          ...promotion,
+          discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
+        })
+      );
+    },
+    getPromotionDiscountType(promotion) {
+      return (
+        promotion?.discount_type ??
+        promotion?.discountType ??
+        promotion?.promotion_discount_type ??
+        promotion?.promotionDiscountType ??
+        promotion?.promotion_details?.discount_type ??
+        promotion?.promotion_details?.discountType ??
+        promotion?.promotionDetails?.discount_type ??
+        promotion?.promotionDetails?.discountType ??
+        "monto"
+      );
+    },
+    getPromotionDiscountIcon(promotion) {
+      return this.getPromotionDiscountType(promotion) === "porcentaje"
+        ? "mdi-percent"
+        : "mdi-cash-minus";
+    },
+    formatPromotionDiscount(promotion) {
+      const discountType = this.getPromotionDiscountType(promotion);
+      const value = Number(promotion?.percentage) || 0;
+      const formattedValue = value.toLocaleString("es-CL");
+      return discountType === "porcentaje" ? `${formattedValue}%` : `${formattedValue} CLP`;
     },
     getTicketTypePayableAmount(ticket) {
       const cant = Math.max(0, Number(ticket?.cant) || 0);
@@ -1740,7 +1746,7 @@ export default {
             formattedDate,
             null
           );
-          this.promotions = result.data?.promotions || [];
+          this.promotions = this.normalizePromotions(result.data?.promotions || []);
           this.tickettypes = result.data?.tickettypes || [];
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -2406,7 +2412,7 @@ export default {
             formattedDate,
             currentTripId
           );
-          this.promotions = result.data?.promotions || [];
+          this.promotions = this.normalizePromotions(result.data?.promotions || []);
           this.tickettypes = result.data?.tickettypes || [];
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -2684,11 +2690,14 @@ export default {
     },
     attachPromotionDetails(ticketRecord, promotion) {
       const promoData = this.getPromotionAdjustment(ticketRecord, promotion);
+      const discountType = this.getPromotionDiscountType(promotion);
       return {
         ...ticketRecord,
         promotion_id: promotion.id,
         namePromotion: promotion.name,
         percentage: promotion.percentage,
+        discount_type: discountType,
+        discountType,
         discount: promoData.promotionDiscount,
         promotion_base_price: promoData.promotion_base_price,
         promotionBasePrice: promoData.promotionBasePrice,
@@ -2696,10 +2705,13 @@ export default {
         promotionUnitDiscount: promoData.promotionUnitDiscount,
         promotion_discount: promoData.promotion_discount,
         promotionDiscount: promoData.promotionDiscount,
+        promotion_discount_type: discountType,
+        promotionDiscountType: discountType,
         promotion_details: {
           promotion_id: promotion.id,
           promotion_name: promotion.name,
           percentage: promotion.percentage,
+          discount_type: discountType,
           base_price: promoData.promotion_base_price,
           unit_discount: promoData.promotion_unit_discount,
           total_discount: promoData.promotionDiscount,
@@ -2708,6 +2720,7 @@ export default {
           promotionId: promotion.id,
           promotionName: promotion.name,
           percentage: promotion.percentage,
+          discountType,
           basePrice: promoData.promotion_base_price,
           unitDiscount: promoData.promotion_unit_discount,
           totalDiscount: promoData.promotionDiscount,
@@ -3200,3 +3213,6 @@ table.v-table > thead,
   display: none !important;
 }
 </style>
+
+
+

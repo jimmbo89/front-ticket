@@ -826,6 +826,7 @@ export default {
   border-radius: 8px;
   background: transparent;
 }
+
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;

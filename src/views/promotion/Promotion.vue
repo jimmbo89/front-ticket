@@ -298,7 +298,16 @@
               </v-col>
               <v-col cols="12" md="9" class="py-0">
                 <v-row class="align-center" no-gutters>
-                  <v-col cols="12" md="4" class="d-flex align-center justify-end pr-md-3">
+                  <v-col
+                    cols="12"
+                    md="4"
+                    class="d-flex align-center"
+                    :class="
+                      editedItem.discount_type === 'porcentaje'
+                        ? 'justify-start'
+                        : 'justify-end'
+                    "
+                  >
                     <div class="d-flex align-center compact-switch-line">
                       <v-switch
                         v-model="editedItem.discount_type"
