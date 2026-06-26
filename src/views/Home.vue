@@ -84,8 +84,18 @@
                 </div>
 
                 <div class="kpi-trend">
-                  <v-icon size="20" color="success">mdi-arrow-top-right</v-icon>
-                  <span class="kpi-trend-value">8.1%</span>
+                  <v-icon
+                    size="20"
+                    :style="{ color: getTrendHexColor(stat) }"
+                  >
+                    {{ getTrendIcon(stat.comparison) }}
+                  </v-icon>
+                  <span
+                    class="kpi-trend-value"
+                    :style="{ color: getTrendHexColor(stat) }"
+                  >
+                    {{ formatTrendPercent(stat.comparison?.changePercent) }}
+                  </span>
                   <span class="kpi-trend-text">vs. periodo anterior</span>
                 </div>
               </div>
@@ -434,6 +444,49 @@ export default {
       });
 
       return formattedValue;
+    },
+    getTrendDirection(comparison) {
+      if (!comparison) return "flat";
+
+      const changePercent = Number(comparison.changePercent) || 0;
+      if (changePercent > 0) return "up";
+      if (changePercent < 0) return "down";
+      return comparison.trend || "flat";
+    },
+    getTrendIcon(comparison) {
+      const direction = this.getTrendDirection(comparison);
+
+      if (direction === "down") return "mdi-arrow-bottom-right";
+      if (direction === "flat") return "mdi-minus";
+      return "mdi-arrow-top-right";
+    },
+    getTrendHexColor(stat) {
+      const direction = this.getTrendDirection(stat?.comparison);
+      const isIncidents = stat?.title === "Incidentes";
+
+      if (direction === "flat") return "#9E9E9E";
+
+      if (isIncidents) {
+        if (direction === "up") return "#F44336";
+        return "#4CAF50";
+      }
+
+      if (direction === "down") return "#F44336";
+      return "#4CAF50";
+    },
+    formatTrendPercent(changePercent) {
+      const value = Number(changePercent);
+
+      if (!Number.isFinite(value)) return "0%";
+
+      const absValue = Math.abs(value);
+      const formatted = Number.isInteger(absValue)
+        ? `${absValue}%`
+        : `${absValue.toFixed(1)}%`;
+
+      if (value > 0) return `+${formatted}`;
+      if (value < 0) return `-${formatted}`;
+      return formatted;
     },
     getTripBranchName(trip) {
       return (
