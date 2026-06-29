@@ -11,6 +11,7 @@ import { createApp } from "vue";
 import snotify from "vue3-snotify";
 import "vue3-snotify/style";
 import axios from './axios' // Importa la instancia configurada
+import DatePicker from "./components/DatePicker.vue";
 
 
 
@@ -21,6 +22,7 @@ const app = createApp(App);
 
 // Agregar axios a la instancia global de Vue
 app.config.globalProperties.$axios = axios
+app.component("DatePicker", DatePicker);
 
 app.use(snotify);
 

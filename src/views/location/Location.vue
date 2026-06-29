@@ -130,7 +130,7 @@
               "
             >
               <!-- Negocio (20%) -->
-              <div style="width: 50%; min-width: 0" class="text-left font-weight-bold">
+              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
                 Dirección
               </div>
 
@@ -151,6 +151,10 @@
 
               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Ciudad
+              </div>
+
+              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+                Estado
               </div>
 
               <!-- Acciones (25%) -->
@@ -176,7 +180,7 @@
                   style="width: 100%; min-width: 0"
                 >
                   <!-- Dirección con avatar -->
-                  <div class="d-flex align-center" style="width: 50%; min-width: 0">
+                  <div class="d-flex align-center" style="width: 40%; min-width: 0">
                     <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                       <v-img
                         :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
@@ -239,6 +243,28 @@
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
                         Ciudad: {{ slotProps.item.city }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <!-- Estado -->
+                  <div
+                    style="width: 10%; min-width: 0"
+                    class="d-flex align-center"
+                  >
+                    <v-chip
+                      :color="
+                        slotProps.item.active
+                          ? paleteColors.active
+                          : paleteColors.inactive
+                      "
+                      :text-color="paleteColors.white"
+                    >
+                      {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                    </v-chip>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
                       </span>
                     </v-tooltip>
                   </div>
@@ -345,6 +371,27 @@
                   variant="underlined"
                 ></v-text-field>
               </v-col>
+              <v-col cols="12" md="6" class="d-flex align-center">
+                <div class="d-flex align-center compact-switch-line">
+                  <v-switch
+                    v-model="editedItem.active"
+                    :true-value="true"
+                    :false-value="false"
+                    :color="switchColor"
+                    :base-color="switchColor"
+                    hide-details
+                    inset
+                    density="compact"
+                    class="custom-switch compact-inline-switch"
+                  />
+                  <span
+                    class="text-body-1 compact-switch-label"
+                    :style="{ color: switchColor }"
+                  >
+                    {{ editedItem.active ? "Activa" : "Inactiva" }}
+                  </span>
+                </div>
+              </v-col>
             </v-row>
             <v-row>
               <v-col cols="12" md="6">
@@ -437,11 +484,12 @@ export default {
     data: {},
     headers: [
       //{ title: 'Sucursal', value: 'branchName', width: '20%' },
-      { title: "Dirección", value: "address", width: "50%" },
+      { title: "Dirección", value: "address", width: "40%" },
       { title: "Longitud", value: "longitude", width: "10%" },
       { title: "Latitud", value: "latitude", width: "10%" },
       { title: "País", value: "country", width: "10%" },
       { title: "Ciudad", value: "city", width: "10%" },
+      { title: "Estado", value: "active", width: "10%" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
     editedItem: {
@@ -452,6 +500,7 @@ export default {
       city: "",
       image: "",
       address: "",
+      active: true,
     },
     originalItem: {
       id: "",
@@ -461,6 +510,7 @@ export default {
       city: "",
       image: "",
       address: "",
+      active: true,
     },
     defaultItem: {
       id: "",
@@ -470,6 +520,7 @@ export default {
       city: "",
       image: "",
       address: "",
+      active: true,
     },
     editedIndex: -1,
     search: "",
@@ -493,6 +544,9 @@ export default {
     },
     imgedit() {
       return this.imgMiniatura;
+    },
+    switchColor() {
+      return this.editedItem.active ? paleteColors.green : paleteColors.grey;
     },
   },
   mounted() {
@@ -526,7 +580,13 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.locations = result.data?.locations || [];
+          const rawLocations = Array.isArray(result.data?.locations)
+            ? result.data.locations
+            : Object.values(result.data?.locations || {});
+          this.locations = rawLocations.map((location) => ({
+            ...location,
+            active: location.active ?? true,
+          }));
           this.imageVersion += 1;
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -555,6 +615,7 @@ export default {
           "image",
           "country",
           "city",
+          "active",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -614,6 +675,7 @@ export default {
           "image",
           "country",
           "city",
+          "active",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
@@ -835,5 +897,29 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.compact-switch-line {
+  gap: 4px;
+}
+
+.compact-switch-label {
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.compact-inline-switch :deep(.v-selection-control) {
+  min-height: 0;
+  min-width: 0;
+}
+
+.compact-inline-switch :deep(.v-switch__track) {
+  transform: scale(0.68);
+  transform-origin: left center;
+}
+
+.compact-inline-switch :deep(.v-switch__thumb) {
+  transform: scale(0.68);
 }
 </style>

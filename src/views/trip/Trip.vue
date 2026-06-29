@@ -659,6 +659,325 @@
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1"
+                          ><strong>Paradas del viaje</strong></span
+                        >
+                        <div class="text-caption" style="opacity: 0.85">
+                          La última columna agrega o quita la asociación de la parada al
+                          viaje. La tabla muestra la información propia de la parada.
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
+
+                  <v-card-text>
+                    <v-data-table
+                      :headers="tripStopsHeaders"
+                      :items="tripStopRows"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                      hide-default-header
+                    >
+                      <template v-slot:top>
+                        <v-card
+                          flat
+                          color="blue-grey-lighten-5"
+                          class="mb-2 mx-1 rounded-lg"
+                          elevation="1"
+                          style="
+                            border: 1px solid #eceff1;
+                            height: 40px;
+                            min-height: 40px;
+                            display: flex;
+                            align-items: center;
+                          "
+                        >
+                          <v-card-text
+                            class="d-flex pa-2"
+                            style="
+                              width: 100%;
+                              min-width: 0;
+                              height: 100%;
+                              padding: 0 16px !important;
+                              display: flex;
+                              align-items: center;
+                            "
+                          >
+                            <div
+                              style="width: 24%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Parada
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Orden
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Distancia
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Minutos
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Subir
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Bajar
+                            </div>
+                            <div
+                              style="width: 9%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Estado
+                            </div>
+                            <div
+                              style="width: 12%; min-width: 0"
+                              class="d-flex justify-left font-weight-bold"
+                            >
+                              Asociar al viaje
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+                      <template v-slot:item="slotProps">
+                        <tr>
+                          <td colspan="100%" style="padding: 0; border: none">
+                            <v-card
+                              class="mb-2 mx-1 rounded-lg"
+                              elevation="1"
+                              density="comfortable"
+                              flat
+                              :style="{
+                                opacity: slotProps.item.included ? 1 : 0.55,
+                                border: slotProps.item.included
+                                  ? '1px solid #e5e7eb'
+                                  : '1px dashed #cbd5e1',
+                              }"
+                            >
+                              <v-card-text
+                                class="d-flex align-center pa-2"
+                                style="width: 100%; min-width: 0"
+                              >
+                                <div
+                                  class="d-flex align-center"
+                                  style="width: 24%; min-width: 0"
+                                >
+                                  <v-avatar
+                                    class="mr-3 icono-concavo"
+                                    color="grey-lighten-4"
+                                  >
+                                    <v-img
+                                      :src="getImageUrl(slotProps.item.locationImage)"
+                                      alt="image"
+                                      cover
+                                    ></v-img>
+                                  </v-avatar>
+                                  <div class="text-truncate">
+                                    <div class="font-weight-medium">
+                                      {{ slotProps.item.locationName }}
+                                    </div>
+                                    <div class="text-caption text-grey text-truncate">
+                                      {{ slotProps.item.locationCity }},
+                                      {{ slotProps.item.locationCountry }}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style="width: 11%; min-width: 0" class="px-1">
+                                  <v-text-field
+                                    v-model="slotProps.item.stop_order"
+                                    type="number"
+                                    min="1"
+                                    variant="underlined"
+                                    density="compact"
+                                    hide-details
+                                    @update:modelValue="syncTripStopTimes"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.distance_km }} km
+                                  </div>
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.minutes_from_origin }} min
+                                  </div>
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_board"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_alight"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 9%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.active"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 12%; min-width: 0"
+                                  class="d-flex justify-center align-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.included"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                  <span
+                                    class="ml-2 text-body-2 font-weight-medium text-no-wrap"
+                                    :style="{
+                                      color: slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey,
+                                    }"
+                                  >
+                                    {{
+                                      slotProps.item.included ? "Asociada" : "Sin asociar"
+                                    }}
+                                  </span>
+                                </div>
+                              </v-card-text>
+                            </v-card>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="#E7E9E9"
+                    variant="flat"
+                    @click="nextStep"
+                    :disabled="!tripStopRows.length"
+                  >
+                    Siguiente
+                  </v-btn>
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.3>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
                           ><strong>Relación de Trabajadores</strong></span
                         >
                       </v-col>
@@ -864,12 +1183,13 @@ export default {
     workers: [],
     branches: [],
     filteredWorkers: [],
+    tripStopRows: [],
     data: {},
     selectedWorker: "",
     route: "",
     branch_id: "",
     step: 1,
-    items: ["Datos Generales", "Asignar Trabajadores"],
+    items: ["Datos Generales", "Paradas", "Asignar Trabajadores"],
     dialogAssignedWorkers: false,
     headers: [
       { title: "Ruta", value: "name" },
@@ -889,6 +1209,16 @@ export default {
       { title: "Rol", value: "roleName", width: "20%" },
       { title: "Acciones", value: "actions", sortable: false, width: "20%" },
     ],
+    tripStopsHeaders: [
+      { title: "Parada", value: "locationName", width: "24%" },
+      { title: "Orden", value: "stop_order", width: "11%" },
+      { title: "Distancia", value: "distance_km", width: "11%" },
+      { title: "Minutos", value: "minutes_from_origin", width: "11%" },
+      { title: "Subir", value: "can_board", width: "11%" },
+      { title: "Bajar", value: "can_alight", width: "11%" },
+      { title: "Estado", value: "active", width: "9%" },
+      { title: "Asociar", value: "included", width: "12%" },
+    ],
 
     editedItem: {
       id: "",
@@ -902,6 +1232,7 @@ export default {
       end: "",
       price: "",
       workers: [],
+      tripStops: [],
     },
     originalItem: {
       id: "",
@@ -915,6 +1246,7 @@ export default {
       end: "",
       price: "",
       workers: [],
+      tripStops: [],
     },
     defaultItem: {
       id: "",
@@ -928,6 +1260,7 @@ export default {
       end: "",
       price: "",
       workers: [],
+      tripStops: [],
     },
     editedIndex: -1,
     search: "",
@@ -998,6 +1331,13 @@ export default {
           )
       );
     },
+    selectedRouteRecord() {
+      return (
+        (this.routes || []).find(
+          (route) => Number(route.id) === Number(this.editedItem.route_id)
+        ) || null
+      );
+    },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
@@ -1014,6 +1354,7 @@ export default {
     // Observar cambios en la fecha para resetear selección
     "editedItem.date"(newDate) {
       this.generateTimeSlots();
+      this.syncTripStopTimes();
     },
   },
   methods: {
@@ -1105,6 +1446,161 @@ export default {
         this.step--;
       }
     },
+    getTripBaseDateTime() {
+      const tripDate =
+        this.editedItem.date ||
+        this.dateFormatted ||
+        new Date().toISOString().split("T")[0];
+      const schedule = this.editedItem.schedule || "00:00";
+      return `${tripDate} ${schedule.length === 5 ? `${schedule}:00` : schedule}`;
+    },
+    formatTripStopDateTime(baseDateTime, minutesOffset = 0) {
+      const parsed = new Date(baseDateTime.replace(" ", "T"));
+      if (Number.isNaN(parsed.getTime())) {
+        return baseDateTime;
+      }
+
+      const adjusted = new Date(parsed.getTime() + Number(minutesOffset || 0) * 60000);
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${adjusted.getFullYear()}-${pad(adjusted.getMonth() + 1)}-${pad(
+        adjusted.getDate()
+      )} ${pad(adjusted.getHours())}:${pad(adjusted.getMinutes())}:00`;
+    },
+    buildTripStopRows(route = null, tripStops = [], forceIncludeAll = false) {
+      const selectedRoute = route || this.selectedRouteRecord;
+      const routeStops = Array.isArray(selectedRoute?.routeStops)
+        ? selectedRoute.routeStops
+        : [];
+      const stopMap = new Map(
+        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
+          Number(stop.route_stop_id),
+          stop,
+        ])
+      );
+      const baseDateTime = this.getTripBaseDateTime();
+
+      return routeStops.map((routeStop) => {
+        const existingStop = stopMap.get(Number(routeStop.id));
+        const included = forceIncludeAll ? true : !!existingStop;
+        return {
+          id: existingStop?.id || "",
+          route_stop_id: routeStop.id,
+          location_id: routeStop.location_id || routeStop.locationId || "",
+          companyName: routeStop.companyName || "",
+          routeName: routeStop.routeName || "",
+          stop_order: routeStop.stop_order ?? routeStop.stopOrder ?? 1,
+          distance_km: routeStop.distance_km ?? routeStop.distanceKm ?? 0,
+          minutes_from_origin:
+            routeStop.minutes_from_origin ?? routeStop.minutesFromOrigin ?? 0,
+          arrival_time:
+            existingStop?.arrival_time ||
+            this.formatTripStopDateTime(baseDateTime, routeStop.minutes_from_origin || 0),
+          departure_time:
+            existingStop?.departure_time ||
+            this.formatTripStopDateTime(
+              baseDateTime,
+              (routeStop.minutes_from_origin || 0) + 5
+            ),
+          can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
+          can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
+          active: existingStop?.active ?? routeStop.active ?? true,
+          source_type: existingStop?.source_type || "auto",
+          included,
+          locationName: routeStop.locationName || routeStop.address || "",
+          locationCity: routeStop.locationCity || "",
+          locationCountry: routeStop.locationCountry || "",
+          locationImage:
+            routeStop.image || routeStop.locationImage || "locations/default.jpg",
+        };
+      });
+    },
+    syncTripStopsFromRoute(forceIncludeAll = false) {
+      const route = this.selectedRouteRecord;
+      if (!route) {
+        this.tripStopRows = [];
+        return;
+      }
+
+      const tripStops = Array.isArray(this.editedItem.tripStops)
+        ? this.editedItem.tripStops
+        : [];
+      const shouldIncludeAll =
+        forceIncludeAll ||
+        this.editedIndex === -1 ||
+        Number(this.originalItem.route_id) !== Number(this.editedItem.route_id);
+
+      this.tripStopRows = this.buildTripStopRows(route, tripStops, shouldIncludeAll);
+    },
+    syncTripStopTimes() {
+      if (!Array.isArray(this.tripStopRows) || this.tripStopRows.length === 0) {
+        return;
+      }
+
+      const baseDateTime = this.getTripBaseDateTime();
+      this.tripStopRows = this.tripStopRows.map((row) => {
+        if (!row.included) {
+          return row;
+        }
+
+        const routeStop = this.selectedRouteRecord?.routeStops?.find(
+          (item) => Number(item.id) === Number(row.route_stop_id)
+        );
+        const minutesOffset =
+          row.minutes_from_origin !== undefined && row.minutes_from_origin !== null
+            ? Number(row.minutes_from_origin)
+            : routeStop?.minutes_from_origin || 0;
+
+        return {
+          ...row,
+          arrival_time:
+            row.source_type === "manual"
+              ? row.arrival_time
+              : this.formatTripStopDateTime(baseDateTime, minutesOffset),
+          departure_time:
+            row.source_type === "manual"
+              ? row.departure_time
+              : this.formatTripStopDateTime(baseDateTime, minutesOffset + 5),
+        };
+      });
+    },
+    normalizeTripStopsPayload(rows = []) {
+      return (Array.isArray(rows) ? rows : [])
+        .filter((row) => row.included)
+        .map((row) => {
+          const payload = {
+            route_stop_id: Number(row.route_stop_id),
+            stop_order: Number(row.stop_order) || 1,
+            arrival_time: row.arrival_time,
+            departure_time: row.departure_time,
+            can_board: !!row.can_board,
+            can_alight: !!row.can_alight,
+            active: row.active ?? true,
+            source_type: row.source_type || "auto",
+          };
+
+          if (row.id) {
+            payload.id = row.id;
+          }
+
+          return payload;
+        })
+        .sort((a, b) => a.route_stop_id - b.route_stop_id);
+    },
+    areTripStopsDifferent(originalStops, editedStops) {
+      const normalizeForCompare = (rows = []) =>
+        this.normalizeTripStopsPayload(rows || []).map(
+          ({ arrival_time, departure_time, ...rest }) => rest
+        );
+
+      return !_.isEqual(
+        normalizeForCompare(originalStops),
+        normalizeForCompare(editedStops)
+      );
+    },
+    onTripStopIncludedChange() {
+      this.syncTripStopTimes();
+      this.$forceUpdate();
+    },
     async showBranches() {
       try {
         const result = await handleRequest({
@@ -1142,9 +1638,7 @@ export default {
     },
     updateStimated() {
       this.estimated = null;
-      const matchedRoute = this.routes.find(
-        (route) => route.id === this.editedItem.route_id
-      );
+      const matchedRoute = this.selectedRouteRecord;
       // Si se encuentra el objeto, asignamos su propiedad 'estimated' a this.estimated
       this.estimated = matchedRoute ? matchedRoute.estimated : null;
       this.editedItem.arrival = null;
@@ -1152,6 +1646,7 @@ export default {
       if (this.editedItem.schedule) {
         this.updateArrival();
       }
+      this.syncTripStopsFromRoute();
     },
     updateArrival() {
       // Validación mejorada
@@ -1189,6 +1684,7 @@ export default {
 
         this.editedItem.arrival = formattedArrival;
         console.log("Hora de llegada calculada:", this.editedItem.arrival);
+        this.syncTripStopTimes();
       } catch (error) {
         console.error("Error calculando hora de llegada:", error);
         this.editedItem.arrival = null;
@@ -1212,6 +1708,7 @@ export default {
       this.input = val;
       this.editedItem.date = this.dateFormatted;
       this.menu = false;
+      this.syncTripStopTimes();
     },
     updateDateSearch(val) {
       this.input2 = val;
@@ -1224,6 +1721,7 @@ export default {
       this.step = 1;
       this.data = {};
       this.filteredWorkers = [];
+      this.tripStopRows = [];
       this.data.branch_id = this.branch_id;
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem);
@@ -1241,6 +1739,7 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
+          this.syncTripStopsFromRoute(true);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];
@@ -1266,6 +1765,7 @@ export default {
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
+      this.tripStopRows = [];
     },
     async showAssiegnedWorker() {
       this.selectedWorker = null;
@@ -1410,6 +1910,7 @@ export default {
           "end",
           "price",
           "workers",
+          "tripStops",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -1421,6 +1922,8 @@ export default {
           .reduce((obj, key) => {
             if (key === "workers") {
               obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTripStopsPayload(this.tripStopRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1470,18 +1973,26 @@ export default {
           "end",
           "price",
           "workers",
+          "tripStops",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
             (key) =>
               fieldsToUpdate.includes(key) &&
               (key !== "workers"
-                ? this.editedItem[key] !== this.originalItem[key]
+                ? key !== "tripStops"
+                  ? this.editedItem[key] !== this.originalItem[key]
+                  : this.areTripStopsDifferent(
+                      this.originalItem.tripStops,
+                      this.tripStopRows
+                    )
                 : this.areWorkersDifferent(this.originalItem[key], this.editedItem[key])) // Compara el array people
           )
           .reduce((obj, key) => {
             if (key === "workers") {
               obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTripStopsPayload(this.tripStopRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1542,10 +2053,9 @@ export default {
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
 
-          const matchedRoute = this.routes.find(
-            (route) => route.id === this.editedItem.route_id
-          );
+          const matchedRoute = this.selectedRouteRecord;
           this.estimated = matchedRoute ? matchedRoute.estimated : null;
+          this.syncTripStopsFromRoute(false);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];

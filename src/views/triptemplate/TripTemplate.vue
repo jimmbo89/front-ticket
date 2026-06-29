@@ -1,17 +1,25 @@
 <template>
-    <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-        :multi-line="true" vertical v-model="snackbar">
-        <v-row>
-            <v-col md="2">
-                <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-            </v-col>
-            <v-col md="10">
-                <h4>{{ sb_title }}</h4>
-                {{ sb_message }}
-            </v-col>
-        </v-row>
-    </v-snackbar>
-      <v-card class="d-flex align-center pa-3" elevation="0">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
+    <v-row>
+      <v-col md="2">
+        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+      </v-col>
+      <v-col md="10">
+        <h4>{{ sb_title }}</h4>
+        {{ sb_message }}
+      </v-col>
+    </v-row>
+  </v-snackbar>
+  <v-card class="d-flex align-center pa-3" elevation="0">
     <!-- Icono 
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-map-marker-path</v-icon>
@@ -26,301 +34,385 @@
     <!-- Botones -->
     <v-spacer></v-spacer>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      class="text-subtitle-1 ml-12"
+      :color="paleteColors.primary"
+      variant="tonal"
+      elevation="2"
+      prepend-icon="mdi-plus-circle"
+      @click="showAdd()"
+    >
       Agregar Plantilla de Viaje
     </v-btn>
   </v-card>
   <!--<v-container style="min-width: 100%;">-->
-   <v-card flat>
-  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-    <!-- Título -->
-    <div class="text-body-1 font-weight-bold">Listado de plantillas de viajes</div>
+  <v-card flat>
+    <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+    <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
+      <!-- Título -->
+      <div class="text-body-1 font-weight-bold">Listado de plantillas de viajes</div>
 
-    <!-- Spacer (solo visible en md+) -->
-    <v-spacer class="d-none d-md-block"></v-spacer>
+      <!-- Spacer (solo visible en md+) -->
+      <v-spacer class="d-none d-md-block"></v-spacer>
 
-    <!-- Grupo: Autocomplete + Botón buscar -->
-   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
+      <!-- Grupo: Autocomplete + Botón buscar -->
+      <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
+        <!-- Autocomplete de sucursales (mismo estilo que el original) -->
+        <v-autocomplete
+          :no-data-text="'No hay datos disponibles'"
+          v-model="branch_id"
+          v-if="mostrarFila"
+          :items="branches"
+          label="Seleccione una Sucursal"
+          prepend-inner-icon="mdi-store"
+          item-title="name"
+          class="mr-1"
+          item-value="id"
+          variant="solo-filled"
+          hide-details
+          single-line
+          flat
+          :rules="selectRules"
+          density="compact"
+          @update:modelValue="initialize"
+        >
+          <template v-slot:item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+            >
+            </v-list-item>
+          </template>
+        </v-autocomplete>
 
-          <!-- Botón de búsqueda (actualizar datos) 
+        <!-- Botón de búsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>-->
-        </div>
+      </div>
 
-    <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 300px">
-      <v-text-field v-model="search" density="compact" label="Buscar plantilla de viaje" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </div>
-  </v-card-title>
+      <!-- Campo de búsqueda global -->
+      <div class="flex-grow-1" style="max-width: 300px">
+        <v-text-field
+          v-model="search"
+          density="compact"
+          label="Buscar plantilla de viaje"
+          prepend-inner-icon="mdi-magnify"
+          variant="solo-filled"
+          hide-details
+          single-line
+          flat
+        ></v-text-field>
+      </div>
+    </v-card-title>
 
-
-  <!-- Tabla de viajes con filas personalizadas -->
-  <v-data-table :headers="headers" :items="templates" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
-  <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    <!-- Tabla de viajes con filas personalizadas -->
+    <v-data-table
+      :headers="headers"
+      :items="templates"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      :hide-default-header="true"
+      class="elevation-1"
+      style="max-height: 68vh; overflow-y: auto; background: transparent"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Ruta
-              </div>
+      <template v-slot:top>
+        <!-- Tarjeta de encabezado con alto fijo -->
+        <v-card
+          flat
+          color="blue-grey-lighten-5"
+          class="mb-2 mx-1 rounded-lg"
+          elevation="1"
+          style="
+            border: 1px solid #eceff1;
+            height: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+          "
+        >
+          <v-card-text
+            class="d-flex pa-2"
+            style="
+              width: 100%;
+              min-width: 0;
+              height: 100%;
+              padding: 0 16px !important;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <!-- Negocio (20%) -->
+            <div style="width: 34%; min-width: 0" class="text-left font-weight-bold">
+              Ruta
+            </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Origen
-              </div>
+            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
+              Vehículo
+            </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Destino
-              </div>
+            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
+              Trabajadores
+            </div>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Vehículo
-              </div>
+            <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+              Horario
+            </div>
 
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Trabajadores
-              </div>
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+              Duración
+            </div>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Horario
-              </div>
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
+              Precio
+            </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Duración
-              </div>
+            <div style="width: 9%; min-width: 0" class="text-left font-weight-bold">
+              Frecuencia
+            </div>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Precio
-              </div>
+            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+              Días
+            </div>
 
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Frecuencia
-              </div>
+            <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+              Estado
+            </div>
 
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Días
-              </div>
-
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Estado
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 6%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
-    <!-- Fila personalizada -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              <!-- Ruta -->
-              <div style="width: 10%; min-width: 0" class="text-truncate">
-                <span>{{ slotProps.item.name }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Ruta: {{ slotProps.item.name }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Origen con avatar -->
-              <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.origin }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Origen: {{ slotProps.item.origin }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Destino con avatar -->
-              <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.destination }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Destino: {{ slotProps.item.destination }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Vehículo con avatar -->
-              <div class="d-flex align-center" style="width: 10%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <div class="d-flex flex-column text-truncate">
-                  <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
-                  <span class="text-caption text-grey text-truncate">
-                    {{ getVehicleInternalNumber(slotProps.item) }}
-                  </span>
+            <!-- Acciones (25%) -->
+            <div
+              style="width: 6%; min-width: 0"
+              class="d-flex justify-left font-weight-bold"
+            ></div>
+          </v-card-text>
+        </v-card>
+      </template>
+      <!-- Fila personalizada -->
+      <template v-slot:item="slotProps">
+        <tr>
+          <td colspan="100%" style="padding: 0; border: none">
+            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
+              <v-card-text
+                class="d-flex align-center pa-2"
+                style="width: 100%; min-width: 0"
+              >
+                <!-- Ruta -->
+                <div style="width: 34%; min-width: 0" class="text-truncate pr-2">
+                  <div class="font-weight-medium text-truncate">
+                    {{ slotProps.item.name }}
+                  </div>
+                  <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                    <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+                    <span class="text-truncate">Origen: {{ slotProps.item.origin }}</span>
+                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+                    <span class="text-truncate">Destino: {{ slotProps.item.destination }}</span>
+                  </div>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Ruta: {{ slotProps.item.name }}<br />
+                      Origen: {{ slotProps.item.origin }}<br />
+                      Destino: {{ slotProps.item.destination }}
+                    </span>
+                  </v-tooltip>
                 </div>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Vehículo: {{ slotProps.item.vehicleName }}<br>
-                    Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
-                  </span>
-                </v-tooltip>
-              </div>
 
-              <!-- trabajadores -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                 <div class="avatar-row">
-                                    <v-tooltip v-for="person in slotProps.item.workers" :key="person.id" bottom>
-                                        <template v-slot:activator="{ props }">
-                                            <v-avatar class="avatar-item hover-expand" size="32" elevation="3"
-                                                v-bind="props">
-                                                <v-img
-                                                    :src="`${this.$axios.defaults.baseURL}images/${person.workerImage}?t=${getCacheTimestamp()}`"
-                                                    alt="image" />
-                                            </v-avatar>
-                                        </template>
-                                        <span>{{ person.workerName }}</span>
-                                        <v-spacer></v-spacer>
-                                        <span class="text-secondary">{{ person.roleName }}</span>
-                                    </v-tooltip>
-                                </div>
-              </div>
+                <!-- Vehículo con avatar -->
+                <div class="d-flex align-center" style="width: 11%; min-width: 0">
+                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${
+                        slotProps.item.vehicleImage
+                      }?t=${getCacheTimestamp()}`"
+                      class="icono-concavo"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                  <div class="d-flex flex-column text-truncate">
+                    <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                    <span class="text-caption text-grey text-truncate">
+                      {{ getVehicleInternalNumber(slotProps.item) }}
+                    </span>
+                  </div>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Vehículo: {{ slotProps.item.vehicleName }}<br />
+                      Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.schedule }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Horario: {{ slotProps.item.schedule }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- trabajadores -->
+                <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                  <div class="avatar-row">
+                    <v-tooltip
+                      v-for="person in slotProps.item.workers"
+                      :key="person.id"
+                      bottom
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-avatar
+                          class="avatar-item hover-expand"
+                          size="32"
+                          elevation="3"
+                          v-bind="props"
+                        >
+                          <v-img
+                            :src="`${this.$axios.defaults.baseURL}images/${
+                              person.workerImage
+                            }?t=${getCacheTimestamp()}`"
+                            alt="image"
+                          />
+                        </v-avatar>
+                      </template>
+                      <span>{{ person.workerName }}</span>
+                      <v-spacer></v-spacer>
+                      <span class="text-secondary">{{ person.roleName }}</span>
+                    </v-tooltip>
+                  </div>
+                </div>
 
-              <!-- Horario -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.duration }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Duración (Minutos): {{ slotProps.item.duration }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <div style="width: 9%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.schedule }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Horario: {{ slotProps.item.schedule }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Precio -->
-              <div style="width: 5%; min-width: 0" class="text-truncate text-left">
-                <span>{{ formatNumber(slotProps.item.price) }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Precio: {{ formatNumber(slotProps.item.price) }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Horario -->
+                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ slotProps.item.duration }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Duración (Minutos): {{ slotProps.item.duration }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- frecuencia -->
-              <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-              <div class="text-truncate text-center" v-if="slotProps.item.recurrence_pattern">
-                                <v-icon small class="me-1" :color="getRecurrenceColor(slotProps.item.recurrence_pattern)">{{ getRecurrenceIcon(slotProps.item.recurrence_pattern) }}</v-icon>
-                                <span >{{ translateRecurrence(slotProps.item.recurrence_pattern) }}</span>
-                            </div>
-                            <span v-else>—</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Frecuencia: {{ translateRecurrence(slotProps.item.recurrence_pattern) }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <!-- Precio -->
+                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                  <span>{{ formatNumber(slotProps.item.price) }}</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Precio: {{ formatNumber(slotProps.item.price) }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <!-- Dias -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center">
-              <div v-if="slotProps.item.days_of_week" class="d-flex">
-                                <v-tooltip location="bottom">
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <div v-bind="activatorProps" class="d-flex flex-wrap gap-1">
-                                    <v-avatar
-                                        v-for="day in 7"
-                                        :key="day"
-                                        size="24"
-                                        :color="getDaysArray(slotProps.item.days_of_week).includes(day - 1) ? 'primary' : 'grey-lighten-4'"
-                                        class="text-caption"
-                                    >
-                                        {{ ['D', 'L', 'M', 'X', 'J', 'V', 'S'][day - 1] }}
-                                    </v-avatar>
-                                    </div>
-                                </template>
-                                <span>{{ formatFullDayNames(getDaysArray(slotProps.item.days_of_week)) }}</span>
-                                </v-tooltip>
-                            </div>
-                            <span v-else>-</span>
-              </div>
+                <!-- frecuencia -->
+                <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                  <div
+                    class="text-truncate text-center"
+                    v-if="slotProps.item.recurrence_pattern"
+                  >
+                    <v-icon
+                      small
+                      class="me-1"
+                      :color="getRecurrenceColor(slotProps.item.recurrence_pattern)"
+                      >{{ getRecurrenceIcon(slotProps.item.recurrence_pattern) }}</v-icon
+                    >
+                    <span>{{
+                      translateRecurrence(slotProps.item.recurrence_pattern)
+                    }}</span>
+                  </div>
+                  <span v-else>-</span>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Frecuencia:
+                      {{ translateRecurrence(slotProps.item.recurrence_pattern) }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-center">
-                
-                <v-chip
-                                            :color="slotProps.item.active ? paleteColors.active : paleteColors.inactive"
-                                            :text-color="paleteColors.white">
-                                            {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                                        </v-chip>
-                                        <v-tooltip activator="parent" location="bottom" max-width="350px">
-                                            <span style="white-space: normal; word-break: break-word">
-                                                Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                                            </span>
-                                        </v-tooltip>
-              </div>
+                <!-- Dias -->
+                <div style="width: 10%; min-width: 0" class="text-truncate text-center">
+                  <div v-if="slotProps.item.days_of_week" class="d-flex">
+                    <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props: activatorProps }">
+                        <div v-bind="activatorProps" class="d-flex flex-wrap gap-1">
+                          <v-avatar
+                            v-for="day in 7"
+                            :key="day"
+                            size="24"
+                            :color="
+                              getDaysArray(slotProps.item.days_of_week).includes(day - 1)
+                                ? 'primary'
+                                : 'grey-lighten-4'
+                            "
+                            class="text-caption"
+                          >
+                            {{ ["D", "L", "M", "X", "J", "V", "S"][day - 1] }}
+                          </v-avatar>
+                        </div>
+                      </template>
+                      <span>{{
+                        formatFullDayNames(getDaysArray(slotProps.item.days_of_week))
+                      }}</span>
+                    </v-tooltip>
+                  </div>
+                  <span v-else>-</span>
+                </div>
 
-              <!-- Acciones -->
-              <div class="d-flex gap-1" style="width: 6%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                  title="Editar plantilla deViaje">
-                  <v-icon size="20">mdi-pencil</v-icon>
-                </v-btn>
+                <div style="width: 6%; min-width: 0" class="text-truncate text-center">
+                  <v-chip
+                    :color="
+                      slotProps.item.active ? paleteColors.active : paleteColors.inactive
+                    "
+                    :text-color="paleteColors.white"
+                    size="small"
+                  >
+                    {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                  </v-chip>
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                    </span>
+                  </v-tooltip>
+                </div>
 
-                <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                  title="Eliminar plantilla de  Viaje">
-                  <v-icon size="20">mdi-delete</v-icon>
-                </v-btn>
-              </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-</v-card>
+                <!-- Acciones -->
+                <div
+                  class="d-flex gap-1"
+                  style="width: 5%; justify-content: flex-end; flex-wrap: nowrap"
+                >
+                  <v-btn
+                    size="35"
+                    icon
+                    variant="outlined"
+                    :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    class="flex-shrink-0 mr-1"
+                    title="Editar plantilla deViaje"
+                  >
+                    <v-icon size="20">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="35"
+                    icon
+                    variant="outlined"
+                    :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    class="flex-shrink-0"
+                    title="Eliminar plantilla de  Viaje"
+                  >
+                    <v-icon size="20">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+  </v-card>
   <!--</v-container>
     <v-container style="min-width: 100%">
         <v-card elevation="6" class="mx-2">
@@ -462,7 +554,7 @@
                                 <v-icon small class="me-1" :color="getRecurrenceColor(item.recurrence_pattern)">{{ getRecurrenceIcon(item.recurrence_pattern) }}</v-icon>
                                 <span >{{ translateRecurrence(item.recurrence_pattern) }}</span>
                             </div>
-                            <span v-else>—</span>
+                            <span v-else>-</span>
                             </template>
                             <template v-slot:item.days_of_week="{ item }">
                             <div v-if="item.days_of_week" class="d-flex">
@@ -504,194 +596,251 @@
             </v-card-text>
         </v-card>
     </v-container>-->
-    <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
-        <v-card style="display: flex; flex-direction: column; min-height: 100vh;">
-            <v-card-text style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <v-form v-model="valid" enctype="multipart/form-data"
-                    style="flex: 1; display: flex; flex-direction: column;">
-                    <v-stepper elevation="6" bg-color="" v-model="step" :items="items" hide-actions
-                        style="max-height: 100vh; min-height: 95vh; overflow-y: auto">
-                        <template v-slot:item.1>
-                            <div style="flex: 1; overflow-y: auto; padding: 16px;">
-                                <v-row style="margin-top: 5px">
-                                    <v-col cols="12" md="12">
-                                        <v-autocomplete :no-data-text="'No hay datos disponibles'"
-                                            v-model="editedItem.route_id" :items="routes" label="Ruta"
-                                            prepend-icon="mdi-road" item-title="name" item-value="id"
-                                            variant="underlined" :rules="selectRules" density="compact"
-                                            @update:model-value="updateStimated">
-                                            <template v-slot:item="{ props, item }">
-                                                <v-card class="mx-1 my-2" elevation="2">
-                                                    <v-list-item v-bind="props">
-                                                            <v-row align="center" no-gutters>
-                                                                <!-- Columna 1: Origen -->
-                                                                <v-col cols="12" md="4" class="d-flex align-center">
-                                                                    <v-avatar>
-                                                                        <v-img
-                                                                            :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
-                                                                            max-width="40" />
-                                                                    </v-avatar>
-                                                                    <div class="ml-2">
-                                                                        <div class="text-caption text-grey">
-                                                                            <v-icon small
-                                                                                class="mr-1">mdi-map-marker</v-icon>
-                                                                            Origen
-                                                                        </div>
-                                                                        <v-tooltip location="top">
-                                                                            <template
-                                                                                v-slot:activator="{ props: tooltipProps }">
-                                                                                <div v-bind="tooltipProps"
-                                                                                    class="text-truncate"
-                                                                                    style="max-width: 100%">
-                                                                                    {{ item.raw.originAddress }}
-                                                                                </div>
-                                                                            </template>
-                                                                            <span>{{ item.raw.originAddress }}</span>
-                                                                            <!-- Texto completo en el tooltip -->
-                                                                        </v-tooltip>
-                                                                    </div>
-                                                                </v-col>
+  <v-dialog
+    v-model="dialog"
+    fullscreen
+    transition="dialog-bottom-transition"
+    :no-click-animation="true"
+  >
+    <v-card style="display: flex; flex-direction: column; min-height: 100vh">
+      <v-card-text
+        style="flex: 1; display: flex; flex-direction: column; overflow: hidden"
+      >
+        <v-form
+          v-model="valid"
+          enctype="multipart/form-data"
+          style="flex: 1; display: flex; flex-direction: column"
+        >
+          <v-stepper
+            elevation="6"
+            bg-color=""
+            v-model="step"
+            :items="items"
+            hide-actions
+            style="max-height: 100vh; min-height: 95vh; overflow-y: auto"
+          >
+            <template v-slot:item.1>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-row style="margin-top: 5px">
+                  <v-col cols="12" md="12">
+                    <v-autocomplete
+                      :no-data-text="'No hay datos disponibles'"
+                      v-model="editedItem.route_id"
+                      :items="routes"
+                      label="Ruta"
+                      prepend-icon="mdi-road"
+                      item-title="name"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                      @update:model-value="updateStimated"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-card class="mx-1 my-2" elevation="2">
+                          <v-list-item v-bind="props">
+                            <v-row align="center" no-gutters>
+                              <!-- Columna 1: Origen -->
+                              <v-col cols="12" md="4" class="d-flex align-center">
+                                <v-avatar>
+                                  <v-img
+                                    :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
+                                    max-width="40"
+                                  />
+                                </v-avatar>
+                                <div class="ml-2">
+                                  <div class="text-caption text-grey">
+                                    <v-icon small class="mr-1">mdi-map-marker</v-icon>
+                                    Origen
+                                  </div>
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props: tooltipProps }">
+                                      <div
+                                        v-bind="tooltipProps"
+                                        class="text-truncate"
+                                        style="max-width: 100%"
+                                      >
+                                        {{ item.raw.originAddress }}
+                                      </div>
+                                    </template>
+                                    <span>{{ item.raw.originAddress }}</span>
+                                    <!-- Texto completo en el tooltip -->
+                                  </v-tooltip>
+                                </div>
+                              </v-col>
 
-                                                                <!-- Columna 2: Destino -->
-                                                                <v-col cols="12" md="4" class="d-flex align-center">
-                                                                    <v-avatar>
-                                                                        <v-img
-                                                                            :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
-                                                                            max-width="40" />
-                                                                    </v-avatar>
-                                                                    <div class="ml-2">
-                                                                        <div class="text-caption text-grey">
-                                                                            <v-icon small
-                                                                                class="mr-1">mdi-map-marker-check</v-icon>
-                                                                            Destino
-                                                                        </div>
-                                                                        <v-tooltip location="top">
-                                                                            <template
-                                                                                v-slot:activator="{ props: tooltipProps }">
-                                                                                <div v-bind="tooltipProps"
-                                                                                    class="text-truncate"
-                                                                                    style="max-width: 100%">
-                                                                                    {{ item.raw.destinationAddress }}
-                                                                                </div>
-                                                                            </template>
-                                                                            <span>{{ item.raw.destinationAddress
-                                                                                }}</span>
-                                                                            <!-- Texto completo en el tooltip -->
-                                                                        </v-tooltip>
-                                                                    </div>
-                                                                </v-col>
-                                                            </v-row>
-                                                    </v-list-item>
-                                                </v-card>
-                                            </template>
-                                        </v-autocomplete>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <v-autocomplete :no-data-text="'No hay datos disponibles'"
-                                            v-model="editedItem.vehicle_id" :items="vehicles" label="Vehículo"
-                                            prepend-icon="mdi-car-side" item-title="vehicleName" item-value="id"
-                                            variant="underlined" :rules="selectRules" density="compact"
-                                            @update:model-value="filterWorkers">
-                                            <template v-slot:item="{ props, item }">
-                                                <v-list-item v-bind="props"
-                                                    :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.vehicleImage}`"
-                                                    :title="item.raw.vehicleName">
-                                                    <v-list-item-subtitle class="d-flex flex-column">
-                                                        <div>Marca: {{ item.raw.brand }}</div>
-                                                        <div>Asientos: {{ item.raw.seats }}</div>
-                                                        <div>Número interno: {{ getVehicleInternalNumber(item.raw) }}</div>
-                                                    </v-list-item-subtitle>
-                                                </v-list-item>
-                                            </template>
-                                        </v-autocomplete>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <v-select
-                                        v-model="editedItem.recurrence_pattern"
-                                        :items="frequencyOptions"
-                                        item-title="text"
-                                        item-value="value"
-                                        label="Frecuencia"
-                                        variant="underlined"
-                                        :rules="selectRules"
-                                        density="compact"
-                                        >
-                                        <template v-slot:item="{ props, item }">
-                                            <v-list-item
-                                            v-bind="props"
-                                            :prepend-icon="getRecurrenceIcon(item.raw.value)"
-                                            :color="getRecurrenceColor(item.raw.value)"
-                                            >
-                                            </v-list-item>
-                                        </template>
+                              <!-- Columna 2: Destino -->
+                              <v-col cols="12" md="4" class="d-flex align-center">
+                                <v-avatar>
+                                  <v-img
+                                    :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
+                                    max-width="40"
+                                  />
+                                </v-avatar>
+                                <div class="ml-2">
+                                  <div class="text-caption text-grey">
+                                    <v-icon small class="mr-1"
+                                      >mdi-map-marker-check</v-icon
+                                    >
+                                    Destino
+                                  </div>
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props: tooltipProps }">
+                                      <div
+                                        v-bind="tooltipProps"
+                                        class="text-truncate"
+                                        style="max-width: 100%"
+                                      >
+                                        {{ item.raw.destinationAddress }}
+                                      </div>
+                                    </template>
+                                    <span>{{ item.raw.destinationAddress }}</span>
+                                    <!-- Texto completo en el tooltip -->
+                                  </v-tooltip>
+                                </div>
+                              </v-col>
+                            </v-row>
+                          </v-list-item>
+                        </v-card>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-autocomplete
+                      :no-data-text="'No hay datos disponibles'"
+                      v-model="editedItem.vehicle_id"
+                      :items="vehicles"
+                      label="Vehículo"
+                      prepend-icon="mdi-car-side"
+                      item-title="vehicleName"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                      @update:model-value="filterWorkers"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item
+                          v-bind="props"
+                          :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.vehicleImage}`"
+                          :title="item.raw.vehicleName"
+                        >
+                          <v-list-item-subtitle class="d-flex flex-column">
+                            <div>Marca: {{ item.raw.brand }}</div>
+                            <div>Asientos: {{ item.raw.seats }}</div>
+                            <div>
+                              Número interno: {{ getVehicleInternalNumber(item.raw) }}
+                            </div>
+                          </v-list-item-subtitle>
+                        </v-list-item>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-select
+                      v-model="editedItem.recurrence_pattern"
+                      :items="frequencyOptions"
+                      item-title="text"
+                      item-value="value"
+                      label="Frecuencia"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item
+                          v-bind="props"
+                          :prepend-icon="getRecurrenceIcon(item.raw.value)"
+                          :color="getRecurrenceColor(item.raw.value)"
+                        >
+                        </v-list-item>
+                      </template>
 
-                                        <template v-slot:selection="{ item }">
-                                            <div class="d-flex align-center">
-                                            <v-icon
-                                                :icon="getRecurrenceIcon(item.raw.value)"
-                                                :color="getRecurrenceColor(item.raw.value)"
-                                                size="small"
-                                                class="me-2"
-                                            />
-                                            <span>{{ item.raw.text }}</span>
-                                            </div>
-                                        </template>
-                                        </v-select>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                    <div class="d-flex flex-wrap">
-                                        <v-chip
-                                        v-for="day in daysOfWeekOptions"
-                                        :key="day.value"
-                                        class="ma-1"
-                                        :color="getDayColor(day.value)"
-                                        @click="handleDayClick(day.value)"
-                                        :disabled="isDaySelectionDisabled"
-                                        >
-                                        {{ getDayInitial(day.text) }}
-                                        </v-chip>
-                                    </div>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                    <v-autocomplete
-                                            v-model="editedItem.schedule"
-                                            :items="filteredTimeSlots"
-                                            label="Hora de salida"
-                                            variant="underlined"
-                                            density="compact"
-                                            prepend-icon="mdi-calendar-clock"
-                                            :rules="selectRules"
-                                            ></v-autocomplete>
-                                    </v-col>
-                                </v-row>
-                                <v-row>
-                                    <v-col cols="12" md="3">
-                                        <v-text-field v-model="editedItem.price" label="Precio"
-                                            prepend-icon="mdi-currency-usd" variant="underlined" :rules="priceRules"
-                                            type="number" density="compact" min="0"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <v-text-field v-model="editedItem.duration" label="Duración (Minutos)"
-                                        prepend-icon="mdi-timer" variant="underlined" :rules="durationRules"></v-text-field>
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                    <v-switch 
-  v-model="editedItem.active" 
-  :true-value="true" 
-  :false-value="false"
-  :color="paleteColors.active"
-  hide-details 
-  inset 
-  class="custom-switch"
->
-  <template v-slot:label>
-    <span class="text-body-1"
-      :style="{ color: editedItem.active ? paleteColors.active : paleteColors.grey }">
-      {{ editedItem.active ? 'Activa' : 'Inactiva' }}
-    </span>
-  </template>
-</v-switch>
-                                      <!--<v-select
+                      <template v-slot:selection="{ item }">
+                        <div class="d-flex align-center">
+                          <v-icon
+                            :icon="getRecurrenceIcon(item.raw.value)"
+                            :color="getRecurrenceColor(item.raw.value)"
+                            size="small"
+                            class="me-2"
+                          />
+                          <span>{{ item.raw.text }}</span>
+                        </div>
+                      </template>
+                    </v-select>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <div class="d-flex flex-wrap">
+                      <v-chip
+                        v-for="day in daysOfWeekOptions"
+                        :key="day.value"
+                        class="ma-1"
+                        :color="getDayColor(day.value)"
+                        @click="handleDayClick(day.value)"
+                        :disabled="isDaySelectionDisabled"
+                      >
+                        {{ getDayInitial(day.text) }}
+                      </v-chip>
+                    </div>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-autocomplete
+                      v-model="editedItem.schedule"
+                      :items="filteredTimeSlots"
+                      label="Hora de salida"
+                      variant="underlined"
+                      density="compact"
+                      prepend-icon="mdi-calendar-clock"
+                      :rules="selectRules"
+                    ></v-autocomplete>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" md="3">
+                    <v-text-field
+                      v-model="editedItem.price"
+                      label="Precio"
+                      prepend-icon="mdi-currency-usd"
+                      variant="underlined"
+                      :rules="priceRules"
+                      type="number"
+                      density="compact"
+                      min="0"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-text-field
+                      v-model="editedItem.duration"
+                      label="Duración (Minutos)"
+                      prepend-icon="mdi-timer"
+                      variant="underlined"
+                      :rules="durationRules"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-switch
+                      v-model="editedItem.active"
+                      :true-value="true"
+                      :false-value="false"
+                      :color="paleteColors.active"
+                      hide-details
+                      inset
+                      class="custom-switch"
+                    >
+                      <template v-slot:label>
+                        <span
+                          class="text-body-1"
+                          :style="{
+                            color: editedItem.active
+                              ? paleteColors.active
+                              : paleteColors.grey,
+                          }"
+                        >
+                          {{ editedItem.active ? "Activa" : "Inactiva" }}
+                        </span>
+                      </template>
+                    </v-switch>
+                    <!--<v-select
                                             v-model="editedItem.active"
                                             :items="statusOptions"
                                             item-value="value"
@@ -719,151 +868,522 @@
                                                 </div>
                                             </template>
                                         </v-select>-->
-                                    </v-col>
-                                </v-row>
-                            </div>
-                            <v-divider></v-divider>
-                            <div style="padding: 16px; border-top: 1px solid #eee;">
-                                <!-- BOTONES -->
-                                <v-row class="mt-1">
-                                    <v-btn color="#E7E9E9" variant="flat" @click="close()">Salir</v-btn>
-                                    <v-spacer></v-spacer>
-                                    <v-btn color="#E7E9E9" variant="flat" @click="nextStep" :disabled="
-                                        !editedItem.vehicle_id ||
-                                        !editedItem.route_id ||
-                                        !editedItem.schedule ||
-                                        !editedItem.price
-                                        ">
-                                        Siguiente
-                                    </v-btn>
-                                </v-row>
-                            </div>
-                        </template>
-                        <template v-slot:item.2>
-                            <div style="flex: 1; overflow-y: auto; padding: 16px;">
-                                <v-sheet border>
-                                    <v-toolbar :color="paleteColors.primary">
-                                        <v-row align="center">
-                                            <v-col cols="12" md="7" class="grow ml-4">
-                                                <span class="text-subtitle-1"><strong>Relación de
-                                                        Trabajadores</strong></span>
-                                            </v-col>
-                                            <v-col cols="12" md="4" class="text-right">
-                                                <v-btn class="text-subtitle-1" :color="paleteColors.white"
-                                                    variant="tonal" elevation="2" prepend-icon="mdi-plus-circle"
-                                                    @click="showAssiegnedWorker">
-                                                    Asignar Trabajador
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                    </v-toolbar>
+                  </v-col>
+                </v-row>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <!-- BOTONES -->
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="close()">Salir</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="#E7E9E9"
+                    variant="flat"
+                    @click="nextStep"
+                    :disabled="
+                      !editedItem.vehicle_id ||
+                      !editedItem.route_id ||
+                      !editedItem.schedule ||
+                      !editedItem.price
+                    "
+                  >
+                    Siguiente
+                  </v-btn>
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.2>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
+                          ><strong>Paradas de la plantilla</strong></span
+                        >
+                        <div class="text-caption" style="opacity: 0.85">
+                          La última columna agrega o quita la asociación de la parada a la
+                          plantilla. La tabla muestra la información propia de la parada.
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
 
-                                    <v-card-text>
-                                        <v-data-table :headers="headersWorkers" :items="filteredWorkers"
-                                            class="elevation-1" style="max-height: 68vh; overflow-y: auto"
-                                            :items-per-page-text="'Elementos por páginas'"
-                                            no-data-text="No hay datos disponibles" :loading="loading"
-                                            loading-text="Cargando datos...">
-                                            <!--<template v-slot:item.actions="{ item }">
+                  <v-card-text>
+                    <v-data-table
+                      :headers="tripStopsHeaders"
+                      :items="templateStopRows"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                      hide-default-header
+                    >
+                      <template v-slot:top>
+                        <v-card
+                          flat
+                          color="blue-grey-lighten-5"
+                          class="mb-2 mx-1 rounded-lg"
+                          elevation="1"
+                          style="
+                            border: 1px solid #eceff1;
+                            height: 40px;
+                            min-height: 40px;
+                            display: flex;
+                            align-items: center;
+                          "
+                        >
+                          <v-card-text
+                            class="d-flex pa-2"
+                            style="
+                              width: 100%;
+                              min-width: 0;
+                              height: 100%;
+                              padding: 0 16px !important;
+                              display: flex;
+                              align-items: center;
+                            "
+                          >
+                            <div
+                              style="width: 24%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Parada
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Orden
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Distancia
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Minutos
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Subir
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Bajar
+                            </div>
+                            <div
+                              style="width: 9%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Estado
+                            </div>
+                            <div
+                              style="width: 12%; min-width: 0"
+                              class="d-flex justify-left font-weight-bold"
+                            >
+                              Asociar
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+                      <template v-slot:item="slotProps">
+                        <tr>
+                          <td colspan="100%" style="padding: 0; border: none">
+                            <v-card
+                              class="mb-2 mx-1 rounded-lg"
+                              elevation="1"
+                              density="comfortable"
+                              flat
+                              :style="{
+                                opacity: slotProps.item.included ? 1 : 0.55,
+                                border: slotProps.item.included
+                                  ? '1px solid #e5e7eb'
+                                  : '1px dashed #cbd5e1',
+                              }"
+                            >
+                              <v-card-text
+                                class="d-flex align-center pa-2"
+                                style="width: 100%; min-width: 0"
+                              >
+                                <div
+                                  class="d-flex align-center"
+                                  style="width: 24%; min-width: 0"
+                                >
+                                  <v-avatar
+                                    class="mr-3 icono-concavo"
+                                    color="grey-lighten-4"
+                                  >
+                                    <v-img
+                                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.locationImage}`"
+                                      alt="image"
+                                      cover
+                                    ></v-img>
+                                  </v-avatar>
+                                  <div class="text-truncate">
+                                    <div class="font-weight-medium">
+                                      {{ slotProps.item.locationName }}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style="width: 11%; min-width: 0" class="px-1">
+                                  <v-text-field
+                                    v-model="slotProps.item.stop_order"
+                                    type="number"
+                                    min="1"
+                                    variant="underlined"
+                                    density="compact"
+                                    hide-details
+                                    @update:modelValue="onTemplateStopFieldChange"
+                                  />
+                                </div>
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.distance_km }} km
+                                  </div>
+                                </div>
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.minutes_from_origin }} min
+                                  </div>
+                                </div>
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_board"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTemplateStopFieldChange"
+                                  />
+                                </div>
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_alight"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTemplateStopFieldChange"
+                                  />
+                                </div>
+                                <div
+                                  style="width: 9%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.active"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTemplateStopFieldChange"
+                                  />
+                                </div>
+                                <div
+                                  style="width: 12%; min-width: 0"
+                                  class="d-flex justify-center align-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.included"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTemplateStopIncludedChange"
+                                  />
+                                  <span
+                                    class="ml-2 text-body-2 font-weight-medium text-no-wrap"
+                                    :style="{
+                                      color: slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey,
+                                    }"
+                                  >
+                                    {{
+                                      slotProps.item.included ? "Asociada" : "Sin asociar"
+                                    }}
+                                  </span>
+                                </div>
+                              </v-card-text>
+                            </v-card>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="#E7E9E9"
+                    variant="flat"
+                    @click="nextStep"
+                    :disabled="!templateStopRows.length"
+                  >
+                    Siguiente
+                  </v-btn>
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.3>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
+                          ><strong>Relación de Trabajadores</strong></span
+                        >
+                      </v-col>
+                      <v-col cols="12" md="4" class="text-right">
+                        <v-btn
+                          class="text-subtitle-1"
+                          :color="paleteColors.white"
+                          variant="tonal"
+                          elevation="2"
+                          prepend-icon="mdi-plus-circle"
+                          @click="showAssiegnedWorker"
+                        >
+                          Asignar Trabajador
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
+
+                  <v-card-text>
+                    <v-data-table
+                      :headers="headersWorkers"
+                      :items="filteredWorkers"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                    >
+                      <!--<template v-slot:item.actions="{ item }">
                       <v-btn density="comfortable" icon="mdi-delete" @click="deleteItemWorker(item)"
                         :color="paleteColors.error" variant="tonal" elevation="1" title="Eliminar Relación"></v-btn>
                     </template>-->
-                                            <template v-slot:item.workerName="{ item }">
-                                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4"
-                                                    size="large">
-                                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                            item.workerImage
-                          }?t=${Date.now()}`" alt="image"></v-img> </v-avatar><!--+'?$'+Date.now()-->
-                                                {{ item.workerName }}
-                                            </template>
-                                            <template v-slot:item.actions="{ item }">
-                                                <v-btn density="comfortable"
-                                                    :icon="isWorkerAssociated(item) ? 'mdi-delete' : 'mdi-plus'"
-                                                    @click="isWorkerAssociated(item) ? deleteItemWorker(item) : saveAssignedWorker(item)"
-                                                    :color="isWorkerAssociated(item) ? paleteColors.error : paleteColors.success"
-                                                    variant="tonal" elevation="1"
-                                                    :title="isWorkerAssociated(item) ? 'Eliminar Relación' : 'Agregar Relación'"></v-btn>
-                                            </template>
-                                        </v-data-table>
-                                    </v-card-text>
-                                </v-sheet>
-                            </div>
-                            <v-divider></v-divider>
-                            <div style="padding: 16px; border-top: 1px solid #eee;">
-                                <!-- BOTONES -->
-                                <v-row class="mt-1">
-                                    <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
-                                    <v-spacer></v-spacer>
-                                    <!--<v-btn color="#E7E9E9" :disabled="hasInvalidState" variant="flat"
+                      <template v-slot:item.workerName="{ item }">
+                        <v-avatar
+                          class="mr-1"
+                          elevation="3"
+                          color="grey-lighten-4"
+                          size="large"
+                        >
+                          <v-img
+                            :src="`${this.$axios.defaults.baseURL}images/${
+                              item.workerImage
+                            }?t=${Date.now()}`"
+                            alt="image"
+                          ></v-img> </v-avatar
+                        ><!--+'?$'+Date.now()-->
+                        {{ item.workerName }}
+                      </template>
+                      <template v-slot:item.actions="{ item }">
+                        <v-btn
+                          density="comfortable"
+                          :icon="isWorkerAssociated(item) ? 'mdi-delete' : 'mdi-plus'"
+                          @click="
+                            isWorkerAssociated(item)
+                              ? deleteItemWorker(item)
+                              : saveAssignedWorker(item)
+                          "
+                          :color="
+                            isWorkerAssociated(item)
+                              ? paleteColors.error
+                              : paleteColors.success
+                          "
+                          variant="tonal"
+                          elevation="1"
+                          :title="
+                            isWorkerAssociated(item)
+                              ? 'Eliminar Relación'
+                              : 'Agregar Relación'
+                          "
+                        ></v-btn>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <!-- BOTONES -->
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <!--<v-btn color="#E7E9E9" :disabled="hasInvalidState" variant="flat"
                     @click="dialogDeleteDiario = true">Siguiente</v-btn>-->
-                                    <v-btn :color="paleteColors.primary" variant="flat" @click="save()"
-                                        :disabled="!valid || !editedItem.workers.length"
-                                        :loading="loading">Aceptar</v-btn>
-                                </v-row>
-                            </div>
-                        </template>
-                    </v-stepper>
-                </v-form>
-            </v-card-text>
-        </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogDelete" max-width="500px">
-        <v-card>
-            <v-toolbar :color="paleteColors.error">
-                <span class="text-subtitle-2 ml-4"> Eliminar una plantilla de viaje</span>
-            </v-toolbar>
-
-            <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la plantilla viaje seleccionada?</v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
-                    Cancelar
-                </v-btn>
-                <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
-                    Aceptar
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="dialogAssignedWorkers" max-width="400px">
-        <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-            <v-card>
-                <v-toolbar :color="paleteColors.primary">
-                    <span class="text-subtitle-2 ml-4">Asignar trabajadores al viaje</span>
-                </v-toolbar>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-col cols="12" md="12">
-                                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="selectedWorker"
-                                    :items="filteredWorkers" label="Personas" prepend-icon="mdi-account"
-                                    item-title="workerName" item-value="id" variant="underlined" :rules="selectRules">
-                                    <template v-slot:item="{ props, item }">
-                                        <v-list-item v-bind="props"
-                                            :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.workerImage}`"
-                                            :title="item.raw.workerName">
-                                            <v-list-item-subtitle class="d-flex flex-column">
-                                                <div>Rol: {{ item.raw.roleName }}</div>
-                                            </v-list-item-subtitle>
-                                        </v-list-item>
-                                    </template>
-                                </v-autocomplete>
-                            </v-col>
-                        </v-row>
-                    </v-container>
-                </v-card-text>
-                <v-divider></v-divider>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn :color="paleteColors.gris" variant="flat" @click="closeAssignedWorker">Cancelar</v-btn>
-                    <v-btn :color="paleteColors.primary" variant="flat" @click="saveAssignedWorker"
-                        :disabled="!valid">Aceptar</v-btn>
-                </v-card-actions>
-            </v-card>
+                  <v-btn
+                    :color="paleteColors.primary"
+                    variant="flat"
+                    @click="save()"
+                    :disabled="!valid || !editedItem.workers.length"
+                    :loading="loading"
+                    >Aceptar</v-btn
+                  >
+                </v-row>
+              </div>
+            </template>
+          </v-stepper>
         </v-form>
-    </v-dialog>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+  <v-dialog v-model="dialogDelete" max-width="500px">
+    <v-card>
+      <v-toolbar :color="paleteColors.error">
+        <span class="text-subtitle-2 ml-4"> Eliminar una plantilla de viaje</span>
+      </v-toolbar>
+
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar la plantilla viaje seleccionada?</v-card-text
+      >
+      <v-divider></v-divider>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+          Cancelar
+        </v-btn>
+        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+          Aceptar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="dialogAssignedWorkers" max-width="400px">
+    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+      <v-card>
+        <v-toolbar :color="paleteColors.primary">
+          <span class="text-subtitle-2 ml-4">Asignar trabajadores al viaje</span>
+        </v-toolbar>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12" md="12">
+                <v-autocomplete
+                  :no-data-text="'No hay datos disponibles'"
+                  v-model="selectedWorker"
+                  :items="filteredWorkers"
+                  label="Personas"
+                  prepend-icon="mdi-account"
+                  item-title="workerName"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                >
+                  <template v-slot:item="{ props, item }">
+                    <v-list-item
+                      v-bind="props"
+                      :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.workerImage}`"
+                      :title="item.raw.workerName"
+                    >
+                      <v-list-item-subtitle class="d-flex flex-column">
+                        <div>Rol: {{ item.raw.roleName }}</div>
+                      </v-list-item-subtitle>
+                    </v-list-item>
+                  </template>
+                </v-autocomplete>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn :color="paleteColors.gris" variant="flat" @click="closeAssignedWorker"
+            >Cancelar</v-btn
+          >
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="saveAssignedWorker"
+            :disabled="!valid"
+            >Aceptar</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
 </template>
 
 <script>
@@ -890,52 +1410,53 @@ export default {
     estimated: 0,
     timeSlotsKey: 0,
     mostrarFila: false,
-    permissions:'',
+    permissions: "",
     templates: [],
     routes: [],
     vehicles: [],
     workers: [],
     branches: [],
     filteredWorkers: [],
+    templateStopRows: [],
     data: {},
     selectedWorker: "",
     route: "",
     branch_id: "",
     step: 1,
-    items: ["Datos Generales", "Asignar Trabajadores"],
+    items: ["Datos Generales", "Paradas", "Asignar Trabajadores"],
     dialogAssignedWorkers: false,
     frequencyOptions: [
-    { text: 'Diario', value: 'daily' },
-    { text: 'Días laborables (L-V)', value: 'weekdays' },
-    { text: 'Fin de semana (S-D)', value: 'weekends' }, // ¡Nueva opción!
-    { text: 'Semanal', value: 'weekly' }
-    // Eliminamos 'custom' que no existe en el backend
+      { text: "Diario", value: "daily" },
+      { text: "Días laborables (L-V)", value: "weekdays" },
+      { text: "Fin de semana (S-D)", value: "weekends" }, // ¡Nueva opción!
+      { text: "Semanal", value: "weekly" },
+      // Eliminamos 'custom' que no existe en el backend
     ],
-     daysOfWeekOptions: [
-      { text: 'Lunes', value: 1, icon: 'mdi-calendar' },
-      { text: 'Martes', value: 2, icon: 'mdi-calendar' },
-      { text: 'Miércoles', value: 3, icon: 'mdi-calendar' },
-      { text: 'Jueves', value: 4, icon: 'mdi-calendar' },
-      { text: 'Viernes', value: 5, icon: 'mdi-calendar' },
-      { text: 'Sábado', value: 6, icon: 'mdi-calendar' },
-      { text: 'Domingo', value: 0, icon: 'mdi-calendar' },
+    daysOfWeekOptions: [
+      { text: "Lunes", value: 1, icon: "mdi-calendar" },
+      { text: "Martes", value: 2, icon: "mdi-calendar" },
+      { text: "Miércoles", value: 3, icon: "mdi-calendar" },
+      { text: "Jueves", value: 4, icon: "mdi-calendar" },
+      { text: "Viernes", value: 5, icon: "mdi-calendar" },
+      { text: "Sábado", value: 6, icon: "mdi-calendar" },
+      { text: "Domingo", value: 0, icon: "mdi-calendar" },
     ],
-     statusOptions: [
-      { text: 'Activo', value: true },
-      { text: 'Inactivo', value: false },
+    statusOptions: [
+      { text: "Activo", value: true },
+      { text: "Inactivo", value: false },
     ],
     headers: [
       { title: "Ruta", value: "name" },
       { title: "Origen", value: "origin" },
       { title: "Destino", value: "destination" },
-      { title: "Vehículo", value: "vehicleName"},
-      { title: "Trabajadores", value: "workers"},
+      { title: "Vehículo", value: "vehicleName" },
+      { title: "Trabajadores", value: "workers" },
       { title: "Horario", value: "schedule" },
       { title: "Duración (minutos)", value: "duration" },
       { title: "Precio", value: "price" },
       { title: "Frecuencia", value: "recurrence_pattern" },
       { title: "Dias de la Semana", value: "days_of_week" },
-        { title: "Estado", value: "active" },
+      { title: "Estado", value: "active" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
 
@@ -943,6 +1464,16 @@ export default {
       { title: "Nombre", value: "workerName", width: "60%" },
       { title: "Rol", value: "roleName", width: "20%" },
       { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+    ],
+    tripStopsHeaders: [
+      { title: "Parada", value: "locationName", width: "24%" },
+      { title: "Orden", value: "stop_order", width: "11%" },
+      { title: "Distancia", value: "distance_km", width: "11%" },
+      { title: "Minutos", value: "minutes_from_origin", width: "11%" },
+      { title: "Subir", value: "can_board", width: "11%" },
+      { title: "Bajar", value: "can_alight", width: "11%" },
+      { title: "Estado", value: "active", width: "9%" },
+      { title: "Asociar", value: "included", width: "12%" },
     ],
 
     editedItem: {
@@ -957,6 +1488,7 @@ export default {
       days_of_week: "",
       active: true,
       workers: [],
+      tripStops: [],
     },
     originalItem: {
       id: "",
@@ -970,6 +1502,7 @@ export default {
       days_of_week: "",
       active: true,
       workers: [],
+      tripStops: [],
     },
     defaultItem: {
       id: "",
@@ -984,6 +1517,7 @@ export default {
       days_of_week: "",
       active: true,
       workers: [],
+      tripStops: [],
     },
     editedIndex: -1,
     search: "",
@@ -1012,7 +1546,9 @@ export default {
   }),
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Agregar Plantilla de Viaje" : "Editar Plantilla de Viaje";
+      return this.editedIndex === -1
+        ? "Agregar Plantilla de Viaje"
+        : "Editar Plantilla de Viaje";
     },
     dateFormatted() {
       const date = this.input ? new Date(this.input) : new Date();
@@ -1025,22 +1561,24 @@ export default {
       return this.input ? new Date(this.input) : new Date();
     },
     filteredTimeSlots() {
-    return this.generateTimeSlots();
-  },
-  isDaySelectionDisabled() {
-    // Deshabilitar selección manual para estas opciones
-    return ['daily', 'weekdays', 'weekends'].includes(this.editedItem.recurrence_pattern);
-  },
-  
-  shouldPreselectDays() {
-    // Determinar si debemos preseleccionar días
-    return this.editedItem.recurrence_pattern && this.isDaySelectionDisabled;
-  }
+      return this.generateTimeSlots();
+    },
+    isDaySelectionDisabled() {
+      // Deshabilitar selección manual para estas opciones
+      return ["daily", "weekdays", "weekends"].includes(
+        this.editedItem.recurrence_pattern
+      );
+    },
+
+    shouldPreselectDays() {
+      // Determinar si debemos preseleccionar días
+      return this.editedItem.recurrence_pattern && this.isDaySelectionDisabled;
+    },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-   this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_triptemplates_company')) {
+    this.permissions = LocalStorageService.getItem("permissions");
+    if (this.hasPermission("view_triptemplates_company")) {
       this.showBranches();
       this.mostrarFila = true;
     } else {
@@ -1049,29 +1587,130 @@ export default {
     }
   },
   watch: {
-  'editedItem.recurrence_pattern': {
-    handler(newVal) {
-      // Primero limpiar los días seleccionados
-      this.editedItem.days_of_week = '';
-      
-      // Luego llamar al método de preselección
-      this.$nextTick(() => {
-        this.preselectDays();
+    "editedItem.recurrence_pattern": {
+      handler(newVal) {
+        // Primero limpiar los días seleccionados
+        this.editedItem.days_of_week = "";
+
+        // Luego llamar al método de preselección
+        this.$nextTick(() => {
+          this.preselectDays();
+        });
+      },
+      immediate: true,
+    },
+  },
+  methods: {
+    getSelectedRouteRecord() {
+      return (
+        (this.routes || []).find(
+          (route) => Number(route.id) === Number(this.editedItem.route_id)
+        ) || null
+      );
+    },
+    parseTemplateStops(value) {
+      if (Array.isArray(value)) return value;
+      if (!value) return [];
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          return [];
+        }
+      }
+      return [];
+    },
+    buildTemplateStopRows(route = null, tripStops = [], forceIncludeAll = false) {
+      const selectedRoute = route || this.getSelectedRouteRecord();
+      const routeStops = Array.isArray(selectedRoute?.routeStops)
+        ? selectedRoute.routeStops
+        : [];
+      const stopMap = new Map(
+        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
+          Number(stop.route_stop_id),
+          stop,
+        ])
+      );
+
+      return routeStops.map((routeStop) => {
+        const existingStop = stopMap.get(Number(routeStop.id));
+        const included = forceIncludeAll ? true : !!existingStop;
+
+        return {
+          id: existingStop?.id || "",
+          route_stop_id: routeStop.id,
+          location_id: routeStop.location_id || routeStop.locationId || "",
+          companyName: routeStop.companyName || "",
+          routeName: routeStop.routeName || "",
+          stop_order: routeStop.stop_order ?? routeStop.stopOrder ?? 1,
+          distance_km: routeStop.distance_km ?? routeStop.distanceKm ?? 0,
+          minutes_from_origin:
+            routeStop.minutes_from_origin ?? routeStop.minutesFromOrigin ?? 0,
+          can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
+          can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
+          active: existingStop?.active ?? routeStop.active ?? true,
+          included,
+          locationName: routeStop.locationName || routeStop.address || "",
+          locationCity: routeStop.locationCity || "",
+          locationCountry: routeStop.locationCountry || "",
+          locationImage:
+            routeStop.image || routeStop.locationImage || "locations/default.jpg",
+        };
       });
     },
-    immediate: true
-  }
-},
-  methods: {
+    syncTemplateStopsFromRoute(forceIncludeAll = false) {
+      const route = this.getSelectedRouteRecord();
+      if (!route) {
+        this.templateStopRows = [];
+        return;
+      }
+
+      const storedStops = this.parseTemplateStops(this.editedItem.tripStops);
+      const shouldIncludeAll =
+        forceIncludeAll ||
+        this.editedIndex === -1 ||
+        Number(this.originalItem.route_id) !== Number(this.editedItem.route_id);
+
+      this.templateStopRows = this.buildTemplateStopRows(
+        route,
+        storedStops,
+        shouldIncludeAll
+      );
+    },
+    normalizeTemplateStopsPayload(rows = []) {
+      return (Array.isArray(rows) ? rows : [])
+        .filter((row) => row.included)
+        .map((row) => ({
+          route_stop_id: Number(row.route_stop_id),
+          stop_order: Number(row.stop_order) || 1,
+          can_board: !!row.can_board,
+          can_alight: !!row.can_alight,
+          active: row.active ?? true,
+        }))
+        .sort((a, b) => a.route_stop_id - b.route_stop_id);
+    },
+    areTemplateStopsDifferent(originalStops, editedStops) {
+      return !_.isEqual(
+        this.normalizeTemplateStopsPayload(originalStops || []),
+        this.normalizeTemplateStopsPayload(editedStops || [])
+      );
+    },
+    onTemplateStopIncludedChange() {
+      this.$forceUpdate();
+    },
+    onTemplateStopFieldChange() {
+      this.$forceUpdate();
+    },
     hasPermission(requiredPermissions) {
-        // Si es un string, lo convertimos a array
-        const perms = Array.isArray(requiredPermissions) 
-          ? requiredPermissions 
-          : [requiredPermissions];
-        
-        // Retorna true si al menos uno coincide
-        return perms.some(p => this.permissions.includes(p));
-      },
+      // Si es un string, lo convertimos a array
+      const perms = Array.isArray(requiredPermissions)
+        ? requiredPermissions
+        : [requiredPermissions];
+
+      // Retorna true si al menos uno coincide
+      return perms.some((p) => this.permissions.includes(p));
+    },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -1106,150 +1745,164 @@ export default {
       return vehicle?.internal_number ?? vehicle?.internalNumber ?? "No asignado";
     },
     filterTimeSlots(item, queryText) {
-    // Permite buscar formatos como "8:30", "0830" o "830"
-    const normalizedQuery = queryText.toLowerCase().replace(/[:\s]/g, '');
-    const normalizedItem = item.toLowerCase().replace(/[:\s]/g, '');
-    return normalizedItem.includes(normalizedQuery);
-  },
-     getDayInitial(text) {
-    // Retorna la primera letra del día
-    return text.charAt(0);
-  },
-  getDaysArray(daysString) {
-    if (!daysString) return [];
-    // Convertir "1,2,5" en [1, 2, 5]
-    return daysString.split(',').map(Number);
-  },
-  getDayColor(dayValue) {
-    if (this.isDaySelected(dayValue)) {
-      return 'primary';
-    }
-    return 'default';
-  },
-  isDaySelected(dayValue) {
-    if (!this.editedItem.days_of_week) return false;
-    return this.editedItem.days_of_week.split(',').includes(dayValue.toString());
-  },
-  
-  handleDayClick(dayValue) {
-    if (!this.isDaySelectionDisabled) {
-      this.toggleDay(dayValue);
-    }
-  },
-  toggleDay(dayValue) {
-    const daysArray = this.editedItem.days_of_week 
-      ? this.editedItem.days_of_week.split(',').filter(Boolean).map(Number) 
-      : [];
-    
-    const index = daysArray.indexOf(dayValue);
-    
-    if (index === -1) {
-      daysArray.push(dayValue);
-    } else {
-      daysArray.splice(index, 1);
-    }
-    
-    this.editedItem.days_of_week = daysArray.sort((a, b) => a - b).join(',');
-  },
-  preselectDays() {
-    // Preseleccionar días según el patrón
-    switch(this.editedItem.recurrence_pattern) {
-      case 'daily':
-        this.editedItem.days_of_week = '0,1,2,3,4,5,6'; // Todos los días
-        break;
-      case 'weekdays':
-        this.editedItem.days_of_week = '1,2,3,4,5'; // L-V
-        break;
-      case 'weekends':
-        this.editedItem.days_of_week = '0,6'; // S-D
-        break;
-      case 'weekly':
-        if (!this.editedItem.days_of_week) {
-          // Valor por defecto para semanal (Lunes)
-          this.editedItem.days_of_week = '1';
-        }
-        break;
-    }
-  },
+      // Permite buscar formatos como "8:30", "0830" o "830"
+      const normalizedQuery = queryText.toLowerCase().replace(/[:\s]/g, "");
+      const normalizedItem = item.toLowerCase().replace(/[:\s]/g, "");
+      return normalizedItem.includes(normalizedQuery);
+    },
+    getDayInitial(text) {
+      // Retorna la primera letra del día
+      return text.charAt(0);
+    },
+    getDaysArray(daysString) {
+      if (!daysString) return [];
+      // Convertir "1,2,5" en [1, 2, 5]
+      return daysString.split(",").map(Number);
+    },
+    getDayColor(dayValue) {
+      if (this.isDaySelected(dayValue)) {
+        return "primary";
+      }
+      return "default";
+    },
+    isDaySelected(dayValue) {
+      if (!this.editedItem.days_of_week) return false;
+      return this.editedItem.days_of_week.split(",").includes(dayValue.toString());
+    },
+
+    handleDayClick(dayValue) {
+      if (!this.isDaySelectionDisabled) {
+        this.toggleDay(dayValue);
+      }
+    },
+    toggleDay(dayValue) {
+      const daysArray = this.editedItem.days_of_week
+        ? this.editedItem.days_of_week.split(",").filter(Boolean).map(Number)
+        : [];
+
+      const index = daysArray.indexOf(dayValue);
+
+      if (index === -1) {
+        daysArray.push(dayValue);
+      } else {
+        daysArray.splice(index, 1);
+      }
+
+      this.editedItem.days_of_week = daysArray.sort((a, b) => a - b).join(",");
+    },
+    preselectDays() {
+      // Preseleccionar días según el patrón
+      switch (this.editedItem.recurrence_pattern) {
+        case "daily":
+          this.editedItem.days_of_week = "0,1,2,3,4,5,6"; // Todos los días
+          break;
+        case "weekdays":
+          this.editedItem.days_of_week = "1,2,3,4,5"; // L-V
+          break;
+        case "weekends":
+          this.editedItem.days_of_week = "0,6"; // S-D
+          break;
+        case "weekly":
+          if (!this.editedItem.days_of_week) {
+            // Valor por defecto para semanal (Lunes)
+            this.editedItem.days_of_week = "1";
+          }
+          break;
+      }
+    },
     formatFullDayNames(daysArray) {
-      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-      return daysArray?.map(day => dayNames[day]).join(', ') || '';
+      const dayNames = [
+        "Domingo",
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado",
+      ];
+      return daysArray?.map((day) => dayNames[day]).join(", ") || "";
     },
     translateRecurrence(pattern) {
-    const translations = {
-        'daily': 'Diario',
-        'weekdays': 'Días laborables (L-V)',
-        'weekends': 'Fin de semana (S-D)',
-        'weekly': 'Semanal'
-    };
-    return translations[pattern] || pattern;
+      const translations = {
+        daily: "Diario",
+        weekdays: "Días laborables (L-V)",
+        weekends: "Fin de semana (S-D)",
+        weekly: "Semanal",
+      };
+      return translations[pattern] || pattern;
     },
     activeName(pattern) {
-    const translations = {
-        false: 'Inactivo',
-        true: 'Activo',
-    };
-    return translations[pattern] || pattern;
+      const translations = {
+        false: "Inactivo",
+        true: "Activo",
+      };
+      return translations[pattern] || pattern;
     },
-  getRecurrenceIcon(pattern) {
-    const icons = {
-      'daily': 'mdi-calendar-today',
-      'weekdays': 'mdi-calendar-week-begin',
-      'weekends': 'mdi-calendar-weekend', // Nuevo ícono
-      'weekly': 'mdi-calendar-week'
-    };
-    return icons[pattern] || 'mdi-calendar-question';
-  },
-  getRecurrenceColor(pattern) {
-    const colors = {
-      'daily': 'blue',
-      'weekdays': 'orange',
-      'weekends': 'cyan', // Nuevo color
-      'weekly': 'green'
-    };
-    return colors[pattern] || 'grey';
-  },
-  generateTimeSlots() {
-  const slots = [];
+    getRecurrenceIcon(pattern) {
+      const icons = {
+        daily: "mdi-calendar-today",
+        weekdays: "mdi-calendar-week-begin",
+        weekends: "mdi-calendar-weekend", // Nuevo ícono
+        weekly: "mdi-calendar-week",
+      };
+      return icons[pattern] || "mdi-calendar-question";
+    },
+    getRecurrenceColor(pattern) {
+      const colors = {
+        daily: "blue",
+        weekdays: "orange",
+        weekends: "cyan", // Nuevo color
+        weekly: "green",
+      };
+      return colors[pattern] || "grey";
+    },
+    generateTimeSlots() {
+      const slots = [];
 
-  // Generar todos los slots posibles (de 00:00 a 23:55)
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 5) {
-      const slotMinutes = hour * 60 + minute;
-      const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-      
-      slots.push({
-        time: timeStr,
-        minutes: slotMinutes
-      });
-    }
-  }
+      // Generar todos los slots posibles (de 00:00 a 23:55)
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 5) {
+          const slotMinutes = hour * 60 + minute;
+          const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(
+            2,
+            "0"
+          )}`;
 
-  // Ordenar: primero de 08:00 en adelante, luego los anteriores
-  return [
-    ...slots.filter(s => s.minutes >= 480),  // 480 minutos = 8:00 AM
-    ...slots.filter(s => s.minutes < 480)
-    ].map(s => s.time);
+          slots.push({
+            time: timeStr,
+            minutes: slotMinutes,
+          });
+        }
+      }
+
+      // Ordenar: primero de 08:00 en adelante, luego los anteriores
+      return [
+        ...slots.filter((s) => s.minutes >= 480), // 480 minutos = 8:00 AM
+        ...slots.filter((s) => s.minutes < 480),
+      ].map((s) => s.time);
     },
     updateStimated(selectedRouteId) {
-    try {
-      const selectedRoute = this.routes.find(route => route.id === selectedRouteId);
-      
-      if (!selectedRoute) {
-        throw new Error('Ruta no encontrada');
+      try {
+        const selectedRoute =
+          this.routes.find((route) => route.id === selectedRouteId) ||
+          this.getSelectedRouteRecord();
+
+        if (!selectedRoute) {
+          throw new Error("Ruta no encontrada");
+        }
+
+        this.editedItem.duration = selectedRoute.estimated || 0;
+        this.syncTemplateStopsFromRoute();
+      } catch (error) {
+        //console.error("Error al actualizar ruta:", error);
+        this.editedItem.duration = 0;
+        this.templateStopRows = [];
       }
-      
-      this.editedItem.duration = selectedRoute.estimated || 0;
-      
-    } catch (error) {
-      //console.error("Error al actualizar ruta:", error);
-      this.editedItem.duration = 0;
-    }
-  },
+    },
     // Método para verificar si un trabajador ya está asociado al viaje
-  isWorkerAssociated(worker) {
-    return this.editedItem.workers?.some(w => w.id === worker.id);
-  },
+    isWorkerAssociated(worker) {
+      return this.editedItem.workers?.some((w) => w.id === worker.id);
+    },
     async nextStep() {
       if (this.step < this.items.length) {
         this.step++;
@@ -1295,7 +1948,7 @@ export default {
     // Filtramos los trabajadores según el vehículo seleccionado
     filterWorkers() {
       const selectedVehicleId = Number(this.editedItem.vehicle_id);
-      console.log('this.editedItem.vehicle_id');
+      console.log("this.editedItem.vehicle_id");
       console.log(Number(this.editedItem.vehicle_id));
       // Filtramos los trabajadores que están relacionados con el vehículo seleccionado
       this.filteredWorkers = this.workers.filter((worker) =>
@@ -1307,10 +1960,10 @@ export default {
       const hoy = new Date();
 
       // Formatear la fecha actual al mismo formato YYYY-MM-DD
-      const año = hoy.getFullYear();
+      const anio = hoy.getFullYear();
       const mes = String(hoy.getMonth() + 1).padStart(2, "0");
       const dia = String(hoy.getDate()).padStart(2, "0");
-      const hoyFormateado = `${año}-${mes}-${dia}`;
+      const hoyFormateado = `${anio}-${mes}-${dia}`;
 
       // Comparar con la fecha proporcionada
       return date === hoyFormateado;
@@ -1325,6 +1978,7 @@ export default {
       this.step = 1;
       this.data = {};
       this.filteredWorkers = [];
+      this.templateStopRows = [];
       this.data.branch_id = this.branch_id;
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem);
@@ -1342,6 +1996,7 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
+          this.syncTemplateStopsFromRoute(true);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];
@@ -1367,6 +2022,7 @@ export default {
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
+      this.templateStopRows = [];
     },
     async showAssiegnedWorker() {
       // Clonar filteredWorkers para evitar referencias compartidas
@@ -1387,26 +2043,26 @@ export default {
     },
     saveAssignedWorker(worker) {
       //if (this.selectedWorker) {
-        //const worker = this.workers.find((p) => p.id === this.selectedWorker);
-        const newWorkers = {
-          id: worker.id,
-          workerName: worker.workerName,
-          workerImage: worker.workerImage,
-          roleId: worker.roleId,
-          roleName: worker.roleName,
-        };
-        // Verificar si la relación ya existe en editedItem.people
-        const existingPersonIndex = this.editedItem.workers.findIndex(
-          (p) => p.id === newWorkers.id
-        );
+      //const worker = this.workers.find((p) => p.id === this.selectedWorker);
+      const newWorkers = {
+        id: worker.id,
+        workerName: worker.workerName,
+        workerImage: worker.workerImage,
+        roleId: worker.roleId,
+        roleName: worker.roleName,
+      };
+      // Verificar si la relación ya existe en editedItem.people
+      const existingPersonIndex = this.editedItem.workers.findIndex(
+        (p) => p.id === newWorkers.id
+      );
 
-        if (existingPersonIndex === -1) {
-          // No existe, por lo tanto, se agrega uno nuevo
-          this.editedItem.workers.push(newWorkers);
-        } else {
-          // Existe, por lo tanto se edita el existente
-          this.editedItem.workers.splice(existingPersonIndex, 1, newWorkers); // Actualiza el elemento en el array
-        }
+      if (existingPersonIndex === -1) {
+        // No existe, por lo tanto, se agrega uno nuevo
+        this.editedItem.workers.push(newWorkers);
+      } else {
+        // Existe, por lo tanto se edita el existente
+        this.editedItem.workers.splice(existingPersonIndex, 1, newWorkers); // Actualiza el elemento en el array
+      }
       //}
 
       // Reiniciar selección y cerrar diálogo
@@ -1434,7 +2090,7 @@ export default {
       });
     },
     async initialize() {
-      if (this.branch_id === 'null') {
+      if (this.branch_id === "null") {
         this.templates = [];
         this.loading = false;
         return;
@@ -1483,14 +2139,11 @@ export default {
           "price",
           "active",
           "workers",
+          "tripStops",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              (this.originalItem[key], this.editedItem[key])
-          )
+          .filter((key) => fieldsToUpdate.includes(key))
           .reduce((obj, key) => {
             if (key === "workers") {
               // Transformar el campo `people`
@@ -1501,6 +2154,8 @@ export default {
                 roleId: Number(worker.roleId),
                 roleName: worker.roleName,
               }));
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTemplateStopsPayload(this.templateStopRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1549,25 +2204,33 @@ export default {
           "price",
           "active",
           "workers",
+          "tripStops",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
             (key) =>
               fieldsToUpdate.includes(key) &&
               (key !== "workers"
-                ? this.editedItem[key] !== this.originalItem[key]
+                ? key !== "tripStops"
+                  ? this.editedItem[key] !== this.originalItem[key]
+                  : this.areTemplateStopsDifferent(
+                      this.originalItem.tripStops,
+                      this.templateStopRows
+                    )
                 : this.areWorkersDifferent(this.originalItem[key], this.editedItem[key])) // Compara el array people
           )
           .reduce((obj, key) => {
             if (key === "workers") {
               // Transformar el campo `people`
               obj[key] = this.editedItem.workers.map((worker) => ({
-                 id: Number(worker.id),
+                id: Number(worker.id),
                 workerName: worker.workerName,
                 workerImage: worker.workerImage,
                 roleId: Number(worker.roleId),
                 roleName: worker.roleName,
               }));
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTemplateStopsPayload(this.templateStopRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1613,6 +2276,9 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.originalItem.tripStops = this.parseTemplateStops(this.originalItem.tripStops);
+      this.editedItem.tripStops = this.parseTemplateStops(this.editedItem.tripStops);
+      this.templateStopRows = [];
       this.data = {};
       this.data.branch_id = this.branch_id;
       try {
@@ -1628,8 +2294,9 @@ export default {
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
 
-          const matchedRoute = this.routes.find(route => route.id === this.editedItem.route_id);
+          const matchedRoute = this.getSelectedRouteRecord();
           this.estimated = matchedRoute ? matchedRoute.estimated : null;
+          this.syncTemplateStopsFromRoute(false);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];
@@ -1765,7 +2432,7 @@ export default {
 .custom-tooltip {
   background-color: #f5f5f5 !important;
   /* Fondo claro */
-  color: #E5E5E5 !important;
+  color: #e5e5e5 !important;
   /* Texto oscuro */
   border-radius: 8px;
   /* Bordes redondeados */
@@ -1844,3 +2511,4 @@ table.v-table > thead,
   display: none !important;
 }
 </style>
+
