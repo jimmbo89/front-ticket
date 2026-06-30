@@ -52,7 +52,7 @@
       class="busgo-add-btn"
       @click="showAdd()"
     >
-      Agregar Vehículo 1
+      Agregar Vehículo 
     </v-btn>
   </v-card>
 
