@@ -683,7 +683,7 @@
             <v-col cols="12" md="6">
               <v-card>
                 <v-card-title class="bg-primary"
-                  ><span class="text-subtitle-2 ml-2">Tipos de Pasaje</span></v-card-title
+                  ><span class="text-subtitle-2 ml-2">Tipos de Pasajero</span></v-card-title
                 >
                 <v-card-text
                   class="bg-white pt-4"
@@ -692,7 +692,7 @@
                   <div v-if="mergedTicketTypes.length > 0">
                     <div
                       v-for="ticket in mergedTicketTypes"
-                      :key="ticket.id"
+                      :key="ticket.trip_fare_id || ticket.id"
                       class="mb-2"
                     >
                       <v-row align="center">
@@ -701,14 +701,14 @@
                             v-model.number="ticket.cant"
                             @update:model-value="handleQuantityChange(ticket, $event)"
                             @blur="validateQuantity(ticket)"
-                            :label="ticket.name"
+                            :label="ticket.ticketTypeName || ticket.name"
                             variant="underlined"
                             density="compact"
                             type="number"
                             min="0"
                             :error-messages="
-                              (currentlyEditing === ticket.id && seatError) ||
-                              quantityErrors[ticket.id]
+                              (currentlyEditing === ticket.trip_fare_id && seatError) ||
+                              quantityErrors[ticket.trip_fare_id]
                             "
                             hide-details="auto"
                           ></v-text-field>
@@ -723,68 +723,14 @@
                           </div>
                         </v-col>
                         <v-col cols="12" md="6" class="d-flex align-center">
-                          <!-- Mostrar autocomplete cuando se está agregando tarifa -->
-                          <div v-if="ticket.showPromotionSelect" class="flex-grow-1">
-                            <v-autocomplete
-                              v-model="ticket.selectedPromotion"
-                              :items="promotions"
-                              label="Seleccionar tarifa"
-                              item-title="name"
-                              item-value="id"
-                              variant="underlined"
-                              density="compact"
-                              :no-data-text="'No hay tarifas disponibles'"
-                              @update:model-value="(val) => applyPromotion(ticket, val)"
-                              @blur="ticket.showPromotionSelect = false"
-                              autofocus
-                            >
-                              <template v-slot:item="{ props, item }">
-                                <v-list-item v-bind="props">
-                                  <template v-slot:prepend>
-                                    <v-icon :icon="getPromotionDiscountIcon(item.raw)"></v-icon>
-                                  </template>
-                                  <v-list-item-subtitle>
-                                    <strong>Descuento:</strong>
-                                    {{ formatPromotionDiscount(item.raw) }}
-                                  </v-list-item-subtitle>
-                                </v-list-item>
-                              </template>
-                            </v-autocomplete>
+                          <div class="flex-grow-1 d-flex justify-end mb-3">
+                            <div class="ticket-price-pill">
+                              <span class="text-caption text-medium-emphasis">Precio</span>
+                              <span class="text-subtitle-2 font-weight-bold text-primary">
+                                {{ formatNumber(Number(ticket.base_price)) }} CLP
+                              </span>
+                            </div>
                           </div>
-
-                          <!-- Mostrar chip de promoción cuando está aplicada -->
-                          <div
-                            v-else-if="ticket.promotion_id"
-                            class="d-flex align-center"
-                            style="gap: 8px"
-                          >
-                            <v-chip
-                              variant="outlined"
-                              color="primary"
-                              :prepend-icon="getPromotionDiscountIcon(ticket)"
-                            >
-                              {{ ticket.namePromotion }} ({{ formatPromotionDiscount(ticket) }})
-                            </v-chip>
-                            <v-btn
-                              @click="removePromotion(ticket)"
-                              variant="flat"
-                              color="error"
-                              icon="mdi-tag"
-                              size="small"
-                            ></v-btn>
-                          </div>
-
-                          <!-- Mostrar botón para agregar promoción cuando no hay -->
-                          <v-btn
-                            v-else
-                            @click="showPromotionSelect(ticket)"
-                            variant="flat"
-                            color="primary"
-                            icon="mdi-tag"
-                            size="small"
-                            elevation="1"
-                            :disabled="ticket.cant === 0"
-                          ></v-btn>
                         </v-col>
                       </v-row>
                       <v-divider class="my-2"></v-divider>
@@ -1326,7 +1272,10 @@ export default {
         () => {
           // Calcular la cantidad actual sumando todos los tickets
           const currentQuantity =
-            this.editedItem.tickettypes?.reduce((sum, t) => sum + (t.cant || 0), 0) || 0;
+            this.editedItem.tickettypes?.reduce(
+              (sum, t) => sum + (Number(t.cant ?? t.quantity) || 0),
+              0
+            ) || 0;
           const availableSeats = this.availableSeats.length;
 
           // Validación 1: Debe haber al menos un pasaje
@@ -1344,15 +1293,17 @@ export default {
       ];
     },
     mergedTicketTypes() {
-      const editedTickets = this.editedItem.tickettypes || [];
-      const ticketDefinitions = Array.isArray(this.tickettypes)
-        ? this.tickettypes
-        : Object.values(this.tickettypes || {});
+      const editedTickets = this.normalizeEditedTickettypes();
+      const ticketDefinitions = this.getTicketTypeDefinitions();
       const result = ticketDefinitions.map((ticket) => {
-        const editedTicket = editedTickets.find((t) => t.id === ticket.id) || {};
+        const editedTicket =
+          editedTickets.find(
+            (t) =>
+              Number(t.trip_fare_id ?? t.tripFareId ?? t.id) === Number(ticket.trip_fare_id)
+          ) || {};
         const mergedTicket = this.buildTicketTypeRecord(
           ticket,
-          editedTicket.cant ?? 0,
+          editedTicket.cant ?? editedTicket.quantity ?? 0,
           editedTicket
         );
 
@@ -1373,7 +1324,7 @@ export default {
     },
     totalSelected() {
       return (
-        this.editedItem.tickettypes?.reduce((sum, t) => sum + (Number(t.cant) || 0), 0) ||
+        this.normalizeEditedTickettypes().reduce((sum, t) => sum + (Number(t.cant ?? t.quantity) || 0), 0) ||
         0
       );
     },
@@ -1409,12 +1360,6 @@ export default {
         }
         this.recalculateTicketTotals();
       },
-    },
-    "editedItem.price"() {
-      if (this.isRecalculatingTickettypes) {
-        return;
-      }
-      this.recalculateTicketTotals();
     },
   },
   mounted() {
@@ -1965,19 +1910,7 @@ export default {
       return formattedValue;
     },
     getSelectedTripBasePrice() {
-      const selectedFareSegment = this.selectedFareSegmentRecord;
-      if (selectedFareSegment) {
-        return Number(selectedFareSegment.base_price) || 0;
-      }
-
-      const selectedTrip = this.selectedTripRecord;
-
-      return (
-        Number(this.editedItem.price) ||
-        Number(selectedTrip?.price) ||
-        Number(selectedTrip?.raw?.price) ||
-        0
-      );
+      return Number(this.editedItem.price) || 0;
     },
     getTicketTypeAdjustment(ticket, basePrice = this.getSelectedTripBasePrice()) {
       const normalizedBasePrice = Number(basePrice) || 0;
@@ -2076,27 +2009,10 @@ export default {
         return 0;
       }
 
-      const definition = this.getTicketTypeDefinition(ticket);
-      const adjustment = this.getTicketTypeAdjustment(definition);
-      const lineTotal = adjustment.unit_price * cant;
-      const promotion = ticket?.promotion_id
-        ? (this.promotions || []).find(
-            (item) => Number(item.id) === Number(ticket.promotion_id)
-          )
-        : null;
-      const promotionDiscount = promotion
-        ? this.getPromotionAdjustment(ticket, promotion, adjustment.unit_price)
-            .promotionDiscount
-        : Number(
-            ticket?.promotion_discount ??
-              ticket?.promotionDiscount ??
-              ticket?.discount ??
-              ticket?.promotion_details?.total_discount ??
-              ticket?.promotionDetails?.totalDiscount ??
-              0
-          ) || 0;
-
-      return Math.max(0, lineTotal - promotionDiscount);
+      return Math.max(
+        0,
+        Number(ticket.line_total ?? ticket.lineTotal ?? ticket.base_price * cant ?? 0) || 0
+      );
     },
     async showBranches() {
       try {
@@ -2151,7 +2067,7 @@ export default {
         seat.type === "seat" && seat.label && !this.isSeatReserved(Number(seat.label))
       );
     },
-    updateSeats(tripId) {
+    updateSeats(tripId, preserveTicketItems = false) {
       this.availableSeats = [];
       this.reservedSeats = [];
       this.aviable = 0;
@@ -2160,8 +2076,13 @@ export default {
       const selectedTrip = this.trips.find((trip) => Number(trip.id) === Number(tripId));
       if (!selectedTrip) {
         this.editedItem.price = 0;
+        this.editedItem.tickettypes = [];
         this.editedItem.fare_segment_id = null;
         return;
+      }
+
+      if (!preserveTicketItems) {
+        this.editedItem.tickettypes = [];
       }
 
       const validFareSegments = this.getFareSegmentOptions(selectedTrip);
@@ -2173,12 +2094,10 @@ export default {
         this.editedItem.fare_segment_id = null;
       }
 
-      const selectedFareSegment = hasSelectedSegment ? this.selectedFareSegmentRecord : null;
-      this.editedItem.price = Number(
-        selectedFareSegment?.base_price ?? selectedTrip.price ?? selectedTrip.raw?.price ?? 0
-      );
+      this.editedItem.price = 0;
       this.seats = Number(selectedTrip.seats) || 0;
       this.seatMap = Array.isArray(selectedTrip.seatMap) ? selectedTrip.seatMap : [];
+      const selectedFareSegment = hasSelectedSegment ? this.selectedFareSegmentRecord : null;
       this.reservedSeats = this.getOccupiedSeatsForSelection(selectedTrip, selectedFareSegment);
 
       this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
@@ -2192,16 +2111,16 @@ export default {
     },
     updateFareSegment(fareSegmentId) {
       this.editedItem.fare_segment_id = fareSegmentId || null;
+      this.editedItem.tickettypes = [];
       const selectedTrip = this.selectedTripRecord;
       if (!selectedTrip) {
         this.editedItem.price = 0;
+        this.editedItem.tickettypes = [];
         return;
       }
 
       const selectedFareSegment = this.selectedFareSegmentRecord;
-      this.editedItem.price = Number(
-        selectedFareSegment?.base_price ?? selectedTrip.price ?? selectedTrip.raw?.price ?? 0
-      );
+      this.editedItem.price = 0;
       this.selectedSeats = [];
       this.reservedSeats = this.getOccupiedSeatsForSelection(selectedTrip, selectedFareSegment);
       this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
@@ -2353,7 +2272,7 @@ export default {
             null
           );
           this.promotions = this.normalizePromotions(result.data?.promotions || []);
-          this.tickettypes = result.data?.tickettypes || [];
+          this.tickettypes = [];
         } else {
           // Si no hay datos, asignamos un array vacío
           this.trips = [];
@@ -2437,6 +2356,33 @@ export default {
       // Comparar las cadenas generadas
       return originalSeatsString !== editedSeatsString;
     },
+    normalizeTicketItemsPayload(items = []) {
+      return (Array.isArray(items) ? items : [])
+        .filter((item) => item && Number(item.cant ?? item.quantity) > 0)
+        .map((item) => {
+          const payload = {
+            trip_fare_id: Number(item.trip_fare_id ?? item.tripFareId ?? item.id),
+            quantity: Number(item.cant ?? item.quantity) || 0,
+          };
+
+          if (item.id && Number(item.id) !== Number(payload.trip_fare_id)) {
+            payload.id = Number(item.id);
+          }
+
+          return payload;
+        })
+        .sort((a, b) => Number(a.trip_fare_id) - Number(b.trip_fare_id));
+    },
+    areTicketItemsDifferent(originalItems, editedItems) {
+      const normalize = (items) =>
+        this.normalizeTicketItemsPayload(items).map((item) => ({
+          id: item.id ?? null,
+          trip_fare_id: Number(item.trip_fare_id),
+          quantity: Number(item.quantity) || 0,
+        }));
+
+      return JSON.stringify(normalize(originalItems)) !== JSON.stringify(normalize(editedItems));
+    },
     async save() {
       this.loading = true;
       if (this.editedIndex === -1) {
@@ -2455,7 +2401,7 @@ export default {
           "adults",
           "minors",
           "promotions",
-          "tickettypes",
+          "ticketItems",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -2472,9 +2418,14 @@ export default {
           updatedFields.seats = this.selectedSeats;
         }
         if (
-          this.areSeatsDifferent(this.editedItem.tickettypes, this.originalItem.seats)
+          this.areTicketItemsDifferent(
+            this.originalItem.tickettypes || this.originalItem.ticketItems || [],
+            this.editedItem.tickettypes
+          )
         ) {
-          updatedFields.tickettypes = this.editedItem.tickettypes;
+          updatedFields.ticketItems = this.normalizeTicketItemsPayload(
+            this.editedItem.tickettypes
+          );
         }
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.date = this.editedItem.date ? this.editedItem.date : new Date();
@@ -2548,7 +2499,7 @@ export default {
           "adults",
           "minors",
           "promotions",
-          "tickettypes",
+          "ticketItems",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
@@ -2565,9 +2516,14 @@ export default {
           updatedFields.seats = _.cloneDeep(this.selectedSeats);
         }
         if (
-          this.areSeatsDifferent(this.editedItem.tickettypes, this.originalItem.seats)
+          this.areTicketItemsDifferent(
+            this.originalItem.tickettypes || this.originalItem.ticketItems || [],
+            this.editedItem.tickettypes
+          )
         ) {
-          updatedFields.tickettypes = this.editedItem.tickettypes;
+          updatedFields.ticketItems = this.normalizeTicketItemsPayload(
+            this.editedItem.tickettypes
+          );
         }
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.id = this.editedItem.id;
@@ -3001,6 +2957,8 @@ export default {
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
       this.editedItem.fare_segment_id = item.fare_segment_id ?? item.fareSegmentId ?? null;
+      this.originalItem.tickettypes = _.cloneDeep(item.ticketItems || item.tickettypes || []);
+      this.editedItem.tickettypes = _.cloneDeep(item.ticketItems || item.tickettypes || []);
       this.selectedSeats = item.seats;
       this.data = {};
       this.data.branch_id = this.branch_id;
@@ -3027,7 +2985,7 @@ export default {
             currentTripId
           );
           this.promotions = this.normalizePromotions(result.data?.promotions || []);
-          this.tickettypes = result.data?.tickettypes || [];
+          this.tickettypes = [];
         } else {
           // Si no hay datos, asignamos un array vacío
           this.trips = [];
@@ -3041,7 +2999,7 @@ export default {
           3000
         );
       } finally {
-        this.updateSeats(item.trip_id);
+        this.updateSeats(item.trip_id, true);
         this.dialog = true;
       }
     },
@@ -3130,19 +3088,71 @@ export default {
       this.seatError = null;
       return true;
     },
-    getTicketTypeDefinitions(collection = this.tickettypes) {
-      const source =
-        collection && typeof collection === "object" && !Array.isArray(collection)
-          ? Array.isArray(collection.tickettypes)
-            ? collection.tickettypes
-            : Object.values(collection)
-          : collection;
+    getTicketTypeDefinitions(collection = null) {
+      const trip = this.selectedTripRecord;
+      const source = Array.isArray(trip?.tripFares) ? trip.tripFares : [];
+      const selectedFareSegmentId = Number(this.editedItem.fare_segment_id || 0);
 
-      if (Array.isArray(source)) {
-        return source.filter((item) => item && typeof item === "object");
-      }
+      return source
+        .filter((fare) => {
+          const fareSegmentId = Number(
+            fare?.fareSegment?.id ??
+              fare?.fareSegmentTicketType?.fare_segment_id ??
+              fare?.fare_segment_id ??
+              fare?.fareSegmentTicketType?.fareSegment?.id ??
+              0
+          );
 
-      return [];
+          if (!selectedFareSegmentId) {
+            return false;
+          }
+
+          return fareSegmentId === selectedFareSegmentId;
+        })
+        .map((fare) => this.normalizeTripFareDefinition(fare))
+        .filter((item) => item && item.trip_fare_id !== undefined && item.trip_fare_id !== null);
+    },
+    normalizeTripFareDefinition(fare = {}) {
+      const fareSegmentTicketType = fare.fareSegmentTicketType || {};
+      const fareSegment = fareSegmentTicketType.fareSegment || fare.fareSegment || {};
+      const originStop = fareSegment.originRouteStop || fareSegment.origin_route_stop || null;
+      const destinationStop =
+        fareSegment.destinationRouteStop || fareSegment.destination_route_stop || null;
+
+      return {
+        id: fare.id,
+        trip_fare_id: fare.id,
+        tripFareId: fare.id,
+        fare_segment_ticket_type_id:
+          fare.fare_segment_ticket_type_id ?? fareSegmentTicketType.id ?? null,
+        fareSegmentTicketTypeId:
+          fare.fare_segment_ticket_type_id ?? fareSegmentTicketType.id ?? null,
+        ticketTypeName:
+          fareSegmentTicketType.ticketTypeName ||
+          fareSegmentTicketType.ticket_type_name ||
+          fare.ticketTypeName ||
+          "Tipo de pasajero",
+        ticketTypeDescription:
+          fareSegmentTicketType.ticketTypeDescription || fare.ticketTypeDescription || "",
+        base_price: Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) || 0,
+        price: Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) || 0,
+        active: fare.active ?? true,
+        origin_label:
+          this.getFareSegmentRouteStopLabel(originStop?.location || originStop || fareSegment.originRouteStop) ||
+          "-",
+        destination_label:
+          this.getFareSegmentRouteStopLabel(
+            destinationStop?.location || destinationStop || fareSegment.destinationRouteStop
+          ) || "-",
+        fareSegment,
+        fareSegmentTicketType,
+        name:
+          fareSegmentTicketType.ticketTypeName ||
+          fareSegmentTicketType.ticket_type_name ||
+          fare.ticketTypeName ||
+          "Tipo de pasajero",
+        description: fareSegmentTicketType.ticketTypeDescription || "",
+      };
     },
     normalizeEditedTickettypes(tickettypes = this.editedItem.tickettypes || []) {
       const source =
@@ -3155,7 +3165,11 @@ export default {
       if (Array.isArray(source)) {
         return source.filter(
           (item) =>
-            item && typeof item === "object" && item.id !== undefined && item.id !== null
+            item &&
+            typeof item === "object" &&
+            (item.trip_fare_id !== undefined ||
+              item.tripFareId !== undefined ||
+              item.id !== undefined)
         );
       }
 
@@ -3163,220 +3177,118 @@ export default {
     },
     getCurrentQuantity(ticketId) {
       const ticket = this.normalizeEditedTickettypes().find(
-        (item) => Number(item.id) === Number(ticketId)
+        (item) =>
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) === Number(ticketId)
       );
-      return ticket ? Number(ticket.cant) || 0 : 0;
+      return ticket ? Number(ticket.cant ?? ticket.quantity) || 0 : 0;
     },
     getMaxQuantity(ticket) {
-      return (
-        this.availableSeats.length -
-        (this.totalSelected - this.getCurrentQuantity(ticket.id))
-      );
+      return this.availableSeats.length - (this.totalSelected - this.getCurrentQuantity(ticket.trip_fare_id || ticket.id));
     },
     getTicketTypeDefinition(ticketOrId) {
-      const ticketId = typeof ticketOrId === "object" ? ticketOrId?.id : ticketOrId;
-      const currentTicket =
-        typeof ticketOrId === "object" && ticketOrId ? ticketOrId : {};
+      const ticketId =
+        typeof ticketOrId === "object" ? ticketOrId?.trip_fare_id ?? ticketOrId?.id : ticketOrId;
+      const currentTicket = typeof ticketOrId === "object" && ticketOrId ? ticketOrId : {};
       const sourceTicket =
         this.getTicketTypeDefinitions().find(
-          (ticket) => Number(ticket.id) === Number(ticketId)
+          (ticket) => Number(ticket.trip_fare_id) === Number(ticketId)
         ) || {};
 
       return {
         ...sourceTicket,
         ...currentTicket,
-        id: ticketId ?? sourceTicket.id ?? currentTicket.id,
+        trip_fare_id:
+          sourceTicket.trip_fare_id ?? currentTicket.trip_fare_id ?? ticketId ?? null,
+        id: currentTicket.id ?? sourceTicket.id ?? null,
       };
     },
     getTicketTypeAdjustment(ticket) {
-      const basePrice = Number(this.editedItem.price) || 0;
-      const adjustmentType =
-        ticket.adjustment_type ?? ticket.adjustmentType ?? "descuento";
-      const valueType = ticket.value_type ?? ticket.valueType ?? "monto";
-      const adjustmentValue =
-        Number(ticket.adjustment_value ?? ticket.adjustmentValue ?? 0) || 0;
-      const adjustmentAmount =
-        valueType === "porcentaje"
-          ? (basePrice * adjustmentValue) / 100
-          : adjustmentValue;
-      const signedAdjustment =
-        adjustmentType === "recargo" ? adjustmentAmount : -adjustmentAmount;
-      const unitPrice = basePrice + signedAdjustment;
-
+      const basePrice = Number(ticket.base_price ?? ticket.price ?? 0) || 0;
       return {
-        adjustment_type: adjustmentType,
-        adjustmentType,
-        value_type: valueType,
-        valueType,
-        adjustment_value: adjustmentValue,
-        adjustmentValue,
         base_price: basePrice,
         basePrice,
-        adjustment_amount: adjustmentAmount,
-        adjustmentAmount,
-        signed_adjustment: signedAdjustment,
-        signedAdjustment,
-        unit_price: unitPrice,
-        unitPrice,
+        unit_price: basePrice,
+        unitPrice: basePrice,
+        line_total: basePrice,
+        lineTotal: basePrice,
+        line_subtotal: basePrice,
+        lineSubtotal: basePrice,
+        adjustment_amount: 0,
+        adjustmentAmount: 0,
+        signed_adjustment: 0,
+        signedAdjustment: 0,
       };
     },
     buildTicketTypeRecord(ticketOrId, quantity, existing = {}) {
       const definition = this.getTicketTypeDefinition(ticketOrId);
-      const adjustment = this.getTicketTypeAdjustment(definition);
+      const basePrice = Number(definition.base_price ?? definition.price ?? 0) || 0;
       const cant = Math.max(0, Number(quantity) || 0);
-      const lineSubtotal = adjustment.base_price * cant;
-      const lineTotal = adjustment.unit_price * cant;
-      const adjustmentTotal = adjustment.signed_adjustment * cant;
-      const tariffDetails = {
-        adjustment_type: adjustment.adjustment_type,
-        adjustmentType: adjustment.adjustmentType,
-        value_type: adjustment.value_type,
-        valueType: adjustment.valueType,
-        adjustment_value: adjustment.adjustment_value,
-        adjustmentValue: adjustment.adjustmentValue,
-        base_price: adjustment.base_price,
-        basePrice: adjustment.basePrice,
-        adjustment_amount: adjustment.adjustment_amount,
-        adjustmentAmount: adjustment.adjustmentAmount,
-        signed_adjustment: adjustment.signed_adjustment,
-        signedAdjustment: adjustment.signedAdjustment,
-        unit_price: adjustment.unit_price,
-        unitPrice: adjustment.unitPrice,
-        line_subtotal: lineSubtotal,
-        lineSubtotal,
-        adjustment_total: adjustmentTotal,
-        adjustmentTotal,
-        line_total: lineTotal,
-        lineTotal,
-      };
-
+      const lineTotal = basePrice * cant;
       const record = {
         ...existing,
-        id: definition.id,
-        name: definition.name,
-        description: definition.description ?? existing.description ?? "",
+        id: existing.id ?? definition.id ?? null,
+        trip_fare_id: definition.trip_fare_id ?? definition.id ?? null,
+        tripFareId: definition.trip_fare_id ?? definition.id ?? null,
+        fare_segment_ticket_type_id: definition.fare_segment_ticket_type_id ?? null,
+        ticketTypeName: definition.ticketTypeName || definition.name || "",
+        ticketTypeDescription: definition.ticketTypeDescription || definition.description || "",
+        name: definition.name || definition.ticketTypeName || "",
+        description: definition.description || definition.ticketTypeDescription || "",
         cant,
-        adjustment_details: tariffDetails,
-        adjustmentDetails: tariffDetails,
-        adjustment_type: adjustment.adjustment_type,
-        adjustmentType: adjustment.adjustmentType,
-        value_type: adjustment.value_type,
-        valueType: adjustment.valueType,
-        adjustment_value: adjustment.adjustment_value,
-        adjustmentValue: adjustment.adjustmentValue,
-        base_price: adjustment.base_price,
-        basePrice: adjustment.basePrice,
-        adjustment_amount: adjustment.adjustment_amount,
-        adjustmentAmount: adjustment.adjustmentAmount,
-        signed_adjustment: adjustment.signed_adjustment,
-        signedAdjustment: adjustment.signedAdjustment,
-        unit_price: adjustment.unit_price,
-        unitPrice: adjustment.unitPrice,
-        line_subtotal: lineSubtotal,
-        lineSubtotal,
-        adjustment_total: adjustmentTotal,
-        adjustmentTotal,
+        quantity: cant,
+        base_price: basePrice,
+        basePrice,
+        price: basePrice,
+        unit_price: basePrice,
+        unitPrice: basePrice,
         line_total: lineTotal,
         lineTotal,
-        promotion_id: existing.promotion_id ?? null,
-        namePromotion: existing.namePromotion ?? "",
-        percentage: existing.percentage ?? 0,
-        discount: Number(existing.discount) || 0,
-        showPromotionSelect: existing.showPromotionSelect ?? false,
-        selectedPromotion: existing.selectedPromotion ?? null,
+        line_subtotal: lineTotal,
+        lineSubtotal: lineTotal,
+        total: lineTotal,
+        origin_label: definition.origin_label || "-",
+        destination_label: definition.destination_label || "-",
+        fareSegment: definition.fareSegment || existing.fareSegment || null,
+        fareSegmentTicketType:
+          definition.fareSegmentTicketType || existing.fareSegmentTicketType || null,
       };
-
-      if (record.promotion_id) {
-        const promotion = (this.promotions || []).find(
-          (item) => Number(item.id) === Number(record.promotion_id)
-        );
-        if (promotion) {
-          return this.attachPromotionDetails(record, promotion);
-        }
-
-        record.promotion_id = null;
-        record.namePromotion = "";
-        record.percentage = 0;
-        record.discount = 0;
-      }
 
       return record;
     },
-    attachPromotionDetails(ticketRecord, promotion) {
-      const promoData = this.getPromotionAdjustment(ticketRecord, promotion);
-      const discountType = this.getPromotionDiscountType(promotion);
-      return {
-        ...ticketRecord,
-        promotion_id: promotion.id,
-        namePromotion: promotion.name,
-        percentage: promotion.percentage,
-        discount_type: discountType,
-        discountType,
-        discount: promoData.promotionDiscount,
-        promotion_base_price: promoData.promotion_base_price,
-        promotionBasePrice: promoData.promotionBasePrice,
-        promotion_unit_discount: promoData.promotion_unit_discount,
-        promotionUnitDiscount: promoData.promotionUnitDiscount,
-        promotion_discount: promoData.promotion_discount,
-        promotionDiscount: promoData.promotionDiscount,
-        promotion_discount_type: discountType,
-        promotionDiscountType: discountType,
-        promotion_details: {
-          promotion_id: promotion.id,
-          promotion_name: promotion.name,
-          percentage: promotion.percentage,
-          discount_type: discountType,
-          base_price: promoData.promotion_base_price,
-          unit_discount: promoData.promotion_unit_discount,
-          total_discount: promoData.promotionDiscount,
-        },
-        promotionDetails: {
-          promotionId: promotion.id,
-          promotionName: promotion.name,
-          percentage: promotion.percentage,
-          discountType,
-          basePrice: promoData.promotion_base_price,
-          unitDiscount: promoData.promotion_unit_discount,
-          totalDiscount: promoData.promotionDiscount,
-        },
-      };
-    },
     normalizeTickettypes(tickettypes = this.editedItem.tickettypes || []) {
-      return this.normalizeEditedTickettypes(tickettypes).map((ticket) =>
-        this.buildTicketTypeRecord(ticket, Number(ticket?.cant) || 0, ticket)
-      );
+      const ticketItems = this.normalizeEditedTickettypes(tickettypes);
+      return this.getTicketTypeDefinitions().map((ticket) => {
+        const existingTicket =
+          ticketItems.find(
+            (item) =>
+              Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
+              Number(ticket.trip_fare_id)
+          ) || {};
+
+        return this.buildTicketTypeRecord(
+          ticket,
+          Number(existingTicket.cant ?? existingTicket.quantity) || 0,
+          existingTicket
+        );
+      });
     },
     recalculateTicketTotals() {
       const normalizedTickettypes = this.normalizeTickettypes();
       const quantity = normalizedTickettypes.reduce(
-        (sum, ticket) => sum + (Number(ticket.cant) || 0),
+        (sum, ticket) => sum + (Number(ticket.cant ?? ticket.quantity) || 0),
         0
       );
-      const total = normalizedTickettypes.reduce((sum, ticket) => {
-        const cant = Number(ticket.cant) || 0;
-        const details = ticket.adjustment_details ?? ticket.adjustmentDetails ?? {};
-        const lineTotal =
-          Number(
-            details.line_total ??
-              details.lineTotal ??
-              ticket.line_total ??
-              ticket.lineTotal ??
-              0
-          ) || 0;
-        const discount =
-          Number(
-            ticket.discount ??
-              details.promotion_discount ??
-              details.promotionDiscount ??
-              0
-          ) || 0;
-        return sum + lineTotal - discount;
-      }, 0);
+      const total = normalizedTickettypes.reduce(
+        (sum, ticket) => sum + (Number(ticket.line_total ?? ticket.lineTotal ?? 0) || 0),
+        0
+      );
+      const price = quantity > 0 ? total / quantity : 0;
 
       this.isRecalculatingTickettypes = true;
       this.editedItem.tickettypes = normalizedTickettypes;
       this.editedItem.quantity = quantity;
       this.editedItem.total = total;
+      this.editedItem.price = price;
       this.$nextTick(() => {
         this.isRecalculatingTickettypes = false;
       });
@@ -3384,11 +3296,11 @@ export default {
     validateQuantity(ticket) {
       this.quantityErrors = {
         ...this.quantityErrors,
-        [ticket.id]: null,
+        [ticket.trip_fare_id || ticket.id]: null,
       };
 
-      const currentQty = this.getCurrentQuantity(ticket.id);
-      const requestedQty = Math.max(0, Number(ticket.cant) || 0);
+      const currentQty = this.getCurrentQuantity(ticket.trip_fare_id || ticket.id);
+      const requestedQty = Math.max(0, Number(ticket.cant ?? ticket.quantity) || 0);
       const maxAllowed = Math.max(
         0,
         this.availableSeats.length - (this.totalSelected - currentQty)
@@ -3398,15 +3310,15 @@ export default {
         ticket.cant = maxAllowed;
         this.quantityErrors = {
           ...this.quantityErrors,
-          [ticket.id]: `Máximo disponible: ${maxAllowed}`,
+          [ticket.trip_fare_id || ticket.id]: `Máximo disponible: ${maxAllowed}`,
         };
       }
 
-      this.handleQuantityChange(ticket, ticket.cant);
+      this.handleQuantityChange(ticket, ticket.cant ?? ticket.quantity);
     },
     handleQuantityChange(ticket, newValue) {
       const numericValue = Math.max(0, Number(newValue) || 0);
-      const currentQty = this.getCurrentQuantity(ticket.id);
+      const currentQty = this.getCurrentQuantity(ticket.trip_fare_id || ticket.id);
       const maxAllowed = Math.max(
         0,
         this.availableSeats.length - (this.totalSelected - currentQty)
@@ -3416,7 +3328,7 @@ export default {
         this.seatError = `Excede la capacidad. Máximo: ${this.availableSeats.length} asientos`;
         this.quantityErrors = {
           ...this.quantityErrors,
-          [ticket.id]: `Máximo disponible: ${maxAllowed}`,
+          [ticket.trip_fare_id || ticket.id]: `Máximo disponible: ${maxAllowed}`,
         };
         return;
       }
@@ -3424,7 +3336,9 @@ export default {
       this.seatError = null;
       const updatedTickets = [...this.normalizeEditedTickettypes()];
       const existingIndex = updatedTickets.findIndex(
-        (item) => Number(item.id) === Number(ticket.id)
+        (item) =>
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
+          Number(ticket.trip_fare_id || ticket.id)
       );
       const existingTicket = existingIndex !== -1 ? updatedTickets[existingIndex] : {};
       const normalizedRecord = this.buildTicketTypeRecord(
@@ -3443,10 +3357,10 @@ export default {
         updatedTickets.splice(existingIndex, 1);
       }
 
-      this.currentlyEditing = ticket.id;
+      this.currentlyEditing = ticket.trip_fare_id || ticket.id;
       this.quantityErrors = {
         ...this.quantityErrors,
-        [ticket.id]: null,
+        [ticket.trip_fare_id || ticket.id]: null,
       };
       this.isRecalculatingTickettypes = true;
       this.editedItem.tickettypes = updatedTickets;
@@ -3457,7 +3371,10 @@ export default {
     },
     updateTicketWithPromotion(ticket) {
       const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
-        if (Number(item.id) !== Number(ticket.id)) {
+        if (
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !==
+          Number(ticket.trip_fare_id || ticket.id)
+        ) {
           return item;
         }
 
@@ -3474,7 +3391,9 @@ export default {
     showPromotionSelect(ticket) {
       const updatedTickets = [...this.normalizeEditedTickettypes()];
       const existingIndex = updatedTickets.findIndex(
-        (item) => Number(item.id) === Number(ticket.id)
+        (item) =>
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
+          Number(ticket.trip_fare_id || ticket.id)
       );
 
       if (existingIndex !== -1) {
@@ -3485,7 +3404,7 @@ export default {
         };
       } else {
         updatedTickets.push(
-          this.buildTicketTypeRecord(ticket.id, Number(ticket.cant) || 0, {
+          this.buildTicketTypeRecord(ticket, Number(ticket.cant) || 0, {
             showPromotionSelect: true,
             selectedPromotion: null,
           })
@@ -3509,7 +3428,9 @@ export default {
 
       const updatedTickets = this.normalizeEditedTickettypes();
       const existingIndex = updatedTickets.findIndex(
-        (item) => Number(item.id) === Number(ticket.id)
+        (item) =>
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
+          Number(ticket.trip_fare_id || ticket.id)
       );
       const currentTicket =
         existingIndex !== -1
@@ -3539,7 +3460,10 @@ export default {
     },
     removePromotion(ticket) {
       const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
-        if (Number(item.id) !== Number(ticket.id)) {
+        if (
+          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !==
+          Number(ticket.trip_fare_id || ticket.id)
+        ) {
           return item;
         }
 
@@ -3651,6 +3575,18 @@ export default {
   line-height: 1.1;
 }
 
+.ticket-price-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(25, 118, 210, 0.08);
+  border: 1px solid rgba(25, 118, 210, 0.12);
+  min-width: 140px;
+}
+
 .v-icon {
   transition: all 0.3s ease;
 }
@@ -3754,6 +3690,11 @@ export default {
 
   .ticket-total-preview {
     font-size: 0.72rem;
+  }
+
+  .ticket-price-pill {
+    min-width: 120px;
+    padding: 6px 10px;
   }
 
   .seat-container {

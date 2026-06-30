@@ -148,8 +148,8 @@ export default {
 
     tickets: [
       {
-        title: "Tipos de Pasaje",
-        icon: "mdi-ticket-percent-outline",
+        title: "Tipos de pasajeros",
+        icon: "mdi-account-group-outline",
         to: "ticket-type",
         permission: "view_tickettype",
       },

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <v-snackbar
     class="mt-12"
     location="right top"
@@ -47,15 +47,15 @@
   </v-card>
   <!--<v-container style="min-width: 100%;">-->
   <v-card flat>
-    <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+    <!-- Barra superior: selecciÃ³n de sucursal + botÃ³n buscar + bÃºsqueda global -->
     <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-      <!-- Título -->
+      <!-- TÃ­tulo -->
       <div class="text-body-1 font-weight-bold">Listado de plantillas de viajes</div>
 
       <!-- Spacer (solo visible en md+) -->
       <v-spacer class="d-none d-md-block"></v-spacer>
 
-      <!-- Grupo: Autocomplete + Botón buscar -->
+      <!-- Grupo: Autocomplete + BotÃ³n buscar -->
       <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
         <!-- Autocomplete de sucursales (mismo estilo que el original) -->
         <v-autocomplete
@@ -85,14 +85,14 @@
           </template>
         </v-autocomplete>
 
-        <!-- Botón de búsqueda (actualizar datos) 
+        <!-- BotÃ³n de bÃºsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
           </v-btn>-->
       </div>
 
-      <!-- Campo de búsqueda global -->
+      <!-- Campo de bÃºsqueda global -->
       <div class="flex-grow-1" style="max-width: 300px">
         <v-text-field
           v-model="search"
@@ -147,15 +147,15 @@
             "
           >
             <!-- Negocio (20%) -->
-            <div style="width: 34%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
               Ruta
             </div>
 
-            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
               Vehículo
             </div>
 
-            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 12%; min-width: 0" class="text-left font-weight-bold">
               Trabajadores
             </div>
 
@@ -167,27 +167,25 @@
               Duración
             </div>
 
-            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-              Precio
-            </div>
-
-            <div style="width: 9%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
               Frecuencia
             </div>
 
-            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 9%; min-width: 0" class="text-center font-weight-bold">
               Días
             </div>
 
-            <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 5%; min-width: 0" class="text-center font-weight-bold">
               Estado
             </div>
 
             <!-- Acciones (25%) -->
             <div
               style="width: 6%; min-width: 0"
-              class="d-flex justify-left font-weight-bold"
-            ></div>
+              class="d-flex justify-center font-weight-bold"
+            >
+              Acciones
+            </div>
           </v-card-text>
         </v-card>
       </template>
@@ -201,15 +199,19 @@
                 style="width: 100%; min-width: 0"
               >
                 <!-- Ruta -->
-                <div style="width: 34%; min-width: 0" class="text-truncate pr-2">
+                <div style="width: 30%; min-width: 0" class="text-truncate pr-2">
                   <div class="font-weight-medium text-truncate">
                     {{ slotProps.item.name }}
                   </div>
-                  <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                  <div
+                    class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1"
+                  >
                     <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
                     <span class="text-truncate">Origen: {{ slotProps.item.origin }}</span>
                     <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-                    <span class="text-truncate">Destino: {{ slotProps.item.destination }}</span>
+                    <span class="text-truncate"
+                      >Destino: {{ slotProps.item.destination }}</span
+                    >
                   </div>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
@@ -221,7 +223,7 @@
                 </div>
 
                 <!-- Vehículo con avatar -->
-                <div class="d-flex align-center" style="width: 11%; min-width: 0">
+                <div class="d-flex align-center" style="width: 10%; min-width: 0">
                   <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
                       :src="`${this.$axios.defaults.baseURL}images/${
@@ -246,10 +248,10 @@
                 </div>
 
                 <!-- trabajadores -->
-                <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                <div style="width: 12%; min-width: 0" class="text-truncate text-left">
                   <div class="avatar-row">
                     <v-tooltip
-                      v-for="person in slotProps.item.workers"
+                      v-for="person in slotProps.item.workers || []"
                       :key="person.id"
                       bottom
                     >
@@ -262,20 +264,20 @@
                         >
                           <v-img
                             :src="`${this.$axios.defaults.baseURL}images/${
-                              person.workerImage
+                              person.workerImage || person.image
                             }?t=${getCacheTimestamp()}`"
                             alt="image"
                           />
                         </v-avatar>
                       </template>
-                      <span>{{ person.workerName }}</span>
+                      <span>{{ person.workerName || person.name }}</span>
                       <v-spacer></v-spacer>
                       <span class="text-secondary">{{ person.roleName }}</span>
                     </v-tooltip>
                   </div>
                 </div>
 
-                <div style="width: 9%; min-width: 0" class="text-truncate text-left">
+                <div style="width: 8%; min-width: 0" class="text-truncate text-left">
                   <span>{{ slotProps.item.schedule }}</span>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
@@ -294,20 +296,10 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Precio -->
-                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
-                  <span>{{ formatNumber(slotProps.item.price) }}</span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Precio: {{ formatNumber(slotProps.item.price) }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
                 <!-- frecuencia -->
-                <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                <div style="width: 9%; min-width: 0" class="text-truncate text-left">
                   <div
-                    class="text-truncate text-center"
+                    class="text-truncate text-left"
                     v-if="slotProps.item.recurrence_pattern"
                   >
                     <v-icon
@@ -330,8 +322,8 @@
                 </div>
 
                 <!-- Dias -->
-                <div style="width: 10%; min-width: 0" class="text-truncate text-center">
-                  <div v-if="slotProps.item.days_of_week" class="d-flex">
+                <div style="width: 8%; min-width: 0" class="text-truncate text-left">
+                  <div v-if="slotProps.item.days_of_week" class="d-flex text-left">
                     <v-tooltip location="bottom">
                       <template v-slot:activator="{ props: activatorProps }">
                         <div v-bind="activatorProps" class="d-flex flex-wrap gap-1">
@@ -378,7 +370,7 @@
                 <!-- Acciones -->
                 <div
                   class="d-flex gap-1"
-                  style="width: 5%; justify-content: flex-end; flex-wrap: nowrap"
+                  style="width: 6%; justify-content: flex-end; flex-wrap: nowrap"
                 >
                   <v-btn
                     size="35"
@@ -413,189 +405,6 @@
       </template>
     </v-data-table>
   </v-card>
-  <!--</v-container>
-    <v-container style="min-width: 100%">
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <v-row align="center">
-                    <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Plantillas de Viajes</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="3" class="text-right">
-                        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-                            prepend-icon="mdi-plus-circle" @click="showAdd">
-                            Agregar Plantilla de Viaje
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-toolbar>
-            <v-card-text>
-                <v-row>
-                    <v-container fluid>
-                        <v-col cols="12" md="12">
-                            <v-row v-if="mostrarFila" dense>
-                                <v-col cols="12" md="3">
-                                    <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id"
-                                        :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store"
-                                        item-title="name" item-value="id" variant="underlined" :rules="selectRules"
-                                        density="compact">
-                                        <template v-slot:item="{ props, item }">
-                                            <v-list-item v-bind="props"
-                                                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-                                            </v-list-item>
-                                        </template> </v-autocomplete>
-                                </v-col>
-                                <v-col cols="12" md="2">
-                                    <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable">
-                                        <v-icon>mdi-magnify</v-icon></v-btn>
-                                </v-col>
-                            </v-row>
-                        </v-col>
-                    </v-container>
-                </v-row>
-                <v-row dense>
-                    <v-col cols="12">
-                        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar"
-                            single-line hide-details>
-                        </v-text-field>
-                        <v-data-table :headers="headers" :search="search" :items="templates" class="elevation-1"
-                            style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-                            no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                            <template v-slot:item.actions="{ item }">
-                                <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)"
-                                    :color="paleteColors.primary" variant="tonal" elevation="1"
-                                    title="Editar Viaje"></v-btn>
-                                <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)"
-                                    :color="paleteColors.error" variant="tonal" elevation="1"
-                                    title="Eliminar Viaje"></v-btn>
-                            </template>
-                            <template v-slot:item.origin="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                                <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                                    item.originImage
-                                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                {{ item.origin }}
-                            </template>
-                            <template v-slot:item.origin="{ item }">
-                                <div class="avatar-row">
-                                    <v-tooltip v-if="item.origin && item.originImage" bottom
-                                        content-class="custom-tooltip">
-                                        <template v-slot:activator="{ props }">
-                                            <div class="d-flex align-center" v-bind="props">
-                                                <v-avatar class="avatar-item me-2" size="32" elevation="3">
-                                                    <v-img
-                                                        :src="`${this.$axios.defaults.baseURL}images/${item.originImage}?t=${Date.now()}`"
-                                                        alt="Origin image" />
-                                                </v-avatar>
-                                            </div>
-                                        </template>
-                                        <span>{{ item.origin }}</span>
-                                    </v-tooltip>
-                                    <span v-else>{{ item.origin || 'N/A' }}</span>
-                                </div>
-                            </template>                           
-                            <template v-slot:item.destination="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                                <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                                    item.destinationImage
-                                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                {{ item.destination }}
-                            </template>
-                            <template v-slot:item.destination="{ item }">
-                                <div class="avatar-row">
-                                    <v-tooltip v-if="item.destination && item.destinationImage" bottom
-                                        content-class="custom-tooltip">
-                                        <template v-slot:activator="{ props }">
-                                            <div class="d-flex align-center" v-bind="props">
-                                                <v-avatar class="avatar-item me-2" size="32" elevation="3">
-                                                    <v-img
-                                                        :src="`${this.$axios.defaults.baseURL}images/${item.destinationImage}?t=${Date.now()}`"
-                                                        alt="Origin image" />
-                                                </v-avatar>
-                                            </div>
-                                        </template>
-                                        <span>{{ item.destination }}</span>
-                                    </v-tooltip>
-                                    <span v-else>{{ item.destination || 'N/A' }}</span>
-                                </div>
-                            </template>
-                            <template v-slot:item.vehicleName="{ item }">
-                                <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-                                    <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                      item.vehicleImage
-                    }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-                                <div class="d-flex flex-column">
-                                    <span>{{ item.vehicleName }}</span>
-                                    <span class="text-caption text-grey">
-                                        {{ getVehicleInternalNumber(item) }}
-                                    </span>
-                                </div>
-                            </template>
-                            <template v-slot:item.workers="{ item }">
-                                <div class="avatar-row">
-                                    <v-tooltip v-for="person in item.workers" :key="person.id" bottom
-                                        content-class="custom-tooltip">
-                                        <template v-slot:activator="{ props }">
-                                            <v-avatar class="avatar-item hover-expand" size="32" elevation="3"
-                                                v-bind="props">
-                                                <v-img
-                                                    :src="`${this.$axios.defaults.baseURL}images/${person.workerImage}?t=${Date.now()}`"
-                                                    alt="image" />
-                                            </v-avatar>
-                                        </template>
-                                        <span>{{ person.workerName }}</span>
-                                        <v-spacer></v-spacer>
-                                        <span class="text-secondary">{{ person.roleName }}</span>
-                                    </v-tooltip>
-                                </div>
-                            </template>
-                            <template v-slot:item.recurrence_pattern="{ item }">
-                            <div class="d-flex align-center" v-if="item.recurrence_pattern">
-                                <v-icon small class="me-1" :color="getRecurrenceColor(item.recurrence_pattern)">{{ getRecurrenceIcon(item.recurrence_pattern) }}</v-icon>
-                                <span >{{ translateRecurrence(item.recurrence_pattern) }}</span>
-                            </div>
-                            <span v-else>-</span>
-                            </template>
-                            <template v-slot:item.days_of_week="{ item }">
-                            <div v-if="item.days_of_week" class="d-flex">
-                                <v-tooltip location="bottom">
-                                <template v-slot:activator="{ props: activatorProps }">
-                                    <div v-bind="activatorProps" class="d-flex flex-wrap gap-1">
-                                    <v-avatar
-                                        v-for="day in 7"
-                                        :key="day"
-                                        size="24"
-                                        :color="getDaysArray(item.days_of_week).includes(day - 1) ? 'primary' : 'grey-lighten-4'"
-                                        class="text-caption"
-                                    >
-                                        {{ ['D', 'L', 'M', 'X', 'J', 'V', 'S'][day - 1] }}
-                                    </v-avatar>
-                                    </div>
-                                </template>
-                                <span>{{ formatFullDayNames(getDaysArray(item.days_of_week)) }}</span>
-                                </v-tooltip>
-                            </div>
-                            <span v-else>-</span>
-                            </template>
-                             <template v-slot:item.active="{ item }">
-                            <div class="selection-content">
-                                                    <v-icon :size="20"
-                                                            :color="item.active ? 'success' : 'error'"
-                                                            :icon="item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
-                                                            class="selection-icon"></v-icon>
-                                                    <span class="selection-text">{{ activeName(item.active) }}</span>
-                                                </div>
-                            </template>
-                            
-                            <template v-slot:item.price="{ item }">
-                                {{ formatNumber(item.price)}}
-                            </template>
-                        </v-data-table>
-                    </v-col>
-                </v-row>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
   <v-dialog
     v-model="dialog"
     fullscreen
@@ -798,18 +607,6 @@
                 <v-row>
                   <v-col cols="12" md="3">
                     <v-text-field
-                      v-model="editedItem.price"
-                      label="Precio"
-                      prepend-icon="mdi-currency-usd"
-                      variant="underlined"
-                      :rules="priceRules"
-                      type="number"
-                      density="compact"
-                      min="0"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="3">
-                    <v-text-field
                       v-model="editedItem.duration"
                       label="Duración (Minutos)"
                       prepend-icon="mdi-timer"
@@ -884,8 +681,7 @@
                     :disabled="
                       !editedItem.vehicle_id ||
                       !editedItem.route_id ||
-                      !editedItem.schedule ||
-                      !editedItem.price
+                      !editedItem.schedule
                     "
                   >
                     Siguiente
@@ -904,7 +700,7 @@
                         >
                         <div class="text-caption" style="opacity: 0.85">
                           La última columna agrega o quita la asociación de la parada a la
-                          plantilla. La tabla muestra la información propia de la parada.
+                          plantilla. La tabla muestra la informaciÃ³n propia de la parada.
                         </div>
                       </v-col>
                     </v-row>
@@ -1208,6 +1004,296 @@
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1"
+                          ><strong>Tramos y tipos de pasaje</strong></span
+                        >
+                        <div class="text-caption" style="opacity: 0.85">
+                          Define los tramos disponibles para la plantilla y ajusta el
+                          precio de cada tipo de pasaje.
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
+
+                  <v-card-text>
+                    <v-data-table
+                      :headers="tripFaresHeaders"
+                      :items="templateFareRows"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                      hide-default-header
+                    >
+                      <template v-slot:top>
+                        <v-card
+                          flat
+                          color="blue-grey-lighten-5"
+                          class="mb-2 mx-1 rounded-lg"
+                          elevation="1"
+                          style="
+                            border: 1px solid #eceff1;
+                            height: 40px;
+                            min-height: 40px;
+                            display: flex;
+                            align-items: center;
+                          "
+                        >
+                          <v-card-text
+                            class="d-flex pa-2"
+                            style="
+                              width: 100%;
+                              min-width: 0;
+                              height: 100%;
+                              padding: 0 16px !important;
+                              display: flex;
+                              align-items: center;
+                            "
+                          >
+                            <div
+                              style="width: 28%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Origen
+                            </div>
+                            <div
+                              style="width: 28%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Destino
+                            </div>
+                            <div
+                              style="width: 14%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Precio base
+                            </div>
+                            <div
+                              style="width: 18%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Vigencia
+                            </div>
+                            <div
+                              style="width: 10%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Estado
+                            </div>
+                            <div
+                              style="width: 2%; min-width: 0"
+                              class="d-flex justify-left font-weight-bold"
+                            ></div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+
+                      <template v-slot:item="slotProps">
+                        <tr>
+                          <td colspan="100%" style="padding: 0; border: none">
+                            <v-card
+                              class="mb-2 mx-1 rounded-lg"
+                              elevation="1"
+                              density="comfortable"
+                              flat
+                            >
+                              <v-card-text
+                                class="d-flex align-center pa-2"
+                                style="width: 100%; min-width: 0"
+                              >
+                                <div
+                                  style="width: 28%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{ slotProps.item.originLabel }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 28%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{ slotProps.item.destinationLabel }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 14%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{
+                                    formatNumber(slotProps.item.base_price)
+                                  }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 18%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div>{{ slotProps.item.valid_from || "-" }}</div>
+                                  <div>hasta {{ slotProps.item.valid_to || "-" }}</div>
+                                </div>
+
+                                <div
+                                  style="width: 10%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <v-chip
+                                    :color="
+                                      slotProps.item.active
+                                        ? paleteColors.active
+                                        : paleteColors.inactive
+                                    "
+                                    :text-color="paleteColors.white"
+                                  >
+                                    {{ slotProps.item.active ? "Activo" : "Inactivo" }}
+                                  </v-chip>
+                                </div>
+
+                                <div
+                                  class="d-flex gap-1"
+                                  style="
+                                    width: 2%;
+                                    justify-content: flex-end;
+                                    flex-wrap: nowrap;
+                                  "
+                                >
+                                  <v-btn
+                                    v-if="
+                                      slotProps.item.fareSegmentTicketTypes &&
+                                      slotProps.item.fareSegmentTicketTypes.length
+                                    "
+                                    size="35"
+                                    icon
+                                    variant="outlined"
+                                    :style="{
+                                      'border-width': '1px',
+                                      'border-style': 'solid',
+                                    }"
+                                    :color="paleteColors.primary"
+                                    @click="toggleTemplateFareExpanded(slotProps.item)"
+                                    class="flex-shrink-0"
+                                    title="Ver tipos de pasaje"
+                                  >
+                                    <v-icon size="20">
+                                      {{
+                                        isTemplateFareExpanded(slotProps.item)
+                                          ? "mdi-chevron-up"
+                                          : "mdi-chevron-down"
+                                      }}
+                                    </v-icon>
+                                  </v-btn>
+                                </div>
+                              </v-card-text>
+
+                              <v-expand-transition>
+                                <div
+                                  v-if="
+                                    isTemplateFareExpanded(slotProps.item) &&
+                                    slotProps.item.fareSegmentTicketTypes &&
+                                    slotProps.item.fareSegmentTicketTypes.length
+                                  "
+                                  class="px-4 pb-4"
+                                >
+                                  <v-card
+                                    variant="outlined"
+                                    class="trip-fare-ticket-types-panel rounded-lg"
+                                    elevation="0"
+                                  >
+                                    <div class="trip-fare-ticket-types-header">
+                                      <div class="trip-fare-col-name">
+                                        Tipo de pasajero
+                                      </div>
+                                      <div class="trip-fare-col-price">Precio (Bs.)</div>
+                                      <div class="trip-fare-col-status">Habilitado</div>
+                                    </div>
+
+                                    <div
+                                      v-for="(ticketType, ticketIndex) in slotProps.item
+                                        .fareSegmentTicketTypes"
+                                      :key="
+                                        templateFareTicketTypeKey(ticketType, ticketIndex)
+                                      "
+                                      class="trip-fare-ticket-types-row"
+                                    >
+                                      <div class="trip-fare-col-name">
+                                        <div class="font-weight-medium text-truncate">
+                                          {{ ticketType.ticketTypeName }}
+                                        </div>
+                                      </div>
+                                      <div class="trip-fare-col-price">
+                                        <v-text-field
+                                          v-model="ticketType.price"
+                                          type="number"
+                                          step="1"
+                                          min="0"
+                                          variant="underlined"
+                                          density="compact"
+                                          hide-details
+                                        ></v-text-field>
+                                      </div>
+                                      <div class="trip-fare-col-status">
+                                        <div class="trip-fare-status-inline">
+                                          <v-switch
+                                            v-model="ticketType.active"
+                                            :true-value="true"
+                                            :false-value="false"
+                                            :color="
+                                              ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey
+                                            "
+                                            :base-color="
+                                              ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey
+                                            "
+                                            density="compact"
+                                            hide-details
+                                            inset
+                                            class="trip-fare-row-switch"
+                                          />
+                                          <span
+                                            class="trip-fare-status-label text-body-2"
+                                            :style="{
+                                              color: ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey,
+                                            }"
+                                          >
+                                            {{ ticketType.active ? "Si" : "No" }}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </v-card>
+                                </div>
+                              </v-expand-transition>
+                            </v-card>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn color="#E7E9E9" variant="flat" @click="nextStep"
+                    >Siguiente</v-btn
+                  >
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.4>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
                           ><strong>Relación de Trabajadores</strong></span
                         >
                       </v-col>
@@ -1405,7 +1491,7 @@ export default {
     mostrar: false,
     dialog: false,
     timeSlots: [], // Array para almacenar los slots ordenados
-    currentTimeSlots: [], // Array para los slots filtrados según fecha
+    currentTimeSlots: [], // Array para los slots filtrados segÃºn fecha
     dialogDelete: false,
     estimated: 0,
     timeSlotsKey: 0,
@@ -1418,12 +1504,19 @@ export default {
     branches: [],
     filteredWorkers: [],
     templateStopRows: [],
+    templateFareRows: [],
+    expandedTemplateFareIds: [],
     data: {},
     selectedWorker: "",
     route: "",
     branch_id: "",
     step: 1,
-    items: ["Datos Generales", "Paradas", "Asignar Trabajadores"],
+    items: [
+      "Datos Generales",
+      "Paradas",
+      "Tramos y tipos de pasaje",
+      "Asignar Trabajadores",
+    ],
     dialogAssignedWorkers: false,
     frequencyOptions: [
       { text: "Diario", value: "daily" },
@@ -1453,7 +1546,6 @@ export default {
       { title: "Trabajadores", value: "workers" },
       { title: "Horario", value: "schedule" },
       { title: "Duración (minutos)", value: "duration" },
-      { title: "Precio", value: "price" },
       { title: "Frecuencia", value: "recurrence_pattern" },
       { title: "Dias de la Semana", value: "days_of_week" },
       { title: "Estado", value: "active" },
@@ -1475,6 +1567,14 @@ export default {
       { title: "Estado", value: "active", width: "9%" },
       { title: "Asociar", value: "included", width: "12%" },
     ],
+    tripFaresHeaders: [
+      { title: "Origen", value: "originLabel", width: "28%" },
+      { title: "Destino", value: "destinationLabel", width: "28%" },
+      { title: "Precio base", value: "base_price", width: "14%" },
+      { title: "Vigencia", value: "valid_from", width: "18%" },
+      { title: "Estado", value: "active", width: "10%" },
+      { title: "Tipos", value: "actions", sortable: false, width: "2%" },
+    ],
 
     editedItem: {
       id: "",
@@ -1483,12 +1583,12 @@ export default {
       vehicle_id: "",
       schedule: "",
       duration: "",
-      price: "",
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
       workers: [],
       tripStops: [],
+      tripFares: [],
     },
     originalItem: {
       id: "",
@@ -1497,12 +1597,12 @@ export default {
       vehicle_id: "",
       schedule: "",
       duration: "",
-      price: "",
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
       workers: [],
       tripStops: [],
+      tripFares: [],
     },
     defaultItem: {
       id: "",
@@ -1512,12 +1612,12 @@ export default {
       date: "",
       schedule: "",
       duration: "",
-      price: "",
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
       workers: [],
       tripStops: [],
+      tripFares: [],
     },
     editedIndex: -1,
     search: "",
@@ -1532,13 +1632,6 @@ export default {
       (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    priceRules: [
-      (v) => !!v || "El precio es obligatorio", // El campo es obligatorio
-      (v) =>
-        /^[0-9]+(\.[0-9]{1,2})?$/.test(v) ||
-        "El precio debe ser un número válido con hasta 2 decimales", // Valida el formato del precio
-      (v) => v > 0 || "El precio debe ser un número positivo", // El precio debe ser positivo
-    ],
     durationRules: [
       (v) => !isNaN(v) || "La duración debe ser un número",
       (v) => v > 0 || "La duración debe ser mayor a 0",
@@ -1564,14 +1657,14 @@ export default {
       return this.generateTimeSlots();
     },
     isDaySelectionDisabled() {
-      // Deshabilitar selección manual para estas opciones
+      // Deshabilitar selecciÃ³n manual para estas opciones
       return ["daily", "weekdays", "weekends"].includes(
         this.editedItem.recurrence_pattern
       );
     },
 
     shouldPreselectDays() {
-      // Determinar si debemos preseleccionar días
+      // Determinar si debemos preseleccionar dÃ­as
       return this.editedItem.recurrence_pattern && this.isDaySelectionDisabled;
     },
   },
@@ -1589,10 +1682,10 @@ export default {
   watch: {
     "editedItem.recurrence_pattern": {
       handler(newVal) {
-        // Primero limpiar los días seleccionados
+        // Primero limpiar los dÃ­as seleccionados
         this.editedItem.days_of_week = "";
 
-        // Luego llamar al método de preselección
+        // Luego llamar al mÃ©todo de preselecciÃ³n
         this.$nextTick(() => {
           this.preselectDays();
         });
@@ -1607,6 +1700,25 @@ export default {
           (route) => Number(route.id) === Number(this.editedItem.route_id)
         ) || null
       );
+    },
+    getSelectedRouteStopLabel(stop) {
+      if (!stop) {
+        return "";
+      }
+
+      return (
+        stop.location?.address || stop.locationName || stop.address || stop.name || "-"
+      );
+    },
+    normalizeTemplateWorkerRecord(worker = {}) {
+      return {
+        ...worker,
+        workerName: worker.workerName ?? worker.name ?? "",
+        workerImage: worker.workerImage ?? worker.image ?? "workers/default.jpg",
+      };
+    },
+    normalizeTemplateWorkersList(workers = []) {
+      return workers.map((worker) => this.normalizeTemplateWorkerRecord(worker));
     },
     parseTemplateStops(value) {
       if (Array.isArray(value)) return value;
@@ -1658,6 +1770,158 @@ export default {
             routeStop.image || routeStop.locationImage || "locations/default.jpg",
         };
       });
+    },
+    parseTemplateFares(value) {
+      if (Array.isArray(value)) return value;
+      if (!value) return [];
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          return [];
+        }
+      }
+      return [];
+    },
+    buildTemplateFareRows(route = null, tripFares = [], forceIncludeAll = false) {
+      const selectedRoute = route || this.getSelectedRouteRecord();
+      const fareSegments = Array.isArray(selectedRoute?.fareSegments)
+        ? selectedRoute.fareSegments
+        : Array.isArray(selectedRoute?.fare_segments)
+        ? selectedRoute.fare_segments
+        : [];
+
+      const fareMap = new Map(
+        (Array.isArray(tripFares) ? tripFares : []).map((fare) => [
+          Number(fare.fare_segment_ticket_type_id ?? fare.fareSegmentTicketTypeId),
+          fare,
+        ])
+      );
+
+      return fareSegments.map((segment) => {
+        const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
+        const destinationStop =
+          segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
+        const ticketTypes = Array.isArray(segment.fareSegmentTicketTypes)
+          ? segment.fareSegmentTicketTypes
+          : Array.isArray(segment.fare_segment_ticket_types)
+          ? segment.fare_segment_ticket_types
+          : [];
+
+        return {
+          ...segment,
+          originLabel: this.getSelectedRouteStopLabel(
+            originStop?.location || originStop || segment.originStop
+          ),
+          destinationLabel: this.getSelectedRouteStopLabel(
+            destinationStop?.location || destinationStop || segment.destinationStop
+          ),
+          fareSegmentTicketTypes: ticketTypes.map((ticketType) => {
+            const existingFare = fareMap.get(Number(ticketType.id));
+            return {
+              id: existingFare?.id || "",
+              fare_segment_ticket_type_id: ticketType.id,
+              price:
+                existingFare?.price ?? ticketType.base_price ?? ticketType.basePrice ?? 0,
+              active: existingFare?.active ?? true,
+              source_type: existingFare?.source_type || "auto",
+              ticketTypeName:
+                ticketType.ticketTypeName ||
+                ticketType.ticketType?.name ||
+                ticketType.name ||
+                "",
+            };
+          }),
+          included: forceIncludeAll || true,
+        };
+      });
+    },
+    templateFareTicketTypeKey(ticketType, index) {
+      return ticketType.id || ticketType.fare_segment_ticket_type_id || index;
+    },
+    isTemplateFareExpanded(item) {
+      const itemId = Number(item?.id);
+      return this.expandedTemplateFareIds.includes(itemId);
+    },
+    toggleTemplateFareExpanded(item) {
+      const itemId = Number(item?.id);
+      if (!Number.isFinite(itemId) || itemId <= 0) {
+        return;
+      }
+
+      this.expandedTemplateFareIds =
+        this.expandedTemplateFareIds[0] === itemId ? [] : [itemId];
+    },
+    syncTemplateFareRows(forceIncludeAll = false) {
+      const route = this.getSelectedRouteRecord();
+      if (!route) {
+        this.templateFareRows = [];
+        this.expandedTemplateFareIds = [];
+        return;
+      }
+
+      const tripFares = this.parseTemplateFares(this.editedItem.tripFares);
+      const shouldIncludeAll =
+        forceIncludeAll ||
+        this.editedIndex === -1 ||
+        Number(this.originalItem.route_id) !== Number(this.editedItem.route_id);
+
+      this.templateFareRows = this.buildTemplateFareRows(
+        route,
+        tripFares,
+        shouldIncludeAll
+      );
+      this.expandedTemplateFareIds = [];
+    },
+    normalizeTemplateFaresPayload(rows = []) {
+      const payload = [];
+
+      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+        (Array.isArray(segment.fareSegmentTicketTypes)
+          ? segment.fareSegmentTicketTypes
+          : []
+        ).forEach((ticketType) => {
+          const fareSegmentTicketTypeId = Number(
+            ticketType.fare_segment_ticket_type_id ??
+              ticketType.fareSegmentTicketTypeId ??
+              ticketType.id
+          );
+
+          if (!Number.isFinite(fareSegmentTicketTypeId) || fareSegmentTicketTypeId <= 0) {
+            return;
+          }
+
+          const item = {
+            fare_segment_ticket_type_id: fareSegmentTicketTypeId,
+            price: Number(ticketType.price) || 0,
+            active: ticketType.active ?? true,
+            source_type: ticketType.source_type || (ticketType.id ? "manual" : "auto"),
+          };
+
+          if (ticketType.id) {
+            item.id = ticketType.id;
+          }
+
+          payload.push(item);
+        });
+      });
+
+      return payload.sort(
+        (a, b) => a.fare_segment_ticket_type_id - b.fare_segment_ticket_type_id
+      );
+    },
+    areTemplateFaresDifferent(originalFares, editedRows) {
+      const normalize = (rows = []) =>
+        this.normalizeTemplateFaresPayload(
+          Array.isArray(rows)
+            ? rows
+            : Array.isArray(rows?.fareSegmentTicketTypes)
+            ? rows.fareSegmentTicketTypes
+            : []
+        ).map(({ source_type, ...rest }) => rest);
+
+      return !_.isEqual(normalize(originalFares), normalize(editedRows));
     },
     syncTemplateStopsFromRoute(forceIncludeAll = false) {
       const route = this.getSelectedRouteRecord();
@@ -1712,13 +1976,13 @@ export default {
       return perms.some((p) => this.permissions.includes(p));
     },
     getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del día actual
+      // Usamos medianoche (00:00:00) del dÃ­a actual
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al dÃ­a)
     },
     formatNumber(value) {
-      // Verificar si el valor es 0, null, undefined o no es un número
+      // Verificar si el valor es 0, null, undefined o no es un nÃºmero
       if (value === 0 || value === null || value === undefined || isNaN(value)) {
         return "0.0";
       }
@@ -1733,7 +1997,7 @@ export default {
       // Primero, redondea el valor a dos decimales
       value = Math.round((value + Number.EPSILON) * 100) / 100;
 
-      // Convierte el valor a cadena con formato de número local (en-US)
+      // Convierte el valor a cadena con formato de nÃºmero local (en-US)
       let formattedValue = value.toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -1751,7 +2015,7 @@ export default {
       return normalizedItem.includes(normalizedQuery);
     },
     getDayInitial(text) {
-      // Retorna la primera letra del día
+      // Retorna la primera letra del dÃ­a
       return text.charAt(0);
     },
     getDaysArray(daysString) {
@@ -1791,10 +2055,10 @@ export default {
       this.editedItem.days_of_week = daysArray.sort((a, b) => a - b).join(",");
     },
     preselectDays() {
-      // Preseleccionar días según el patrón
+      // Preseleccionar dÃ­as segÃºn el patrÃ³n
       switch (this.editedItem.recurrence_pattern) {
         case "daily":
-          this.editedItem.days_of_week = "0,1,2,3,4,5,6"; // Todos los días
+          this.editedItem.days_of_week = "0,1,2,3,4,5,6"; // Todos los dÃ­as
           break;
         case "weekdays":
           this.editedItem.days_of_week = "1,2,3,4,5"; // L-V
@@ -1842,7 +2106,7 @@ export default {
       const icons = {
         daily: "mdi-calendar-today",
         weekdays: "mdi-calendar-week-begin",
-        weekends: "mdi-calendar-weekend", // Nuevo ícono
+        weekends: "mdi-calendar-weekend", // Nuevo Ã­cono
         weekly: "mdi-calendar-week",
       };
       return icons[pattern] || "mdi-calendar-question";
@@ -1893,13 +2157,15 @@ export default {
 
         this.editedItem.duration = selectedRoute.estimated || 0;
         this.syncTemplateStopsFromRoute();
+        this.syncTemplateFareRows();
       } catch (error) {
         //console.error("Error al actualizar ruta:", error);
         this.editedItem.duration = 0;
         this.templateStopRows = [];
+        this.templateFareRows = [];
       }
     },
-    // Método para verificar si un trabajador ya está asociado al viaje
+    // MÃ©todo para verificar si un trabajador ya estÃ¡ asociado al viaje
     isWorkerAssociated(worker) {
       return this.editedItem.workers?.some((w) => w.id === worker.id);
     },
@@ -1927,7 +2193,7 @@ export default {
           this.editedItem.branch_id = this.branches[0].id;
           this.branch_id = this.branches[0].id;
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.branches = [];
           this.mostrarFila = false;
         }
@@ -1945,12 +2211,12 @@ export default {
         this.initialize();
       }
     },
-    // Filtramos los trabajadores según el vehículo seleccionado
+    // Filtramos los trabajadores segÃºn el vehÃ­culo seleccionado
     filterWorkers() {
       const selectedVehicleId = Number(this.editedItem.vehicle_id);
       console.log("this.editedItem.vehicle_id");
       console.log(Number(this.editedItem.vehicle_id));
-      // Filtramos los trabajadores que están relacionados con el vehículo seleccionado
+      // Filtramos los trabajadores que estÃ¡n relacionados con el vehÃ­culo seleccionado
       this.filteredWorkers = this.workers.filter((worker) =>
         worker.vehicles.some((vehicle) => vehicle.id === selectedVehicleId)
       );
@@ -1979,6 +2245,8 @@ export default {
       this.data = {};
       this.filteredWorkers = [];
       this.templateStopRows = [];
+      this.templateFareRows = [];
+      this.expandedTemplateFareIds = [];
       this.data.branch_id = this.branch_id;
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem);
@@ -1995,10 +2263,11 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
-          this.workers = result.data.tripworkers || [];
+          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
           this.syncTemplateStopsFromRoute(true);
+          this.syncTemplateFareRows(true);
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.routes = [];
           this.vehicles = [];
           this.workers = [];
@@ -2023,6 +2292,8 @@ export default {
       this.imgMiniatura = "";
       this.editedIndex = -1;
       this.templateStopRows = [];
+      this.templateFareRows = [];
+      this.expandedTemplateFareIds = [];
     },
     async showAssiegnedWorker() {
       // Clonar filteredWorkers para evitar referencias compartidas
@@ -2030,7 +2301,7 @@ export default {
 
       // Ahora puedes filtrar el arreglo clonado sin afectar a los objetos originales
       this.filteredWorkers = clonedFilteredWorkers.filter((worker) => {
-        // Verificar si la persona no está en editedItem.workers
+        // Verificar si la persona no estÃ¡ en editedItem.workers
         return !this.editedItem.workers.some(
           (editedWorker) => editedWorker.id === worker.id
         );
@@ -2044,14 +2315,8 @@ export default {
     saveAssignedWorker(worker) {
       //if (this.selectedWorker) {
       //const worker = this.workers.find((p) => p.id === this.selectedWorker);
-      const newWorkers = {
-        id: worker.id,
-        workerName: worker.workerName,
-        workerImage: worker.workerImage,
-        roleId: worker.roleId,
-        roleName: worker.roleName,
-      };
-      // Verificar si la relación ya existe en editedItem.people
+      const newWorkers = this.normalizeTemplateWorkerRecord(worker);
+      // Verificar si la relaciÃ³n ya existe en editedItem.people
       const existingPersonIndex = this.editedItem.workers.findIndex(
         (p) => p.id === newWorkers.id
       );
@@ -2065,7 +2330,7 @@ export default {
       }
       //}
 
-      // Reiniciar selección y cerrar diálogo
+      // Reiniciar selecciÃ³n y cerrar diÃ¡logo
       this.filterWorkers();
     },
     deleteItemWorker(item) {
@@ -2079,7 +2344,7 @@ export default {
         return true; // Si tienen longitudes diferentes, son diferentes
       }
 
-      // Ordenar ambos arrays para una comparación consistente
+      // Ordenar ambos arrays para una comparaciÃ³n consistente
       const sortedOriginal = [...originalWorkers].sort((a, b) => a.id - b.id);
       const sortedEdited = [...editedWorkers].sort((a, b) => a.id - b.id);
 
@@ -2107,9 +2372,12 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.templates = result.data?.templates || [];
+          this.templates = (result.data?.templates || []).map((template) => ({
+            ...template,
+            workers: this.normalizeTemplateWorkersList(template.workers || []),
+          }));
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.templates = [];
         }
       } catch (error) {
@@ -2136,10 +2404,10 @@ export default {
           "duration",
           "recurrence_pattern",
           "days_of_week",
-          "price",
           "active",
           "workers",
           "tripStops",
+          "tripFares",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -2156,6 +2424,8 @@ export default {
               }));
             } else if (key === "tripStops") {
               obj[key] = this.normalizeTemplateStopsPayload(this.templateStopRows);
+            } else if (key === "tripFares") {
+              obj[key] = this.normalizeTemplateFaresPayload(this.templateFareRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -2170,7 +2440,7 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -2181,7 +2451,7 @@ export default {
               this.valid = true;
             }
           } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2201,10 +2471,10 @@ export default {
           "duration",
           "recurrence_pattern",
           "days_of_week",
-          "price",
           "active",
           "workers",
           "tripStops",
+          "tripFares",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
@@ -2212,7 +2482,12 @@ export default {
               fieldsToUpdate.includes(key) &&
               (key !== "workers"
                 ? key !== "tripStops"
-                  ? this.editedItem[key] !== this.originalItem[key]
+                  ? key !== "tripFares"
+                    ? this.editedItem[key] !== this.originalItem[key]
+                    : this.areTemplateFaresDifferent(
+                        this.originalItem.tripFares,
+                        this.templateFareRows
+                      )
                   : this.areTemplateStopsDifferent(
                       this.originalItem.tripStops,
                       this.templateStopRows
@@ -2231,6 +2506,8 @@ export default {
               }));
             } else if (key === "tripStops") {
               obj[key] = this.normalizeTemplateStopsPayload(this.templateStopRows);
+            } else if (key === "tripFares") {
+              obj[key] = this.normalizeTemplateFaresPayload(this.templateFareRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -2245,7 +2522,7 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -2255,7 +2532,7 @@ export default {
               this.loading = false;
             }
           } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2278,7 +2555,10 @@ export default {
       this.editedItem = _.cloneDeep(item);
       this.originalItem.tripStops = this.parseTemplateStops(this.originalItem.tripStops);
       this.editedItem.tripStops = this.parseTemplateStops(this.editedItem.tripStops);
+      this.originalItem.tripFares = this.parseTemplateFares(this.originalItem.tripFares);
+      this.editedItem.tripFares = this.parseTemplateFares(this.editedItem.tripFares);
       this.templateStopRows = [];
+      this.templateFareRows = [];
       this.data = {};
       this.data.branch_id = this.branch_id;
       try {
@@ -2292,13 +2572,14 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
-          this.workers = result.data.tripworkers || [];
+          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
 
           const matchedRoute = this.getSelectedRouteRecord();
           this.estimated = matchedRoute ? matchedRoute.estimated : null;
           this.syncTemplateStopsFromRoute(false);
+          this.syncTemplateFareRows(false);
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.routes = [];
           this.vehicles = [];
           this.workers = [];
@@ -2338,7 +2619,7 @@ export default {
           data: request,
         });
 
-        // Manejo de la respuesta según el resultado
+        // Manejo de la respuesta segÃºn el resultado
         if (result.success) {
           this.showAlert("success", result.message, 3000);
           this.initialize();
@@ -2346,7 +2627,7 @@ export default {
           this.showAlert("warning", result.message, 3000);
         }
       } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estándar
+        // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2391,7 +2672,7 @@ export default {
 }
 .avatar-border {
   border: 2px solid #000;
-  /* Aquí se define el borde */
+  /* AquÃ­ se define el borde */
 }
 
 .avatar-row {
@@ -2408,12 +2689,12 @@ export default {
 .avatar-item {
   margin-right: -5px;
   border: 2px solid #1976d2;
-  /* Cambia el color del borde según desees */
+  /* Cambia el color del borde segÃºn desees */
   border-radius: 50%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   /* Para que siga siendo redondo */
   box-sizing: border-box;
-  /* Asegura que el borde no afecte el tamaño del avatar */
+  /* Asegura que el borde no afecte el tamaÃ±o del avatar */
   /* Optional: reduce the space even further between avatars */
 }
 
@@ -2426,7 +2707,7 @@ export default {
   color: #6c757d;
   /* Color gris claro */
   font-size: 0.85rem;
-  /* Tamaño de texto más pequeño */
+  /* TamaÃ±o de texto mÃ¡s pequeÃ±o */
 }
 
 .custom-tooltip {
@@ -2450,7 +2731,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 4px; /* Ajuste para alinear con el diseño */
+  padding-left: 4px; /* Ajuste para alinear con el diseÃ±o */
 }
 
 .selection-icon {
@@ -2458,7 +2739,7 @@ export default {
 }
 
 .selection-text {
-  font-size: 0.875rem; /* Tamaño consistente con Vuetify */
+  font-size: 0.875rem; /* TamaÃ±o consistente con Vuetify */
 }
 
 .icono-concavo {
@@ -2469,7 +2750,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
+  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -2485,13 +2766,78 @@ export default {
   border-radius: 8px;
   background: transparent;
 }
+.trip-fare-ticket-types-panel {
+  border-color: #d9e1ef;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.trip-fare-ticket-types-header {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.8fr;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef3fb 100%);
+  border-bottom: 1px solid #d9e1ef;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2a44;
+}
+
+.trip-fare-ticket-types-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.8fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.trip-fare-ticket-types-row:last-child {
+  border-bottom: none;
+}
+
+.trip-fare-col-name,
+.trip-fare-col-price,
+.trip-fare-col-status {
+  min-width: 0;
+}
+
+.trip-fare-col-price {
+  max-width: 150px;
+}
+
+.trip-fare-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trip-fare-status-label {
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.trip-fare-row-switch :deep(.v-selection-control) {
+  min-height: 0;
+  min-width: 0;
+}
+
+.trip-fare-row-switch :deep(.v-switch__track) {
+  transform: scale(0.7);
+  transform-origin: left center;
+}
+
+.trip-fare-row-switch :deep(.v-switch__thumb) {
+  transform: scale(0.7);
+}
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* MÃ¡xima especificidad para ocultar el thead */
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
@@ -2511,4 +2857,3 @@ table.v-table > thead,
   display: none !important;
 }
 </style>
-
