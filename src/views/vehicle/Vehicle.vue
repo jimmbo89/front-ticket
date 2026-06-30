@@ -11,91 +11,62 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0">
-    <!-- Icono 
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-bus</v-icon>
-    </v-avatar>
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Vehículos</div>
-      <div class="text-body-2 text-grey">Gestionar Vehículos</div>
-    </div>-->
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-bus</v-icon>
+    </v-avatar>
+
+    <div>
+      <div class="busgo-page-title">Vehículos</div>
+      <div class="busgo-page-subtitle">Gestionar flota de vehículos</div>
+    </div>
+
+    <v-spacer />
 
     <v-btn
-      class="text-subtitle-1 ml-12"
       :color="paleteColors.primary"
-      variant="tonal"
-      elevation="2"
-      prepend-icon="mdi-plus-circle"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
       @click="showAdd()"
     >
       Agregar Vehículo
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%">
-    <!--<v-card elevation="6" class="mx-2">
-     <v-card-text>
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="vehicles" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-account-tie" @click="showAddWorker(item)" :color="paleteColors.green"
-              variant="tonal" elevation="1" title="Agregar Trabajador"></v-btn>
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
-              variant="tonal" elevation="1" title="Editar Vehículo"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
-              variant="tonal" elevation="1" title="Eliminar Vehículo"></v-btn>
-          </template>
-          <template v-slot:item.plate="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?v=${imageVersion}`" alt="image"></v-img>
-            </v-avatar>
-            {{ item.plate }}
-          </template>
-          <template v-slot:item.state="{ item }">
-            <v-chip :color="item.state === 1 ? paleteColors.active : paleteColors.inactive"
-              :text-color="paleteColors.white">
-              {{ item.state === 1 ? "Activo" : "Inactivo" }}
-            </v-chip>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>-->
-    <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de vehículos</div>
 
-        <!-- Spacer (solo visible en md+) -->
-        <v-spacer class="d-none d-md-block"></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Listado de vehículos</div>
+          <div class="busgo-card-subtitle">
+            Administra la flota, capacidad, estado y asignación de trabajadores.
+          </div>
+        </div>
+
         <v-text-field
           v-model="search"
           density="compact"
-          label="Buscar vehículo"
+          placeholder="Buscar vehículo..."
           prepend-inner-icon="mdi-magnify"
-          variant="solo-filled"
+          variant="outlined"
           hide-details
           single-line
-          flat
-        ></v-text-field>
-      </v-card-title>
+          class="busgo-search"
+        />
+      </div>
 
-      <!-- Tabla de vehículos con filas personalizadas -->
       <v-data-table
         :headers="headers"
         :items="vehicles"
@@ -105,230 +76,127 @@
         :loading="loading"
         loading-text="Cargando datos..."
         :hide-default-header="true"
-        class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent"
+        class="busgo-table"
       >
-        <template v-slot:top>
-          <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card
-            flat
-            color="blue-grey-lighten-5"
-            class="mb-2 mx-1 rounded-lg"
-            elevation="1"
-            style="
-              border: 1px solid #eceff1;
-              height: 40px;
-              min-height: 40px;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <v-card-text
-              class="d-flex pa-2"
-              style="
-                width: 100%;
-                min-width: 0;
-                height: 100%;
-                padding: 0 16px !important;
-                display: flex;
-                align-items: center;
-              "
-            >
-              <!-- Negocio (20%) -->
-              <div style="width: 16%; min-width: 0" class="text-left font-weight-bold">
-                Patente
-              </div>
-
-              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
-                Número interno
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
-                Marca
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
-                Modelo
-              </div>
-
-              <!-- Dirección (25%) -->
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Asientos
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-center font-weight-bold">
-                Estado
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div
-                style="width: 24%; min-width: 0"
-                class="d-flex justify-left font-weight-bold"
-              ></div>
-            </v-card-text>
-          </v-card>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="vehicle-col-plate">Patente</div>
+            <div class="vehicle-col-number">Interno</div>
+            <div class="vehicle-col-brand">Marca</div>
+            <div class="vehicle-col-model">Modelo</div>
+            <div class="vehicle-col-seats">Asientos</div>
+            <div class="vehicle-col-state">Estado</div>
+            <div class="vehicle-col-actions"></div>
+          </div>
         </template>
-        <!-- Fila personalizada -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card
-                class="mb-2 mx-1 rounded-lg"
-                elevation="1"
-                density="comfortable"
-                flat
-              >
-                <v-card-text
-                  class="d-flex align-center pa-2"
-                  style="width: 100%; min-width: 0"
-                >
-                  <!-- Placa con avatar -->
-                  <div class="d-flex align-center" style="width: 16%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.plate }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Patente: {{ slotProps.item.plate }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Número interno -->
-                  <div
-                    style="width: 14%; min-width: 0"
-                    class="text-truncate text-center text-start"
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="vehicle-col-plate busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
                   >
-                    <span>{{ slotProps.item.internal_number || "-" }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Número interno:
-                        {{ slotProps.item.internal_number || "No asignado" }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
+                      cover
+                    />
+                  </v-avatar>
 
-                  <!-- Marca -->
-                  <div
-                    style="width: 14%; min-width: 0"
-                    class="text-truncate text-center text-start"
+                  <div class="busgo-name">
+                    {{ slotProps.item.plate }}
+                  </div>
+                </div>
+
+                <div class="vehicle-col-number busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.internal_number || "-" }}
+                  </span>
+                </div>
+
+                <div class="vehicle-col-brand busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.brand }}
+                  </span>
+                </div>
+
+                <div class="vehicle-col-model busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.model }}
+                  </span>
+                </div>
+
+                <div class="vehicle-col-seats busgo-meta">
+                  <v-icon size="16" color="primary">mdi-seat</v-icon>
+                  <span>{{ slotProps.item.seats }}</span>
+                </div>
+
+                <div class="vehicle-col-state">
+                  <v-chip
+                    size="small"
+                    :color="
+                      slotProps.item.state === 1
+                        ? paleteColors.active
+                        : paleteColors.inactive
+                    "
+                    :text-color="paleteColors.white"
                   >
-                    <span>{{ slotProps.item.brand }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Marca: {{ slotProps.item.brand }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    {{ slotProps.item.state === 1 ? "Activo" : "Inactivo" }}
+                  </v-chip>
+                </div>
 
-                  <!-- Modelo -->
-                  <div
-                    style="width: 14%; min-width: 0"
-                    class="text-truncate text-center text-start"
+                <div class="vehicle-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.green"
+                    @click="showAddWorker(slotProps.item)"
+                    title="Agregar Trabajador"
                   >
-                    <span>{{ slotProps.item.model }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Modelo: {{ slotProps.item.model }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    <v-icon size="17">mdi-account-tie</v-icon>
+                  </v-btn>
 
-                  <!-- Asientos -->
-                  <div
-                    style="width: 8%; min-width: 0"
-                    class="text-truncate text-center text-start"
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar Vehículo"
                   >
-                    <span>{{ slotProps.item.seats }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Asientos: {{ slotProps.item.seats }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
 
-                  <!-- Estado -->
-                  <div style="width: 10%; min-width: 0" class="text-center">
-                    <v-chip
-                      :color="
-                        slotProps.item.state === 1
-                          ? paleteColors.active
-                          : paleteColors.inactive
-                      "
-                      :text-color="paleteColors.white"
-                      size="small"
-                    >
-                      {{ slotProps.item.state === 1 ? "Activo" : "Inactivo" }}
-                    </v-chip>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Estado: {{ slotProps.item.state === 1 ? "Activo" : "Inactivo" }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Acciones -->
-                  <div
-                    class="d-flex gap-1"
-                    style="width: 24%; justify-content: flex-end; flex-wrap: nowrap"
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Vehículo"
                   >
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.green"
-                      @click="showAddWorker(slotProps.item)"
-                      class="flex-shrink-0 mr-1"
-                      title="Agregar Trabajador"
-                    >
-                      <v-icon size="20">mdi-account-tie</v-icon>
-                    </v-btn>
-
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary"
-                      @click="editItem(slotProps.item)"
-                      class="flex-shrink-0 mr-1"
-                      title="Editar Vehículo"
-                    >
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error"
-                      @click="deleteItem(slotProps.item)"
-                      class="flex-shrink-0"
-                      title="Eliminar Vehículo"
-                    >
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
-      <v-card-actions class="pa-4">
-        <v-spacer></v-spacer>
+
+      <v-card-actions class="busgo-footer">
+        <v-spacer />
+
         <v-btn
-          variant="flat"
+          variant="tonal"
           :color="paleteColors.gris"
           to="/company"
+          prepend-icon="mdi-arrow-left"
           aria-label="Volver a Empresa"
         >
           Volver
@@ -336,12 +204,14 @@
       </v-card-actions>
     </v-card>
   </v-container>
+
   <v-dialog v-model="dialog" max-width="700px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card>
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
+
         <v-card-text>
           <v-container>
             <v-row>
@@ -358,11 +228,9 @@
                   :rules="selectRules"
                   @update:model-value="updateSeats"
                 >
-                  <!-- Personalizar el ítem del autocomplete -->
-                  <template v-slot:item="{ props, item }">
+                  <template #item="{ props, item }">
                     <v-list-item v-bind="props">
-                      <template v-slot:prepend>
-                        <!-- Vista previa de la matriz de asientos -->
+                      <template #prepend>
                         <div class="seat-map-preview">
                           <div
                             v-for="(row, rowIndex) in item.raw.seatMap"
@@ -384,29 +252,33 @@
                           </div>
                         </div>
                       </template>
-                      <v-list-item-subtitle>{{
-                        item.raw.description
-                      }}</v-list-item-subtitle>
+
+                      <v-list-item-subtitle>
+                        {{ item.raw.description }}
+                      </v-list-item-subtitle>
                     </v-list-item>
                   </template>
                 </v-autocomplete>
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="editedItem.brand"
                   label="Marca"
                   prepend-icon="mdi-car"
                   variant="underlined"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="editedItem.model"
                   label="Modelo"
                   prepend-icon="mdi-car-info"
                   variant="underlined"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="3">
                 <v-text-field
                   v-model="editedItem.plate"
@@ -414,21 +286,18 @@
                   prepend-icon="mdi-license"
                   variant="underlined"
                   :rules="[(v) => !!v || 'La placa es requerida']"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="3">
                 <v-text-field
                   v-model="editedItem.internal_number"
                   label="Número interno"
                   prepend-icon="mdi-pound"
                   variant="underlined"
-                ></v-text-field>
+                />
               </v-col>
-              <!--<v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.rut" label="RUT" prepend-icon="mdi-identifier"
-                  variant="underlined" :rules="rutRules">
-                </v-text-field>
-              </v-col>-->
+
               <v-col cols="12" md="3">
                 <v-text-field
                   v-model="editedItem.seats"
@@ -437,11 +306,12 @@
                   variant="underlined"
                   :rules="[
                     (v) => !!v || 'El número de asientos es requerido',
-                    (v) => !isNaN(v) || 'Debe ser un número',
+                    (v) => !isNaN(v) || 'Debe ser un número'
                   ]"
                   :disabled="true"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="3">
                 <v-switch
                   v-model="editedItem.state"
@@ -452,11 +322,13 @@
                   inset
                   class="custom-switch"
                 >
-                  <template v-slot:label>
+                  <template #label>
                     <span
                       class="text-body-1"
                       :style="{
-                        color: editedItem.state ? paleteColors.active : paleteColors.grey,
+                        color: editedItem.state
+                          ? paleteColors.active
+                          : paleteColors.grey
                       }"
                     >
                       {{ editedItem.state ? "Activo" : "Inactivo" }}
@@ -465,6 +337,7 @@
                 </v-switch>
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="6">
                 <v-file-input
@@ -476,9 +349,9 @@
                   name="file"
                   accept=".png, .jpg, .jpeg"
                   @change="onFileSelected"
-                >
-                </v-file-input>
+                />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
                   <img
@@ -492,45 +365,70 @@
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+
+        <v-divider />
+
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
           <v-btn
             :color="paleteColors.primary"
             variant="flat"
             @click="save"
             :disabled="!valid"
             :loading="loading"
-            >Aceptar</v-btn
           >
+            Aceptar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
   </v-dialog>
+
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Vehículo</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar Vehículo
+        </span>
       </v-toolbar>
 
       <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el vehículo seleccionado?</v-card-text
-      >
-      <v-divider></v-divider>
+        ¿Desea eliminar el vehículo seleccionado?
+      </v-card-text>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          @click="deleteItemConfirm"
+        >
           Aceptar
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <!-- Diálogo donde se mostrarán los detalles de las rutas -->
   <v-dialog
     v-model="dialogVehicleWorker"
     fullscreen
@@ -538,15 +436,21 @@
   >
     <v-card>
       <v-card-text>
-        <!-- Aquí pasamos el 'selectedWorker' al componente dentro del diálogo -->
         <VehicleWorker :vehicle="selectedVehicle" />
       </v-card-text>
-      <v-divider></v-divider>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn variant="flat" :color="paleteColors.gris" @click="closeDialogVehicleWorker"
-          >Cerrar</v-btn
+        <v-spacer />
+
+        <v-btn
+          variant="flat"
+          :color="paleteColors.gris"
+          @click="closeDialogVehicleWorker"
         >
+          Cerrar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -1116,5 +1020,185 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.vehicle-col-plate {
+  width: 18%;
+  min-width: 0;
+}
+
+.vehicle-col-number {
+  width: 12%;
+  min-width: 0;
+}
+
+.vehicle-col-brand {
+  width: 14%;
+  min-width: 0;
+}
+
+.vehicle-col-model {
+  width: 14%;
+  min-width: 0;
+}
+
+.vehicle-col-seats {
+  width: 8%;
+  min-width: 0;
+}
+
+.vehicle-col-state {
+  width: 10%;
+  min-width: 0;
+}
+
+.vehicle-col-actions {
+  width: 24%;
+  min-width: 0;
+}
+
+.seat-map-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: 12px;
+  max-width: 180px;
+  overflow: hidden;
+}
+
+.seat-row {
+  display: flex;
+  gap: 2px;
+}
+
+.seat-button-preview {
+  min-width: 25px !important;
+  padding: 0 !important;
+  font-size: 10px;
+}
+
+@media (max-width: 960px) {
+  .vehicle-col-plate,
+  .vehicle-col-number,
+  .vehicle-col-brand,
+  .vehicle-col-model,
+  .vehicle-col-seats,
+  .vehicle-col-state,
+  .vehicle-col-actions {
+    width: 100%;
+  }
+}
+
+.busgo-delete-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-delete-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 55%, #dc2626 100%);
+  color: #ffffff;
+}
+
+.busgo-delete-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-delete-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.busgo-delete-subtitle {
+  font-size: 13px;
+  opacity: 0.82;
+  margin-top: 3px;
+}
+
+.busgo-delete-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-delete-body {
+  padding: 24px !important;
+  background: #fff7f7;
+}
+
+.busgo-delete-message {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 14px;
+}
+
+.busgo-delete-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.busgo-delete-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #fee2e2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-delete-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 110px;
+}
+
+.busgo-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .busgo-delete-header {
+    padding: 18px;
+  }
+
+  .busgo-delete-body {
+    padding: 18px !important;
+  }
+
+  .busgo-delete-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-delete-cancel,
+  .busgo-delete-confirm {
+    flex: 1;
+  }
 }
 </style>

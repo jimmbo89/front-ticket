@@ -11,132 +11,115 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-    style="background-color: #f9f9f9"
-  >
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-alert</v-icon>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-alert</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Incidentes</div>
-      <div class="text-body-2 text-grey">Gestionar Incidentes</div>
+    <div>
+      <div class="busgo-page-title">Incidentes</div>
+      <div class="busgo-page-subtitle">Gestionar incidentes operacionales</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
-
-    <!--<v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
-      Agregar Viaje
-    </v-btn>-->
+    <v-spacer />
   </v-card>
-  <v-container style="min-width: 100%">
-    <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de incidencias</div>
 
-        <!-- Spacer (solo visible en md+) -->
-        <v-spacer class="d-none d-md-block"></v-spacer>
-
-        <!-- Grupo: Autocomplete + Botón buscar -->
-        <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
-          <ReportDateRangeFilter
-            v-model:start-date="editedItem.startDate"
-            v-model:end-date="editedItem.endDate"
-          />
-          <v-select
-            v-if="mostrarFila"
-            v-model="type"
-            :items="options"
-            label="Seleccione una opción"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-            density="compact"
-            item-title="title"
-            item-value="value"
-            class="ml-2"
-            style="min-width: 220px"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props">
-                <template v-slot:prepend>
-                  <v-icon :icon="item.raw.icon"></v-icon>
-                </template>
-              </v-list-item>
-            </template>
-            <template v-slot:prepend-inner>
-              <v-icon icon="mdi-form-dropdown"></v-icon>
-            </template>
-          </v-select>
-          <v-autocomplete
-            :no-data-text="'No hay datos disponibles'"
-            v-model="branch_id"
-            v-if="type === 'Sucursal' && mostrarFila"
-            :items="branches"
-            label="Seleccione una Sucursal"
-            prepend-inner-icon="mdi-store"
-            item-title="name"
-            item-value="id"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-            :rules="selectRules"
-            density="compact"
-            class="ml-1"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item
-                v-bind="props"
-                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-              >
-              </v-list-item>
-            </template>
-          </v-autocomplete>
-          <!-- Botón de búsqueda (actualizar datos) -->
-          <v-btn
-            icon
-            @click="getIncidents"
-            :color="paleteColors.primary"
-            density="comfortable"
-            :disabled="type === 'Sucursal' && !branch_id"
-            class="mt-2 mt-md-0 mr-1 ml-1"
-          >
-            <v-icon>mdi-magnify</v-icon>
-          </v-btn>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Listado de incidencias</div>
+          <div class="busgo-card-subtitle">
+            Consulta eventos, trabajadores, sucursales y detalles asociados.
+          </div>
         </div>
+      </div>
 
-        <!-- Campo de búsqueda global -->
-        <div class="flex-grow-1" style="max-width: 300px">
-          <v-text-field
-            v-model="search"
-            density="compact"
-            label="Buscar incidencia"
-            prepend-inner-icon="mdi-magnify"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-          ></v-text-field>
-        </div>
-      </v-card-title>
+      <div class="incident-toolbar px-6 pb-4">
+        <ReportDateRangeFilter
+          v-model:start-date="editedItem.startDate"
+          v-model:end-date="editedItem.endDate"
+        />
+
+        <v-select
+          v-if="mostrarFila"
+          v-model="type"
+          :items="options"
+          item-title="title"
+          item-value="value"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-filter"
+          placeholder="Tipo"
+          hide-details
+          class="incident-filter"
+        >
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props">
+              <template #prepend>
+                <v-icon :icon="item.raw.icon" />
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
+
+        <v-autocomplete
+          v-if="type === 'Sucursal' && mostrarFila"
+          v-model="branch_id"
+          :items="branches"
+          :no-data-text="'No hay datos disponibles'"
+          item-title="name"
+          item-value="id"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-store"
+          placeholder="Sucursal"
+          hide-details
+          class="incident-filter"
+          :rules="selectRules"
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+            />
+          </template>
+        </v-autocomplete>
+
+        <v-btn
+          icon
+          variant="tonal"
+          :color="paleteColors.primary"
+          @click="getIncidents"
+          :disabled="type === 'Sucursal' && !branch_id"
+        >
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
+
+        <v-spacer />
+
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar incidencia..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="incident-search"
+        />
+      </div>
+
       <v-data-table
         :headers="headers"
         :items="incidents"
@@ -147,210 +130,133 @@
         :loading="loading"
         loading-text="Cargando datos..."
         :hide-default-header="true"
-        class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent"
+        class="busgo-table"
         show-expand
       >
-        <template v-slot:top>
-          <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card
-            flat
-            color="blue-grey-lighten-5"
-            class="mb-2 mx-1 rounded-lg"
-            elevation="1"
-            style="
-              border: 1px solid #eceff1;
-              height: 40px;
-              min-height: 40px;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <v-card-text
-              class="d-flex pa-2"
-              style="
-                width: 100%;
-                min-width: 0;
-                height: 100%;
-                padding: 0 16px !important;
-                display: flex;
-                align-items: center;
-              "
-            >
-              <!-- Sucursal -->
-              <div style="width: 24%; min-width: 0" class="text-left font-weight-bold">
-                Sucursal
-              </div>
-
-              <!-- Trabajador -->
-              <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
-                Trabajador
-              </div>
-
-              <!-- Titulo -->
-              <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
-                Titulo
-              </div>
-
-              <!-- Fecha -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Fecha
-              </div>
-
-              <!-- Descripcion -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Descripcion
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div
-                style="width: 10%; min-width: 0"
-                class="d-flex justify-left font-weight-bold"
-              ></div>
-            </v-card-text>
-          </v-card>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="incident-col-branch">Sucursal</div>
+            <div class="incident-col-worker">Trabajador</div>
+            <div class="incident-col-title">Título</div>
+            <div class="incident-col-date">Fecha</div>
+            <div class="incident-col-description">Descripción</div>
+            <div class="incident-col-actions"></div>
+          </div>
         </template>
-        <!-- Personalización completa de la fila con v-slot:row -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card
-                class="mb-2 mx-1 rounded-lg"
-                elevation="1"
-                density="comfortable"
-                flat
-              >
-                <v-card-text
-                  class="d-flex align-center pa-2"
-                  style="width: 100%; min-width: 0"
-                >
-                  <!-- Sucursal + imagen -->
-                  <div class="d-flex align-center" style="width: 24%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="
-                          slotProps.item.imageBranch
-                            ? `${this.$axios.defaults.baseURL}images/${slotProps.item.imageBranch}`
-                            : ''
-                        "
-                        class="icono-concavo"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">
-                      {{ slotProps.item.nameBranch || slotProps.item.branchName }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Sucursal: {{ slotProps.item.nameBranch || slotProps.item.branchName }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="incident-col-branch busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-img
+                      :src="
+                        slotProps.item.imageBranch
+                          ? `${this.$axios.defaults.baseURL}images/${slotProps.item.imageBranch}`
+                          : ''
+                      "
+                      cover
+                    />
+                  </v-avatar>
 
-                  <!-- Avatar + Nombre -->
-                  <div class="d-flex align-center" style="width: 18%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}`"
-                        class="icono-concavo"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">
-                      {{ slotProps.item.workerName }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Trabajador: {{ slotProps.item.workerName }}
-                      </span>
-                    </v-tooltip>
+                  <div class="busgo-name">
+                    {{ slotProps.item.nameBranch || slotProps.item.branchName }}
                   </div>
+                </div>
 
-                  <!-- Título con ícono -->
-                  <div style="width: 18%; min-width: 0" class="text-truncate">
-                    <v-icon
-                      v-if="slotProps.item.title.includes('Retraso')"
-                      color="warning"
-                      size="20"
-                    >
-                      mdi-clock-alert
+                <div class="incident-col-worker busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}`"
+                      cover
+                    />
+                  </v-avatar>
+
+                  <div class="busgo-name">
+                    {{ slotProps.item.workerName }}
+                  </div>
+                </div>
+
+                <div class="incident-col-title busgo-meta">
+                  <v-icon
+                    v-if="slotProps.item.title.includes('Retraso')"
+                    color="warning"
+                    size="18"
+                  >
+                    mdi-clock-alert
+                  </v-icon>
+
+                  <v-icon
+                    v-else-if="slotProps.item.title.includes('Escaneo')"
+                    color="success"
+                    size="18"
+                  >
+                    mdi-qrcode-scan
+                  </v-icon>
+
+                  <v-icon
+                    v-else-if="slotProps.item.title.includes('Reimpresión')"
+                    color="info"
+                    size="18"
+                  >
+                    mdi-printer
+                  </v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.title }}
+                  </span>
+                </div>
+
+                <div class="incident-col-date busgo-meta">
+                  <v-icon size="16" color="primary">mdi-calendar</v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.date }}
+                  </span>
+                </div>
+
+                <div class="incident-col-description busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.description }}
+                  </span>
+                </div>
+
+                <div class="incident-col-actions busgo-actions">
+                  <v-btn
+                    size="small"
+                    variant="tonal"
+                    :color="getDetailsButtonColor(slotProps.item)"
+                    @click.stop="toggleExpand(slotProps.item)"
+                  >
+                    <v-icon start size="18">
+                      {{ isExpanded(slotProps.item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
                     </v-icon>
-                    <v-icon
-                      v-else-if="slotProps.item.title.includes('Escaneo')"
-                      color="success"
-                      size="20"
-                    >
-                      mdi-qrcode-scan
-                    </v-icon>
-                    <v-icon
-                      v-else-if="slotProps.item.title.includes('Reimpresión')"
-                      color="info"
-                      size="20"
-                    >
-                      mdi-printer
-                    </v-icon>
-                    <span>
-                      {{ slotProps.item.title }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        {{ slotProps.item.title }}
-                      </span>
-                    </v-tooltip>
-                  </div>
 
-                  <!-- Fecha -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate">
-                    <span>
-                      {{ slotProps.item.date }}
+                    <span class="text-caption">
+                      {{ isExpanded(slotProps.item) ? "Ocultar" : "Ver" }}
                     </span>
-                    <v-tooltip activator="parent" location="bottom">
-                      Fecha: {{ slotProps.item.date }}
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Descripción -->
-                  <div style="width: 20%; min-width: 0" class="text-truncate">
-                    <span>
-                      {{ slotProps.item.description }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ slotProps.item.description }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Botón de expansión -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate">
-                    <v-btn
-                      size="small"
-                      variant="text"
-                      :color="getDetailsButtonColor(slotProps.item)"
-                      @click.stop="toggleExpand(slotProps.item)"
-                    >
-                      <v-icon start size="18">
-                        {{ isExpanded(slotProps.item) ? "mdi-chevron-up" : "mdi-chevron-down" }}
-                      </v-icon>
-                      <span class="text-caption">
-                        {{ isExpanded(slotProps.item) ? "Ocultar" : "Ver" }}
-                      </span>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
 
-        <!-- Contenido expandido -->
-        <template v-slot:expanded-row="{ item }">
+        <template #expanded-row="{ item }">
           <tr>
             <td :colspan="headers.length">
-              <div class="pa-4 bg-grey-lighten-4">
-                <h4 class="text-subtitle-1 mb-2">Detalles completos:</h4>
-
-                <!-- Título con ícono -->
+              <div class="incident-expanded">
                 <div class="d-flex align-center mb-3">
                   <v-icon
                     v-if="item.title.includes('Retraso')"
@@ -359,6 +265,7 @@
                   >
                     mdi-clock-alert
                   </v-icon>
+
                   <v-icon
                     v-else-if="item.title.includes('Escaneo')"
                     color="success"
@@ -366,6 +273,7 @@
                   >
                     mdi-qrcode-scan
                   </v-icon>
+
                   <v-icon
                     v-else-if="item.title.includes('Reimpresión')"
                     color="info"
@@ -373,22 +281,21 @@
                   >
                     mdi-printer
                   </v-icon>
+
                   <strong>{{ item.title }}</strong>
                 </div>
 
-                <!-- Tabla de detalles -->
-                <table
-                  class="v-table v-table--density-compact text-body-2 bg-grey-lighten-4"
-                >
+                <table class="incident-detail-table">
                   <tbody>
                     <tr
                       v-for="(value, key) in getFilteredDetails(item.details)"
                       :key="key"
                     >
-                      <td class="font-weight-bold" style="width: 200px">
+                      <td class="incident-detail-key">
                         {{ formatDetailKey(key) }}:
                       </td>
-                      <td>
+
+                      <td class="incident-detail-value">
                         {{ formatDetailValue(key, value) }}
                       </td>
                     </tr>
@@ -987,5 +894,101 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.incident-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.incident-filter {
+  width: 220px;
+  min-width: 220px;
+}
+
+.incident-search {
+  width: 300px;
+  min-width: 260px;
+}
+
+.incident-col-branch {
+  width: 24%;
+  min-width: 0;
+}
+
+.incident-col-worker {
+  width: 18%;
+  min-width: 0;
+}
+
+.incident-col-title {
+  width: 18%;
+  min-width: 0;
+}
+
+.incident-col-date {
+  width: 10%;
+  min-width: 0;
+}
+
+.incident-col-description {
+  width: 20%;
+  min-width: 0;
+}
+
+.incident-col-actions {
+  width: 10%;
+  min-width: 0;
+}
+
+.incident-expanded {
+  margin: 0 16px 10px;
+  padding: 18px 22px;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.incident-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.incident-detail-key {
+  width: 220px;
+  padding: 6px 8px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.incident-detail-value {
+  padding: 6px 8px;
+  color: #475569;
+}
+
+@media (max-width: 960px) {
+  .incident-toolbar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .incident-filter,
+  .incident-search {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .incident-col-branch,
+  .incident-col-worker,
+  .incident-col-title,
+  .incident-col-date,
+  .incident-col-description,
+  .incident-col-actions {
+    width: 100%;
+  }
 }
 </style>

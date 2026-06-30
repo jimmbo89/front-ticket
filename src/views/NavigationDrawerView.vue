@@ -122,7 +122,7 @@ export default {
       {
         icon: "mdi-bus-side",
         title: "Vehículos",
-        to: "structure-vehicle",
+        to: "vehicle",
         permission: "view_vehicles",
       },
       {
@@ -137,7 +137,7 @@ export default {
         to: "location",
         permission: "view_locations",
       },
-      { icon: "mdi-routes", title: "Rutas", to: "route", permission: "view_routes" },
+      { icon: "mdi-map-marker-path", title: "Rutas", to: "route", permission: "view_routes" },
       {
         icon: "mdi-devices",
         title: "Dispositivos",

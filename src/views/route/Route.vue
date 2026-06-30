@@ -11,67 +11,62 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-  >
-    <!-- Icono 
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-road-variant</v-icon>
-    </v-avatar>
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Rutas</div>
-      <div class="text-body-2 text-grey">Gestionar Rutas</div>
-    </div>-->
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-map-marker-path</v-icon>
+    </v-avatar>
+
+    <div>
+      <div class="busgo-page-title">Rutas</div>
+      <div class="busgo-page-subtitle">Gestionar rutas del sistema</div>
+    </div>
+
+    <v-spacer />
 
     <v-btn
-      class="text-subtitle-1 ml-12"
       :color="paleteColors.primary"
-      variant="tonal"
-      elevation="2"
-      prepend-icon="mdi-plus-circle"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
       @click="showAdd()"
     >
       Agregar Ruta
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%">
-    <v-card flat class="mt-4">
-      <!-- Barra superior con título y búsqueda -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de rutas</div>
 
-        <!-- Spacer (solo visible en md+) -->
-         <v-spacer class="d-none d-md-block"></v-spacer>
-
-        <!-- Campo de búsqueda global -->
-        <div class="flex-grow-1" style="max-width: 30%">
-          <v-text-field
-            v-model="search"
-            density="compact"
-            label="Buscar ruta"
-            prepend-inner-icon="mdi-magnify"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-          ></v-text-field>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Listado de rutas</div>
+          <div class="busgo-card-subtitle">
+            Administra origen, destino, distancia y duración estimada.
+          </div>
         </div>
-      </v-card-title>
 
-      <!-- Tabla de rutas con filas personalizadas -->
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar ruta..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
+
       <v-data-table
         :headers="headers"
         :items="branchRoutes"
@@ -81,159 +76,133 @@
         :loading="loading"
         loading-text="Cargando datos..."
         :hide-default-header="true"
-        class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent"
+        class="busgo-table"
       >
-        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Nombre de la ruta
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Origen
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold text-subtitle-2">
-                Destino
-              </div>
-
-
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Distancia
-              </div>
-
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Duración
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold text-subtitle-2">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="route-col-name">Nombre</div>
+            <div class="route-col-origin">Origen</div>
+            <div class="route-col-destination">Destino</div>
+            <div class="route-col-distance">Distancia</div>
+            <div class="route-col-duration">Duración</div>
+            <div class="route-col-actions"></div>
+          </div>
         </template>
-      <!-- Slot personalizado para cada fila -->
-      <template v-slot:item="slotProps">
-        <tr>
-          <td colspan="100%" style="padding: 0; border: none">
-            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                <!-- Columna 1: Nombre de la ruta -->
-                <div class="d-flex align-center" style="width: 10%; min-width: 0">
-                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Nombre de la ruta: {{ slotProps.item.name }}
-                    </span>
-                  </v-tooltip>
+
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="route-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-icon color="primary" size="20">
+                      mdi-map-marker-path
+                    </v-icon>
+                  </v-avatar>
+
+                  <div class="busgo-name">
+                    {{ slotProps.item.name }}
+                  </div>
                 </div>
 
-                <!-- Columna 2: Origen (con avatar) -->
-                <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                <div class="route-col-origin busgo-name-cell">
+                  <v-avatar
+                    size="32"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
                     <v-img
                       :src="`${$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`"
-                      alt="Imagen del origen" class="icono-concavo" cover></v-img>
+                      alt="Imagen del origen"
+                      cover
+                    />
                   </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.originName }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Origen: {{ slotProps.item.originName }}
-                    </span>
-                  </v-tooltip>
+
+                  <span class="busgo-meta-text">
+                    {{ slotProps.item.originName }}
+                  </span>
                 </div>
 
-                <!-- Columna 3: Destino (con avatar) -->
-                <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                <div class="route-col-destination busgo-name-cell">
+                  <v-avatar
+                    size="32"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
                     <v-img
                       :src="`${$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`"
-                      alt="Imagen del destino" class="icono-concavo" cover></v-img>
+                      alt="Imagen del destino"
+                      cover
+                    />
                   </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.destinationName }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Destino: {{ slotProps.item.destinationName }}
-                    </span>
-                  </v-tooltip>
+
+                  <span class="busgo-meta-text">
+                    {{ slotProps.item.destinationName }}
+                  </span>
                 </div>
 
-                <div style="width: 10%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.distance }} km</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Distancia: {{ slotProps.item.distance }} km
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="route-col-distance busgo-meta">
+                  <v-icon size="16" color="primary">mdi-ruler</v-icon>
 
-                  <!-- Duración -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.estimated }} min</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Duración: {{ slotProps.item.estimated }} minutos
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                <!-- Columna 5: Acciones -->
-                <div class="d-flex flex-column align-end" style="width: 10%; min-width: 0; text-align: right">
-                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar Ruta">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Ruta">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
+                  <span class="text-truncate">
+                    {{ slotProps.item.distance }} km
+                  </span>
                 </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
+
+                <div class="route-col-duration busgo-meta">
+                  <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.estimated }} min
+                  </span>
+                </div>
+
+                <div class="route-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar Ruta"
+                  >
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Ruta"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
       </v-data-table>
-      
-            <v-card-actions class="pa-4">
-    <v-spacer></v-spacer>
-    <v-btn
-      variant="flat"
-      :color="paleteColors.gris"
-      to="/company"
-      aria-label="Volver a Empresa"
-    >
-      Volver
-    </v-btn>
-  </v-card-actions>
+
     </v-card>
   </v-container>
+
   <v-dialog v-model="dialog" max-width="500px" persistent>
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card>
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
+
         <v-card-text>
           <v-container>
             <v-row>
@@ -244,8 +213,9 @@
                   prepend-icon="mdi-store"
                   variant="underlined"
                   :rules="nameRules"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="12">
                 <v-autocomplete
                   :no-data-text="'No hay datos disponibles'"
@@ -257,15 +227,16 @@
                   item-value="id"
                   variant="underlined"
                 >
-                  <template v-slot:item="{ props, item }">
+                  <template #item="{ props, item }">
                     <v-list-item
                       v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
                       :title="item.raw.address"
-                    ></v-list-item>
+                    />
                   </template>
                 </v-autocomplete>
               </v-col>
+
               <v-col cols="12" md="12">
                 <v-autocomplete
                   :no-data-text="'No hay datos disponibles'"
@@ -278,68 +249,96 @@
                   variant="underlined"
                   :rules="selectRules"
                 >
-                  <template v-slot:item="{ props, item }">
+                  <template #item="{ props, item }">
                     <v-list-item
                       v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
                       :title="item.raw.address"
-                    ></v-list-item>
+                    />
                   </template>
                 </v-autocomplete>
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="editedItem.distance"
-                  
                   label="Distancia (Km)"
                   prepend-icon="mdi-ruler"
                   variant="underlined"
                   :rules="distanceRules"
-                ></v-text-field>
+                />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="editedItem.estimated"
-                  
                   label="Duración (Minutos)"
                   prepend-icon="mdi-timer"
                   variant="underlined"
                   :rules="durationRules"
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+
+        <v-divider />
+
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
           <v-btn
             :color="paleteColors.primary"
             variant="flat"
             @click="save"
             :disabled="!valid"
             :loading="loading"
-            >Aceptar</v-btn
           >
+            Aceptar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
   </v-dialog>
+
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar una Ruta</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar ruta
+        </span>
       </v-toolbar>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la ruta seleccionada?</v-card-text>
-      <v-divider></v-divider>
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar la ruta seleccionada?
+      </v-card-text>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          @click="deleteItemConfirm"
+        >
           Aceptar
         </v-btn>
       </v-card-actions>
@@ -817,4 +816,433 @@ table.v-table > thead,
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
 }
+
+.route-col-name {
+  width: 17%;
+  min-width: 0;
+}
+
+.route-col-origin {
+  width: 25%;
+  min-width: 0;
+}
+
+.route-col-destination {
+  width: 25%;
+  min-width: 0;
+}
+
+.route-col-distance {
+  width: 11%;
+  min-width: 0;
+}
+
+.route-col-duration {
+  width: 11%;
+  min-width: 0;
+}
+
+.route-col-actions {
+  width: 11%;
+  min-width: 0;
+}
+
+.busgo-meta-text {
+  font-size: 13px;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =======================================================
+   BUSGO DESIGN SYSTEM
+   ======================================================= */
+
+:root{
+
+--busgo-border:#E5E7EB;
+
+--busgo-border-soft:#EEF2F7;
+
+--busgo-surface:#FFFFFF;
+
+--busgo-surface-alt:#F8FAFC;
+
+--busgo-text:#111827;
+
+--busgo-text-soft:#64748B;
+
+--busgo-radius-lg:18px;
+
+--busgo-radius-md:12px;
+
+--busgo-shadow:
+
+0 1px 2px rgba(15,23,42,.04),
+
+0 4px 12px rgba(15,23,42,.05);
+
+}
+
+
+/* =======================================================
+   LAYOUT
+   ======================================================= */
+
+.busgo-page{
+
+padding:24px;
+
+}
+
+.busgo-card{
+
+background:var(--busgo-surface);
+
+border:1px solid var(--busgo-border);
+
+border-radius:var(--busgo-radius-lg);
+
+overflow:hidden;
+
+box-shadow:var(--busgo-shadow);
+
+}
+
+.busgo-section{
+
+padding:24px;
+
+}
+
+
+/* =======================================================
+   HEADER
+   ======================================================= */
+
+.busgo-page-header{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+padding:18px 24px;
+
+background:var(--busgo-surface-alt);
+
+border-bottom:1px solid var(--busgo-border);
+
+}
+
+.busgo-page-icon{
+
+border-radius:14px;
+
+}
+
+.busgo-page-title{
+
+font-size:22px;
+
+font-weight:700;
+
+color:var(--busgo-text);
+
+}
+
+.busgo-page-subtitle{
+
+font-size:13px;
+
+color:var(--busgo-text-soft);
+
+margin-top:2px;
+
+}
+
+.busgo-page-actions{
+
+margin-left:auto;
+
+display:flex;
+
+gap:8px;
+
+}
+
+
+/* =======================================================
+   SEARCH
+   ======================================================= */
+
+.busgo-search{
+
+max-width:380px;
+
+min-width:280px;
+
+}
+
+
+/* =======================================================
+   CARD HEADER
+   ======================================================= */
+
+.busgo-card-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:24px;
+
+padding:20px 24px;
+
+}
+
+.busgo-card-title{
+
+font-size:16px;
+
+font-weight:700;
+
+color:var(--busgo-text);
+
+}
+
+.busgo-card-subtitle{
+
+font-size:13px;
+
+color:var(--busgo-text-soft);
+
+}
+
+
+/* =======================================================
+   TABLE
+   ======================================================= */
+
+.busgo-table{
+
+background:transparent;
+
+max-height:68vh;
+
+overflow:auto;
+
+}
+
+.busgo-table-head{
+
+display:flex;
+
+align-items:center;
+
+padding:0 20px;
+
+height:42px;
+
+margin:0 16px 6px;
+
+border-radius:12px;
+
+background:var(--busgo-surface-alt);
+
+font-size:12px;
+
+font-weight:700;
+
+text-transform:uppercase;
+
+color:var(--busgo-text-soft);
+
+}
+
+.busgo-row{
+
+display:flex;
+
+align-items:center;
+
+min-height:58px;
+
+padding:8px 20px;
+
+margin:0 16px 6px;
+
+border:1px solid var(--busgo-border-soft);
+
+border-radius:12px;
+
+background:white;
+
+transition:all .15s ease;
+
+}
+
+.busgo-row:hover{
+
+background:#fafafa;
+
+border-color:#dbeafe;
+
+}
+
+
+/* =======================================================
+   CELLS
+   ======================================================= */
+
+.busgo-name-cell{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.busgo-avatar{
+
+border:1px solid var(--busgo-border);
+
+}
+
+.busgo-name{
+
+font-size:14px;
+
+font-weight:600;
+
+overflow:hidden;
+
+white-space:nowrap;
+
+text-overflow:ellipsis;
+
+}
+
+.busgo-meta{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+font-size:13px;
+
+color:#374151;
+
+}
+
+
+/* =======================================================
+   BUTTONS
+   ======================================================= */
+
+.busgo-actions{
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:5px;
+
+}
+
+.busgo-action{
+
+width:30px;
+
+height:30px;
+
+}
+
+
+/* =======================================================
+   FOOTER
+   ======================================================= */
+
+.busgo-footer{
+
+padding:14px 24px;
+
+border-top:1px solid var(--busgo-border-soft);
+
+}
+
+
+/* =======================================================
+   SCROLL
+   ======================================================= */
+
+.busgo-table::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+.busgo-table::-webkit-scrollbar-thumb{
+
+background:#CBD5E1;
+
+border-radius:30px;
+
+}
+
+
+/* =======================================================
+   RESPONSIVE
+   ======================================================= */
+
+@media(max-width:960px){
+
+.busgo-card-header{
+
+flex-direction:column;
+
+align-items:stretch;
+
+}
+
+.busgo-search{
+
+max-width:100%;
+
+min-width:100%;
+
+}
+
+.busgo-table-head{
+
+display:none;
+
+}
+
+.busgo-row{
+
+flex-direction:column;
+
+align-items:stretch;
+
+gap:12px;
+
+}
+
+.busgo-actions{
+
+justify-content:flex-start;
+
+}
+
+}
+
 </style>

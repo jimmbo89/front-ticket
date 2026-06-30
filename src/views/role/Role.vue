@@ -1,190 +1,216 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-    <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-   <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-account-cog-outline</v-icon>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-account-cog-outline</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Roles</div>
-      <div class="text-body-2 text-grey">Gestionar Roles</div>
+    <div>
+      <div class="busgo-page-title">Roles</div>
+      <div class="busgo-page-subtitle">Gestionar roles y permisos del sistema</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAddRole">
+    <v-btn
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAddRole"
+    >
       Agregar Rol
     </v-btn>
   </v-card>
-    <v-container style="min-width: 100%;">
-    <v-card flat>
-      <v-card-title class="d-flex align-center text-body-1">
-        Listado de roles
-        <v-spacer></v-spacer>
 
-        <v-text-field v-model="search" density="compact" label="Buscar roles" prepend-inner-icon="mdi-magnify"
-          variant="solo-filled" hide-details single-line flat></v-text-field>
-      </v-card-title>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Listado de roles</div>
+          <div class="busgo-card-subtitle">
+            Administra perfiles, permisos y niveles de acceso.
+          </div>
+        </div>
 
-      <v-divider class="my-2"></v-divider>
-      <v-data-table :headers="headers" :items="roles" :search="search" :items-per-page-text="'Elementos por páginas'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar rol..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
 
-       <template v-slot:top>
-        <!-- Tarjeta de encabezado con alto fijo -->
-        <v-card
-          flat
-          color="blue-grey-lighten-5"
-          class="mb-2 mx-1 rounded-lg"
-          elevation="1"
-          style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-        >
-          <v-card-text
-            class="d-flex pa-2"
-            style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-          >
-              <!-- Negocio (20%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
-
-              <!-- Nombre (20%) 
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Tipo
-              </div>-->
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 60%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+      <v-data-table
+        :headers="headers"
+        :items="roles"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="role-col-name">Nombre</div>
+            <div class="role-col-description">Descripción</div>
+            <div class="role-col-actions"></div>
+          </div>
         </template>
-        <!-- Slot para cada fila -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-               <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Columna 1: Nombre -->
-                  <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                   <span class="text-truncate">{{ slotProps.item.name }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Nombre: {{ slotProps.item.name }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="role-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-icon color="primary" size="20">
+                      mdi-account-key
+                    </v-icon>
+                  </v-avatar>
 
-                  <!-- Columna 3: tipo 
-                  <div style="width: 15%; min-width: 0" class="text-truncate text-left">
-                    <v-avatar class="mr-1  avatar-border" elevation="3" size="small">
-                      <v-icon :title=" slotProps.item.type">
-                        {{ getTypeIcon( slotProps.item.type) }}
-                      </v-icon>
-                    </v-avatar>
-                    {{  slotProps.item.type }}
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Tipo: {{ slotProps.item.type }}
-                      </span>
-                    </v-tooltip>
-                  </div>-->
-
-                  <!-- Columna 4: descripción -->
-                  <div style="width: 60%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.description }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ slotProps.item.description }}
-                      </span>
-                    </v-tooltip>
+                  <div class="busgo-name">
+                    {{ slotProps.item.name }}
                   </div>
+                </div>
 
-                  <!-- Columna 5: Acciones -->
-                  <div class="d-flex gap-1" style="width: 15%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.green" @click="showAddPermission(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Asignar permisosr">
-                      <v-icon size="20">mdi-shield-check</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                <div class="role-col-description busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.description }}
+                  </span>
+                </div>
+
+                <div class="role-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar"
+                  >
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.green"
+                    @click="showAddPermission(slotProps.item)"
+                    title="Asignar permisos"
+                  >
+                    <v-icon size="17">mdi-shield-check</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
     </v-card>
   </v-container>
-  
+
   <v-dialog v-model="dialog" max-width="600px">
     <v-form ref="form" v-model="valid">
       <v-card>
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
+
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-tag-outline"
-                  variant="underlined" :rules="nameRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.name"
+                  clearable
+                  label="Nombre"
+                  prepend-icon="mdi-tag-outline"
+                  variant="underlined"
+                  :rules="nameRules"
+                />
               </v-col>
-              <!--<v-col cols="12" md="6">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.type"
-                  :items="typeOptions" label="Tipos" prepend-icon="mdi-label-outline" item-title="name" item-value="id"
-                  variant="underlined" :rules="selectRules">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
-                      :prepend-icon="getTypeIcon(item.raw.name)"
-                      :title="item.raw.name"></v-list-item>
-                  </template>
-                </v-autocomplete>
-              </v-col>-->
+
               <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.description" clearable label="Descripción" prepend-icon="mdi-note"
-                  variant="underlined"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.description"
+                  clearable
+                  label="Descripción"
+                  prepend-icon="mdi-note"
+                  variant="underlined"
+                />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+
+        <v-divider />
+
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" :loading="loading" @click="save" :disabled="!valid">Aceptar</v-btn>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            :loading="loading"
+            @click="save"
+            :disabled="!valid"
+          >
+            Aceptar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -193,33 +219,65 @@
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar un rol</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar rol
+        </span>
       </v-toolbar>
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el rol seleccionado?</v-card-text>
-      <v-divider></v-divider>
+
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar el rol seleccionado?
+      </v-card-text>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">Cancelar</v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" :loading="loading" @click="deleteItemConfirm">Aceptar</v-btn>
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
+          Cancelar
+        </v-btn>
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          :loading="loading"
+          @click="deleteItemConfirm"
+        >
+          Aceptar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <!-- Diálogo donde se mostrarán los detalles de las rutas -->
-  <v-dialog v-model="dialogRolePermission" fullscreen transition="dialog-bottom-transition">
+  <v-dialog
+    v-model="dialogRolePermission"
+    fullscreen
+    transition="dialog-bottom-transition"
+  >
     <v-card>
       <v-card-text>
-        <!-- Aquí pasamos el 'selectedWorker' al componente dentro del diálogo -->
         <RolePermission :role="selectedRole" />
       </v-card-text>
-      <v-divider></v-divider>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn variant="flat" :color="paleteColors.gris" @click="closeDialogRolePermission">Cerrar</v-btn>
+        <v-spacer />
+
+        <v-btn
+          variant="flat"
+          :color="paleteColors.gris"
+          @click="closeDialogRolePermission"
+        >
+          Cerrar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
-  
 </template>
 
 <script>
@@ -558,5 +616,20 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.role-col-name{
+    width:25%;
+    min-width:0;
+}
+
+.role-col-description{
+    width:60%;
+    min-width:0;
+}
+
+.role-col-actions{
+    width:15%;
+    min-width:0;
 }
 </style>

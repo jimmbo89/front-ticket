@@ -1,399 +1,513 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-devices</v-icon>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-devices</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Dispositivos</div>
-      <div class="text-body-2 text-grey">Gestionar Dispositivos</div>
+    <div>
+      <div class="busgo-page-title">Dispositivos</div>
+      <div class="busgo-page-subtitle">Gestionar dispositivos</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAdd()"
+    >
       Agregar Dispositivo
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
-    <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de dispositivos</div>
 
-        <!-- Spacer (solo visible en md+) -->
-        <v-spacer class="d-none d-md-block"></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
 
-        <!-- Grupo: Autocomplete + Botón buscar -->
-        <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 400px">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" class="mr-1"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" @update:modelValue="initialize">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
+  <div class="busgo-card-info">
 
-          <!-- Botón de búsqueda (actualizar datos) 
-          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
-            class="mt-2 mt-md-0 mr-5 ml-1">
-            <v-icon>mdi-magnify</v-icon>
-          </v-btn>-->
-        </div>
+    <div class="busgo-card-title">
+      Listado de dispositivos
+    </div>
 
-        <!-- Campo de búsqueda global -->
-        <div class="flex-grow-1" style="max-width: 300px">
-          <v-text-field v-model="search" density="compact" label="Buscar dispositivo" prepend-inner-icon="mdi-magnify"
-            variant="solo-filled" hide-details single-line flat></v-text-field>
-        </div>
-      </v-card-title>
+    <div class="busgo-card-subtitle">
+      Gestiona terminales, equipos móviles y dispositivos asociados a sucursales.
+    </div>
 
-      <!-- Separador -->
-      <v-divider class="my-2"></v-divider>
+  </div>
 
-      <!-- Tabla de dispositivos con filas personalizadas -->
-      <v-data-table :headers="headers" :items="devices" :search="search" :items-per-page-text="'Elementos por página'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
-        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+  <div class="busgo-card-filters">
+
+    <v-autocomplete
+      v-if="mostrarFila"
+      v-model="branch_id"
+      :items="branches"
+      item-title="name"
+      item-value="id"
+      density="compact"
+      variant="outlined"
+      prepend-inner-icon="mdi-store"
+      placeholder="Sucursal"
+      hide-details
+      class="busgo-filter busgo-filter-branch"
+      @update:modelValue="initialize"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                MAC
-              </div>
+      <template #item="{ props, item }">
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Serie
-              </div>
+        <v-list-item
+          v-bind="props"
+          :prepend-avatar="`${$axios.defaults.baseURL}images/${item.raw.image}`"
+          :title="item.raw.name"
+        />
 
-              <!-- Dirección (25%) -->
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Android
-              </div>
+      </template>
 
-              <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-                Adquirido
-              </div>
-              
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Mantenimiento
-              </div>
+    </v-autocomplete>
 
-              <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
-                Estado
-              </div>
 
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
+    <v-text-field
+      v-model="search"
+      density="compact"
+      placeholder="Buscar dispositivo..."
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      hide-details
+      class="busgo-filter busgo-filter-search"
+    />
 
-              <!-- Acciones (25%) -->
-              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+  </div>
+
+</div>
+
+      <v-data-table
+        :headers="headers"
+        :items="devices"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="device-col-name">Nombre</div>
+            <div class="device-col-mac">MAC</div>
+            <div class="device-col-serial">Serie</div>
+            <div class="device-col-android">Android</div>
+            <div class="device-col-acquisition">Adquirido</div>
+            <div class="device-col-maintenance">Mantención</div>
+            <div class="device-col-status">Estado</div>
+            <div class="device-col-notes">Descripción</div>
+            <div class="device-col-actions"></div>
+          </div>
         </template>
-        <!-- Fila personalizada -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Nombre con avatar -->
-                  <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img :src="`${this.$axios.defaults.baseURL}images/${
-                          slotProps.item.image
-                        }?t=${getCacheTimestamp()}`" cover></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.name }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Nombre: {{ slotProps.item.name }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="device-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
+                      cover
+                    />
+                  </v-avatar>
 
-                  <!-- Mac -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.mac }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Mac: {{ slotProps.item.mac }}
-                      </span>
-                    </v-tooltip>
+                  <div class="busgo-name">
+                    {{ slotProps.item.name }}
                   </div>
+                </div>
 
-                  <!-- Serie -->
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.serial }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Serie: {{ slotProps.item.serial }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-mac busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.mac }}
+                  </span>
+                </div>
 
-                  <!-- Android -->
-                  <div style="width: 5%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.version }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Android: {{ slotProps.item.version }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-serial busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.serial }}
+                  </span>
+                </div>
 
-                  <!-- Adquirido -->
-                  <div style="width: 7%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.acquisition }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Adquirido: {{ slotProps.item.acquisition }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-android busgo-meta">
+                  <v-icon size="16" color="green">mdi-android</v-icon>
+                  <span class="text-truncate">
+                    {{ slotProps.item.version }}
+                  </span>
+                </div>
 
-                  <!-- Mantenimiento -->
-                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.maintenance }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Mantenimiento: {{ slotProps.item.maintenance }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-acquisition busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.acquisition }}
+                  </span>
+                </div>
 
-                  <!-- Estado -->
-                  <div style="width: 5%; min-width: 0" class="text-center">
-                    <v-chip :color="
-                        slotProps.item.status === 1
-                          ? paleteColors.active
-                          : paleteColors.inactive
-                      " :text-color="paleteColors.white" size="small">
-                      {{ slotProps.item.status === 1 ? "Activo" : "Inactivo" }}
-                    </v-chip>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Estado: {{ slotProps.item.status }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-maintenance busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.maintenance }}
+                  </span>
+                </div>
 
-                  <!-- Descripción -->
-                  <div style="width: 25%; min-width: 0" class="d-inline-block text-truncate text-start">
-                    <span class="text-truncate">{{ slotProps.item.notes }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ slotProps.item.notes }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="device-col-status">
+                  <v-chip
+                    size="small"
+                    :color="
+                      slotProps.item.status === 1
+                        ? paleteColors.active
+                        : paleteColors.inactive
+                    "
+                    :text-color="paleteColors.white"
+                  >
+                    {{ slotProps.item.status === 1 ? "Activo" : "Inactivo" }}
+                  </v-chip>
+                </div>
 
-                  <!-- Acciones -->
-                  <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar Dispositivo">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
+                <div class="device-col-notes busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.notes }}
+                  </span>
+                </div>
 
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Dispositivo">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                <div class="device-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar Dispositivo"
+                  >
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Dispositivo"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
-      <v-card-actions class="pa-4">
-    <v-spacer></v-spacer>
-    <v-btn
-      variant="flat"
-      :color="paleteColors.gris"
-      to="/company"
-      aria-label="Volver a Empresa"
-    >
-      Volver
-    </v-btn>
-  </v-card-actions>
+
+
     </v-card>
   </v-container>
+
   <v-dialog v-model="dialog" max-width="700px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card>
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
+
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12" md="6">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.branch_id" v-if="mostrarFila"
-                  :items="branches" label="Sucursal" prepend-icon="mdi-store-outline" item-title="name" item-value="id"
-                  variant="underlined" :rules="selectRules" :disabled="editedIndex !== -1">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
+                <v-autocomplete
+                  v-if="mostrarFila"
+                  v-model="editedItem.branch_id"
+                  :items="branches"
+                  :no-data-text="'No hay datos disponibles'"
+                  label="Sucursal"
+                  prepend-icon="mdi-store-outline"
+                  item-title="name"
+                  item-value="id"
+                  variant="underlined"
+                  :rules="selectRules"
+                  :disabled="editedIndex !== -1"
+                >
+                  <template #item="{ props, item }">
+                    <v-list-item
+                      v-bind="props"
                       :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name"></v-list-item>
+                      :title="item.raw.name"
+                    />
                   </template>
                 </v-autocomplete>
               </v-col>
+
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-devices"
-                  variant="underlined" :rules="nameRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.name"
+                  clearable
+                  label="Nombre"
+                  prepend-icon="mdi-devices"
+                  variant="underlined"
+                  :rules="nameRules"
+                />
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="4">
-                <v-text-field v-model="editedItem.mac" clearable label="Mac" prepend-icon="mdi-lan" variant="underlined"
-                  :rules="macRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.mac"
+                  clearable
+                  label="Mac"
+                  prepend-icon="mdi-lan"
+                  variant="underlined"
+                  :rules="macRules"
+                />
               </v-col>
+
               <v-col cols="12" md="4">
-                <v-text-field v-model="editedItem.serial" clearable label="Serie" prepend-icon="mdi-barcode"
-                  variant="underlined" :rules="serialRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.serial"
+                  clearable
+                  label="Serie"
+                  prepend-icon="mdi-barcode"
+                  variant="underlined"
+                  :rules="serialRules"
+                />
               </v-col>
+
               <v-col cols="12" md="4">
-                <v-switch 
-                  v-model="editedItem.status" 
-                  :true-value=1 
-                  :false-value=0
+                <v-switch
+                  v-model="editedItem.status"
+                  :true-value="1"
+                  :false-value="0"
                   :color="paleteColors.active"
-                  hide-details 
-                  inset 
+                  hide-details
+                  inset
                   class="custom-switch"
                 >
-                  <template v-slot:label>
-                    <span class="text-body-1"
-                      :style="{ color: editedItem.status ? paleteColors.active : paleteColors.grey }">
-                      {{ editedItem.status ? 'Activo' : 'Inactivo' }}
+                  <template #label>
+                    <span
+                      class="text-body-1"
+                      :style="{
+                        color: editedItem.status
+                          ? paleteColors.active
+                          : paleteColors.grey
+                      }"
+                    >
+                      {{ editedItem.status ? "Activo" : "Inactivo" }}
                     </span>
                   </template>
                 </v-switch>
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="4">
-                <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-                  offset-y min-width="290px">
-                  <template v-slot:activator="{ props }">
-                    <v-text-field v-bind="props" :modelValue="dateFormatted" variant="underlined"
-                      prepend-icon="mdi-calendar" label="Fecha de Adquisición"></v-text-field>
+                <v-menu
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="290px"
+                >
+                  <template #activator="{ props }">
+                    <v-text-field
+                      v-bind="props"
+                      :modelValue="dateFormatted"
+                      variant="underlined"
+                      prepend-icon="mdi-calendar"
+                      label="Fecha de Adquisición"
+                    />
                   </template>
+
                   <v-locale-provider locale="es">
-                    <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                      :modelValue="input" @update:model-value="updateDate" format="yyyy-MM-dd"
-                      :max="dateFormatted2"></v-date-picker>
+                    <v-date-picker
+                      header="Calendario"
+                      title="Seleccione la fecha"
+                      :color="paleteColors.primary"
+                      :modelValue="input"
+                      @update:model-value="updateDate"
+                      format="yyyy-MM-dd"
+                      :max="dateFormatted2"
+                    />
                   </v-locale-provider>
                 </v-menu>
               </v-col>
-              <!-- Segunda columna -->
+
               <v-col cols="12" md="4">
-                <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition"
-                  offset-y min-width="290px">
-                  <template v-slot:activator="{ props }">
-                    <v-text-field v-bind="props" :modelValue="dateFormatted2" variant="underlined"
-                      prepend-icon="mdi-calendar" label="Fecha de Mantenimiento"></v-text-field>
+                <v-menu
+                  v-model="menu2"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="290px"
+                >
+                  <template #activator="{ props }">
+                    <v-text-field
+                      v-bind="props"
+                      :modelValue="dateFormatted2"
+                      variant="underlined"
+                      prepend-icon="mdi-calendar"
+                      label="Fecha de Mantenimiento"
+                    />
                   </template>
+
                   <v-locale-provider locale="es">
-                    <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-                      :modelValue="input2" format="yyyy-MM-dd" :min="dateFormatted"
-                      @update:model-value="updateDate1"></v-date-picker><!--@update:model-value="updateDate2"-->
+                    <v-date-picker
+                      header="Calendario"
+                      title="Seleccione la fecha"
+                      :color="paleteColors.primary"
+                      :modelValue="input2"
+                      format="yyyy-MM-dd"
+                      :min="dateFormatted"
+                      @update:model-value="updateDate1"
+                    />
                   </v-locale-provider>
                 </v-menu>
               </v-col>
+
               <v-col cols="12" md="4">
-                <v-text-field v-model="editedItem.version" label="Versión de Android" prepend-icon="mdi-android"
-                  variant="underlined" :rules="androidVersionRules" clearable></v-text-field>
+                <v-text-field
+                  v-model="editedItem.version"
+                  label="Versión de Android"
+                  prepend-icon="mdi-android"
+                  variant="underlined"
+                  :rules="androidVersionRules"
+                  clearable
+                />
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="12">
-                <v-textarea v-model="editedItem.notes" clearable label="Descripción" prepend-icon="mdi-note"
-                  variant="underlined"></v-textarea>
+                <v-textarea
+                  v-model="editedItem.notes"
+                  clearable
+                  label="Descripción"
+                  prepend-icon="mdi-note"
+                  variant="underlined"
+                />
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="6">
-                <v-file-input clearable v-model="file" ref="fileInput" label="Imagen del Dispositivo"
-                  variant="underlined" density="compact" name="file" accept=".png, .jpg, .jpeg"
-                  @change="onFileSelected">
-                </v-file-input>
+                <v-file-input
+                  clearable
+                  v-model="file"
+                  ref="fileInput"
+                  label="Imagen del Dispositivo"
+                  variant="underlined"
+                  density="compact"
+                  name="file"
+                  accept=".png, .jpg, .jpeg"
+                  @change="onFileSelected"
+                />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
-                  <img v-if="imagenDisponible()" :src="imgedit" height="120" width="210" />
+                  <img
+                    v-if="imagenDisponible()"
+                    :src="imgedit"
+                    height="120"
+                    width="210"
+                  />
                 </v-card>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+
+        <v-divider />
+
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-            :loading="loading">Aceptar</v-btn>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="save"
+            :disabled="!valid"
+            :loading="loading"
+          >
+            Aceptar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
   </v-dialog>
+
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Dispositivo</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar Dispositivo
+        </span>
       </v-toolbar>
 
       <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el dispositivo seleccionado?</v-card-text>
-      <v-divider></v-divider>
+        ¿Desea eliminar el dispositivo seleccionado?
+      </v-card-text>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          @click="deleteItemConfirm"
+        >
           Aceptar
         </v-btn>
       </v-card-actions>
@@ -990,5 +1104,96 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.device-col-name{
+    width:20%;
+    min-width:0;
+}
+
+.device-col-mac{
+    width:10%;
+    min-width:0;
+}
+
+.device-col-serial{
+    width:10%;
+    min-width:0;
+}
+
+.device-col-android{
+    width:6%;
+    min-width:0;
+}
+
+.device-col-acquisition{
+    width:8%;
+    min-width:0;
+}
+
+.device-col-maintenance{
+    width:8%;
+    min-width:0;
+}
+
+.device-col-status{
+    width:8%;
+    min-width:0;
+}
+
+.device-col-notes{
+    width:20%;
+    min-width:0;
+}
+
+.device-col-actions{
+    width:10%;
+    min-width:0;
+}
+
+.busgo-card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:24px;
+
+    padding:20px 24px;
+
+}
+
+.busgo-card-info{
+
+    flex:1;
+
+    min-width:240px;
+
+}
+
+.busgo-card-filters{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+
+}
+
+.busgo-filter-branch{
+
+    width:260px;
+
+}
+
+.busgo-filter-search{
+
+    width:320px;
+
 }
 </style>

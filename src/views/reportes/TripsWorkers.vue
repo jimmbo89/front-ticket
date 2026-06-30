@@ -1,275 +1,335 @@
 <template>
-    <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-        :multi-line="true" vertical v-model="snackbar">
-        <v-row>
-            <v-col md="2">
-                <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-            </v-col>
-            <v-col md="10">
-                <h4>{{ sb_title }}</h4>
-                {{ sb_message }}
-            </v-col>
-        </v-row>
-    </v-snackbar>
-      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-bus-marker</v-icon>
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
+    <v-row>
+      <v-col md="2">
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
+      </v-col>
+
+      <v-col md="10">
+        <h4>{{ sb_title }}</h4>
+        {{ sb_message }}
+      </v-col>
+    </v-row>
+  </v-snackbar>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-account-cash-outline</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Recaudación por Trabajador</div>
-      <div class="text-body-2 text-grey">Gestionar recaudación por trabajador</div>
+    <div>
+      <div class="busgo-page-title">Recaudación por Trabajador</div>
+      <div class="busgo-page-subtitle">
+        Gestionar recaudación por trabajador
+      </div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.green" variant="tonal" elevation="2"
-      prepend-icon="mdi-file-excel-box" @click="exportToExcel()">
+    <v-btn
+      :color="paleteColors.green"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-file-excel-box"
+      class="busgo-add-btn"
+      @click="exportToExcel()"
+    >
       Exportar a Excel
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
-   <v-card flat>
-  <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-  <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-    <!-- Título -->
-    <div class="text-subtitle-1 font-weight-bold">Listado de recaudación por trabajador</div>
 
-    <!-- Spacer (solo visible en md+) -->
-    <v-spacer class="d-none d-md-block"></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">
+            Listado de recaudación por trabajador
+          </div>
 
-    <!-- Grupo: Autocomplete + Botón buscar -->
-   <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 100%">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-
-          <ReportDateRangeFilter
-            v-model:start-date="date"
-            v-model:end-date="endDate"
-          />
-
-          <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" v-if="this.mostrarFila"
-            :items="branches" label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name"
-            item-value="id" variant="solo-filled" hide-details single-line flat :rules="selectRules" density="compact" class="ml-1 mr-1">
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :prepend-avatar="this.getImageUrl(item.raw.image)">
-              </v-list-item>
-            </template>
-          </v-autocomplete>
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="this.selectedWorker" v-if="this.mostrarFila"
-                  :items="workers" label="Trabajadores" prepend-inner-icon="mdi-account" item-title="name" item-value="id"
-                  variant="solo-filled" hide-details single-line flat density="compact" :rules="selectRules">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
-                      :prepend-avatar="getImageUrl(item.raw.image)"
-                      :title="item.raw.name">
-                      <v-list-item-subtitle class="d-flex flex-column">
-                        <div>Rol: {{ item.raw.role.name }}</div>
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                  </template>
-                </v-autocomplete>
-          <!-- Botón de búsqueda (actualizar datos) -->
-          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" class="mt-2 mt-md-0 mr-5 ml-1">
-            <v-icon>mdi-magnify</v-icon>
-          </v-btn>
+          <div class="busgo-card-subtitle">
+            Consulta viajes, pasajeros, horarios y montos generados.
+          </div>
         </div>
 
-    <!-- Campo de búsqueda global -->
-    <div class="flex-grow-1" style="max-width: 300px">
-      <v-text-field v-model="search" density="compact" label="Buscar viaje" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </div>
+        <v-chip
+          color="green-darken-2"
+          variant="tonal"
+          label
+          size="large"
+          class="worker-collection-total"
+        >
+          Total general: ${{ formatNumber(Number(totalGeneral || 0)) }}
+        </v-chip>
+      </div>
 
-    <v-chip
-      class="ml-2"
-      color="green-darken-2"
-      variant="tonal"
-      label
-      size="large"
-    >
-      Total general: ${{ formatNumber(Number(totalGeneral || 0)) }}
-    </v-chip>
-  </v-card-title>
+      <div class="worker-collection-toolbar px-6 pb-4">
+        <ReportDateRangeFilter
+          v-model:start-date="date"
+          v-model:end-date="endDate"
+        />
 
-  <!-- Tabla de viajes con filas personalizadas -->
-  <v-data-table :headers="headers" :items="sortedResponse" :search="search" :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." :hide-default-header="true"
-        class="elevation-1" style="max-height: 68vh; overflow-y: auto; background: transparent">
-        <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Ruta -->
-              <div
-                style="width: 44%; min-width: 0; cursor: pointer"
-                class="text-left font-weight-bold d-flex align-center"
-                @click="toggleSort('name')"
-              >
-                Ruta
-                <v-icon size="16" class="ml-1">
-                  {{
-                    sortBy === 'name'
-                      ? sortOrder === 'asc'
-                        ? 'mdi-arrow-up'
-                        : 'mdi-arrow-down'
-                      : 'mdi-swap-vertical'
-                  }}
-                </v-icon>
-              </div>
+        <v-autocomplete
+          v-if="mostrarFila"
+          v-model="branch_id"
+          :items="branches"
+          :no-data-text="'No hay datos disponibles'"
+          item-title="name"
+          item-value="id"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-store"
+          placeholder="Sucursal"
+          hide-details
+          single-line
+          class="worker-collection-filter"
+          :rules="selectRules"
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="getImageUrl(item.raw.image)"
+              :title="item.raw.name"
+            />
+          </template>
+        </v-autocomplete>
 
-              <!-- Fecha -->
-              <div
-                style="width: 10%; min-width: 0; cursor: pointer"
-                class="text-left font-weight-bold d-flex align-center"
-                @click="toggleSort('date')"
-              >
-                Fecha
-                <v-icon size="16" class="ml-1">
-                  {{
-                    sortBy === 'date'
-                      ? sortOrder === 'asc'
-                        ? 'mdi-arrow-up'
-                        : 'mdi-arrow-down'
-                      : 'mdi-swap-vertical'
-                  }}
-                </v-icon>
-              </div>
+        <v-autocomplete
+          v-if="mostrarFila"
+          v-model="selectedWorker"
+          :items="workers"
+          :no-data-text="'No hay datos disponibles'"
+          item-title="name"
+          item-value="id"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-account"
+          placeholder="Trabajador"
+          hide-details
+          single-line
+          class="worker-collection-filter"
+          :rules="selectRules"
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="getImageUrl(item.raw.image)"
+              :title="item.raw.name"
+            >
+              <v-list-item-subtitle class="d-flex flex-column">
+                <div>Rol: {{ item.raw.role.name }}</div>
+              </v-list-item-subtitle>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
 
-              <div style="width: 13%; min-width: 0" class="text-left font-weight-bold">
-                Vehículo
-              </div>
+        <v-btn
+          icon
+          variant="tonal"
+          :color="paleteColors.primary"
+          @click="initialize"
+        >
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Salida
-              </div>
+        <v-spacer />
 
-             <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Llegada
-              </div>
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar viaje..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="worker-collection-search"
+        />
+      </div>
 
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Pasajeros
-              </div>
+      <v-data-table
+        :headers="headers"
+        :items="sortedResponse"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div
+              class="worker-collection-col-route worker-collection-sortable"
+              @click="toggleSort('name')"
+            >
+              Ruta
 
-              <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                Monto
-              </div>
-            </v-card-text>
-          </v-card>
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "name"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
+            </div>
+
+            <div
+              class="worker-collection-col-date worker-collection-sortable"
+              @click="toggleSort('date')"
+            >
+              Fecha
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "date"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
+            </div>
+
+            <div class="worker-collection-col-vehicle">
+              Vehículo
+            </div>
+
+            <div class="worker-collection-col-start">
+              Salida
+            </div>
+
+            <div class="worker-collection-col-end">
+              Llegada
+            </div>
+
+            <div class="worker-collection-col-passengers">
+              Pasajeros
+            </div>
+
+            <div class="worker-collection-col-amount">
+              Monto
+            </div>
+          </div>
         </template>
-    <!-- Fila personalizada -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              <!-- Ruta -->
-              <div style="width: 44%; min-width: 0" class="text-truncate">
-                <div class="font-weight-medium text-truncate">{{ slotProps.item.name }}</div>
-                <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
-                  <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
-                  <span class="text-truncate">Origen: {{ slotProps.item.origin }}</span>
-                  <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-                  <span class="text-truncate">Destino: {{ slotProps.item.destination }}</span>
-                </div>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Ruta: {{ slotProps.item.name }}<br />
-                    Origen: {{ slotProps.item.origin }}<br />
-                    Destino: {{ slotProps.item.destination }}
-                  </span>
-                </v-tooltip>
-              </div>
 
-              <!-- Fecha -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.date }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Fecha: {{ slotProps.item.date }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Vehículo con avatar -->
-              <div class="d-flex align-center" style="width: 13%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`" class="icono-concavo" cover></v-img>
-                </v-avatar>
-                <div class="text-truncate">
-                  <div class="font-weight-medium text-truncate">
-                    {{ slotProps.item.plate || slotProps.item.vehicleName }}
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row worker-collection-row">
+                <div class="worker-collection-col-route">
+                  <div class="worker-collection-route-title">
+                    {{ slotProps.item.name }}
                   </div>
-                  <div
-                    v-if="slotProps.item.vehicleName && slotProps.item.vehicleName !== slotProps.item.plate"
-                    class="text-caption text-grey text-truncate"
+
+                  <div class="worker-collection-route-meta">
+                    <v-icon size="14" class="mr-1">
+                      mdi-map-marker
+                    </v-icon>
+
+                    <span class="text-truncate">
+                      Origen: {{ slotProps.item.origin }}
+                    </span>
+
+                    <v-icon size="14" class="mx-2">
+                      mdi-ray-start-arrow
+                    </v-icon>
+
+                    <span class="text-truncate">
+                      Destino: {{ slotProps.item.destination }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="worker-collection-col-date busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-calendar
+                  </v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.date }}
+                  </span>
+                </div>
+
+                <div class="worker-collection-col-vehicle busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
                   >
-                    {{ slotProps.item.vehicleName }}
+                    <v-img
+                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`"
+                      cover
+                    />
+                  </v-avatar>
+
+                  <div class="min-width-0">
+                    <div class="busgo-name">
+                      {{ slotProps.item.plate || slotProps.item.vehicleName }}
+                    </div>
+
+                    <div
+                      v-if="
+                        slotProps.item.vehicleName &&
+                        slotProps.item.vehicleName !== slotProps.item.plate
+                      "
+                      class="busgo-submeta text-truncate"
+                    >
+                      {{ slotProps.item.vehicleName }}
+                    </div>
                   </div>
                 </div>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Vehículo: {{ slotProps.item.vehicleName }}
-                  </span>
-                </v-tooltip>
-              </div>
 
-              <!-- Salida -->
-              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.start }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Salida: {{ slotProps.item.start }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <div class="worker-collection-col-start busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-clock-start
+                  </v-icon>
 
-              <!-- Llegada -->
-              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.end }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Llegada: {{ slotProps.item.end }}
+                  <span class="text-truncate">
+                    {{ slotProps.item.start }}
                   </span>
-                </v-tooltip>
-              </div>
+                </div>
 
-              <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                <span>{{ slotProps.item.passenger }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Pasajeros: {{ slotProps.item.passenger }}
-                  </span>
-                </v-tooltip>
-              </div>
+                <div class="worker-collection-col-end busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-clock-end
+                  </v-icon>
 
-              <div style="width: 11%; min-width: 0" class="text-truncate text-left">
-                <span class="font-weight-medium">${{ formatNumber(Number(slotProps.item.totalAmount || 0)) }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Monto generado: ${{ formatNumber(Number(slotProps.item.totalAmount || 0)) }}
+                  <span class="text-truncate">
+                    {{ slotProps.item.end }}
                   </span>
-                </v-tooltip>
+                </div>
+
+                <div class="worker-collection-col-passengers busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-account-multiple
+                  </v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.passenger }}
+                  </span>
+                </div>
+
+                <div class="worker-collection-col-amount worker-collection-amount">
+                  ${{ formatNumber(Number(slotProps.item.totalAmount || 0)) }}
+                </div>
               </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-  </v-card>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
   </v-container>
 </template>
 
@@ -646,6 +706,138 @@ table.v-table > thead,
 }
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
+}
+
+.worker-collection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.worker-collection-filter {
+  width: 240px;
+  min-width: 240px;
+}
+
+.worker-collection-search {
+  width: 300px;
+  min-width: 260px;
+}
+
+.worker-collection-total {
+  font-weight: 700;
+}
+
+.worker-collection-col-route {
+  width: 44%;
+  min-width: 0;
+}
+
+.worker-collection-col-date {
+  width: 10%;
+  min-width: 0;
+}
+
+.worker-collection-col-vehicle {
+  width: 13%;
+  min-width: 0;
+}
+
+.worker-collection-col-start {
+  width: 6%;
+  min-width: 0;
+}
+
+.worker-collection-col-end {
+  width: 6%;
+  min-width: 0;
+}
+
+.worker-collection-col-passengers {
+  width: 8%;
+  min-width: 0;
+}
+
+.worker-collection-col-amount {
+  width: 13%;
+  min-width: 0;
+}
+
+.worker-collection-sortable {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.worker-collection-row {
+  min-height: 66px;
+}
+
+.worker-collection-route-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.worker-collection-route-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  min-width: 0;
+}
+
+.worker-collection-amount {
+  font-size: 14px;
+  font-weight: 800;
+  color: #15803d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.busgo-submeta {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .worker-collection-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .worker-collection-filter,
+  .worker-collection-search {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .worker-collection-col-route,
+  .worker-collection-col-date,
+  .worker-collection-col-vehicle,
+  .worker-collection-col-start,
+  .worker-collection-col-end,
+  .worker-collection-col-passengers,
+  .worker-collection-col-amount {
+    width: 100%;
+  }
+
+  .worker-collection-route-meta {
+    flex-wrap: wrap;
+  }
 }
 </style>
 

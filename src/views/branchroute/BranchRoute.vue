@@ -11,165 +11,129 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
-        <div v-if="branch">
-          <!-- Aquí puedes agregar más información sobre la sucursal -->
-        </div>
+
+        <div v-if="branch"></div>
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-    style="background-color: #f9f9f9"
-  >
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
       <v-img
-        :src="`${this.$axios.defaults.baseURL}images/${
-          this.branch.image
-        }?t=${getCacheTimestamp()}`"
-        alt="image"
-        class="icono-concavo"
+        :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
+        alt="Sucursal"
         cover
-      ></v-img>
+      />
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">{{ this.branch.name }}</div>
-      <div class="text-body-2 text-grey">Gestionar Rutas de la Sucursal</div>
+    <div>
+      <div class="busgo-page-title">
+        {{ this.branch.name }}
+      </div>
+
+      <div class="busgo-page-subtitle">
+        Gestionar rutas de la sucursal
+      </div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
     <v-btn
-      class="text-subtitle-1 ml-12"
       :color="paleteColors.primary"
-      variant="tonal"
-      elevation="2"
-      prepend-icon="mdi-plus-circle"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
       @click="showAdd()"
     >
       Agregar Ruta
     </v-btn>
   </v-card>
-  <v-card flat>
-    <v-card-title class="d-flex align-center text-body-1">
-      Listado de rutas
 
-      <v-spacer></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">
+            Listado de rutas
+          </div>
 
-      <v-text-field
-        v-model="search"
-        density="compact"
-        label="Buscar ruta"
-        prepend-inner-icon="mdi-magnify"
-        variant="solo-filled"
-        hide-details
-        single-line
-        flat
-      ></v-text-field>
-    </v-card-title>
+          <div class="busgo-card-subtitle">
+            Administra las rutas asignadas a esta sucursal.
+          </div>
+        </div>
 
-    <v-data-table
-      :headers="headers"
-      :items="branchroutes"
-      :search="search"
-      :items-per-page-text="'Elementos por página'"
-      no-data-text="No hay datos disponibles"
-      :loading="loading"
-      loading-text="Cargando datos..."
-      class="elevation-1"
-      :hide-default-header="true"
-      style="max-height: 68vh; overflow-y: auto; background: transparent"
-    >
-      <template v-slot:top>
-        <!-- Tarjeta de encabezado con alto fijo -->
-        <v-card
-          flat
-          color="blue-grey-lighten-5"
-          class="mb-2 mx-1 rounded-lg"
-          elevation="1"
-          style="
-            border: 1px solid #eceff1;
-            height: 40px;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-          "
-        >
-          <v-card-text
-            class="d-flex pa-2"
-            style="
-              width: 100%;
-              min-width: 0;
-              height: 100%;
-              padding: 0 16px !important;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <!-- Negocio (20%) -->
-            <div
-              style="width: 15%; min-width: 0"
-              class="text-left font-weight-bold text-subtitle-2"
-            >
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar ruta..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
+
+      <v-data-table
+        :headers="headers"
+        :items="branchroutes"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="branch-route-col-name">
               Nombre de la ruta
             </div>
 
-            <!-- Nombre (20%) -->
-            <!-- Origen -->
-            <div
-              style="width: 25%; min-width: 0"
-              class="text-left font-weight-bold text-subtitle-2"
-            >
+            <div class="branch-route-col-origin">
               Origen
             </div>
 
-            <!-- Destino -->
-            <div
-              style="width: 25%; min-width: 0"
-              class="text-left font-weight-bold text-subtitle-2"
-            >
+            <div class="branch-route-col-destination">
               Destino
             </div>
 
-            <!-- Distancia / Tiempo -->
-            <div
-              style="width: 20%; min-width: 0"
-              class="text-left font-weight-bold text-subtitle-2"
-            >
+            <div class="branch-route-col-info">
               Distancia / Tiempo
             </div>
 
-            <!-- Acciones -->
-            <div
-              style="width: 15%; min-width: 0"
-              class="d-flex justify-left font-weight-bold text-subtitle-2"
-            ></div>
-          </v-card-text>
-        </v-card>
-      </template>
-      <!-- Slot personalizado para cada fila -->
-      <template v-slot:item="slotProps">
-        <tr>
-          <td colspan="100%" style="padding: 0; border: none">
-            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text
-                class="d-flex align-center pa-2"
-                style="width: 100%; min-width: 0"
-              >
-                <!-- Columna 1: Nombre de la ruta -->
-                <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate font-weight-medium">{{
-                    slotProps.item.name
-                  }}</span>
+            <div class="branch-route-col-actions"></div>
+          </div>
+        </template>
+
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row branch-route-row">
+                <div class="branch-route-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-icon color="primary" size="20">
+                      mdi-map-marker-path
+                    </v-icon>
+                  </v-avatar>
+
+                  <div class="busgo-name">
+                    {{ slotProps.item.name }}
+                  </div>
+
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Nombre de la ruta: {{ slotProps.item.name }}
@@ -177,19 +141,24 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Columna 2: Origen (con avatar) -->
-                <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                <div class="branch-route-col-origin busgo-name-cell">
+                  <v-avatar
+                    size="34"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
                     <v-img
-                      :src="`${$axios.defaults.baseURL}images/${
-                        slotProps.item.originImage
-                      }?t=${getCacheTimestamp()}`"
+                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.originImage}?t=${getCacheTimestamp()}`"
                       alt="Imagen del origen"
-                      class="icono-concavo"
                       cover
-                    ></v-img>
+                    />
                   </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.originName }}</span>
+
+                  <span class="branch-route-location text-truncate">
+                    {{ slotProps.item.originName }}
+                  </span>
+
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Origen: {{ slotProps.item.originName }}
@@ -197,19 +166,24 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Columna 3: Destino (con avatar) -->
-                <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+                <div class="branch-route-col-destination busgo-name-cell">
+                  <v-avatar
+                    size="34"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
                     <v-img
-                      :src="`${$axios.defaults.baseURL}images/${
-                        slotProps.item.destinationImage
-                      }?t=${getCacheTimestamp()}`"
+                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.destinationImage}?t=${getCacheTimestamp()}`"
                       alt="Imagen del destino"
-                      class="icono-concavo"
                       cover
-                    ></v-img>
+                    />
                   </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.destinationName }}</span>
+
+                  <span class="branch-route-location text-truncate">
+                    {{ slotProps.item.destinationName }}
+                  </span>
+
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Destino: {{ slotProps.item.destinationName }}
@@ -217,16 +191,27 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Columna 4: Distancia / Tiempo -->
-                <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                  <div class="d-flex flex-column">
-                    <span class="text-truncate">{{
-                      formatNumber(Number(slotProps.item.distance))
-                    }}</span>
-                    <span class="text-caption text-grey text-truncate">
+                <div class="branch-route-col-info branch-route-info">
+                  <div class="branch-route-distance">
+                    <v-icon size="16" color="primary">
+                      mdi-ruler
+                    </v-icon>
+
+                    <span class="text-truncate">
+                      {{ formatNumber(Number(slotProps.item.distance)) }}
+                    </span>
+                  </div>
+
+                  <div class="branch-route-time">
+                    <v-icon size="15" color="primary">
+                      mdi-clock-outline
+                    </v-icon>
+
+                    <span class="text-truncate">
                       {{ formatEstimatedTime(slotProps.item.estimated) }}
                     </span>
                   </div>
+
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Distancia: {{ formatNumber(Number(slotProps.item.distance)) }}<br />
@@ -235,156 +220,203 @@
                   </v-tooltip>
                 </div>
 
-                <!-- Columna 5: Acciones -->
-                <div
-                  class="d-flex flex-column align-end"
-                  style="width: 15%; min-width: 0; text-align: right"
-                >
-                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <!--<v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar Ruta">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>-->
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error"
-                      @click="deleteItem(slotProps.item)"
-                      class="flex-shrink-0"
-                      title="Eliminar Ruta"
-                    >
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
+                <div class="branch-route-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Ruta"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
+  </v-container>
+
+<v-dialog v-model="dialog" max-width="620px" persistent>
+  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+    <v-card class="busgo-route-dialog" elevation="18">
+
+      <div class="busgo-route-header">
+        <div class="busgo-route-icon">
+          <v-icon size="28">mdi-road-variant</v-icon>
+        </div>
+
+        <div>
+          <div class="busgo-route-title">{{ formTitle }}</div>
+          <div class="busgo-route-subtitle">
+            Asigna una ruta disponible a la sucursal
+          </div>
+        </div>
+
+        <v-spacer />
+
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          class="busgo-route-close"
+          @click="close"
+        />
+      </div>
+
+      <v-card-text class="busgo-route-body">
+        <label class="busgo-field-label">Ruta</label>
+
+        <v-autocomplete
+          :no-data-text="'No hay datos disponibles'"
+          v-model="editedItem.route_id"
+          :items="routes"
+          placeholder="Buscar ruta..."
+          prepend-inner-icon="mdi-map-search-outline"
+          item-title="name"
+          item-value="id"
+          variant="outlined"
+          density="comfortable"
+          rounded="lg"
+          :rules="selectRules"
+          :disabled="this.editedIndex === 1"
+          hide-details="auto"
+          clearable
+        >
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props" class="busgo-route-option">
+              <div class="busgo-route-option-grid">
+
+                <div class="busgo-route-point">
+                  <v-avatar size="42" class="busgo-route-avatar">
+                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`" />
+                  </v-avatar>
+
+                  <div class="busgo-route-point-info">
+                    <div class="busgo-route-point-label">
+                      <v-icon size="14">mdi-map-marker-outline</v-icon>
+                      Origen
+                    </div>
+
+                    <v-tooltip location="top">
+                      <template #activator="{ props: tooltipProps }">
+                        <div v-bind="tooltipProps" class="busgo-route-address">
+                          {{ item.raw.originAddress }}
+                        </div>
+                      </template>
+                      <span>{{ item.raw.originAddress }}</span>
+                    </v-tooltip>
                   </div>
                 </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
-  </v-card>
-  <v-dialog v-model="dialog" max-width="550px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-autocomplete
-                  :no-data-text="'No hay datos disponibles'"
-                  v-model="editedItem.route_id"
-                  :items="routes"
-                  label="Ruta"
-                  prepend-icon="mdi-road"
-                  item-title="name"
-                  item-value="id"
-                  variant="underlined"
-                  :rules="selectRules"
-                  density="compact"
-                  :disabled="this.editedIndex === 1"
-                >
-                  <template v-slot:item="{ props, item }">
-                    <v-card class="mx-1 my-2" elevation="2">
-                      <v-list-item v-bind="props">
-                        <v-list-item>
-                          <v-row align="center" no-gutters>
-                            <!-- Columna 1: Origen -->
-                            <v-col cols="12" md="6" class="d-flex align-center pa-2">
-                              <v-avatar size="40">
-                                <v-img
-                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
-                                />
-                              </v-avatar>
-                              <div class="ml-2 flex-grow-1">
-                                <div class="text-caption text-grey">
-                                  <v-icon small class="mr-1">mdi-map-marker</v-icon>
-                                  Origen
-                                </div>
-                                <v-tooltip location="top">
-                                  <template v-slot:activator="{ props: tooltipProps }">
-                                    <div v-bind="tooltipProps" class="text-truncate">
-                                      {{ item.raw.originAddress }}
-                                    </div>
-                                  </template>
-                                  <span>{{ item.raw.originAddress }}</span>
-                                </v-tooltip>
-                              </div>
-                            </v-col>
 
-                            <!-- Columna 2: Destino -->
-                            <v-col cols="12" md="6" class="d-flex align-center pa-2">
-                              <v-avatar size="40">
-                                <v-img
-                                  :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
-                                />
-                              </v-avatar>
-                              <div class="ml-2 flex-grow-1">
-                                <div class="text-caption text-grey">
-                                  <v-icon small class="mr-1">mdi-map-marker-check</v-icon>
-                                  Destino
-                                </div>
-                                <v-tooltip location="top">
-                                  <template v-slot:activator="{ props: tooltipProps }">
-                                    <div v-bind="tooltipProps" class="text-truncate">
-                                      {{ item.raw.destinationAddress }}
-                                    </div>
-                                  </template>
-                                  <span>{{ item.raw.destinationAddress }}</span>
-                                </v-tooltip>
-                              </div>
-                            </v-col>
-                          </v-row>
-                        </v-list-item>
-                      </v-list-item>
-                    </v-card>
-                  </template>
-                </v-autocomplete>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="!valid"
-            :loading="loading"
-            >Aceptar</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Ruta</span>
-      </v-toolbar>
+                <div class="busgo-route-arrow">
+                  <v-icon size="20">mdi-arrow-right</v-icon>
+                </div>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar la ruta seleccionada?</v-card-text>
-      <v-divider></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+                <div class="busgo-route-point">
+                  <v-avatar size="42" class="busgo-route-avatar">
+                    <v-img :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`" />
+                  </v-avatar>
+
+                  <div class="busgo-route-point-info">
+                    <div class="busgo-route-point-label">
+                      <v-icon size="14">mdi-map-marker-check-outline</v-icon>
+                      Destino
+                    </div>
+
+                    <v-tooltip location="top">
+                      <template #activator="{ props: tooltipProps }">
+                        <div v-bind="tooltipProps" class="busgo-route-address">
+                          {{ item.raw.destinationAddress }}
+                        </div>
+                      </template>
+                      <span>{{ item.raw.destinationAddress }}</span>
+                    </v-tooltip>
+                  </div>
+                </div>
+
+              </div>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
+      </v-card-text>
+
+      <v-card-actions class="busgo-route-actions">
+        <v-btn class="busgo-route-cancel" variant="flat" @click="close">
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
-          Aceptar
+
+        <v-btn
+          class="busgo-route-save"
+          variant="flat"
+          @click="save"
+          :disabled="!valid"
+          :loading="loading"
+        >
+          Guardar
         </v-btn>
       </v-card-actions>
+
     </v-card>
-  </v-dialog>
+  </v-form>
+</v-dialog>
+
+<v-dialog v-model="dialogDelete" max-width="480px" persistent>
+  <v-card class="busgo-delete-dialog" elevation="18">
+
+    <div class="busgo-delete-header">
+      <div class="busgo-delete-icon">
+        <v-icon size="30">mdi-map-marker-remove-outline</v-icon>
+      </div>
+
+      <div>
+        <div class="busgo-delete-title">Eliminar Ruta</div>
+        <div class="busgo-delete-subtitle">Esta acción no se puede deshacer</div>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        icon="mdi-close"
+        variant="text"
+        size="small"
+        class="busgo-delete-close"
+        @click="closeDelete"
+      />
+    </div>
+
+    <v-card-text class="busgo-delete-body">
+      <div class="busgo-delete-message">
+        ¿Desea eliminar la ruta seleccionada?
+      </div>
+
+      <div class="busgo-delete-warning">
+        <v-icon size="20">mdi-information-outline</v-icon>
+        <span>
+          Verifique que la ruta no tenga viajes, tarifas o ventas asociadas antes de continuar.
+        </span>
+      </div>
+    </v-card-text>
+
+    <v-card-actions class="busgo-delete-actions">
+      <v-btn class="busgo-delete-cancel" variant="flat" @click="closeDelete">
+        Cancelar
+      </v-btn>
+
+      <v-btn
+        class="busgo-delete-confirm"
+        variant="flat"
+        @click="deleteItemConfirm"
+      >
+        Eliminar
+      </v-btn>
+    </v-card-actions>
+
+  </v-card>
+</v-dialog>
 </template>
 
 <script>
@@ -770,24 +802,315 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead 
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
+.branch-route-col-name {
+  width: 15%;
+  min-width: 0;
 }
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}*/
+
+.branch-route-col-origin {
+  width: 25%;
+  min-width: 0;
+}
+
+.branch-route-col-destination {
+  width: 25%;
+  min-width: 0;
+}
+
+.branch-route-col-info {
+  width: 20%;
+  min-width: 0;
+}
+
+.branch-route-col-actions {
+  width: 15%;
+  min-width: 0;
+}
+
+.branch-route-row {
+  min-height: 62px;
+}
+
+.branch-route-location {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.branch-route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.branch-route-distance,
+.branch-route-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.branch-route-time {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.busgo-dialog-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.busgo-dialog-actions {
+  padding: 14px 18px;
+}
+
+@media (max-width: 960px) {
+  .branch-route-col-name,
+  .branch-route-col-origin,
+  .branch-route-col-destination,
+  .branch-route-col-info,
+  .branch-route-col-actions {
+    width: 100%;
+  }
+
+  .branch-route-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.busgo-route-dialog,
+.busgo-delete-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-route-header,
+.busgo-delete-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  color: #ffffff;
+}
+
+.busgo-route-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+}
+
+.busgo-delete-header {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 55%, #dc2626 100%);
+}
+
+.busgo-route-icon,
+.busgo-delete-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-route-title,
+.busgo-delete-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.busgo-route-subtitle,
+.busgo-delete-subtitle {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 3px;
+}
+
+.busgo-route-close,
+.busgo-delete-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-route-body {
+  padding: 24px !important;
+  background: #f8fafc;
+}
+
+.busgo-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.busgo-route-option {
+  margin: 6px 8px !important;
+  border-radius: 16px !important;
+  background: #ffffff;
+}
+
+.busgo-route-option-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.busgo-route-point {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.busgo-route-avatar {
+  border: 2px solid #e2e8f0;
+}
+
+.busgo-route-point-info {
+  min-width: 0;
+}
+
+.busgo-route-point-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.busgo-route-address {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.busgo-route-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-route-actions,
+.busgo-delete-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-route-cancel,
+.busgo-delete-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 110px;
+}
+
+.busgo-route-save {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+.busgo-route-save.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #ffffff !important;
+}
+
+.busgo-delete-body {
+  padding: 24px !important;
+  background: #fff7f7;
+}
+
+.busgo-delete-message {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 14px;
+}
+
+.busgo-delete-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.busgo-delete-actions {
+  border-top: 1px solid #fee2e2;
+}
+
+.busgo-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .busgo-route-header,
+  .busgo-delete-header {
+    padding: 18px;
+  }
+
+  .busgo-route-body,
+  .busgo-delete-body {
+    padding: 18px !important;
+  }
+
+  .busgo-route-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .busgo-route-arrow {
+    transform: rotate(90deg);
+    margin-left: 4px;
+  }
+
+  .busgo-route-actions,
+  .busgo-delete-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-route-cancel,
+  .busgo-route-save,
+  .busgo-delete-cancel,
+  .busgo-delete-confirm {
+    flex: 1;
+  }
+}
 </style>

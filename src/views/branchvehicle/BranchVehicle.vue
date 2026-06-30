@@ -11,343 +11,351 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
-        <div v-if="branch">
-          <!-- Aquí puedes agregar más información sobre la sucursal -->
-        </div>
+
+        <div v-if="branch"></div>
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-    style="background-color: #f9f9f9"
-  >
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
       <v-img
-        :src="`${this.$axios.defaults.baseURL}images/${
-          this.branch.image
-        }?t=${getCacheTimestamp()}`"
-        alt="image"
-        class="icono-concavo"
+        :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
+        alt="Sucursal"
         cover
-      ></v-img>
+      />
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">{{ this.branch.name }}</div>
-      <div class="text-body-2 text-grey">Gestionar Vehículos de la Sucursal</div>
+    <div>
+      <div class="busgo-page-title">
+        {{ this.branch.name }}
+      </div>
+
+      <div class="busgo-page-subtitle">
+        Gestionar vehículos de la sucursal
+      </div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
     <v-btn
-      class="text-subtitle-1 ml-12"
       :color="paleteColors.primary"
-      variant="tonal"
-      elevation="2"
-      prepend-icon="mdi-plus-circle"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
       @click="showAdd()"
     >
-      Agregar Vehículo
+      Agregar Vehículo 1
     </v-btn>
   </v-card>
-  <!--<v-container style="min-width: 100%; min-height: 100%">
-    <v-card elevation="6" class="mx-2">
-      <v-card-text>
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="branchvehicles" class="elevation-1"
-          style="max-height: 65vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-              elevation="1" title="Editar Vehículo"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-              elevation="1" title="Eliminar Vehículo"></v-btn>
-          </template>
-          <template v-slot:item.plate="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image
-                }?t=${Date.now()}`" alt="image"></v-img> </v-avatar>
-            {{ item.plate }}
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
-  </v-container>-->
-  <v-card flat>
-    <v-card-title class="d-flex align-center text-body-1">
-      Listado de vehículos
 
-      <v-spacer></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">
+            Listado de vehículos
+          </div>
 
-      <v-text-field
-        v-model="search"
-        density="compact"
-        label="Buscar vehículo"
-        prepend-inner-icon="mdi-magnify"
-        variant="solo-filled"
-        hide-details
-        single-line
-        flat
-      ></v-text-field>
-    </v-card-title>
+          <div class="busgo-card-subtitle">
+            Administra los vehículos asignados a esta sucursal.
+          </div>
+        </div>
 
-    <v-data-table
-      :headers="headers"
-      :items="branchvehicles"
-      :search="search"
-      :items-per-page-text="'Elementos por página'"
-      no-data-text="No hay datos disponibles"
-      :loading="loading"
-      loading-text="Cargando datos..."
-      class="elevation-1"
-      :hide-default-header="true"
-      style="max-height: 68vh; overflow-y: auto; background: transparent"
-    >
-      <template v-slot:top>
-        <!-- Tarjeta de encabezado con alto fijo -->
-        <v-card
-          flat
-          color="blue-grey-lighten-5"
-          class="mb-2 mx-1 rounded-lg"
-          elevation="1"
-          style="
-            border: 1px solid #eceff1;
-            height: 40px;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-          "
-        >
-          <v-card-text
-            class="d-flex pa-2"
-            style="
-              width: 100%;
-              min-width: 0;
-              height: 100%;
-              padding: 0 16px !important;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <!-- Negocio (20%) -->
-            <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar vehículo..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
+
+      <v-data-table
+        :headers="headers"
+        :items="branchvehicles"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="branch-vehicle-col-plate">
               Patente
             </div>
 
-            <!-- Nombre (20%) -->
-            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+            <div class="branch-vehicle-col-brand">
               Marca
             </div>
 
-            <!-- Teléfono (10%) -->
-            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
+            <div class="branch-vehicle-col-model">
               Modelo
             </div>
 
-            <!-- Dirección (25%) -->
-            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+            <div class="branch-vehicle-col-seats">
               Asientos
             </div>
 
-            <!-- Acciones (25%) -->
-            <div
-              style="width: 20%; min-width: 0"
-              class="d-flex justify-left font-weight-bold"
-            ></div>
-          </v-card-text>
-        </v-card>
-      </template>
-      <!-- Slot personalizado para cada fila -->
-      <template v-slot:item="slotProps">
-        <tr>
-          <td colspan="100%" style="padding: 0; border: none">
-            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text
-                class="d-flex align-center pa-2"
-                style="width: 100%; min-width: 0"
-              >
-                <!-- Columna 1: Patente + Imagen -->
-                <div class="d-flex align-center" style="width: 30%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+            <div class="branch-vehicle-col-actions"></div>
+          </div>
+        </template>
+
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="branch-vehicle-col-plate busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
                     <v-img
                       :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
                       alt="Imagen del vehículo"
-                      class="icono-concavo"
                       cover
-                    ></v-img>
+                    />
                   </v-avatar>
-                  <div class="d-flex flex-column text-truncate" style="min-width: 0">
-                    <span class="text-truncate">{{ slotProps.item.plate }}</span>
-                    <span class="text-caption text-grey text-truncate">
-                      {{ getVehicleInternalNumber(slotProps.item) }}
-                    </span>
-                  </div>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Patente: {{ slotProps.item.plate }}<br />
-                      Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
-                    </span>
-                  </v-tooltip>
-                </div>
 
-                <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.brand }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Marca: {{ slotProps.item.brand }}<br />
-                    </span>
-                  </v-tooltip>
-                </div>
+                  <div class="min-width-0">
+                    <div class="busgo-name">
+                      {{ slotProps.item.plate }}
+                    </div>
 
-                <div class="d-flex align-center" style="width: 20%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.model }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Modelo: {{ slotProps.item.model }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="d-flex align-center" style="width: 10%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.seats }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Asientos: {{ slotProps.item.seats }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Columna 3: Asientos y Acciones -->
-                <div
-                  class="d-flex flex-column align-end"
-                  style="width: 20%; min-width: 0; text-align: right"
-                >
-                  <!-- Botones de acción -->
-                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary"
-                      @click="editItem(slotProps.item)"
-                      class="flex-shrink-0 mr-1"
-                      title="Editar vehículo"
-                    >
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error"
-                      @click="deleteItem(slotProps.item)"
-                      class="flex-shrink-0"
-                      title="Eliminar vehículo"
-                    >
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
+                    <div class="busgo-submeta text-truncate">
+                      Interno: {{ getVehicleInternalNumber(slotProps.item) }}
+                    </div>
                   </div>
                 </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
-  </v-card>
 
-  <v-dialog v-model="dialog" max-width="400px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-autocomplete
-                  :no-data-text="'No hay datos disponibles'"
-                  v-model="editedItem.vehicle_id"
-                  :items="vehicles"
-                  label="Vehículos"
-                  prepend-icon="mdi-car"
-                  item-title="plate"
-                  item-value="id"
-                  variant="underlined"
-                  :rules="selectRules"
-                >
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item
-                      v-bind="props"
-                      :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name"
-                    >
-                      <v-list-item-subtitle class="d-flex flex-column">
-                        <div>Patente: {{ item.raw.plate }}</div>
-                        <div>
-                          Número interno: {{ getVehicleInternalNumber(item.raw) }}
-                        </div>
-                        <div>Marca: {{ item.raw.brand }}</div>
-                        <div>Modelo: {{ item.raw.model }}</div>
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                  </template>
-                </v-autocomplete>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="!valid"
-            :loading="loading"
-            >Aceptar</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Vehículo</span>
-      </v-toolbar>
+                <div class="branch-vehicle-col-brand busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.brand }}
+                  </span>
+                </div>
 
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el Vehículo seleccionado?</v-card-text
-      >
-      <v-divider></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
-          Cancelar
+                <div class="branch-vehicle-col-model busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.model }}
+                  </span>
+                </div>
+
+                <div class="branch-vehicle-col-seats busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-seat
+                  </v-icon>
+
+                  <span>
+                    {{ slotProps.item.seats }}
+                  </span>
+                </div>
+
+                <div class="branch-vehicle-col-actions busgo-actions">
+              
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar vehículo"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
+  </v-container>
+
+  <v-dialog v-model="dialog" max-width="540px" persistent>
+  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+    <v-card class="busgo-vehicle-dialog" elevation="18">
+
+      <div class="busgo-vehicle-header">
+        <div class="busgo-vehicle-icon">
+          <v-icon size="28">mdi-bus</v-icon>
+        </div>
+
+        <div>
+          <div class="busgo-vehicle-title">
+            {{ formTitle }}
+          </div>
+          <div class="busgo-vehicle-subtitle">
+            Selecciona el vehículo que será asignado a la sucursal
+          </div>
+        </div>
+
+        <v-spacer />
+
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          class="busgo-vehicle-close"
+          @click="close"
+        />
+      </div>
+
+      <v-card-text class="busgo-vehicle-body">
+        <label class="busgo-field-label">Vehículo</label>
+
+        <v-autocomplete
+          :no-data-text="'No hay datos disponibles'"
+          v-model="editedItem.vehicle_id"
+          :items="vehicles"
+          placeholder="Buscar por patente, marca o modelo..."
+          prepend-inner-icon="mdi-car-search-outline"
+          item-title="plate"
+          item-value="id"
+          variant="outlined"
+          density="comfortable"
+          rounded="lg"
+          :rules="selectRules"
+          hide-details="auto"
+          clearable
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              class="busgo-vehicle-option"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+              :title="item.raw.name"
+            >
+              <v-list-item-subtitle class="busgo-vehicle-option-subtitle">
+                <div>
+                  <v-icon size="18">mdi-card-text-outline</v-icon>
+                 <strong> Patente: {{ item.raw.plate }} </strong> 
+                </div>
+
+                <div>
+                  <v-icon size="14">mdi-pound</v-icon>
+                  Número interno: {{ getVehicleInternalNumber(item.raw) }}
+                </div>
+
+                <div>
+                  <v-icon size="14">mdi-factory</v-icon>
+                  Marca: {{ item.raw.brand }}
+                </div>
+
+                <div>
+                  <v-icon size="14">mdi-car-info</v-icon>
+                  Modelo: {{ item.raw.model }}
+                </div>
+              </v-list-item-subtitle>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
+      </v-card-text>
+
+      <v-card-actions class="busgo-vehicle-actions">
+        <v-btn
+          class="busgo-vehicle-cancel"
+          variant="flat"
+          prepend-icon="mdi-close"
+          @click="close"
+        >
+          Cerrar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
-          Aceptar
+
+        <v-btn
+          class="busgo-vehicle-save"
+          variant="flat"
+          prepend-icon="mdi-check"
+          @click="save"
+          :disabled="!valid"
+          :loading="loading"
+        >
+          Guardar
         </v-btn>
       </v-card-actions>
+
     </v-card>
-  </v-dialog>
+  </v-form>
+</v-dialog>
+
+<v-dialog v-model="dialogDelete" max-width="480px" persistent>
+  <v-card class="busgo-delete-dialog" elevation="18">
+
+    <div class="busgo-delete-header">
+      <div class="busgo-delete-icon">
+        <v-icon size="30">mdi-bus-alert</v-icon>
+      </div>
+
+      <div>
+        <div class="busgo-delete-title">
+          Eliminar Vehículo
+        </div>
+        <div class="busgo-delete-subtitle">
+          Esta acción no se puede deshacer
+        </div>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        icon="mdi-close"
+        variant="text"
+        size="small"
+        class="busgo-delete-close"
+        @click="closeDelete"
+      />
+    </div>
+
+    <v-card-text class="busgo-delete-body">
+      <div class="busgo-delete-message">
+        ¿Desea eliminar el vehículo seleccionado?
+      </div>
+
+      <div class="busgo-delete-warning">
+        <v-icon size="20">mdi-information-outline</v-icon>
+        <span>
+          Verifique que el vehículo no tenga viajes, rutas o ventas asociadas antes de continuar.
+        </span>
+      </div>
+    </v-card-text>
+
+    <v-card-actions class="busgo-delete-actions">
+      <v-btn
+        class="busgo-delete-cancel"
+        variant="flat"
+        prepend-icon="mdi-close"
+        @click="closeDelete"
+      >
+        Cerrar
+      </v-btn>
+
+      <v-btn
+        class="busgo-delete-confirm"
+        variant="flat"
+        prepend-icon="mdi-delete-outline"
+        @click="deleteItemConfirm"
+      >
+        Eliminar
+      </v-btn>
+    </v-card-actions>
+
+  </v-card>
+</v-dialog>
 </template>
 
 <script>
@@ -702,24 +710,187 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-/*.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
+.branch-vehicle-col-plate {
+  width: 34%;
+  min-width: 0;
 }
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}*/
+
+.branch-vehicle-col-brand {
+  width: 20%;
+  min-width: 0;
+}
+
+.branch-vehicle-col-model {
+  width: 20%;
+  min-width: 0;
+}
+
+.branch-vehicle-col-seats {
+  width: 10%;
+  min-width: 0;
+}
+
+.branch-vehicle-col-actions {
+  width: 16%;
+  min-width: 0;
+}
+
+.busgo-dialog-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.busgo-dialog-actions {
+  padding: 14px 18px;
+  background: #f8fafc;
+}
+
+.busgo-submeta {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .branch-vehicle-col-plate,
+  .branch-vehicle-col-brand,
+  .branch-vehicle-col-model,
+  .branch-vehicle-col-seats,
+  .branch-vehicle-col-actions {
+    width: 100%;
+  }
+}
+
+.busgo-vehicle-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-vehicle-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  color: #ffffff;
+}
+
+.busgo-vehicle-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-vehicle-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.busgo-vehicle-subtitle {
+  font-size: 13px;
+  opacity: 0.78;
+  margin-top: 3px;
+}
+
+.busgo-vehicle-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-vehicle-body {
+  padding: 24px !important;
+  background: #f8fafc;
+}
+
+.busgo-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.busgo-vehicle-option {
+  border-radius: 14px !important;
+  margin: 4px 8px !important;
+}
+
+.busgo-vehicle-option-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+  color: #64748b !important;
+  font-size: 12px;
+}
+
+.busgo-vehicle-option-subtitle div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.busgo-vehicle-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-vehicle-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 115px;
+}
+
+.busgo-vehicle-save {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+.busgo-vehicle-save.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 600px) {
+  .busgo-vehicle-header {
+    padding: 18px;
+  }
+
+  .busgo-vehicle-body {
+    padding: 18px !important;
+  }
+
+  .busgo-vehicle-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-vehicle-cancel,
+  .busgo-vehicle-save {
+    flex: 1;
+  }
+}
+
+
 </style>

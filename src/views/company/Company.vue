@@ -1,200 +1,150 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-office-building</v-icon>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-office-building</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Empresa</div>
-      <div class="text-body-2 text-grey">Administración de la Empresa</div>
+    <div>
+      <div class="busgo-page-title">Empresa</div>
+      <div class="busgo-page-subtitle">Administración de la empresa</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn v-if="companies.length <= 0" class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal"
-      elevation="2" prepend-icon="mdi-plus-circle" @click="showAddBussines">
+    <v-btn
+      v-if="companies.length <= 0"
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAddBussines"
+    >
       Agregar Empresa
     </v-btn>
   </v-card>
-  <v-container fluid>
-    <!-- Encabezado alineado con v-col (para que coincida con filas posteriores) -->
-    <v-card elevation="0">
-      <v-card-text>
-     <v-card
-  class="mb-2 rounded-lg company-header"
-  elevation="0"
->
-  <v-card-text class="py-2 px-4">
-    <div class="d-flex align-center text-caption font-weight-bold text-medium-emphasis">
 
-      <div style="width: 48px"></div>
-
-      <div class="flex-grow-1 pl-3">
-        Nombre / Dirección
-      </div>
-
-      <div style="width: 160px">
-        RUT
-      </div>
-
-      <div style="width: 140px">
-        Teléfono
-      </div>
-
-      <div style="width: 110px" class="text-right">
-        Acciones
-      </div>
-
-    </div>
-  </v-card-text>
-</v-card>
-       <v-card
-  v-for="(company, index) in companies"
-  :key="index"
-  class="mb-3 rounded-lg company-row"
-  elevation="1"
->
-  <v-card-text class="py-3 px-4">
-
-    <div class="d-flex align-center">
-
-      <!-- LOGO -->
-      <v-dialog max-width="500">
-        <template #activator="{ props }">
-          <v-avatar
-            v-bind="props"
-            size="44"
-            class="mr-3"
-            style="cursor:pointer"
-          >
-            <v-img
-              :src="`${$axios.defaults.baseURL}images/${company.image}?t=${getCacheTimestamp()}`"
-              cover
-            />
-          </v-avatar>
-        </template>
-
-        <v-card>
-          <v-img
-            :src="`${$axios.defaults.baseURL}images/${company.image}`"
-            max-height="500"
-            contain
-          />
-          <v-card-actions>
-            <v-spacer />
-            <v-btn variant="text" @click="$emit('close')">Cerrar</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- INFO -->
-      <div class="flex-grow-1 min-width-0">
-
-        <div class="font-weight-medium text-body-2">
-          {{ company.name }}
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Datos de la empresa</div>
+          <div class="busgo-card-subtitle">
+            Administra la información principal, contacto e imagen corporativa.
+          </div>
         </div>
-
-        <div class="text-caption text-medium-emphasis text-truncate">
-          {{ company.address }}
-        </div>
-
       </div>
 
-      <!-- RUT -->
-      <div class="company-col">
-        <span class="text-body-2">{{ company.rut }}</span>
+      <div class="busgo-table-head">
+        <div class="company-col-main">Nombre / Dirección</div>
+        <div class="company-col-rut">RUT</div>
+        <div class="company-col-phone">Teléfono</div>
+        <div class="company-col-actions"></div>
       </div>
 
-      <!-- TELÉFONO -->
-      <div class="company-col">
-        <span class="text-body-2">{{ company.phone }}</span>
-      </div>
-
-      <!-- ACCIONES -->
-      <div class="d-flex align-center justify-end" style="width: 110px">
-
-        <v-btn
-          icon="mdi-pencil"
-          size="small"
-          variant="text"
-          @click="editItem(company)"
-        />
-
-        <v-btn
-          icon="mdi-delete"
-          size="small"
-          variant="text"
-          color="error"
-          @click="deleteItem(company)"
-        />
-
-      </div>
-
-    </div>
-  </v-card-text>
-</v-card>
-  
-<v-card class="pa-4 launchpad-card" elevation="2" rounded="lg">
-
-  <!-- Header del card -->
-  <div class="d-flex align-center mb-4">
-    <v-icon icon="mdi-office-building-cog" class="mr-2" size="22" />
-    <div class="flex-grow-1 pl-3">
-      Administración
-    </div>
-  </div>
-
-  <v-divider class="mb-4" />
-
-  <!-- Grid de items -->
-  <div class="launchpad-wrapper">
-   <v-row class="launchpad-grid" dense justify="start">
-
-      <v-col
-        v-for="item_menu in filteredAdministracion"
-        :key="item_menu.value"
-        cols="4"
-        sm="3"
-        md="2"
-        lg="2"
-         class="d-flex justify-start pa-1"
+      <div
+        v-for="(company, index) in companies"
+        :key="index"
+        class="busgo-row company-row-modern"
       >
-        <div
-          class="launchpad-item"
-          @click="$router.push(item_menu.to)"
-        >
-          <div class="launchpad-icon">
-            <v-icon :icon="item_menu.icon" size="26" />
-          </div>
+        <div class="company-col-main busgo-name-cell">
+          <v-dialog max-width="500">
+            <template #activator="{ props }">
+              <v-avatar
+                v-bind="props"
+                size="42"
+                rounded="lg"
+                color="grey-lighten-4"
+                class="busgo-avatar"
+                style="cursor: pointer"
+              >
+                <v-img
+                  :src="`${$axios.defaults.baseURL}images/${company.image}?t=${getCacheTimestamp()}`"
+                  cover
+                />
+              </v-avatar>
+            </template>
 
-          <div class="launchpad-label">
-            {{ item_menu.title }}
+            <v-card>
+              <v-img
+                :src="`${$axios.defaults.baseURL}images/${company.image}`"
+                max-height="500"
+                contain
+              />
+
+              <v-card-actions>
+                <v-spacer />
+                <v-btn variant="text">Cerrar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+
+          <div class="min-width-0">
+            <div class="busgo-name">
+              {{ company.name }}
+            </div>
+
+            <div class="busgo-submeta text-truncate">
+              {{ company.address }}
+            </div>
           </div>
         </div>
-      </v-col>
 
-    </v-row>
-  </div>
+        <div class="company-col-rut busgo-meta">
+          <span class="text-truncate">{{ company.rut }}</span>
+        </div>
 
-</v-card>
+        <div class="company-col-phone busgo-meta">
+          <v-icon size="16" color="primary">mdi-phone</v-icon>
+          <span class="text-truncate">{{ company.phone }}</span>
+        </div>
 
-       
-      </v-card-text>
+        <div class="company-col-actions busgo-actions">
+          <v-btn
+            size="30"
+            icon
+            variant="tonal"
+            :color="paleteColors.primary"
+            @click="editItem(company)"
+            title="Editar Empresa"
+          >
+            <v-icon size="17">mdi-pencil</v-icon>
+          </v-btn>
+
+          <v-btn
+            size="30"
+            icon
+            variant="tonal"
+            :color="paleteColors.error"
+            @click="deleteItem(company)"
+            title="Eliminar Empresa"
+          >
+            <v-icon size="17">mdi-delete</v-icon>
+          </v-btn>
+        </div>
+      </div>
     </v-card>
   </v-container>
 
@@ -204,72 +154,147 @@
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
+
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-store"
-                  variant="underlined" :rules="nameRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.name"
+                  clearable
+                  label="Nombre"
+                  prepend-icon="mdi-store"
+                  variant="underlined"
+                  :rules="nameRules"
+                />
               </v-col>
+
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.rut" clearable label="Rut" prepend-icon="mdi-identifier"
-                  variant="underlined" :rules="rutRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.rut"
+                  clearable
+                  label="Rut"
+                  prepend-icon="mdi-identifier"
+                  variant="underlined"
+                  :rules="rutRules"
+                />
               </v-col>
+
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.phone" clearable label="Teléfono" placeholder="+56912345678"
-                  prepend-icon="mdi-phone" variant="underlined" :rules="mobileRules"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.phone"
+                  clearable
+                  label="Teléfono"
+                  placeholder="+56912345678"
+                  prepend-icon="mdi-phone"
+                  variant="underlined"
+                  :rules="mobileRules"
+                />
               </v-col>
+
               <v-col cols="12" md="6">
-                <v-text-field v-model="editedItem.address" clearable label="Dirección"
-                  prepend-icon="mdi-map-marker-outline" variant="underlined"></v-text-field>
+                <v-text-field
+                  v-model="editedItem.address"
+                  clearable
+                  label="Dirección"
+                  prepend-icon="mdi-map-marker-outline"
+                  variant="underlined"
+                />
               </v-col>
             </v-row>
+
             <v-row>
               <v-col cols="12" md="6">
-                <v-file-input clearable v-model="file" ref="fileInput" label="Imagen de la Empresa" variant="underlined"
-                  density="compact" name="file" accept=".png, .jpg, .jpeg" @change="onFileSelected">
-                </v-file-input>
+                <v-file-input
+                  clearable
+                  v-model="file"
+                  ref="fileInput"
+                  label="Imagen de la Empresa"
+                  variant="underlined"
+                  density="compact"
+                  name="file"
+                  accept=".png, .jpg, .jpeg"
+                  @change="onFileSelected"
+                />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
-                  <img v-if="imagenDisponible()" :src="imgedit" height="120" width="210" />
+                  <img
+                    v-if="imagenDisponible()"
+                    :src="imgedit"
+                    height="120"
+                    width="210"
+                  />
                 </v-card>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+
+        <v-divider />
+
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-            :loading="loading">Aceptar</v-btn>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            @click="save"
+            :disabled="!valid"
+            :loading="loading"
+          >
+            Aceptar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
   </v-dialog>
+
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Empresa</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar Empresa
+        </span>
       </v-toolbar>
 
       <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar la empresa seleccionada?</v-card-text>
-      <v-divider></v-divider>
+        ¿Desea eliminar la empresa seleccionada?
+      </v-card-text>
+
+      <v-divider />
+
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          @click="deleteItemConfirm"
+        >
           Aceptar
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
-
 <script>
 import { paleteColors } from "@/assets/colors";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
@@ -867,5 +892,47 @@ table.v-table > thead,
 .launchpad-wrapper {
   display: flex;
   justify-content: flex-start;
+}
+.company-col-main {
+  width: 55%;
+  min-width: 0;
+}
+
+.company-col-rut {
+  width: 15%;
+  min-width: 0;
+}
+
+.company-col-phone {
+  width: 15%;
+  min-width: 0;
+}
+
+.company-col-actions {
+  width: 15%;
+  min-width: 0;
+}
+
+.company-row-modern {
+  min-height: 68px;
+}
+
+.busgo-submeta {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .company-col-main,
+  .company-col-rut,
+  .company-col-phone,
+  .company-col-actions {
+    width: 100%;
+  }
 }
 </style>

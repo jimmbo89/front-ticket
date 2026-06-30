@@ -1,229 +1,267 @@
 <template>
-    <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-        :multi-line="true" vertical v-model="snackbar">
-        <v-row>
-            <v-col md="2">
-                <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-            </v-col>
-            <v-col md="10">
-                <h4>{{ sb_title }}</h4>
-                {{ sb_message }}
-            </v-col>
-        </v-row>
-    </v-snackbar>
-      <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-   <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-store</v-icon>
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
+    <v-row>
+      <v-col md="2">
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
+      </v-col>
+
+      <v-col md="10">
+        <h4>{{ sb_title }}</h4>
+        {{ sb_message }}
+      </v-col>
+    </v-row>
+  </v-snackbar>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-shield-key-outline</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Permisos</div>
-      <div class="text-body-2 text-grey">Gestionar Permisos</div>
+    <div>
+      <div class="busgo-page-title">Permisos</div>
+      <div class="busgo-page-subtitle">Gestionar permisos del sistema</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd">
+    <v-btn
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAdd"
+    >
       Agregar Permiso
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
-  <v-card flat>
-    <v-card-title class="d-flex align-center text-body-1">
-      Listado de permisos
 
-      <v-spacer></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">Listado de permisos</div>
+          <div class="busgo-card-subtitle">
+            Administra módulos, acciones y permisos disponibles para los roles.
+          </div>
+        </div>
 
-      <v-text-field v-model="search" density="compact" label="Buscar permiso" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </v-card-title>
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar permiso..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
 
-    <v-data-table :headers="headers" :items="permisions" :search="search"
-      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
-      style="max-height: 68vh; overflow-y: auto; background: transparent">
-      <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Módulo
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+      <v-data-table
+        :headers="headers"
+        :items="permisions"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="permission-col-name">Nombre</div>
+            <div class="permission-col-module">Módulo</div>
+            <div class="permission-col-description">Descripción</div>
+            <div class="permission-col-actions"></div>
+          </div>
         </template>
-      <!-- Slot personalizado para cada fila -->
-      <template v-slot:item="slotProps">
-        <tr>
-          <td colspan="100%" style="padding: 0; border: none">
-            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
 
-                <!-- Columna 1: Nombre de la ruta -->
-                <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Nombre: {{ slotProps.item.name }}
-                    </span>
-                  </v-tooltip>
-                </div>
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="permission-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-icon color="primary" size="20">
+                      mdi-key-variant
+                    </v-icon>
+                  </v-avatar>
 
-                <!-- Columna 3: Destino (con avatar) -->
-                <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.module }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Módulo: {{ slotProps.item.module }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="d-flex align-center" style="width: 55%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.description }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Descripción: {{ slotProps.item.description }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Columna 5: Acciones -->
-                <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
-                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar Permiso">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Permiso">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
+                  <div class="busgo-name">
+                    {{ slotProps.item.name }}
                   </div>
                 </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
-  </v-card>
+
+                <div class="permission-col-module busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-view-module
+                  </v-icon>
+
+                  <span class="text-truncate">
+                    {{ slotProps.item.module }}
+                  </span>
+                </div>
+
+                <div class="permission-col-description busgo-meta">
+                  <span class="text-truncate">
+                    {{ slotProps.item.description }}
+                  </span>
+                </div>
+
+                <div class="permission-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar Permiso"
+                  >
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Permiso"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </v-card>
   </v-container>
-    <!--<v-container fluid fill-height>
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <v-row align="center">
-                    <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Listado de Permisos</strong></span>
-                    </v-col>
-                    <v-col cols="12" md="3" class="text-right">
-                        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
-                            prepend-icon="mdi-plus-circle" @click="showAdd">
-                            Agregar Permiso
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-toolbar>
 
-            <v-card-text>
-                <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-                    hide-details>
-                </v-text-field>
-                <v-data-table :headers="headers" :search="search" :items="permisions" class="elevation-1"
-                    style="max-height: 65vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-                    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                    <template v-slot:item.actions="{ item }">
-                        <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
-                            variant="tonal" elevation="1" title="Editar Permiso"></v-btn>
-                        <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error"
-                            variant="tonal" elevation="1" title="Eliminar Permiso"></v-btn>
-                    </template>
-                </v-data-table>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
+  <v-dialog v-model="dialog" max-width="600px">
+    <v-form ref="form" v-model="valid">
+      <v-card>
+        <v-toolbar :color="paleteColors.primary">
+          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
+        </v-toolbar>
 
-    <v-dialog v-model="dialog" max-width="600px">
-        <v-form ref="form" v-model="valid">
-            <v-card>
-                <v-toolbar :color="paleteColors.primary">
-                    <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-                </v-toolbar>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-col cols="12" md="6">
-                                <v-text-field v-model="editedItem.name" clearable label="Nombre"
-                                    prepend-icon="mdi-tag-outline" variant="underlined"
-                                    :rules="nameRules"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                    <v-text-field v-model="editedItem.module" clearable label="Módulo"
-                                        prepend-icon="mdi-view-module" variant="underlined"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="12">
-                                <v-textarea v-model="editedItem.description" clearable label="Descripción"
-                                    prepend-icon="mdi-note" variant="underlined"></v-textarea>
-                            </v-col>
-                        </v-row>
-                    </v-container>
-                </v-card-text>
-                <v-divider></v-divider>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-                    <v-btn :color="paleteColors.primary" variant="flat" :loading="loading" @click="save"
-                        :disabled="!valid">Aceptar</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-form>
-    </v-dialog>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="editedItem.name"
+                  clearable
+                  label="Nombre"
+                  prepend-icon="mdi-tag-outline"
+                  variant="underlined"
+                  :rules="nameRules"
+                />
+              </v-col>
 
-    <v-dialog v-model="dialogDelete" max-width="500px">
-        <v-card>
-            <v-toolbar :color="paleteColors.error">
-                <span class="text-subtitle-2 ml-4"> Eliminar un permiso</span>
-            </v-toolbar>
-            <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el permiso seleccionado?</v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">Cancelar</v-btn>
-                <v-btn :color="paleteColors.error" variant="flat" :loading="loading" @click="deleteItemConfirm">Aceptar</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="editedItem.module"
+                  clearable
+                  label="Módulo"
+                  prepend-icon="mdi-view-module"
+                  variant="underlined"
+                />
+              </v-col>
+
+              <v-col cols="12" md="12">
+                <v-textarea
+                  v-model="editedItem.description"
+                  clearable
+                  label="Descripción"
+                  prepend-icon="mdi-note"
+                  variant="underlined"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn
+            :color="paleteColors.gris"
+            variant="flat"
+            @click="close"
+          >
+            Cancelar
+          </v-btn>
+
+          <v-btn
+            :color="paleteColors.primary"
+            variant="flat"
+            :loading="loading"
+            @click="save"
+            :disabled="!valid"
+          >
+            Aceptar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
+
+  <v-dialog v-model="dialogDelete" max-width="500px">
+    <v-card>
+      <v-toolbar :color="paleteColors.error">
+        <span class="text-subtitle-2 ml-4">
+          Eliminar permiso
+        </span>
+      </v-toolbar>
+
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar el permiso seleccionado?
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions>
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
+          Cancelar
+        </v-btn>
+
+        <v-btn
+          :color="paleteColors.error"
+          variant="flat"
+          :loading="loading"
+          @click="deleteItemConfirm"
+        >
+          Aceptar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -474,5 +512,25 @@ export default {
 .avatar-border {
     border: 2px solid #000;
     /* Aquí se define el borde */
+}
+
+.permission-col-name {
+  width: 20%;
+  min-width: 0;
+}
+
+.permission-col-module {
+  width: 20%;
+  min-width: 0;
+}
+
+.permission-col-description {
+  width: 45%;
+  min-width: 0;
+}
+
+.permission-col-actions {
+  width: 15%;
+  min-width: 0;
 }
 </style>
