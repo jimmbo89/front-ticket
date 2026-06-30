@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <v-snackbar
     class="mt-12"
     location="right top"
@@ -47,15 +47,15 @@
   </v-card>
   <!--<v-container style="min-width: 100%;">-->
   <v-card flat>
-    <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+    <!-- Barra superior: selecciÃ³n de sucursal + botÃ³n buscar + bÃºsqueda global -->
     <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-      <!-- Título -->
+      <!-- TÃ­tulo -->
       <div class="text-body-1 font-weight-bold">Listado de viajes</div>
 
       <!-- Spacer (solo visible en md+) -->
       <v-spacer class="d-none d-md-block"></v-spacer>
 
-      <!-- Grupo: Autocomplete + Botón buscar -->
+      <!-- Grupo: Autocomplete + BotÃ³n buscar -->
       <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
         <!-- Autocomplete de sucursales (mismo estilo que el original) -->
         <v-autocomplete
@@ -82,7 +82,7 @@
           </template>
         </v-autocomplete>
 
-        <!-- Botón de búsqueda (actualizar datos) 
+        <!-- BotÃ³n de bÃºsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
@@ -125,7 +125,7 @@
         </v-menu>
       </div>
 
-      <!-- Campo de búsqueda global -->
+      <!-- Campo de bÃºsqueda global -->
       <div class="flex-grow-1" style="max-width: 20%">
         <v-text-field
           v-model="search"
@@ -179,51 +179,43 @@
               align-items: center;
             "
           >
-            <!-- Negocio (20%) -->
-            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
+            <!-- Ruta compacta -->
+            <div style="width: 32%; min-width: 0" class="text-left font-weight-bold">
               Ruta
             </div>
 
-            <!-- Nombre (20%) -->
-            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-              Origen
-            </div>
-
-            <!-- Teléfono (10%) -->
-            <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-              Destino
-            </div>
-
-            <!-- Dirección (25%) -->
+            <!-- Vehículo -->
             <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
               Vehículo
             </div>
 
-            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-              Fecha
-            </div>
-
-            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
-              Horario
+            <div style="width: 12%; min-width: 0" class="text-left font-weight-bold">
+              Trabajadores
             </div>
 
             <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-              Precio
+              Fecha
             </div>
 
-            <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
+              Horario
+            </div>
+
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
               Salida
             </div>
 
-            <div style="width: 5%; min-width: 0" class="text-left font-weight-bold">
+            <div style="width: 7%; min-width: 0" class="text-left font-weight-bold">
               Llegada
             </div>
 
             <!-- Acciones (25%) -->
             <div
-              style="width: 8%; min-width: 0"
+              style="width: 6%; min-width: 0"
               class="d-flex justify-left font-weight-bold"
-            ></div>
+            >
+              Acciones
+            </div>
           </v-card-text>
         </v-card>
       </template>
@@ -237,51 +229,31 @@
                 style="width: 100%; min-width: 0"
               >
                 <!-- Ruta -->
-                <div style="width: 10%; min-width: 0" class="text-truncate">
-                  <span>{{ slotProps.item.name }}</span>
+                <div style="width: 34%; min-width: 0" class="text-truncate pr-2">
+                  <div class="font-weight-medium text-truncate">
+                    {{ slotProps.item.name }}
+                  </div>
+                  <div
+                    class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1"
+                  >
+                    <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+                    <span class="text-truncate">Origen: {{ slotProps.item.origin }}</span>
+                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+                    <span class="text-truncate"
+                      >Destino: {{ slotProps.item.destination }}</span
+                    >
+                  </div>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Ruta: {{ slotProps.item.name }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Origen con avatar -->
-                <div class="d-flex align-left" style="width: 20%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                    <v-img
-                      :src="getImageUrl(slotProps.item.originImage)"
-                      class="icono-concavo"
-                      cover
-                    ></v-img>
-                  </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.origin }}</span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Origen: {{ slotProps.item.origin }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Destino con avatar -->
-                <div class="d-flex align-left" style="width: 20%; min-width: 0">
-                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                    <v-img
-                      :src="getImageUrl(slotProps.item.destinationImage)"
-                      class="icono-concavo"
-                      cover
-                    ></v-img>
-                  </v-avatar>
-                  <span class="text-truncate">{{ slotProps.item.destination }}</span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
+                      Ruta: {{ slotProps.item.name }}<br />
+                      Origen: {{ slotProps.item.origin }}<br />
                       Destino: {{ slotProps.item.destination }}
                     </span>
                   </v-tooltip>
                 </div>
 
                 <!-- Vehículo con avatar -->
-                <div class="d-flex align-left" style="width: 10%; min-width: 0">
+                <div class="d-flex align-center" style="width: 11%; min-width: 0">
                   <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
                       :src="getImageUrl(slotProps.item.vehicleImage)"
@@ -289,23 +261,47 @@
                       cover
                     ></v-img>
                   </v-avatar>
-                  <div class="text-truncate vehicle-details">
-                    <div class="text-truncate">{{ slotProps.item.vehicleName }}</div>
-                    <div class="text-caption text-grey text-truncate">
+                  <div class="d-flex flex-column text-truncate">
+                    <span class="text-truncate">{{ slotProps.item.vehicleName }}</span>
+                    <span class="text-caption text-grey text-truncate">
                       {{ vehicleInternalNumber(slotProps.item) }}
-                    </div>
+                    </span>
                   </div>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Vehículo: {{ slotProps.item.vehicleName }}
-                      <br />
+                      Vehículo: {{ slotProps.item.vehicleName }}<br />
                       Número interno: {{ vehicleInternalNumber(slotProps.item) }}
                     </span>
                   </v-tooltip>
                 </div>
 
+                <!-- Trabajadores -->
+                <div style="width: 11%; min-width: 0" class="text-truncate text-left">
+                  <div class="d-flex flex-wrap gap-1">
+                    <v-tooltip
+                      v-for="person in slotProps.item.workers || []"
+                      :key="person.id"
+                      location="bottom"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-avatar
+                          class="trip-worker-avatar"
+                          size="32"
+                          elevation="3"
+                          v-bind="props"
+                        >
+                          <v-img :src="getImageUrl(person.image)" alt="image" />
+                        </v-avatar>
+                      </template>
+                      <span>{{ person.name }}</span>
+                      <v-spacer></v-spacer>
+                      <span class="text-secondary">{{ person.roleName }}</span>
+                    </v-tooltip>
+                  </div>
+                </div>
+
                 <!-- Fecha -->
-                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                <div style="width: 9%; min-width: 0" class="text-truncate text-left">
                   <span>{{ slotProps.item.date }}</span>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
@@ -315,21 +311,11 @@
                 </div>
 
                 <!-- Horario -->
-                <div style="width: 7%; min-width: 0" class="text-truncate text-left">
+                <div style="width: 9%; min-width: 0" class="text-truncate text-left">
                   <span>{{ slotProps.item.schedule }}</span>
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Horario: {{ slotProps.item.schedule }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <!-- Precio -->
-                <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                  <span>{{ slotProps.item.price }}</span>
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Precio: {{ slotProps.item.price }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -357,7 +343,7 @@
                 <!-- Acciones -->
                 <div
                   class="d-flex gap-1"
-                  style="width: 8%; justify-content: flex-end; flex-wrap: nowrap"
+                  style="width: 6%; justify-content: flex-end; flex-wrap: nowrap"
                 >
                   <v-btn
                     size="35"
@@ -588,7 +574,7 @@
                   </v-col>
                 </v-row>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <v-select
                       v-model="editedItem.schedule"
                       :items="filteredTimeSlots"
@@ -606,7 +592,7 @@
                       "
                     ></v-select>
                   </v-col>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <v-text-field
                       v-model="editedItem.arrival"
                       label="Hora de llegada"
@@ -614,18 +600,6 @@
                       variant="underlined"
                       density="compact"
                       prepend-icon="mdi-calendar-clock"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field
-                      v-model="editedItem.price"
-                      label="Precio"
-                      prepend-icon="mdi-currency-usd"
-                      variant="underlined"
-                      :rules="priceRules"
-                      type="number"
-                      density="compact"
-                      min="0"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -643,8 +617,7 @@
                     :disabled="
                       !editedItem.vehicle_id ||
                       !editedItem.route_id ||
-                      !editedItem.schedule ||
-                      !editedItem.price
+                      !editedItem.schedule
                     "
                   >
                     Siguiente
@@ -653,6 +626,615 @@
               </div>
             </template>
             <template v-slot:item.2>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
+                          ><strong>Paradas del viaje</strong></span
+                        >
+                        <div class="text-caption" style="opacity: 0.85">
+                          La última columna agrega o quita la asociación de la parada al
+                          viaje. La tabla muestra la información propia de la parada.
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
+
+                  <v-card-text>
+                    <v-data-table
+                      :headers="tripStopsHeaders"
+                      :items="tripStopRows"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por páginas'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                      hide-default-header
+                    >
+                      <template v-slot:top>
+                        <v-card
+                          flat
+                          color="blue-grey-lighten-5"
+                          class="mb-2 mx-1 rounded-lg"
+                          elevation="1"
+                          style="
+                            border: 1px solid #eceff1;
+                            height: 40px;
+                            min-height: 40px;
+                            display: flex;
+                            align-items: center;
+                          "
+                        >
+                          <v-card-text
+                            class="d-flex pa-2"
+                            style="
+                              width: 100%;
+                              min-width: 0;
+                              height: 100%;
+                              padding: 0 16px !important;
+                              display: flex;
+                              align-items: center;
+                            "
+                          >
+                            <div
+                              style="width: 24%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Parada
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Orden
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Distancia
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Minutos
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Subir
+                            </div>
+                            <div
+                              style="width: 11%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Bajar
+                            </div>
+                            <div
+                              style="width: 9%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Estado
+                            </div>
+                            <div
+                              style="width: 12%; min-width: 0"
+                              class="d-flex justify-left font-weight-bold"
+                            >
+                              Asociar al viaje
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+                      <template v-slot:item="slotProps">
+                        <tr>
+                          <td colspan="100%" style="padding: 0; border: none">
+                            <v-card
+                              class="mb-2 mx-1 rounded-lg"
+                              elevation="1"
+                              density="comfortable"
+                              flat
+                              :style="{
+                                opacity: slotProps.item.included ? 1 : 0.55,
+                                border: slotProps.item.included
+                                  ? '1px solid #e5e7eb'
+                                  : '1px dashed #cbd5e1',
+                              }"
+                            >
+                              <v-card-text
+                                class="d-flex align-center pa-2"
+                                style="width: 100%; min-width: 0"
+                              >
+                                <div
+                                  class="d-flex align-center"
+                                  style="width: 24%; min-width: 0"
+                                >
+                                  <v-avatar
+                                    class="mr-3 icono-concavo"
+                                    color="grey-lighten-4"
+                                  >
+                                    <v-img
+                                      :src="getImageUrl(slotProps.item.locationImage)"
+                                      alt="image"
+                                      cover
+                                    ></v-img>
+                                  </v-avatar>
+                                  <div class="text-truncate">
+                                    <div class="font-weight-medium">
+                                      {{ slotProps.item.locationName }}
+                                    </div>
+                                    <div class="text-caption text-grey text-truncate">
+                                      {{ slotProps.item.locationCity }},
+                                      {{ slotProps.item.locationCountry }}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style="width: 11%; min-width: 0" class="px-1">
+                                  <v-text-field
+                                    v-model="slotProps.item.stop_order"
+                                    type="number"
+                                    min="1"
+                                    variant="underlined"
+                                    density="compact"
+                                    hide-details
+                                    @update:modelValue="syncTripStopTimes"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.distance_km }} km
+                                  </div>
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div class="font-weight-medium">
+                                    {{ slotProps.item.minutes_from_origin }} min
+                                  </div>
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_board"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_board
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 11%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.can_alight"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.can_alight
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 9%; min-width: 0"
+                                  class="d-flex justify-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.active"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.active
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                </div>
+
+                                <div
+                                  style="width: 12%; min-width: 0"
+                                  class="d-flex justify-center align-center"
+                                >
+                                  <v-switch
+                                    v-model="slotProps.item.included"
+                                    :true-value="true"
+                                    :false-value="false"
+                                    :color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    :base-color="
+                                      slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey
+                                    "
+                                    density="compact"
+                                    hide-details
+                                    inset
+                                    class="custom-switch compact-inline-switch"
+                                    @update:modelValue="onTripStopIncludedChange"
+                                  />
+                                  <span
+                                    class="ml-2 text-body-2 font-weight-medium text-no-wrap"
+                                    :style="{
+                                      color: slotProps.item.included
+                                        ? paleteColors.green
+                                        : paleteColors.grey,
+                                    }"
+                                  >
+                                    {{
+                                      slotProps.item.included ? "Asociada" : "Sin asociar"
+                                    }}
+                                  </span>
+                                </div>
+                              </v-card-text>
+                            </v-card>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="#E7E9E9"
+                    variant="flat"
+                    @click="nextStep"
+                    :disabled="!tripStopRows.length"
+                  >
+                    Siguiente
+                  </v-btn>
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.3>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-sheet border>
+                  <v-toolbar :color="paleteColors.primary">
+                    <v-row align="center">
+                      <v-col cols="12" md="7" class="grow ml-4">
+                        <span class="text-subtitle-1"
+                          ><strong>Tramos y tipos de pasaje</strong></span
+                        >
+                        <div class="text-caption" style="opacity: 0.85">
+                          Define los tramos disponibles para el viaje y ajusta el precio
+                          de cada tipo de pasaje.
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-toolbar>
+
+                  <v-card-text>
+                    <v-data-table
+                      :headers="tripFaresHeaders"
+                      :items="tripFareRows"
+                      class="elevation-1"
+                      style="max-height: 68vh; overflow-y: auto"
+                      :items-per-page-text="'Elementos por página'"
+                      no-data-text="No hay datos disponibles"
+                      :loading="loading"
+                      loading-text="Cargando datos..."
+                      hide-default-header
+                    >
+                      <template v-slot:top>
+                        <v-card
+                          flat
+                          color="blue-grey-lighten-5"
+                          class="mb-2 mx-1 rounded-lg"
+                          elevation="1"
+                          style="
+                            border: 1px solid #eceff1;
+                            height: 40px;
+                            min-height: 40px;
+                            display: flex;
+                            align-items: center;
+                          "
+                        >
+                          <v-card-text
+                            class="d-flex pa-2"
+                            style="
+                              width: 100%;
+                              min-width: 0;
+                              height: 100%;
+                              padding: 0 16px !important;
+                              display: flex;
+                              align-items: center;
+                            "
+                          >
+                            <div
+                              style="width: 28%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Origen
+                            </div>
+                            <div
+                              style="width: 28%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Destino
+                            </div>
+                            <div
+                              style="width: 14%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Precio base
+                            </div>
+                            <div
+                              style="width: 18%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Vigencia
+                            </div>
+                            <div
+                              style="width: 10%; min-width: 0"
+                              class="text-left font-weight-bold"
+                            >
+                              Estado
+                            </div>
+                            <div
+                              style="width: 2%; min-width: 0"
+                              class="d-flex justify-left font-weight-bold"
+                            ></div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+
+                      <template v-slot:item="slotProps">
+                        <tr>
+                          <td colspan="100%" style="padding: 0; border: none">
+                            <v-card
+                              class="mb-2 mx-1 rounded-lg"
+                              elevation="1"
+                              density="comfortable"
+                              flat
+                            >
+                              <v-card-text
+                                class="d-flex align-center pa-2"
+                                style="width: 100%; min-width: 0"
+                              >
+                                <div
+                                  style="width: 28%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{ slotProps.item.originLabel }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 28%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{ slotProps.item.destinationLabel }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 14%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <span>{{
+                                    formatNumber(slotProps.item.base_price)
+                                  }}</span>
+                                </div>
+
+                                <div
+                                  style="width: 18%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <div>{{ slotProps.item.valid_from || "-" }}</div>
+                                  <div>hasta {{ slotProps.item.valid_to || "-" }}</div>
+                                </div>
+
+                                <div
+                                  style="width: 10%; min-width: 0"
+                                  class="text-truncate"
+                                >
+                                  <v-chip
+                                    :color="
+                                      slotProps.item.active
+                                        ? paleteColors.active
+                                        : paleteColors.inactive
+                                    "
+                                    :text-color="paleteColors.white"
+                                  >
+                                    {{ slotProps.item.active ? "Activo" : "Inactivo" }}
+                                  </v-chip>
+                                </div>
+
+                                <div
+                                  class="d-flex gap-1"
+                                  style="
+                                    width: 2%;
+                                    justify-content: flex-end;
+                                    flex-wrap: nowrap;
+                                  "
+                                >
+                                  <v-btn
+                                    v-if="
+                                      slotProps.item.fareSegmentTicketTypes &&
+                                      slotProps.item.fareSegmentTicketTypes.length
+                                    "
+                                    size="35"
+                                    icon
+                                    variant="outlined"
+                                    :style="{
+                                      'border-width': '1px',
+                                      'border-style': 'solid',
+                                    }"
+                                    :color="paleteColors.primary"
+                                    @click="toggleTripFareExpanded(slotProps.item)"
+                                    class="flex-shrink-0"
+                                    title="Ver tipos de pasaje"
+                                  >
+                                    <v-icon size="20">
+                                      {{
+                                        isTripFareExpanded(slotProps.item)
+                                          ? "mdi-chevron-up"
+                                          : "mdi-chevron-down"
+                                      }}
+                                    </v-icon>
+                                  </v-btn>
+                                </div>
+                              </v-card-text>
+
+                              <v-expand-transition>
+                                <div
+                                  v-if="
+                                    isTripFareExpanded(slotProps.item) &&
+                                    slotProps.item.fareSegmentTicketTypes &&
+                                    slotProps.item.fareSegmentTicketTypes.length
+                                  "
+                                  class="px-2 pb-2"
+                                >
+                                  <v-card
+                                    variant="outlined"
+                                    class="trip-fare-ticket-types-panel rounded-lg"
+                                    elevation="0"
+                                  >
+                                    <div class="trip-fare-ticket-types-header">
+                                      <div class="trip-fare-col-name">
+                                        Tipo de pasajero
+                                      </div>
+                                      <div class="trip-fare-col-price">Precio (Bs.)</div>
+                                      <div class="trip-fare-col-status">Habilitado</div>
+                                    </div>
+
+                                    <div
+                                      v-for="(ticketType, ticketIndex) in slotProps.item
+                                        .fareSegmentTicketTypes"
+                                      :key="
+                                        tripFareTicketTypeKey(ticketType, ticketIndex)
+                                      "
+                                      class="trip-fare-ticket-types-row"
+                                    >
+                                      <div class="trip-fare-col-name">
+                                        <div class="font-weight-medium text-truncate">
+                                          {{ ticketType.ticketTypeName }}
+                                        </div>
+                                      </div>
+                                      <div class="trip-fare-col-price">
+                                        <v-text-field
+                                          v-model="ticketType.price"
+                                          type="number"
+                                          step="1"
+                                          min="0"
+                                          variant="underlined"
+                                          density="compact"
+                                          hide-details
+                                        ></v-text-field>
+                                      </div>
+                                      <div class="trip-fare-col-status">
+                                        <div class="trip-fare-status-inline">
+                                          <v-switch
+                                            v-model="ticketType.active"
+                                            :true-value="true"
+                                            :false-value="false"
+                                            :color="
+                                              ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey
+                                            "
+                                            :base-color="
+                                              ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey
+                                            "
+                                            density="compact"
+                                            hide-details
+                                            inset
+                                            class="trip-fare-row-switch"
+                                          />
+                                          <span
+                                            class="trip-fare-status-label text-body-2"
+                                            :style="{
+                                              color: ticketType.active
+                                                ? paleteColors.green
+                                                : paleteColors.grey,
+                                            }"
+                                          >
+                                            {{ ticketType.active ? "Si" : "No" }}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </v-card>
+                                </div>
+                              </v-expand-transition>
+                            </v-card>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table>
+                  </v-card-text>
+                </v-sheet>
+              </div>
+              <v-divider></v-divider>
+              <div style="padding: 16px; border-top: 1px solid #eee">
+                <v-row class="mt-1">
+                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">Volver</v-btn>
+                  <v-spacer></v-spacer>
+                  <v-btn color="#E7E9E9" variant="flat" @click="nextStep"
+                    >Siguiente</v-btn
+                  >
+                </v-row>
+              </div>
+            </template>
+            <template v-slot:item.4>
               <div style="flex: 1; overflow-y: auto; padding: 16px">
                 <v-sheet border>
                   <v-toolbar :color="paleteColors.primary">
@@ -763,7 +1345,9 @@
         <span class="text-subtitle-2 ml-4"> Eliminar un viaje</span>
       </v-toolbar>
 
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el viaje seleccionado?</v-card-text>
+      <v-card-text class="mt-2 mb-2">
+        ¿Desea eliminar el viaje seleccionado?</v-card-text
+      >
       <v-divider></v-divider>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -852,7 +1436,7 @@ export default {
     mostrar: false,
     dialog: false,
     timeSlots: [], // Array para almacenar los slots ordenados
-    currentTimeSlots: [], // Array para los slots filtrados según fecha
+    currentTimeSlots: [], // Array para los slots filtrados segÃºn fecha
     dialogDelete: false,
     estimated: 0,
     timeSlotsKey: 0,
@@ -864,12 +1448,20 @@ export default {
     workers: [],
     branches: [],
     filteredWorkers: [],
+    tripStopRows: [],
+    tripFareRows: [],
+    expandedTripFareIds: [],
     data: {},
     selectedWorker: "",
     route: "",
     branch_id: "",
     step: 1,
-    items: ["Datos Generales", "Asignar Trabajadores"],
+    items: [
+      "Datos Generales",
+      "Paradas",
+      "Tramos y tipos de pasaje",
+      "Asignar Trabajadores",
+    ],
     dialogAssignedWorkers: false,
     headers: [
       { title: "Ruta", value: "name" },
@@ -878,7 +1470,6 @@ export default {
       { title: "Vehículo", value: "vehicleName" },
       { title: "Fecha", value: "date" },
       { title: "Horario", value: "schedule" },
-      { title: "Precio", value: "price" },
       { title: "Salida", value: "start" },
       { title: "Llegada", value: "end" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
@@ -888,6 +1479,24 @@ export default {
       { title: "Nombre", value: "workerName", width: "60%" },
       { title: "Rol", value: "roleName", width: "20%" },
       { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+    ],
+    tripStopsHeaders: [
+      { title: "Parada", value: "locationName", width: "24%" },
+      { title: "Orden", value: "stop_order", width: "11%" },
+      { title: "Distancia", value: "distance_km", width: "11%" },
+      { title: "Minutos", value: "minutes_from_origin", width: "11%" },
+      { title: "Subir", value: "can_board", width: "11%" },
+      { title: "Bajar", value: "can_alight", width: "11%" },
+      { title: "Estado", value: "active", width: "9%" },
+      { title: "Asociar", value: "included", width: "12%" },
+    ],
+    tripFaresHeaders: [
+      { title: "Origen", value: "originLabel", width: "28%" },
+      { title: "Destino", value: "destinationLabel", width: "28%" },
+      { title: "Precio base", value: "base_price", width: "14%" },
+      { title: "Vigencia", value: "valid_from", width: "18%" },
+      { title: "Estado", value: "active", width: "10%" },
+      { title: "Tipos", value: "actions", sortable: false, width: "2%" },
     ],
 
     editedItem: {
@@ -900,8 +1509,9 @@ export default {
       arrival: "",
       start: "",
       end: "",
-      price: "",
       workers: [],
+      tripStops: [],
+      tripFares: [],
     },
     originalItem: {
       id: "",
@@ -913,8 +1523,9 @@ export default {
       arrival: "",
       start: "",
       end: "",
-      price: "",
       workers: [],
+      tripStops: [],
+      tripFares: [],
     },
     defaultItem: {
       id: "",
@@ -926,8 +1537,9 @@ export default {
       arrival: "",
       start: "",
       end: "",
-      price: "",
       workers: [],
+      tripStops: [],
+      tripFares: [],
     },
     editedIndex: -1,
     search: "",
@@ -942,13 +1554,6 @@ export default {
       (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    priceRules: [
-      (v) => !!v || "El precio es obligatorio", // El campo es obligatorio
-      (v) =>
-        /^[0-9]+(\.[0-9]{1,2})?$/.test(v) ||
-        "El precio debe ser un número válido con hasta 2 decimales", // Valida el formato del precio
-      (v) => v > 0 || "El precio debe ser un número positivo", // El precio debe ser positivo
-    ],
   }),
   computed: {
     formTitle() {
@@ -998,6 +1603,13 @@ export default {
           )
       );
     },
+    selectedRouteRecord() {
+      return (
+        this.getRoutesCollection().find(
+          (route) => Number(route.id) === Number(this.editedItem.route_id)
+        ) || null
+      );
+    },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
@@ -1011,14 +1623,174 @@ export default {
     }
   },
   watch: {
-    // Observar cambios en la fecha para resetear selección
+    // Observar cambios en la fecha para resetear selecciÃ³n
     "editedItem.date"(newDate) {
       this.generateTimeSlots();
+      this.syncTripStopTimes();
     },
   },
   methods: {
+    getRoutesCollection() {
+      return Array.isArray(this.routes) ? this.routes : Object.values(this.routes || {});
+    },
+    getRouteStopDisplayLabel(stop) {
+      if (!stop) {
+        return "";
+      }
+
+      return (
+        stop.location?.address || stop.locationName || stop.address || stop.name || "-"
+      );
+    },
+    formatNumber(value) {
+      if (value === 0 || value === null || value === undefined || isNaN(value)) {
+        return "0.00";
+      }
+
+      const normalized = Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+      return normalized.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    },
+    tripFareTicketTypeKey(ticketType, index) {
+      return ticketType.id || ticketType.fare_segment_ticket_type_id || index;
+    },
+    isTripFareExpanded(item) {
+      const itemId = Number(item?.id);
+      return this.expandedTripFareIds.includes(itemId);
+    },
+    toggleTripFareExpanded(item) {
+      const itemId = Number(item?.id);
+      if (!Number.isFinite(itemId) || itemId <= 0) {
+        return;
+      }
+
+      this.expandedTripFareIds = this.expandedTripFareIds[0] === itemId ? [] : [itemId];
+    },
+    buildTripFareRows(route = null, tripFares = [], forceIncludeAll = false) {
+      const selectedRoute = route || this.selectedRouteRecord;
+      const fareSegments = Array.isArray(selectedRoute?.fareSegments)
+        ? selectedRoute.fareSegments
+        : Array.isArray(selectedRoute?.fare_segments)
+        ? selectedRoute.fare_segments
+        : [];
+
+      const fareMap = new Map(
+        (Array.isArray(tripFares) ? tripFares : []).map((fare) => [
+          Number(fare.fare_segment_ticket_type_id ?? fare.fareSegmentTicketTypeId),
+          fare,
+        ])
+      );
+
+      return fareSegments.map((segment) => {
+        const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
+        const destinationStop =
+          segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
+        const ticketTypes = Array.isArray(segment.fareSegmentTicketTypes)
+          ? segment.fareSegmentTicketTypes
+          : Array.isArray(segment.fare_segment_ticket_types)
+          ? segment.fare_segment_ticket_types
+          : [];
+
+        return {
+          ...segment,
+          originLabel: this.getRouteStopDisplayLabel(
+            originStop?.location || originStop || segment.originStop
+          ),
+          destinationLabel: this.getRouteStopDisplayLabel(
+            destinationStop?.location || destinationStop || segment.destinationStop
+          ),
+          fareSegmentTicketTypes: ticketTypes.map((ticketType) => {
+            const existingFare = fareMap.get(Number(ticketType.id));
+            return {
+              id: existingFare?.id || "",
+              fare_segment_ticket_type_id: ticketType.id,
+              price:
+                existingFare?.price ?? ticketType.base_price ?? ticketType.basePrice ?? 0,
+              active: existingFare?.active ?? true,
+              source_type: existingFare?.source_type || "auto",
+              ticketTypeName:
+                ticketType.ticketTypeName ||
+                ticketType.ticketType?.name ||
+                ticketType.name ||
+                "",
+            };
+          }),
+          included: forceIncludeAll || true,
+        };
+      });
+    },
+    syncTripFareRows(forceIncludeAll = false) {
+      const route = this.selectedRouteRecord;
+      if (!route) {
+        this.tripFareRows = [];
+        this.expandedTripFareIds = [];
+        return;
+      }
+
+      const tripFares = Array.isArray(this.editedItem.tripFares)
+        ? this.editedItem.tripFares
+        : [];
+      const shouldIncludeAll =
+        forceIncludeAll ||
+        this.editedIndex === -1 ||
+        Number(this.originalItem.route_id) !== Number(this.editedItem.route_id);
+
+      this.tripFareRows = this.buildTripFareRows(route, tripFares, shouldIncludeAll);
+      this.expandedTripFareIds = [];
+    },
+    normalizeTripFaresPayload(rows = []) {
+      const payload = [];
+
+      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+        (Array.isArray(segment.fareSegmentTicketTypes)
+          ? segment.fareSegmentTicketTypes
+          : []
+        ).forEach((ticketType) => {
+          const fareSegmentTicketTypeId = Number(
+            ticketType.fare_segment_ticket_type_id ??
+              ticketType.fareSegmentTicketTypeId ??
+              ticketType.id
+          );
+
+          if (!Number.isFinite(fareSegmentTicketTypeId) || fareSegmentTicketTypeId <= 0) {
+            return;
+          }
+
+          const item = {
+            fare_segment_ticket_type_id: fareSegmentTicketTypeId,
+            price: Number(ticketType.price) || 0,
+            active: ticketType.active ?? true,
+            source_type: ticketType.source_type || (ticketType.id ? "manual" : "auto"),
+          };
+
+          if (ticketType.id) {
+            item.id = ticketType.id;
+          }
+
+          payload.push(item);
+        });
+      });
+
+      return payload.sort(
+        (a, b) => a.fare_segment_ticket_type_id - b.fare_segment_ticket_type_id
+      );
+    },
+    areTripFaresDifferent(originalFares, editedRows) {
+      const normalize = (rows = []) =>
+        this.normalizeTripFaresPayload(
+          Array.isArray(rows)
+            ? rows
+            : Array.isArray(rows?.fareSegmentTicketTypes)
+            ? rows.fareSegmentTicketTypes
+            : []
+        ).map(({ source_type, ...rest }) => rest);
+
+      return !_.isEqual(normalize(originalFares), normalize(editedRows));
+    },
     formatDuration(minutes) {
-      if (minutes == null || minutes <= 0) return "—";
+      if (minutes == null || minutes <= 0) return "â€”";
 
       const mins = Math.floor(minutes);
       const hours = Math.floor(mins / 60);
@@ -1045,10 +1817,10 @@ export default {
       }images/${imagePath}?t=${this.getCacheTimestamp()}`;
     },
     getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del día actual
+      // Usamos medianoche (00:00:00) del dÃ­a actual
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al dÃ­a)
     },
     generateTimeSlots() {
       const now = new Date();
@@ -1074,7 +1846,7 @@ export default {
         }
       }
 
-      // Si estamos editando, incluir el slot actual aunque esté en el pasado
+      // Si estamos editando, incluir el slot actual aunque estÃ© en el pasado
       if (this.editedIndex !== -1 && this.editedItem.schedule) {
         const currentSlot = slots.find((s) => s.time === this.editedItem.schedule);
         if (currentSlot && isToday && currentSlot.minutes <= currentMinutes) {
@@ -1085,12 +1857,12 @@ export default {
         }
       }
 
-      // Para creación o slots futuros
+      // Para creaciÃ³n o slots futuros
       return isToday
         ? slots.filter((s) => s.minutes > currentMinutes).map((s) => s.time)
         : slots.map((s) => s.time);
     },
-    // Método para verificar si un trabajador ya está asociado al viaje
+    // MÃ©todo para verificar si un trabajador ya estÃ¡ asociado al viaje
     isWorkerAssociated(worker) {
       return this.editedItem.workers?.some((w) => w.id === worker.id);
     },
@@ -1105,6 +1877,163 @@ export default {
         this.step--;
       }
     },
+    getTripBaseDateTime() {
+      const tripDate =
+        this.editedItem.date ||
+        this.dateFormatted ||
+        new Date().toISOString().split("T")[0];
+      const schedule = this.editedItem.schedule || "00:00";
+      return `${tripDate} ${schedule.length === 5 ? `${schedule}:00` : schedule}`;
+    },
+    formatTripStopDateTime(baseDateTime, minutesOffset = 0) {
+      const parsed = new Date(baseDateTime.replace(" ", "T"));
+      if (Number.isNaN(parsed.getTime())) {
+        return baseDateTime;
+      }
+
+      const adjusted = new Date(parsed.getTime() + Number(minutesOffset || 0) * 60000);
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${adjusted.getFullYear()}-${pad(adjusted.getMonth() + 1)}-${pad(
+        adjusted.getDate()
+      )} ${pad(adjusted.getHours())}:${pad(adjusted.getMinutes())}:00`;
+    },
+    buildTripStopRows(route = null, tripStops = [], forceIncludeAll = false) {
+      const selectedRoute = route || this.selectedRouteRecord;
+      const routeStops = Array.isArray(selectedRoute?.routeStops)
+        ? selectedRoute.routeStops
+        : [];
+      const stopMap = new Map(
+        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
+          Number(stop.route_stop_id),
+          stop,
+        ])
+      );
+      const baseDateTime = this.getTripBaseDateTime();
+
+      return routeStops.map((routeStop) => {
+        const existingStop = stopMap.get(Number(routeStop.id));
+        const included = forceIncludeAll ? true : !!existingStop;
+        return {
+          id: existingStop?.id || "",
+          route_stop_id: routeStop.id,
+          location_id: routeStop.location_id || routeStop.locationId || "",
+          companyName: routeStop.companyName || "",
+          routeName: routeStop.routeName || "",
+          stop_order: routeStop.stop_order ?? routeStop.stopOrder ?? 1,
+          distance_km: routeStop.distance_km ?? routeStop.distanceKm ?? 0,
+          minutes_from_origin:
+            routeStop.minutes_from_origin ?? routeStop.minutesFromOrigin ?? 0,
+          arrival_time:
+            existingStop?.arrival_time ||
+            this.formatTripStopDateTime(baseDateTime, routeStop.minutes_from_origin || 0),
+          departure_time:
+            existingStop?.departure_time ||
+            this.formatTripStopDateTime(
+              baseDateTime,
+              (routeStop.minutes_from_origin || 0) + 5
+            ),
+          can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
+          can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
+          active: existingStop?.active ?? routeStop.active ?? true,
+          source_type: existingStop?.source_type || "auto",
+          included,
+          locationName: routeStop.locationName || routeStop.address || "",
+          locationCity: routeStop.locationCity || "",
+          locationCountry: routeStop.locationCountry || "",
+          locationImage:
+            routeStop.image || routeStop.locationImage || "locations/default.jpg",
+        };
+      });
+    },
+    syncTripStopsFromRoute(forceIncludeAll = false) {
+      const route = this.selectedRouteRecord;
+      if (!route) {
+        this.tripStopRows = [];
+        this.tripFareRows = [];
+        this.expandedTripFareIds = [];
+        return;
+      }
+
+      const tripStops = Array.isArray(this.editedItem.tripStops)
+        ? this.editedItem.tripStops
+        : [];
+      const shouldIncludeAll =
+        forceIncludeAll ||
+        this.editedIndex === -1 ||
+        Number(this.originalItem.route_id) !== Number(this.editedItem.route_id);
+
+      this.tripStopRows = this.buildTripStopRows(route, tripStops, shouldIncludeAll);
+    },
+    syncTripStopTimes() {
+      if (!Array.isArray(this.tripStopRows) || this.tripStopRows.length === 0) {
+        return;
+      }
+
+      const baseDateTime = this.getTripBaseDateTime();
+      this.tripStopRows = this.tripStopRows.map((row) => {
+        if (!row.included) {
+          return row;
+        }
+
+        const routeStop = this.selectedRouteRecord?.routeStops?.find(
+          (item) => Number(item.id) === Number(row.route_stop_id)
+        );
+        const minutesOffset =
+          row.minutes_from_origin !== undefined && row.minutes_from_origin !== null
+            ? Number(row.minutes_from_origin)
+            : routeStop?.minutes_from_origin || 0;
+
+        return {
+          ...row,
+          arrival_time:
+            row.source_type === "manual"
+              ? row.arrival_time
+              : this.formatTripStopDateTime(baseDateTime, minutesOffset),
+          departure_time:
+            row.source_type === "manual"
+              ? row.departure_time
+              : this.formatTripStopDateTime(baseDateTime, minutesOffset + 5),
+        };
+      });
+    },
+    normalizeTripStopsPayload(rows = []) {
+      return (Array.isArray(rows) ? rows : [])
+        .filter((row) => row.included)
+        .map((row) => {
+          const payload = {
+            route_stop_id: Number(row.route_stop_id),
+            stop_order: Number(row.stop_order) || 1,
+            arrival_time: row.arrival_time,
+            departure_time: row.departure_time,
+            can_board: !!row.can_board,
+            can_alight: !!row.can_alight,
+            active: row.active ?? true,
+            source_type: row.source_type || "auto",
+          };
+
+          if (row.id) {
+            payload.id = row.id;
+          }
+
+          return payload;
+        })
+        .sort((a, b) => a.route_stop_id - b.route_stop_id);
+    },
+    areTripStopsDifferent(originalStops, editedStops) {
+      const normalizeForCompare = (rows = []) =>
+        this.normalizeTripStopsPayload(rows || []).map(
+          ({ arrival_time, departure_time, ...rest }) => rest
+        );
+
+      return !_.isEqual(
+        normalizeForCompare(originalStops),
+        normalizeForCompare(editedStops)
+      );
+    },
+    onTripStopIncludedChange() {
+      this.syncTripStopTimes();
+      this.$forceUpdate();
+    },
     async showBranches() {
       try {
         const result = await handleRequest({
@@ -1118,7 +2047,7 @@ export default {
           this.editedItem.branch_id = this.branches[0].id;
           this.branch_id = this.branches[0].id;
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.branches = [];
           this.mostrarFila = false;
         }
@@ -1136,25 +2065,24 @@ export default {
         this.initialize();
       }
     },
-    // Filtramos los trabajadores según el vehículo seleccionado
+    // Filtramos los trabajadores segÃºn el vehÃ­culo seleccionado
     filterWorkers() {
       this.filteredWorkers = [...this.vehicleWorkers];
     },
     updateStimated() {
       this.estimated = null;
-      const matchedRoute = this.routes.find(
-        (route) => route.id === this.editedItem.route_id
-      );
+      const matchedRoute = this.selectedRouteRecord;
       // Si se encuentra el objeto, asignamos su propiedad 'estimated' a this.estimated
       this.estimated = matchedRoute ? matchedRoute.estimated : null;
       this.editedItem.arrival = null;
-      this.editedItem.price = null;
       if (this.editedItem.schedule) {
         this.updateArrival();
       }
+      this.syncTripStopsFromRoute();
+      this.syncTripFareRows();
     },
     updateArrival() {
-      // Validación mejorada
+      // ValidaciÃ³n mejorada
       if (
         !this.editedItem.schedule ||
         !this.estimated ||
@@ -1189,6 +2117,7 @@ export default {
 
         this.editedItem.arrival = formattedArrival;
         console.log("Hora de llegada calculada:", this.editedItem.arrival);
+        this.syncTripStopTimes();
       } catch (error) {
         console.error("Error calculando hora de llegada:", error);
         this.editedItem.arrival = null;
@@ -1200,10 +2129,10 @@ export default {
       const hoy = new Date();
 
       // Formatear la fecha actual al mismo formato YYYY-MM-DD
-      const año = hoy.getFullYear();
+      const ano = hoy.getFullYear();
       const mes = String(hoy.getMonth() + 1).padStart(2, "0");
       const dia = String(hoy.getDate()).padStart(2, "0");
-      const hoyFormateado = `${año}-${mes}-${dia}`;
+      const hoyFormateado = `${ano}-${mes}-${dia}`;
 
       // Comparar con la fecha proporcionada
       return date === hoyFormateado;
@@ -1212,6 +2141,7 @@ export default {
       this.input = val;
       this.editedItem.date = this.dateFormatted;
       this.menu = false;
+      this.syncTripStopTimes();
     },
     updateDateSearch(val) {
       this.input2 = val;
@@ -1224,6 +2154,9 @@ export default {
       this.step = 1;
       this.data = {};
       this.filteredWorkers = [];
+      this.tripStopRows = [];
+      this.tripFareRows = [];
+      this.expandedTripFareIds = [];
       this.data.branch_id = this.branch_id;
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem);
@@ -1241,8 +2174,10 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
+          this.syncTripStopsFromRoute(true);
+          this.syncTripFareRows(true);
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.routes = [];
           this.vehicles = [];
           this.workers = [];
@@ -1266,6 +2201,9 @@ export default {
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
+      this.tripStopRows = [];
+      this.tripFareRows = [];
+      this.expandedTripFareIds = [];
     },
     async showAssiegnedWorker() {
       this.selectedWorker = null;
@@ -1338,7 +2276,7 @@ export default {
         return true; // Si tienen longitudes diferentes, son diferentes
       }
 
-      // Ordenar ambos arrays para una comparación consistente
+      // Ordenar ambos arrays para una comparaciÃ³n consistente
       const sortedOriginal = [...originalWorkers].sort((a, b) => a.id - b.id);
       const sortedEdited = [...editedWorkers].sort((a, b) => a.id - b.id);
 
@@ -1380,7 +2318,7 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.trips = result.data?.trips || [];
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.trips = [];
         }
       } catch (error) {
@@ -1408,8 +2346,9 @@ export default {
           "arrival",
           "start",
           "end",
-          "price",
           "workers",
+          "tripStops",
+          "tripFares",
         ];
 
         let updatedFields = Object.keys(this.editedItem)
@@ -1421,6 +2360,10 @@ export default {
           .reduce((obj, key) => {
             if (key === "workers") {
               obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTripStopsPayload(this.tripStopRows);
+            } else if (key === "tripFares") {
+              obj[key] = this.normalizeTripFaresPayload(this.tripFareRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1436,7 +2379,7 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -1447,7 +2390,7 @@ export default {
               this.valid = true;
             }
           } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -1468,20 +2411,30 @@ export default {
           "arrival",
           "start",
           "end",
-          "price",
           "workers",
+          "tripStops",
+          "tripFares",
         ];
         let updatedFields = Object.keys(this.editedItem)
           .filter(
             (key) =>
               fieldsToUpdate.includes(key) &&
               (key !== "workers"
-                ? this.editedItem[key] !== this.originalItem[key]
+                ? key !== "tripStops"
+                  ? this.editedItem[key] !== this.originalItem[key]
+                  : this.areTripStopsDifferent(
+                      this.originalItem.tripStops,
+                      this.tripStopRows
+                    )
                 : this.areWorkersDifferent(this.originalItem[key], this.editedItem[key])) // Compara el array people
           )
           .reduce((obj, key) => {
             if (key === "workers") {
               obj[key] = this.normalizeWorkersPayload(this.editedItem.workers);
+            } else if (key === "tripStops") {
+              obj[key] = this.normalizeTripStopsPayload(this.tripStopRows);
+            } else if (key === "tripFares") {
+              obj[key] = this.normalizeTripFaresPayload(this.tripFareRows);
             } else {
               obj[key] = this.editedItem[key];
             }
@@ -1496,7 +2449,7 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -1506,7 +2459,7 @@ export default {
               this.loading = false;
             }
           } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -1527,6 +2480,12 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)
+        ? this.originalItem.tripFares
+        : [];
+      this.editedItem.tripFares = Array.isArray(this.editedItem.tripFares)
+        ? this.editedItem.tripFares
+        : [];
       this.data = {};
       this.data.branch_id = this.branch_id;
       try {
@@ -1542,12 +2501,12 @@ export default {
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data.tripworkers || [];
 
-          const matchedRoute = this.routes.find(
-            (route) => route.id === this.editedItem.route_id
-          );
+          const matchedRoute = this.selectedRouteRecord;
           this.estimated = matchedRoute ? matchedRoute.estimated : null;
+          this.syncTripStopsFromRoute(false);
+          this.syncTripFareRows(false);
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.routes = [];
           this.vehicles = [];
           this.workers = [];
@@ -1587,7 +2546,7 @@ export default {
           data: request,
         });
 
-        // Manejo de la respuesta según el resultado
+        // Manejo de la respuesta segÃºn el resultado
         if (result.success) {
           this.showAlert("success", result.message, 3000);
           this.initialize();
@@ -1595,7 +2554,7 @@ export default {
           this.showAlert("warning", result.message, 3000);
         }
       } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estándar
+        // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -1654,7 +2613,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
+  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -1679,8 +2638,83 @@ export default {
   min-width: 0;
   max-width: calc(100% - 56px);
 }
+
+.trip-fare-ticket-types-panel {
+  border-color: #d9e1ef;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.trip-fare-ticket-types-header {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.8fr;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef3fb 100%);
+  border-bottom: 1px solid #d9e1ef;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2a44;
+}
+
+.trip-fare-ticket-types-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.8fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.trip-fare-ticket-types-row:last-child {
+  border-bottom: none;
+}
+
+.trip-fare-col-name,
+.trip-fare-col-price,
+.trip-fare-col-status {
+  min-width: 0;
+}
+
+.trip-fare-col-price {
+  max-width: 150px;
+}
+
+.trip-fare-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trip-fare-status-label {
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.trip-fare-row-switch :deep(.v-selection-control) {
+  min-height: 0;
+  min-width: 0;
+}
+
+.trip-fare-row-switch :deep(.v-switch__track) {
+  transform: scale(0.7);
+  transform-origin: left center;
+}
+
+.trip-fare-row-switch :deep(.v-switch__thumb) {
+  transform: scale(0.7);
+}
+
+.trip-worker-avatar {
+  transition: transform 0.15s ease;
+}
+
+.trip-worker-avatar:hover {
+  transform: translateY(-1px) scale(1.05);
+}
+
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* MÃ¡xima especificidad para ocultar el thead */
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,

@@ -31,8 +31,8 @@
 
     <!-- Texto -->
     <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Tipos de Pasajes</div>
-      <div class="text-body-2 text-grey">Gestionar Tipos de Pasajes</div>
+      <div class="text-h6 font-weight-medium">Tipos de pasajeros</div>
+      <div class="text-body-2 text-grey">Gestionar tipos de pasajeros</div>
     </div>
 
     <!-- Botones -->
@@ -46,7 +46,7 @@
       prepend-icon="mdi-plus-circle"
       @click="showAdd()"
     >
-      Agregar Tipo de Pasaje
+      Agregar tipo de pasajero
     </v-btn>
   </v-card>
   <!--<v-container style="min-width: 100%; min-height: 100%;">
@@ -54,7 +54,7 @@
             <v-toolbar :color="paleteColors.primary">
                 <v-row align="center">
                     <v-col cols="12" md="8" class="grow ml-4">
-                        <span class="text-subtitle-1"><strong>Listado de Tipos de Pasaje</strong></span>
+                        <span class="text-subtitle-1"><strong>Listado de tipos de pasajeros</strong></span>
                     </v-col>
                     <v-col cols="12" md="3" class="text-right">
                         <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.white" variant="tonal" elevation="2"
@@ -70,7 +70,7 @@
                     hide-details>
                 </v-text-field>
                 <v-data-table :headers="headers" :search="search" :items="ticketTypes" class="elevation-1"
-                    style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
+                    style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por pagina'"
                     no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
                     <template v-slot:item.actions="{ item }">
                         <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary"
@@ -82,7 +82,7 @@
                     <v-chip
                     :color="item.active ? 'green-darken-3' : 'red-darken-3'"
                     :prepend-icon="item.active ? 'mdi-check-circle' : 'mdi-close-circle'"
-                    :text="item.active ? 'Sí' : 'No'"
+                    :text="item.active ? 'Si' : 'No'"
                     variant="outlined"
                     ></v-chip>
                 </template>
@@ -92,19 +92,19 @@
     </v-container>-->
   <v-container style="min-width: 100%">
     <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+      <!-- Barra superior: seleccion de sucursal + boton buscar + busqueda global -->
       <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de tipos de pasajes</div>
+        <!-- Titulo -->
+        <div class="text-subtitle-1 font-weight-bold">Listado de tipos de pasajeros</div>
 
         <!-- Spacer (solo visible en md+) -->
         <v-spacer class="d-none d-md-block"></v-spacer>
-        <!-- Campo de búsqueda global -->
+        <!-- Campo de busqueda global -->
         <div class="flex-grow-1" style="max-width: 300px">
           <v-text-field
             v-model="search"
             density="compact"
-            label="Buscar tipos de pasajes"
+            label="Buscar tipos de pasajeros"
             prepend-inner-icon="mdi-magnify"
             variant="solo-filled"
             hide-details
@@ -119,7 +119,7 @@
         :headers="headers"
         :items="ticketTypes"
         :search="search"
-        :items-per-page-text="'Elementos por página'"
+        :items-per-page-text="'Elementos por pagina'"
         no-data-text="No hay datos disponibles"
         :loading="loading"
         loading-text="Cargando datos..."
@@ -153,34 +153,21 @@
                 align-items: center;
               "
             >
-              <!-- Negocio (20%) -->
-              <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
+              <!-- Nombre (35%) -->
+              <div style="width: 35%; min-width: 0" class="text-left font-weight-bold">
                 Nombre
               </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 28%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 12%; min-width: 0" class="text-left font-weight-bold">
-                Ajuste
-              </div>
-
-              <div style="width: 12%; min-width: 0" class="text-left font-weight-bold">
-                Valor
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Monto
+              <!-- Descripcion (55%) -->
+              <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
+                Descripcion
               </div>
 
               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Estado
               </div>
 
-              <!-- Acciones (25%) -->
+              <!-- Acciones (10%) -->
               <div
                 style="width: 10%; min-width: 0"
                 class="d-flex justify-left font-weight-bold"
@@ -203,7 +190,7 @@
                   style="width: 100%; min-width: 0"
                 >
                   <!-- Ruta -->
-                  <div style="width: 18%; min-width: 0" class="text-truncate">
+                  <div style="width: 35%; min-width: 0" class="text-truncate">
                     <span>{{ slotProps.item.name }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
@@ -212,46 +199,12 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Origen con avatar -->
-                  <div class="d-flex align-center" style="width: 28%; min-width: 0">
+                  <!-- Descripcion -->
+                  <div class="d-flex align-center" style="width: 55%; min-width: 0">
                     <span class="text-truncate">{{ slotProps.item.description }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ slotProps.item.description }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Destino con avatar -->
-                  <div class="d-flex align-center" style="width: 12%; min-width: 0">
-                    <span class="text-truncate">{{
-                      adjustmentTypeLabel(slotProps.item.adjustment_type)
-                    }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Ajuste: {{ adjustmentTypeLabel(slotProps.item.adjustment_type) }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <div class="d-flex align-center" style="width: 12%; min-width: 0">
-                    <span class="text-truncate">{{
-                      valueTypeLabel(slotProps.item.value_type)
-                    }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Tipo de valor: {{ valueTypeLabel(slotProps.item.value_type) }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <div class="d-flex align-center" style="width: 10%; min-width: 0">
-                    <span class="text-truncate">{{
-                      formatAdjustmentValue(slotProps.item)
-                    }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Valor del ajuste: {{ formatAdjustmentValue(slotProps.item) }}
+                        Descripcion: {{ slotProps.item.description }}
                       </span>
                     </v-tooltip>
                   </div>
@@ -287,7 +240,7 @@
                       :color="paleteColors.primary"
                       @click="editItem(slotProps.item)"
                       class="flex-shrink-0 mr-1"
-                      title="Editar Viaje"
+                      title="Editar tipo de pasajero"
                     >
                       <v-icon size="20">mdi-pencil</v-icon>
                     </v-btn>
@@ -300,7 +253,7 @@
                       :color="paleteColors.error"
                       @click="deleteItem(slotProps.item)"
                       class="flex-shrink-0"
-                      title="Eliminar Viaje"
+                      title="Eliminar tipo de pasajero"
                     >
                       <v-icon size="20">mdi-delete</v-icon>
                     </v-btn>
@@ -350,74 +303,11 @@
                   </span>
                 </div>
               </v-col>
-              <v-col cols="12" md="4" class="d-flex align-center">
-                <div class="d-flex align-center compact-switch-line">
-                  <v-switch
-                    v-model="editedItem.adjustment_type"
-                    true-value="recargo"
-                    false-value="descuento"
-                    :color="paleteColors.green"
-                    :base-color="paleteColors.green"
-                    :style="alwaysGreenSwitchStyle"
-                    hide-details
-                    inset
-                    density="compact"
-                    class="custom-switch compact-inline-switch always-green-switch"
-                  />
-                  <span class="text-body-1 compact-switch-label">
-                    {{
-                      editedItem.adjustment_type === "recargo" ? "Recargo" : "Descuento"
-                    }}
-                  </span>
-                </div>
-              </v-col>
-              <v-col cols="12" md="9" class="py-0">
-                <v-row class="align-center" no-gutters>
-                  <v-col cols="12" md="5" class="d-flex align-center justify-left">
-                    <div class="d-flex align-center compact-switch-line">
-                      <v-switch
-                        v-model="editedItem.value_type"
-                        true-value="porcentaje"
-                        false-value="monto"
-                        :base-color="paleteColors.green"
-                        :color="paleteColors.green"
-                        :style="alwaysGreenSwitchStyle"
-                        hide-details
-                        inset
-                        density="compact"
-                        class="custom-switch compact-inline-switch always-green-switch"
-                      />
-                      <span class="text-body-1 compact-switch-label">
-                        {{
-                          editedItem.value_type === "porcentaje" ? "Porcentaje" : "Monto"
-                        }}
-                      </span>
-                    </div>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    md
-                    class="d-flex align-center justify-left min-width-0"
-                  >
-                    <v-text-field
-                      v-model.number="editedItem.adjustment_value"
-                      clearable
-                      label="Valor del ajuste"
-                      :prepend-icon="adjustmentValueIcon"
-                      variant="underlined"
-                      type="number"
-                      min="0"
-                      step="1"
-                      :rules="adjustmentValueRules"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-col>
               <v-col cols="12" md="12">
                 <v-textarea
                   v-model="editedItem.description"
                   clearable
-                  label="Descripción"
+                  label="Descripcion"
                   prepend-icon="mdi-text-box-outline"
                   variant="underlined"
                 ></v-textarea>
@@ -445,10 +335,10 @@
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Tipo de Pasaje</span>
+        <span class="text-subtitle-2 ml-4"> Eliminar tipo de pasajero</span>
       </v-toolbar>
       <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el tipo de pasaje seleccionado?</v-card-text
+        Desea eliminar el tipo de pasajero seleccionado?</v-card-text
       >
       <v-divider></v-divider>
       <v-card-actions>
@@ -489,42 +379,38 @@ export default {
     data: {},
     activeOptions: [
       { name: "No", id: false, icon: "mdi-close-circle" },
-      { name: "Sí", id: true, icon: "mdi-check-circle" },
+      { name: "Si", id: true, icon: "mdi-check-circle" },
     ],
     headers: [
       { title: "Nombre", value: "name" },
-      { title: "Descripción", value: "description" },
-      { title: "Ajuste", value: "adjustment_type" },
-      { title: "Tipo de valor", value: "value_type" },
-      { title: "Valor del ajuste", value: "adjustment_value" },
+      { title: "Descripcion", value: "description" },
       { title: "Activo", value: "active" },
-      { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
     editedItem: {
       id: "",
       name: "",
       description: "",
-      adjustment_type: "descuento",
-      value_type: "monto",
-      adjustment_value: 0,
+      adjustment_type: null,
+      value_type: null,
+      adjustment_value: null,
       active: true,
     },
     defaultItem: {
       id: "",
       name: "",
       description: "",
-      adjustment_type: "descuento",
-      value_type: "monto",
-      adjustment_value: 0,
+      adjustment_type: null,
+      value_type: null,
+      adjustment_value: null,
       active: true,
     },
     originalItem: {
       id: "",
       name: "",
       description: "",
-      adjustment_type: "descuento",
-      value_type: "monto",
-      adjustment_value: 0,
+      adjustment_type: null,
+      value_type: null,
+      adjustment_value: null,
       active: true,
     },
     editedIndex: -1,
@@ -540,11 +426,11 @@ export default {
   }),
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Agregar Tipo de Pasaje" : "Editar Tipo de Pasaje";
+      return this.editedIndex === -1
+        ? "Agregar tipo de pasajero"
+        : "Editar tipo de pasajero";
     },
-    adjustmentValueIcon() {
-      return this.editedItem.value_type === "porcentaje" ? "mdi-percent" : "mdi-cash";
-    },
+
     switchColor() {
       return paleteColors.green;
     },
@@ -602,7 +488,7 @@ export default {
         this.loading = false;
         this.showAlert(
           "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
+          "Ocurrio un error inesperado al procesar la solicitud.",
           3000
         );
       } finally {
@@ -643,14 +529,18 @@ export default {
             this.close();
             this.showAlert(
               "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
+              "Ocurrio un error inesperado al procesar la solicitud.",
               3000
             );
           }
         } else {
           this.loading = false;
           this.close();
-          this.showAlert("success", "Debe completar los datos del tipo de pasaje.", 3000);
+          this.showAlert(
+            "success",
+            "Debe completar los datos del tipo de pasajero.",
+            3000
+          );
         }
       } else {
         const updatedFields = this.buildTicketTypePayload(this.editedItem, true);
@@ -677,7 +567,7 @@ export default {
             this.close();
             this.showAlert(
               "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
+              "Ocurrio un error inesperado al procesar la solicitud.",
               3000
             );
           }
@@ -728,7 +618,7 @@ export default {
       } catch (error) {
         this.showAlert(
           "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
+          "Ocurrio un error inesperado al procesar la solicitud.",
           3000
         );
       } finally {
@@ -740,7 +630,7 @@ export default {
       this.sb_type = sb_type;
 
       if (sb_type == "success") {
-        this.sb_title = "Éxito";
+        this.sb_title = "Exito";
         this.sb_icon = "mdi-check-circle";
       }
 
@@ -761,29 +651,16 @@ export default {
       return {
         ...this.defaultItem,
         ...ticketType,
-        adjustment_type:
-          ticketType.adjustment_type ?? ticketType.adjustmentType ?? "descuento",
-        value_type: ticketType.value_type ?? ticketType.valueType ?? "monto",
-        adjustment_value: Number(
-          ticketType.adjustment_value ?? ticketType.adjustmentValue ?? 0
-        ),
+        adjustment_type: null,
+        value_type: null,
+        adjustment_value: null,
         active: ticketType.active ?? true,
       };
     },
     buildTicketTypePayload(item, includeId = false) {
-      const adjustmentValue =
-        item.adjustment_value === null ||
-        item.adjustment_value === undefined ||
-        item.adjustment_value === ""
-          ? null
-          : Number(item.adjustment_value);
-
       const payload = {
         name: item.name,
         description: item.description,
-        adjustment_type: item.adjustment_type,
-        value_type: item.value_type,
-        adjustment_value: adjustmentValue,
         active: item.active,
       };
 
@@ -792,16 +669,6 @@ export default {
       }
 
       return payload;
-    },
-    adjustmentTypeLabel(value) {
-      return value === "recargo" ? "Recargo" : "Descuento";
-    },
-    valueTypeLabel(value) {
-      return value === "porcentaje" ? "Porcentaje" : "Monto";
-    },
-    formatAdjustmentValue(item) {
-      const numericValue = Number(item.adjustment_value ?? 0);
-      return item.value_type === "porcentaje" ? `${numericValue}%` : numericValue;
     },
   },
 };
@@ -866,7 +733,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
+  /* Mantenemos solo el efecto concavo en el icono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -888,7 +755,7 @@ export default {
   text-overflow: ellipsis;
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* Maxima especificidad para ocultar el thead */
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,

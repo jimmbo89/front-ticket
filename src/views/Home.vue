@@ -84,10 +84,7 @@
                 </div>
 
                 <div class="kpi-trend">
-                  <v-icon
-                    size="20"
-                    :style="{ color: getTrendHexColor(stat) }"
-                  >
+                  <v-icon size="20" :style="{ color: getTrendHexColor(stat) }">
                     {{ getTrendIcon(stat.comparison) }}
                   </v-icon>
                   <span
@@ -111,8 +108,8 @@
       </v-col>
 
       <!-- Gráfica -->
-      <v-col cols="12" md="6">
-        <v-card class="chart-card pa-2" rounded="lg" elevation="3">
+      <v-col cols="12" md="6" class="d-flex">
+        <v-card class="chart-card dashboard-panel pa-2" rounded="lg" elevation="3">
           <!-- HEADER -->
           <div class="chart-header">
             <div class="kpi-label">
@@ -129,7 +126,12 @@
       </v-col>
 
       <v-col cols="12" md="6" class="d-flex">
-        <v-card flat elevation="2" rounded="lg" class="trip-card panel-card">
+        <v-card
+          flat
+          elevation="2"
+          rounded="lg"
+          class="trip-card panel-card dashboard-panel"
+        >
           <!-- HEADER -->
           <v-card-title class="d-flex align-center px-5 py-4">
             <div class="kpi-label">Próximos viajes</div>
@@ -147,7 +149,8 @@
             </v-btn>
           </v-card-title>
 
-          <v-card-text class="trip-card-body"><!-- TABLE -->
+          <v-card-text class="trip-card-body"
+            ><!-- TABLE -->
             <v-data-table
               class="mt-0 pt-0"
               :headers="headers"
@@ -158,7 +161,7 @@
               hide-default-footer
               :items-per-page="-1"
               :items-per-page-options="[]"
-              no-data-text="Sin operaciones registradas"
+              no-data-text="Sin próximos viajes recientes"
             >
               <template #bottom></template>
 
@@ -697,6 +700,10 @@ table.v-table > thead,
   border: 1px solid #e5e7eb;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
 }
 
 .chart-header {
@@ -719,12 +726,18 @@ table.v-table > thead,
 
 .chart-body {
   padding: 10px 14px 16px 14px;
+  flex: 1;
+  min-height: 0;
 }
 
 .trip-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
 }
 
 .trip-card-body {
@@ -732,9 +745,17 @@ table.v-table > thead,
   min-height: 0;
   overflow-y: auto;
   padding-top: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .trip-card .v-data-table {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-panel {
   height: 100%;
 }
 
