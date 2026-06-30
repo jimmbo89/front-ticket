@@ -8,6 +8,7 @@
 import "@mdi/font/css/materialdesignicons.css";
 import "vuetify/styles";
 import { createVuetify } from "vuetify";
+import { Intersect } from "vuetify/directives";
 import { es } from "vuetify/locale";
 
 // Composables
@@ -57,6 +58,9 @@ export default createVuetify({
   },
   components: {
   
+  },
+  directives: {
+    Intersect,
   },
 });
 

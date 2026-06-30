@@ -1476,21 +1476,21 @@ export default {
 .fare-segment-ticket-types-header {
   display: grid;
   grid-template-columns: 1.6fr 0.9fr 0.8fr;
-  gap: 16px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 6px 14px;
   background: linear-gradient(180deg, #f7f9fc 0%, #eef3fb 100%);
   border-bottom: 1px solid #d9e1ef;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13.5px;
   color: #1f2a44;
 }
 
 .fare-segment-ticket-types-row {
   display: grid;
   grid-template-columns: 1.6fr 0.9fr 0.8fr;
-  gap: 16px;
+  gap: 10px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 6px 14px;
   border-bottom: 1px solid #e5eaf2;
 }
 
@@ -1525,12 +1525,12 @@ export default {
 }
 
 .fare-segment-row-switch :deep(.v-switch__track) {
-  transform: scale(0.76);
+  transform: scale(0.65);
   transform-origin: left center;
 }
 
 .fare-segment-row-switch :deep(.v-switch__thumb) {
-  transform: scale(0.76);
+  transform: scale(0.65);
 }
 
 .v-data-table > .v-data-table__wrapper > table > thead,

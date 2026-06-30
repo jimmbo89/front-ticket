@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <v-snackbar
     class="mt-12"
     location="right top"
@@ -51,15 +51,15 @@
   </v-card>
   <v-container style="min-width: 100%">
     <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
+      <!-- Barra superior: selecciÃ³n de sucursal + botÃ³n buscar + bÃºsqueda global -->
       <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
+        <!-- TÃ­tulo -->
         <div class="text-subtitle-1 font-weight-bold">Listado deTickets Vendidos</div>
 
         <!-- Spacer (solo visible en md+) -->
         <v-spacer class="d-none d-md-block"></v-spacer>
 
-        <!-- Grupo: Autocomplete + Botón buscar -->
+        <!-- Grupo: Autocomplete + BotÃ³n buscar -->
         <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
           <!-- Autocomplete de sucursales (mismo estilo que el original) -->
           <v-autocomplete
@@ -83,13 +83,15 @@
             <template v-slot:item="{ props, item }">
               <v-list-item
                 v-bind="props"
-                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${
+                  getTableRowItem(item).image
+                }`"
               >
               </v-list-item>
             </template>
           </v-autocomplete>
 
-          <!-- Botón de búsqueda (actualizar datos) 
+          <!-- BotÃ³n de bÃºsqueda (actualizar datos) 
           <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
             class="mt-2 mt-md-0 mr-5 ml-1">
             <v-icon>mdi-magnify</v-icon>
@@ -132,7 +134,7 @@
           </v-menu>
         </div>
 
-        <!-- Campo de búsqueda global -->
+        <!-- Campo de bÃºsqueda global -->
         <div class="flex-grow-1" style="max-width: 20%">
           <v-text-field
             v-model="search"
@@ -196,9 +198,9 @@
 
               <!-- Nombre (20%) -->
 
-              <!-- Teléfono (10%) -->
+              <!-- TelÃ©fono (10%) -->
 
-              <!-- Dirección (25%) -->
+              <!-- DirecciÃ³n (25%) -->
               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
                 Fecha
               </div>
@@ -264,7 +266,9 @@
                         Tramo
                       </v-chip>
                     </div>
-                    <div class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1">
+                    <div
+                      class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1"
+                    >
                       <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
                       <span class="text-truncate">
                         Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
@@ -399,517 +403,544 @@
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
         <v-card-text>
-          <v-row style="margin-top: 5px">
-            <!-- Selección de viaje -->
-            <v-col cols="12" md="12">
-              <v-autocomplete
-                v-model="editedItem.trip_id"
-                :items="trips"
-                label="Selecciona el viaje"
-                prepend-icon="mdi-road"
-                item-title="name"
-                item-value="id"
-                variant="underlined"
-                :rules="selectRules"
-                density="compact"
-                :no-data-text="'No hay datos disponibles'"
-                @update:model-value="updateSeats"
-                :menu-props="{ maxHeight: 400, maxWidth: 600 }"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" title="" class="pa-3">
-                    <v-container fluid>
-                      <v-row dense>
-                        <v-col cols="12" md="2" class="d-flex flex-column justify-center">
-                          <div class="d-flex align-center mb-1">
-                            <span><strong>Ruta</strong> </span>
-                          </div>
-                          <div class="d-flex align-center mb-1">
-                            <span>{{ item.raw.name }}</span>
-                          </div>
-                        </v-col>
-
-                        <!-- Horarios y Vehículo -->
-                        <v-col cols="12" md="2" class="d-flex flex-column justify-center">
-                          <div class="d-flex align-center mb-1">
-                            <v-icon small color="red darken-4" class="mr-2"
-                              >mdi mdi-circle-medium</v-icon
-                            >
-                            <span
-                              ><strong>Salida:{{ item.raw.schedule }}</strong>
-                            </span>
-                          </div>
-                          <div class="d-flex align-center mb-1">
-                            <v-icon small color="teal darken-1" class="mr-2"
-                              >mdi-triangle-small-down</v-icon
-                            >
-                            <span>Llegada: {{ item.raw.arrival }}</span>
-                          </div>
-                        </v-col>
-                        <!-- Origen -->
-
-                        <v-col cols="12" md="4" class="d-flex align-start">
-                          <div class="ml-3 text-truncate">
-                            <div class="d-flex align-center mb-1">
-                              <strong> {{ item.raw.origin }}</strong>
-                            </div>
-
-                            <div class="d-flex align-center mb-1">
-                              {{ item.raw.destination }}
-                            </div>
-                          </div>
-                        </v-col>
-
-                        <v-col cols="12" md="2" class="d-flex align-start">
-                          <div class="ml-3 text-truncate">
-                            <div class="d-flex align-center mb-1">
-                              <strong> Vehículo</strong>
-                            </div>
-
-                            <div class="d-flex flex-column align-start mb-1">
-                              <span class="text-truncate">{{ item.raw.plate }}</span>
-                              <span class="text-caption text-grey text-truncate">
-                                {{ getTripInternalNumber(item.raw) }}
-                              </span>
-                            </div>
-                          </div>
-                        </v-col>
-
-                        <v-col cols="12" md="2" class="d-flex align-start">
-                          <div class="ml-3 text-truncate">
-                            <div class="d-flex align-center mb-1">
-                              <strong> Precio</strong>
-                            </div>
-                            <div class="d-flex align-center mb-1">
-                              <span>{{ formatNumber(Number(item.raw.price)) }} CLP</span>
-                            </div>
-                          </div>
-                        </v-col>
-                      </v-row>
-                    </v-container>
-                  </v-list-item>
-                </template>
-              </v-autocomplete>
-            </v-col>
-
-            <!-- Método de pago -->
-            <v-col cols="12" md="2" v-if="false">
-              <v-select
-                v-model="editedItem.method"
-                :items="paymentMethods"
-                label="Método de pago"
-                item-value="value"
-                item-title="text"
-                variant="underlined"
-                density="compact"
-                :rules="[(v) => !!v || 'Seleccione un método de pago']"
-                prepend-icon="mdi-cash"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :disabled="item.raw.disabled">
-                    <template v-slot:prepend>
-                      <v-icon :icon="item.raw.icon"></v-icon>
-                      <!-- Ícono de la opción -->
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
-            </v-col>
-
-            <v-col cols="12" md="12">
-              <v-autocomplete
-                v-model="editedItem.fare_segment_id"
-                :items="fareSegmentOptions"
-                label="Selecciona el tramo"
-                prepend-icon="mdi-vector-line"
-                item-title="label"
-                item-value="id"
-                variant="underlined"
-                :rules="fareSegmentRules"
-                density="compact"
-                :no-data-text="'No hay datos disponibles'"
-                :disabled="!editedItem.trip_id"
-                clearable
-                :menu-props="{ maxHeight: 420, maxWidth: 760 }"
-                @update:model-value="updateFareSegment"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" title="" class="pa-3">
-                    <v-container fluid>
-                      <v-row dense>
-                        <v-col cols="12" md="4" class="d-flex flex-column justify-center">
-                          <div class="d-flex align-center mb-1">
-                            <strong>{{ item.raw.label }}</strong>
-                          </div>
-                          <div class="d-flex align-center mb-1">
-                            <span class="text-caption text-grey">
-                              {{ item.raw.service_class_label }}
-                            </span>
-                          </div>
-                        </v-col>
-
-                        <v-col cols="12" md="4" class="d-flex flex-column justify-center">
-                          <div class="d-flex align-center mb-1">
-                            <span class="font-weight-medium">Origen:</span>
-                            <span class="ml-1">{{ item.raw.origin_label }}</span>
-                          </div>
-                          <div class="d-flex align-center mb-1">
-                            <span class="font-weight-medium">Destino:</span>
-                            <span class="ml-1">{{ item.raw.destination_label }}</span>
-                          </div>
-                        </v-col>
-
-                        <v-col cols="12" md="4" class="d-flex flex-column justify-center">
-                          <div class="d-flex align-center mb-1">
-                            <span class="font-weight-medium">Precio:</span>
-                            <span class="ml-1">
-                              {{ formatNumber(Number(item.raw.base_price)) }} CLP
-                            </span>
-                          </div>
-                          <div class="d-flex align-center mb-1">
-                            <span class="text-caption text-grey">
-                              Vigencia: {{ item.raw.valid_from || "-" }} a
-                              {{ item.raw.valid_to || "-" }}
-                            </span>
-                          </div>
-                        </v-col>
-                      </v-row>
-                    </v-container>
-                  </v-list-item>
-                </template>
-              </v-autocomplete>
-              <div class="text-caption text-grey mt-1">
-                Si no seleccionas tramo, se venderá el viaje completo.
-              </div>
-
-            </v-col>
-
-            <!-- Fecha -->
-            <v-col cols="12" md="2" v-if="false">
-              <v-menu
-                v-model="menu"
-                :close-on-content-click="false"
-                :nudge-right="40"
-                transition="scale-transition"
-                offset-y
-                min-width="190px"
-                disabled="true"
-              >
-                <template v-slot:activator="{ props }">
-                  <v-text-field
-                    v-bind="props"
-                    :modelValue="dateFormatted"
-                    variant="underlined"
-                    prepend-icon="mdi-calendar"
-                    label="Fecha"
-                    density="compact"
-                  ></v-text-field>
-                </template>
-                <v-locale-provider locale="es">
-                  <v-date-picker
-                    header="Calendario"
-                    title="Seleccione la fecha"
-                    :color="paleteColors.primary"
-                    :modelValue="input"
-                    @update:model-value="updateDate"
-                    format="yyyy-MM-dd"
-                    :min="new Date().toISOString().split('T')[0]"
-                  ></v-date-picker>
-                </v-locale-provider>
-              </v-menu>
-            </v-col>
-
-            <!-- Precio del pasaje -->
-            <v-col cols="12" md="2" v-if="false">
-              <v-text-field
-                v-model="editedItem.price"
-                label="Precio del pasaje"
-                type="number"
-                variant="underlined"
-                density="compact"
-                prepend-icon="mdi-cash"
-                :rules="[(v) => v > 0 || 'Debe ser un precio válido']"
-                placeholder="Ingrese el precio del pasaje"
-                min="0"
-                step="0.01"
-                readonly
-              ></v-text-field>
-            </v-col>
-
-            <!-- Cantidad de pasajes -->
-            <v-col cols="12" md="2" v-if="false">
-              <v-text-field
-                v-model="editedItem.quantity"
-                label="Cantidad de pasajes"
-                type="number"
-                variant="underlined"
-                density="compact"
-                prepend-icon="mdi-ticket"
-                placeholder="Ingrese la cantidad"
-                min="1"
-                @update:model-value="calculateTotal"
-                :rules="quantityAndPassengerRules"
-                :disabled="!editedItem.trip_id || !aviable"
-                :hint="!editedItem.quantity ? `Asientos disponibles: ${aviable}` : ''"
-                persistent-hint
-              ></v-text-field>
-            </v-col>
-
-            <!-- Selección de asientos -->
-            <v-col cols="12" md="2" v-if="false">
-              <v-text-field
-                :value="
-                  selectedSeats.length > 0
-                    ? selectedSeats.join(', ')
-                    : 'Seleccionar Asientos'
-                "
-                color="primary"
-                dark
-                readonly
-                style="text-transform: none"
-                :disabled="editedItem.quantity <= 0"
-                prepend-icon="mdi-seat"
-                density="compact"
-                variant="underlined"
-                :rules="[
-                  (v) =>
-                    selectedSeats.length > 0 || 'Debe seleccionar al menos un asiento',
-                ]"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <!-- Pasajeros adultos y menores -->
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-card>
-                <v-card-title class="bg-primary"
-                  ><span class="text-subtitle-2 ml-2">Tipos de Pasajero</span></v-card-title
-                >
-                <v-card-text
-                  class="bg-white pt-4"
-                  style="min-height: 44vh; overflow-y: auto"
-                >
-                  <div v-if="mergedTicketTypes.length > 0">
-                    <div
-                      v-for="ticket in mergedTicketTypes"
-                      :key="ticket.trip_fare_id || ticket.id"
-                      class="mb-2"
-                    >
-                      <v-row align="center">
-                        <v-col cols="12" md="6">
-                          <v-text-field
-                            v-model.number="ticket.cant"
-                            @update:model-value="handleQuantityChange(ticket, $event)"
-                            @blur="validateQuantity(ticket)"
-                            :label="ticket.ticketTypeName || ticket.name"
-                            variant="underlined"
-                            density="compact"
-                            type="number"
-                            min="0"
-                            :error-messages="
-                              (currentlyEditing === ticket.trip_fare_id && seatError) ||
-                              quantityErrors[ticket.trip_fare_id]
-                            "
-                            hide-details="auto"
-                          ></v-text-field>
-                          <div
-                            v-if="Number(ticket.cant) > 0"
-                            class="ticket-total-preview text-caption text-primary mt-1"
-                          >
-                            Total a pagar:
-                            <strong>
-                              {{ formatNumber(getTicketTypePayableAmount(ticket)) }} CLP
-                            </strong>
-                          </div>
-                        </v-col>
-                        <v-col cols="12" md="6" class="d-flex align-center">
-                          <div class="flex-grow-1 d-flex justify-end mb-3">
-                            <div class="ticket-price-pill">
-                              <span class="text-caption text-medium-emphasis">Precio</span>
-                              <span class="text-subtitle-2 font-weight-bold text-primary">
-                                {{ formatNumber(Number(ticket.base_price)) }} CLP
-                              </span>
-                            </div>
-                          </div>
-                        </v-col>
-                      </v-row>
-                      <v-divider class="my-2"></v-divider>
-                    </div>
-                  </div>
-                  <div v-else class="text-center py-8">
-                    <v-icon size="large">mdi-ticket-confirmation-outline</v-icon>
-                    <p class="text-body-1 mt-2">No hay tipos de pasaje disponibles</p>
-                  </div>
-                </v-card-text>
-              </v-card>
-              <!-- Total a pagar 
-                            <v-card class="pa-4">
-                                <v-row>
-                                    <v-col cols="12" md="6">
-                                        <v-text-field v-model="editedItem.total" label="Total a pagar" type="number"
-                                            variant="underlined" density="compact" prepend-icon="mdi-cash"
-                                            readonly></v-text-field>
-                                    </v-col>
-                                </v-row>
-                            </v-card>-->
-            </v-col>
-            <v-col cols="12" md="3">
-              <!-- Mapa de asientos visible -->
-              <v-card style="max-width: 100%">
-                <v-card-title :color="paleteColors.primary" class="bg-primary">
-                  <span class="text-subtitle-2 ml-2">Seleccione los asientos</span>
-                </v-card-title>
-                <v-card-text>
-                  <v-row>
-                    <!-- Mostrar asientos en filas de 2 -->
-                    <v-col cols="12" class="d-flex align-center justify-center">
-                      <div
-                        class="seat-map-preview"
-                        style="display: flex; flex-direction: column"
-                      >
-                        <div
-                          v-for="(row, rowIndex) in seatMap"
-                          :key="rowIndex"
-                          class="seat-row"
-                          style="display: flex; flex-direction: row"
-                        >
-                          <template v-for="(seat, seatIndex) in row" :key="seatIndex">
-                            <div
-                              v-if="seat.type"
-                              :class="[
-                                'seat-container',
-                                'ma-1',
-                                {
-                                  'seat-available': isSeatAvailable(seat),
-                                  'seat-selected': selectedSeats.includes(
-                                    Number(seat.label)
-                                  ),
-                                  'seat-reserved': isSeatReserved(seat.label),
-                                  'seat-aisle': seat.type === 'aisle',
-                                },
-                              ]"
-                              @click="toggleSeat(seat)"
-                            >
-                              <!-- Icono de asiento con tamaño aumentado -->
-                              <v-icon
-                                v-if="seat.type === 'seat'"
-                                class="seat-icon"
-                                size="30"
-                                >mdi-seat</v-icon
-                              >
-
-                              <!-- Icono de pasillo con tamaño aumentado -->
-                              <v-icon
-                                v-if="seat.type === 'aisle'"
-                                class="aisle-icon"
-                                size="30"
-                                >''</v-icon
-                              >
-
-                              <!-- Número de asiento más grande -->
-                              <span v-if="seat.type === 'seat'" class="seat-number">{{
-                                seat.label
-                              }}</span>
-
-                              <!-- Indicador de pasillo más grande -->
-                              <span
-                                v-if="seat.type === 'aisle'"
-                                class="aisle-indicator"
-                              ></span>
-                            </div>
-                          </template>
-                        </div>
-                      </div>
-                    </v-col>
-                  </v-row>
-
-                  <!-- Mensaje de error si se seleccionan demasiados asientos -->
-                  <v-alert
-                    v-if="selectedSeats.length != editedItem.quantity"
-                    type="error"
-                    class="mt-3"
-                  >
-                    Debe Seleccionar {{ editedItem.quantity }} asiento(s).
-                  </v-alert>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            <v-col cols="12" md="3">
-              <!-- Mapa de asientos visible -->
-              <v-card style="max-width: 100%">
-                <v-card-title :color="paleteColors.primary" class="bg-primary">
-                  <span class="text-subtitle-2 ml-2">Pagos de Pasajes</span>
-                </v-card-title>
-                <v-card-text>
-                  <v-col cols="12">
-                    <div class="payment-methods-grid">
-                      <v-card
-                        v-for="method in paymentMethods"
-                        :key="method.value"
-                        class="payment-method-card"
-                        :class="[
-                          getCardClass(method),
-                          { 'payment-method-disabled': method.disabled },
-                        ]"
-                        @click="!method.disabled && (editedItem.method = method.value)"
-                      >
-                        <v-card-text
-                          class="d-flex flex-column align-center justify-center payment-method-content pa-2"
-                        >
-                          <v-icon
-                            size="32"
-                            :color="getMethodColor(method.value)"
-                            class="mb-1"
-                          >
-                            {{ method.icon }}
-                          </v-icon>
-                          <div class="payment-method-label text-center">
-                            {{ method.text }}
-                          </div>
-                        </v-card-text>
-                      </v-card>
-                    </div>
-                  </v-col>
+          <v-stepper
+            v-model="step"
+            :items="items"
+            hide-actions
+            style="max-height: calc(100vh - 72px); overflow-y: auto"
+          >
+            <template v-slot:item.1>
+              <div style="flex: 1; overflow-y: auto; padding: 16px">
+                <v-row style="margin-top: 5px">
                   <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="editedItem.total"
-                      label="Total a pagar"
-                      type="number"
+                    <v-autocomplete
+                      v-model="selectedOriginLocationId"
+                      :items="locations"
+                      label="Seleccione el origen"
+                      prepend-icon="mdi-map-marker"
+                      item-title="address"
+                      item-value="id"
                       variant="underlined"
                       density="compact"
-                      prepend-icon="mdi-cash"
-                      readonly
-                    ></v-text-field>
+                      clearable
+                      :no-data-text="'No hay ubicaciones disponibles'"
+                      @update:model-value="handleLocationSelectionChange"
+                      :menu-props="{ maxHeight: 360, maxWidth: 520 }"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" title="" class="pa-3">
+                          <div class="d-flex flex-column">
+                            <strong class="text-truncate">{{
+                              getTableRowItem(item).address
+                            }}</strong>
+                            <span class="text-caption text-grey text-truncate">
+                              {{ getLocationSubtitle(getTableRowItem(item)) }}
+                            </span>
+                          </div>
+                        </v-list-item>
+                      </template>
+                    </v-autocomplete>
                   </v-col>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+
+                  <v-col cols="12" md="6">
+                    <v-autocomplete
+                      v-model="selectedDestinationLocationId"
+                      :items="locations"
+                      label="Seleccione el destino"
+                      prepend-icon="mdi-map-marker-outline"
+                      item-title="address"
+                      item-value="id"
+                      variant="underlined"
+                      density="compact"
+                      clearable
+                      :no-data-text="'No hay ubicaciones disponibles'"
+                      @update:model-value="handleLocationSelectionChange"
+                      :menu-props="{ maxHeight: 360, maxWidth: 520 }"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" title="" class="pa-3">
+                          <div class="d-flex flex-column">
+                            <strong class="text-truncate">{{
+                              getTableRowItem(item).address
+                            }}</strong>
+                            <span class="text-caption text-grey text-truncate">
+                              {{ getLocationSubtitle(getTableRowItem(item)) }}
+                            </span>
+                          </div>
+                        </v-list-item>
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+
+                  <v-col cols="12">
+                    <v-text-field
+                      v-model="tripSearchText"
+                      label="Buscar viaje"
+                      prepend-icon="mdi-magnify"
+                      variant="underlined"
+                      density="compact"
+                      clearable
+                      :disabled="
+                        !selectedOriginLocationId ||
+                        !selectedDestinationLocationId ||
+                        tripSearchLoading
+                      "
+                    />
+                  </v-col>
+
+                  <v-col cols="12">
+                    <v-sheet border class="trip-sale-sheet">
+                      <v-row align="center">
+                        <v-col cols="12" md="12" class="grow ml-4">
+                          <div class="d-flex align-center mb-2">
+                            <v-icon color="primary" size="18" class="mr-2"
+                              >mdi-ticket-confirmation-outline</v-icon
+                            >
+                            <div>
+                              <div class="text-subtitle-1 font-weight-bold">
+                                Viajes y tramos
+                              </div>
+                              <div class="text-caption text-medium-emphasis">
+                                Selecciona una fila para continuar con la venta.
+                              </div>
+                            </div>
+                          </div>
+                        </v-col>
+                      </v-row>
+
+                      <v-card-text class="pt-4">
+                        <v-card
+                          variant="outlined"
+                          class="trip-sale-panel rounded-lg"
+                          elevation="0"
+                        >
+                          <div class="trip-sale-panel__header">
+                            <div class="trip-sale-col trip-sale-col--route">Ruta</div>
+                            <div class="trip-sale-col trip-sale-col--schedule">
+                              Salida
+                            </div>
+                            <div class="trip-sale-col trip-sale-col--arrival">
+                              Llegada
+                            </div>
+                            <div class="trip-sale-col trip-sale-col--vehicle">
+                              Vehículo
+                            </div>
+                            <div class="trip-sale-col trip-sale-col--price">
+                              Precio base
+                            </div>
+                            <div class="trip-sale-col trip-sale-col--actions">
+                              Acciones
+                            </div>
+                          </div>
+
+                          <div v-if="filteredTripSaleRows.length">
+                            <div
+                              v-for="tripRow in filteredTripSaleRows"
+                              :key="tripRow.id"
+                              class="trip-sale-panel__row"
+                              :class="{
+                                'trip-sale-panel__row--selected':
+                                  Number(tripRow.trip_id) ===
+                                    Number(editedItem.trip_id) &&
+                                  Number(tripRow.fare_segment_id) ===
+                                    Number(editedItem.fare_segment_id),
+                              }"
+                              @click="selectTripForSale(tripRow)"
+                            >
+                              <div class="trip-sale-col trip-sale-col--route">
+                                <div class="font-weight-medium text-truncate">
+                                  {{ tripRow.name }}
+                                </div>
+                                <div
+                                  class="text-caption text-medium-emphasis text-truncate trip-sale-row-meta"
+                                >
+                                  Origen: {{ tripRow.origin }} · Destino:
+                                  {{ tripRow.destination }}
+                                </div>
+                              </div>
+
+                              <div class="trip-sale-col trip-sale-col--schedule">
+                                <div class="font-weight-medium">
+                                  {{ tripRow.schedule || "-" }}
+                                </div>
+                                <div
+                                  class="text-caption text-medium-emphasis trip-sale-row-meta"
+                                >
+                                  Salida
+                                </div>
+                              </div>
+
+                              <div class="trip-sale-col trip-sale-col--arrival">
+                                <div class="font-weight-medium">
+                                  {{ tripRow.arrival || "-" }}
+                                </div>
+                                <div
+                                  class="text-caption text-medium-emphasis trip-sale-row-meta"
+                                >
+                                  Llegada
+                                </div>
+                              </div>
+
+                              <div class="trip-sale-col trip-sale-col--vehicle">
+                                <div class="font-weight-medium text-truncate">
+                                  {{ tripRow.plate }}
+                                </div>
+                                <div
+                                  class="text-caption text-medium-emphasis text-truncate trip-sale-row-meta"
+                                >
+                                  {{ tripRow.internal_number }}
+                                </div>
+                              </div>
+
+                              <div
+                                class="trip-sale-col trip-sale-col--price text-no-wrap"
+                              >
+                                {{ formatNumber(Number(tripRow.price)) }} CLP
+                              </div>
+
+                              <div
+                                class="trip-sale-col trip-sale-col--actions d-flex justify-end"
+                              >
+                                <v-chip
+                                  size="small"
+                                  :color="
+                                    Number(tripRow.trip_id) ===
+                                      Number(editedItem.trip_id) &&
+                                    Number(tripRow.fare_segment_id) ===
+                                      Number(editedItem.fare_segment_id)
+                                      ? paleteColors.active
+                                      : paleteColors.primary
+                                  "
+                                  :variant="
+                                    Number(tripRow.trip_id) ===
+                                      Number(editedItem.trip_id) &&
+                                    Number(tripRow.fare_segment_id) ===
+                                      Number(editedItem.fare_segment_id)
+                                      ? 'flat'
+                                      : 'tonal'
+                                  "
+                                  class="cursor-pointer"
+                                >
+                                  {{
+                                    Number(tripRow.trip_id) ===
+                                      Number(editedItem.trip_id) &&
+                                    Number(tripRow.fare_segment_id) ===
+                                      Number(editedItem.fare_segment_id)
+                                      ? "Seleccionado"
+                                      : "Seleccionar"
+                                  }}
+                                </v-chip>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div v-else class="pa-4 text-medium-emphasis">
+                            No hay viajes disponibles.
+                          </div>
+                        </v-card>
+                      </v-card-text>
+                    </v-sheet>
+                  </v-col>
+                </v-row>
+
+                <div class="d-flex align-center mt-4">
+                  <v-btn variant="tonal" color="grey" @click="close">Cancelar</v-btn>
+                  <v-spacer />
+                  <v-btn
+                    color="primary"
+                    :disabled="!editedItem.trip_id || !editedItem.fare_segment_id"
+                    @click="nextStep"
+                  >
+                    Continuar
+                  </v-btn>
+                </div>
+              </div>
+            </template>
+            <template v-slot:item.2>
+              <div v-if="step === 2">
+                <v-row style="margin-top: 5px">
+                  <v-col cols="12" md="12">
+                    <v-sheet border rounded class="trip-sale-summary mb-4">
+                      <div class="trip-sale-summary__header">
+                        <div>
+                          <div class="text-subtitle-2 font-weight-bold">
+                            Resumen de venta
+                          </div>
+                          <div class="text-caption text-medium-emphasis">
+                            Revisa el viaje y el tramo antes de continuar.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="trip-sale-summary__body">
+                        <div class="trip-sale-summary__item">
+                          <span class="trip-sale-summary__label">Viaje</span>
+                          <span class="trip-sale-summary__value text-truncate">
+                            {{ selectedTripRecord?.name || "No seleccionado" }}
+                          </span>
+                        </div>
+                        <div class="trip-sale-summary__item">
+                          <span class="trip-sale-summary__label">Tramo</span>
+                          <span class="trip-sale-summary__value text-truncate">
+                            {{
+                              selectedFareSegmentRecord?.label ||
+                              selectedFareSegmentRecord?.name ||
+                              "No seleccionado"
+                            }}
+                          </span>
+                        </div>
+                        <div class="trip-sale-summary__item">
+                          <span class="trip-sale-summary__label">Precio del tramo</span>
+                          <span class="trip-sale-summary__value">
+                            {{
+                              formatNumber(
+                                Number(selectedFareSegmentRecord?.base_price || 0)
+                              )
+                            }}
+                            CLP
+                          </span>
+                        </div>
+                      </div>
+                    </v-sheet>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-card>
+                      <v-card-title class="bg-primary">
+                        <span class="text-subtitle-2 ml-2">Tipos de Pasajero</span>
+                      </v-card-title>
+                      <v-card-text
+                        class="bg-white pt-4"
+                        style="min-height: 44vh; overflow-y: auto"
+                      >
+                        <div v-if="mergedTicketTypes.length > 0">
+                          <div
+                            v-for="ticket in mergedTicketTypes"
+                            :key="ticket.trip_fare_id || ticket.id"
+                            class="mb-2"
+                          >
+                            <v-row align="center">
+                              <v-col cols="12" md="6">
+                                <v-text-field
+                                  v-model.number="ticket.cant"
+                                  @update:model-value="
+                                    handleQuantityChange(ticket, $event)
+                                  "
+                                  @blur="validateQuantity(ticket)"
+                                  :label="ticket.ticketTypeName || ticket.name"
+                                  variant="underlined"
+                                  density="compact"
+                                  type="number"
+                                  min="0"
+                                  :error-messages="
+                                    (currentlyEditing === ticket.trip_fare_id &&
+                                      seatError) ||
+                                    quantityErrors[ticket.trip_fare_id]
+                                  "
+                                  hide-details="auto"
+                                ></v-text-field>
+                                <div
+                                  v-if="Number(ticket.cant) > 0"
+                                  class="ticket-total-preview text-caption text-primary mt-1"
+                                >
+                                  Total a pagar:
+                                  <strong>
+                                    {{
+                                      formatNumber(getTicketTypePayableAmount(ticket))
+                                    }}
+                                    CLP
+                                  </strong>
+                                </div>
+                              </v-col>
+                              <v-col cols="12" md="6" class="d-flex align-center">
+                                <div class="flex-grow-1 d-flex justify-end mb-3">
+                                  <div class="ticket-price-pill">
+                                    <span class="text-caption text-medium-emphasis">
+                                      Precio
+                                    </span>
+                                    <span
+                                      class="text-subtitle-2 font-weight-bold text-primary"
+                                    >
+                                      {{ formatNumber(Number(ticket.base_price)) }} CLP
+                                    </span>
+                                  </div>
+                                </div>
+                              </v-col>
+                            </v-row>
+                            <v-divider class="my-2"></v-divider>
+                          </div>
+                        </div>
+                        <div v-else class="text-center py-8">
+                          <v-icon size="large">mdi-ticket-confirmation-outline</v-icon>
+                          <p class="text-body-1 mt-2">
+                            No hay tipos de pasaje disponibles
+                          </p>
+                        </div>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="12" md="3">
+                    <v-card style="max-width: 100%">
+                      <v-card-title :color="paleteColors.primary" class="bg-primary">
+                        <span class="text-subtitle-2 ml-2">Seleccione los asientos</span>
+                      </v-card-title>
+                      <v-card-text>
+                        <v-row>
+                          <v-col cols="12" class="d-flex align-center justify-center">
+                            <div
+                              class="seat-map-preview"
+                              style="display: flex; flex-direction: column"
+                            >
+                              <div
+                                v-for="(row, rowIndex) in seatMap"
+                                :key="rowIndex"
+                                class="seat-row"
+                                style="display: flex; flex-direction: row"
+                              >
+                                <template
+                                  v-for="(seat, seatIndex) in row"
+                                  :key="seatIndex"
+                                >
+                                  <div
+                                    v-if="seat.type"
+                                    :class="[
+                                      'seat-container',
+                                      'ma-1',
+                                      {
+                                        'seat-available': isSeatAvailable(seat),
+                                        'seat-selected': selectedSeats.includes(
+                                          Number(seat.label)
+                                        ),
+                                        'seat-reserved': isSeatReserved(seat.label),
+                                        'seat-aisle': seat.type === 'aisle',
+                                      },
+                                    ]"
+                                    @click="toggleSeat(seat)"
+                                  >
+                                    <v-icon
+                                      v-if="seat.type === 'seat'"
+                                      class="seat-icon"
+                                      size="30"
+                                    >
+                                      mdi-seat
+                                    </v-icon>
+
+                                    <v-icon
+                                      v-else-if="seat.type === 'aisle'"
+                                      class="aisle-icon"
+                                      size="30"
+                                    >
+                                      mdi-minus
+                                    </v-icon>
+
+                                    <span v-if="seat.type === 'seat'" class="seat-number">
+                                      {{ seat.label }}
+                                    </span>
+
+                                    <span
+                                      v-if="seat.type === 'aisle'"
+                                      class="aisle-indicator"
+                                    ></span>
+                                  </div>
+                                </template>
+                              </div>
+                            </div>
+                          </v-col>
+                        </v-row>
+
+                        <v-alert
+                          v-if="selectedSeats.length != editedItem.quantity"
+                          type="error"
+                          class="mt-3"
+                        >
+                          Debe Seleccionar {{ editedItem.quantity }} asiento(s).
+                        </v-alert>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="12" md="3">
+                    <v-card style="max-width: 100%">
+                      <v-card-title :color="paleteColors.primary" class="bg-primary">
+                        <span class="text-subtitle-2 ml-2">Pagos de Pasajes</span>
+                      </v-card-title>
+                      <v-card-text>
+                        <div class="payment-methods-grid">
+                          <v-card
+                            v-for="method in paymentMethods"
+                            :key="method.value"
+                            class="payment-method-card"
+                            :class="[
+                              getCardClass(method),
+                              { 'payment-method-disabled': method.disabled },
+                            ]"
+                            @click="
+                              !method.disabled && (editedItem.method = method.value)
+                            "
+                          >
+                            <v-card-text
+                              class="d-flex flex-column align-center justify-center payment-method-content pa-2"
+                            >
+                              <v-icon
+                                size="32"
+                                :color="getMethodColor(method.value)"
+                                class="mb-1"
+                              >
+                                {{ method.icon }}
+                              </v-icon>
+                              <div class="payment-method-label text-center">
+                                {{ method.text }}
+                              </div>
+                            </v-card-text>
+                          </v-card>
+                        </div>
+
+                        <v-text-field
+                          v-model="editedItem.total"
+                          class="mt-4"
+                          label="Total a pagar"
+                          type="number"
+                          variant="underlined"
+                          density="compact"
+                          prepend-icon="mdi-cash"
+                          readonly
+                        ></v-text-field>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </div>
+            </template>
+          </v-stepper>
         </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="
-              !valid ||
-              Number(selectedSeats.length) !== Number(editedItem.quantity) ||
-              !editedItem.method
-            "
-            :loading="loading"
-            >Aceptar</v-btn
-          >
-        </v-card-actions>
+        <template v-if="step === 2">
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-btn :color="paleteColors.gris" variant="flat" @click="prevStep"
+              >Volver</v-btn
+            >
+            <v-spacer></v-spacer>
+            <v-btn
+              :color="paleteColors.primary"
+              variant="flat"
+              @click="save"
+              :disabled="
+                !valid ||
+                Number(selectedSeats.length) !== Number(editedItem.quantity) ||
+                !editedItem.method
+              "
+              :loading="loading"
+              >Guardar</v-btn
+            >
+          </v-card-actions>
+        </template>
       </v-card>
     </v-form>
   </v-dialog>
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card>
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar un Ticket</span>
+        <span class="text-subtitle-2 ml-4">Eliminar un Ticket</span>
       </v-toolbar>
 
       <v-card-text class="mt-2 mb-2">
@@ -1104,7 +1135,12 @@ export default {
     branch_id: "",
     seatError: null,
     currentlyEditing: null,
+    locations: [],
     trips: [],
+    selectedOriginLocationId: null,
+    selectedDestinationLocationId: null,
+    tripSearchLoading: false,
+    tripSearchText: "",
     routes: [],
     vehicles: [],
     workers: [],
@@ -1119,13 +1155,23 @@ export default {
     data: {},
     hasStartedSelecting: false,
     seats: 0, // Ejemplo de asientos disponibles
-    selectedSeats: [], // Aquí se almacenan los asientos seleccionados
+    selectedSeats: [], // AquÃ­ se almacenan los asientos seleccionados
     reservedSeats: [],
     availableSeats: [],
     aviable: "",
     branches: [],
     showSeatsMenu: false,
     showTicketDialog: false,
+    step: 1,
+    items: ["Trayecto", "Venta"],
+    tripSearchHeaders: [
+      { title: "Ruta", key: "name" },
+      { title: "Salida", key: "schedule" },
+      { title: "Llegada", key: "arrival" },
+      { title: "Vehículo", key: "plate" },
+      { title: "Precio", key: "price" },
+      { title: "Acciones", key: "actions", sortable: false, width: "120px" },
+    ],
     headers: [
       { title: "Ruta", key: "tripName" },
       { title: "Origen", key: "tripOrigin" },
@@ -1230,6 +1276,7 @@ export default {
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     //prueba borrar
+    fareSegmentRules: [(v) => !!v || "Seleccione un tramo"],
     currentPage: 1, // Página actual
     itemsPerPage: 6, // Elementos por página
     quantityErrors: {},
@@ -1278,12 +1325,12 @@ export default {
             ) || 0;
           const availableSeats = this.availableSeats.length;
 
-          // Validación 1: Debe haber al menos un pasaje
+          // ValidaciÃ³n 1: Debe haber al menos un pasaje
           if (currentQuantity <= 0) {
             return "Debe haber al menos un pasaje seleccionado.";
           }
 
-          // Validación 2: La suma total no puede superar los asientos disponibles
+          // ValidaciÃ³n 2: La suma total no puede superar los asientos disponibles
           if (currentQuantity > availableSeats) {
             return `La cantidad total de pasajes (${currentQuantity}) no puede ser mayor a los asientos disponibles (${availableSeats}).`;
           }
@@ -1299,7 +1346,8 @@ export default {
         const editedTicket =
           editedTickets.find(
             (t) =>
-              Number(t.trip_fare_id ?? t.tripFareId ?? t.id) === Number(ticket.trip_fare_id)
+              Number(t.trip_fare_id ?? t.tripFareId ?? t.id) ===
+              Number(ticket.trip_fare_id)
           ) || {};
         const mergedTicket = this.buildTicketTypeRecord(
           ticket,
@@ -1324,8 +1372,10 @@ export default {
     },
     totalSelected() {
       return (
-        this.normalizeEditedTickettypes().reduce((sum, t) => sum + (Number(t.cant ?? t.quantity) || 0), 0) ||
-        0
+        this.normalizeEditedTickettypes().reduce(
+          (sum, t) => sum + (Number(t.cant ?? t.quantity) || 0),
+          0
+        ) || 0
       );
     },
     selectedTripRecord() {
@@ -1344,6 +1394,32 @@ export default {
       }
 
       return this.getFareSegmentOptions(trip);
+    },
+    tripSaleRows() {
+      return this.buildTripSaleRows(this.trips);
+    },
+    filteredTripSaleRows() {
+      const query = (this.tripSearchText || "").toString().trim().toLowerCase();
+      if (!query) {
+        return this.tripSaleRows;
+      }
+
+      return this.tripSaleRows.filter((row) =>
+        [
+          row.name,
+          row.origin,
+          row.destination,
+          row.schedule,
+          row.arrival,
+          row.plate,
+          row.internal_number,
+          row.price,
+        ].some((value) =>
+          String(value ?? "")
+            .toLowerCase()
+            .includes(query)
+        )
+      );
     },
   },
   watch: {
@@ -1385,16 +1461,52 @@ export default {
       return perms.some((p) => this.permissions.includes(p));
     },
     getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del día actual
+      // Usamos medianoche (00:00:00) del dÃ­a actual
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al dÃ­a)
     },
     getTripInternalNumber(trip) {
       return trip?.internal_number ?? trip?.internalNumber ?? "No asignado";
     },
+    getTableRowItem(item) {
+      return item?.raw || item || {};
+    },
+    buildTripSaleRows(trips = []) {
+      const rows = [];
+
+      (Array.isArray(trips) ? trips : []).forEach((trip) => {
+        const tripFares = this.getTripFareSegments(trip);
+
+        tripFares.forEach((fare) => {
+          const range = this.getSegmentRange(fare, trip);
+          if (!range) {
+            return;
+          }
+
+          rows.push({
+            id: `${trip.id}-${fare.id}`,
+            trip_id: Number(trip.id),
+            fare_segment_id: Number(fare.id),
+            tripFareId: Number(fare.id),
+            name: trip.name || "No especificado",
+            origin: this.getRouteStopLabel(range.originStop),
+            destination: this.getRouteStopLabel(range.destinationStop),
+            schedule: trip.schedule || "-",
+            arrival: trip.arrival || "-",
+            plate: trip.plate || trip.vehicleName || "-",
+            internal_number: this.getTripInternalNumber(trip),
+            price: Number(fare.price ?? fare.base_price ?? 0) || 0,
+          });
+        });
+      });
+
+      return rows;
+    },
     getTicketFareSegment(ticket) {
-      return ticket?.fareSegment ?? ticket?.fare_segment ?? ticket?.fareSegmentData ?? null;
+      return (
+        ticket?.fareSegment ?? ticket?.fare_segment ?? ticket?.fareSegmentData ?? null
+      );
     },
     getFareSegmentRouteStopLabel(routeStop) {
       if (!routeStop) {
@@ -1413,6 +1525,9 @@ export default {
         routeStop.label ||
         "No especificado"
       );
+    },
+    getRouteStopLabel(routeStop) {
+      return this.getFareSegmentRouteStopLabel(routeStop);
     },
     getTicketRouteOriginLabel(ticket) {
       const fareSegment = this.getTicketFareSegment(ticket);
@@ -1487,37 +1602,295 @@ export default {
         ) || null
       );
     },
+    normalizeLocationText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+    },
+    getLocationSubtitle(location) {
+      if (!location) {
+        return "";
+      }
+
+      return [location.city, location.country].filter(Boolean).join(" · ") || "Ubicación";
+    },
+    findLocationIdByText(value) {
+      const normalizedValue = this.normalizeLocationText(value);
+      if (!normalizedValue) {
+        return null;
+      }
+
+      const match = (this.locations || []).find((location) => {
+        const candidates = [
+          location.address,
+          location.name,
+          location.city,
+          location.country,
+        ];
+        return candidates.some(
+          (candidate) => this.normalizeLocationText(candidate) === normalizedValue
+        );
+      });
+
+      return match?.id ?? null;
+    },
+    resetTripSelectionState(keepLocations = true) {
+      this.editedItem.trip_id = "";
+      this.editedItem.fare_segment_id = null;
+      this.editedItem.tickettypes = [];
+      this.selectedSeats = [];
+      this.reservedSeats = [];
+      this.availableSeats = [];
+      this.seatMap = [];
+      this.aviable = 0;
+      this.trips = [];
+
+      if (!keepLocations) {
+        this.selectedOriginLocationId = null;
+        this.selectedDestinationLocationId = null;
+      }
+    },
+    async loadTripLocations() {
+      this.tripSearchLoading = true;
+      this.data = {};
+      this.data.branch_id = Number(this.branch_id);
+      this.data.date = this.getChileDate();
+
+      try {
+        const result = await handleRequest({
+          endpoint: "get-trip-date",
+          method: "POST",
+          data: this.data,
+        });
+
+        if (result.success) {
+          this.locations = result.data?.locations || [];
+          this.promotions = this.normalizePromotions(result.data?.promotions || []);
+        } else {
+          this.locations = [];
+          this.promotions = [];
+        }
+      } catch (error) {
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
+        this.locations = [];
+      } finally {
+        this.tripSearchLoading = false;
+      }
+    },
+    async loadTripsBySelectedLocations(preserveTripId = null) {
+      if (!this.selectedOriginLocationId || !this.selectedDestinationLocationId) {
+        this.trips = [];
+        return;
+      }
+
+      this.tripSearchLoading = true;
+      const requestData = {
+        branch_id: Number(this.branch_id),
+        origin_id: Number(this.selectedOriginLocationId),
+        destination_id: Number(this.selectedDestinationLocationId),
+        date: this.getChileDate(),
+      };
+
+      try {
+        const result = await handleRequest({
+          endpoint: "get-trip-date-segment",
+          method: "POST",
+          data: requestData,
+        });
+
+        if (result.success) {
+          this.trips = this.filterTripsForReservation(
+            result.data?.trips || [],
+            requestData.date,
+            preserveTripId
+          );
+        } else {
+          this.trips = [];
+        }
+      } catch (error) {
+        this.trips = [];
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al buscar los viajes disponibles.",
+          3000
+        );
+      } finally {
+        this.tripSearchLoading = false;
+      }
+    },
+    async handleLocationSelectionChange() {
+      this.resetTripSelectionState(true);
+      this.step = 1;
+
+      if (this.selectedOriginLocationId && this.selectedDestinationLocationId) {
+        await this.loadTripsBySelectedLocations();
+      }
+    },
+    selectTripForSale(trip) {
+      if (!trip) {
+        return;
+      }
+
+      const tripId = Number(trip.trip_id ?? trip.tripId ?? trip.id);
+      const fareSegmentId =
+        Number(trip.fare_segment_id ?? trip.fareSegmentId ?? 0) || null;
+
+      this.editedItem.trip_id = tripId;
+      this.editedItem.fare_segment_id = fareSegmentId;
+      this.updateSeats(tripId);
+      this.step = 2;
+    },
+    nextStep() {
+      if (!this.editedItem.trip_id || !this.editedItem.fare_segment_id) {
+        this.showAlert("warning", "Seleccione un viaje y un tramo para continuar.", 2500);
+        return;
+      }
+
+      this.step = 2;
+    },
+    prevStep() {
+      this.editedItem.trip_id = null;
+      this.editedItem.fare_segment_id = null;
+      this.selectedSeats = [];
+      this.currentlyEditing = null;
+      this.step = 1;
+    },
     getTripStopsCollection(trip, key = "routeStops") {
       const value = trip?.[key];
       return Array.isArray(value) ? value.filter(Boolean) : [];
     },
-    getTripOriginStop(trip) {
-      const stops = this.getTripStopsCollection(trip, "routeStops");
-      if (!stops.length) {
+    getTripOriginStop(trip = this.selectedTripRecord) {
+      const routeStops = this.getTripRouteStops(trip);
+      if (routeStops.length) {
+        return (
+          [...routeStops].sort((a, b) => {
+            const orderA = Number(a?.stop_order ?? a?.stopOrder ?? a?.order ?? 0);
+            const orderB = Number(b?.stop_order ?? b?.stopOrder ?? b?.order ?? 0);
+            return orderA - orderB;
+          })[0] || null
+        );
+      }
+
+      const tripStops = this.getTripTripStops(trip);
+      if (!tripStops.length) {
         return null;
       }
 
-      return [...stops].sort((a, b) => Number(a.stop_order) - Number(b.stop_order))[0] || null;
+      const firstTripStop = [...tripStops].sort((a, b) => {
+        const orderA = Number(a?.stop_order ?? a?.stopOrder ?? a?.order ?? 0);
+        const orderB = Number(b?.stop_order ?? b?.stopOrder ?? b?.order ?? 0);
+        return orderA - orderB;
+      })[0];
+
+      return firstTripStop?.routeStop || firstTripStop?.route_stop || null;
     },
-    getTripDestinationStop(trip) {
-      const stops = this.getTripStopsCollection(trip, "routeStops");
-      if (!stops.length) {
+    getTripDestinationStop(trip = this.selectedTripRecord) {
+      const routeStops = this.getTripRouteStops(trip);
+      if (routeStops.length) {
+        return (
+          [...routeStops].sort((a, b) => {
+            const orderA = Number(a?.stop_order ?? a?.stopOrder ?? a?.order ?? 0);
+            const orderB = Number(b?.stop_order ?? b?.stopOrder ?? b?.order ?? 0);
+            return orderA - orderB;
+          })[routeStops.length - 1] || null
+        );
+      }
+
+      const tripStops = this.getTripTripStops(trip);
+      if (!tripStops.length) {
         return null;
       }
 
-      const sorted = [...stops].sort((a, b) => Number(a.stop_order) - Number(b.stop_order));
-      return sorted[sorted.length - 1] || null;
-    },
-    getRouteStopLabel(stop) {
-      if (!stop) return "";
+      const lastTripStop = [...tripStops].sort((a, b) => {
+        const orderA = Number(a?.stop_order ?? a?.stopOrder ?? a?.order ?? 0);
+        const orderB = Number(b?.stop_order ?? b?.stopOrder ?? b?.order ?? 0);
+        return orderA - orderB;
+      })[tripStops.length - 1];
 
-      return (
-        stop.location?.address ||
-        stop.locationName ||
-        stop.address ||
-        stop.name ||
-        "Sin nombre"
-      );
+      return lastTripStop?.routeStop || lastTripStop?.route_stop || null;
+    },
+    getTripFareSegments(trip = this.selectedTripRecord) {
+      const fromFareSegments = Array.isArray(trip?.fareSegments) ? trip.fareSegments : [];
+      const fromTripFares = Array.isArray(trip?.tripFares)
+        ? trip.tripFares
+            .map((fare) => {
+              const fareSegmentTicketType = fare?.fareSegmentTicketType || {};
+              const fareSegment =
+                fareSegmentTicketType.fareSegment || fare?.fareSegment || {};
+
+              const normalizedId = Number(
+                fareSegment?.id ??
+                  fare?.fare_segment_id ??
+                  fare?.fareSegmentTicketType?.fare_segment_id ??
+                  fareSegmentTicketType?.fareSegment?.id ??
+                  0
+              );
+
+              if (!normalizedId) {
+                return null;
+              }
+
+              return {
+                ...fareSegment,
+                id: normalizedId,
+                fare_segment_id: normalizedId,
+                origin_route_stop_id:
+                  fareSegment.origin_route_stop_id ??
+                  fareSegment.originRouteStop?.id ??
+                  fareSegmentTicketType.fareSegment?.origin_route_stop_id ??
+                  null,
+                destination_route_stop_id:
+                  fareSegment.destination_route_stop_id ??
+                  fareSegment.destinationRouteStop?.id ??
+                  fareSegmentTicketType.fareSegment?.destination_route_stop_id ??
+                  null,
+                originRouteStop:
+                  fareSegment.originRouteStop || fareSegment.origin_route_stop || null,
+                destinationRouteStop:
+                  fareSegment.destinationRouteStop ||
+                  fareSegment.destination_route_stop ||
+                  null,
+                base_price:
+                  Number(
+                    fare.price ??
+                      fare.base_price ??
+                      fareSegment.base_price ??
+                      fareSegmentTicketType.base_price ??
+                      0
+                  ) || 0,
+                price:
+                  Number(
+                    fare.price ??
+                      fare.base_price ??
+                      fareSegment.base_price ??
+                      fareSegmentTicketType.base_price ??
+                      0
+                  ) || 0,
+                active: fare.active ?? true,
+                fareSegmentTicketType,
+                fareSegment,
+              };
+            })
+            .filter(Boolean)
+        : [];
+
+      const uniqueSegments = new Map();
+      [...fromFareSegments, ...fromTripFares].forEach((segment) => {
+        const segmentId = Number(segment?.id);
+        if (!segmentId || uniqueSegments.has(segmentId)) {
+          return;
+        }
+
+        uniqueSegments.set(segmentId, segment);
+      });
+
+      return Array.from(uniqueSegments.values());
     },
     getFareSegmentOriginStop(segment, trip = this.selectedTripRecord) {
       if (!segment) {
@@ -1538,9 +1911,21 @@ export default {
         if (direct) {
           return direct;
         }
+
+        const tripStop = this.getTripTripStops(trip).find(
+          (stop) =>
+            Number(stop.route_stop_id ?? stop.routeStopId ?? stop.routeStop?.id) ===
+            Number(originId)
+        );
+
+        if (tripStop?.routeStop) {
+          return tripStop.routeStop;
+        }
       }
 
-      return segment.originRouteStop || segment.origin_route_stop || segment.originStop || null;
+      return (
+        segment.originRouteStop || segment.origin_route_stop || segment.originStop || null
+      );
     },
     getFareSegmentDestinationStop(segment, trip = this.selectedTripRecord) {
       if (!segment) {
@@ -1557,9 +1942,21 @@ export default {
         null;
 
       if (destinationId !== null && destinationId !== undefined) {
-        const direct = routeStops.find((stop) => Number(stop.id) === Number(destinationId));
+        const direct = routeStops.find(
+          (stop) => Number(stop.id) === Number(destinationId)
+        );
         if (direct) {
           return direct;
+        }
+
+        const tripStop = this.getTripTripStops(trip).find(
+          (stop) =>
+            Number(stop.route_stop_id ?? stop.routeStopId ?? stop.routeStop?.id) ===
+            Number(destinationId)
+        );
+
+        if (tripStop?.routeStop) {
+          return tripStop.routeStop;
         }
       }
 
@@ -1612,13 +2009,11 @@ export default {
 
       return (
         this.getTripTripStops(trip).find(
-          (stop) => Number(stop.route_stop_id ?? stop.routeStopId ?? stop.routeStop?.id) ===
+          (stop) =>
+            Number(stop.route_stop_id ?? stop.routeStopId ?? stop.routeStop?.id) ===
             Number(routeStopId)
         ) || null
       );
-    },
-    getTripFareSegments(trip = this.selectedTripRecord) {
-      return Array.isArray(trip?.fareSegments) ? trip.fareSegments.filter(Boolean) : [];
     },
     formatFareSegmentLabel(segment, trip = this.selectedTripRecord) {
       const range = this.getSegmentRange(segment, trip);
@@ -1626,7 +2021,7 @@ export default {
         return "Tramo sin datos";
       }
 
-      return `${this.getRouteStopLabel(range.originStop)} → ${this.getRouteStopLabel(
+      return `${this.getRouteStopLabel(range.originStop)} -> ${this.getRouteStopLabel(
         range.destinationStop
       )}`;
     },
@@ -1663,20 +2058,21 @@ export default {
       }
 
       const originTripStop = this.getTripStopForRouteStop(trip, range.originStop?.id);
-      const destinationTripStop = this.getTripStopForRouteStop(trip, range.destinationStop?.id);
+      const destinationTripStop = this.getTripStopForRouteStop(
+        trip,
+        range.destinationStop?.id
+      );
 
       const routeCanBoard = range.originStop?.allows_boarding !== false;
       const routeCanAlight = range.destinationStop?.allows_alighting !== false;
       const tripCanBoard = originTripStop ? originTripStop.can_board !== false : true;
-      const tripCanAlight = destinationTripStop ? destinationTripStop.can_alight !== false : true;
+      const tripCanAlight = destinationTripStop
+        ? destinationTripStop.can_alight !== false
+        : true;
 
       return routeCanBoard && routeCanAlight && tripCanBoard && tripCanAlight;
     },
     getFareSegmentOptions(trip = this.selectedTripRecord) {
-      const originStop = this.getTripOriginStop(trip);
-      const originOrder = this.getStopOrderFromStop(originStop);
-      const started = this.isTripStarted(trip);
-
       return this.getTripFareSegments(trip)
         .map((segment) => this.normalizeFareSegmentOption(segment, trip))
         .filter((segment) => {
@@ -1684,25 +2080,26 @@ export default {
             return false;
           }
 
-          if (segment.origin_order === null || segment.destination_order === null) {
-            return false;
-          }
-
           if (segment.origin_order >= segment.destination_order) {
             return false;
           }
 
-          if (originOrder === null) {
-            return true;
-          }
-
-          if (!started) {
-            return Number(segment.origin_order) === Number(originOrder);
-          }
-
-          return Number(segment.origin_order) > Number(originOrder);
+          return segment.active !== false;
         })
-        .sort((a, b) => Number(a.origin_order) - Number(b.origin_order));
+        .sort((a, b) => {
+          const originDiff = Number(a.origin_order) - Number(b.origin_order);
+          if (originDiff !== 0) {
+            return originDiff;
+          }
+
+          const destinationDiff =
+            Number(a.destination_order) - Number(b.destination_order);
+          if (destinationDiff !== 0) {
+            return destinationDiff;
+          }
+
+          return Number(a.id) - Number(b.id);
+        });
     },
     isTripStarted(trip = this.selectedTripRecord) {
       if (!trip?.date || !trip?.schedule) {
@@ -1743,7 +2140,8 @@ export default {
         trip.occupiedTickets,
       ];
 
-      const currentTicketId = this.editedIndex > -1 ? Number(this.editedItem?.id) || null : null;
+      const currentTicketId =
+        this.editedIndex > -1 ? Number(this.editedItem?.id) || null : null;
       const records = [];
 
       sources.forEach((source) => {
@@ -1752,7 +2150,10 @@ export default {
         }
 
         source.filter(Boolean).forEach((ticket) => {
-          if (currentTicketId !== null && Number(ticket?.id) === Number(currentTicketId)) {
+          if (
+            currentTicketId !== null &&
+            Number(ticket?.id) === Number(currentTicketId)
+          ) {
             return;
           }
 
@@ -1761,6 +2162,35 @@ export default {
       });
 
       return records;
+    },
+    getTicketFareSegmentId(ticket) {
+      if (!ticket) {
+        return null;
+      }
+
+      const directId =
+        ticket.fare_segment_id ??
+        ticket.fareSegmentId ??
+        ticket.fareSegment?.id ??
+        ticket.fare_segment?.id ??
+        null;
+
+      if (directId !== null && directId !== undefined) {
+        return Number(directId);
+      }
+
+      const ticketItems = Array.isArray(ticket.ticketItems) ? ticket.ticketItems : [];
+      const firstItem = ticketItems[0] || null;
+      const fareSegmentId =
+        firstItem?.tripFare?.fareSegmentTicketType?.fareSegment?.id ??
+        firstItem?.tripFare?.fareSegmentTicketType?.fare_segment_id ??
+        firstItem?.tripFare?.fareSegment?.id ??
+        firstItem?.tripFare?.fare_segment_id ??
+        null;
+
+      return fareSegmentId !== null && fareSegmentId !== undefined
+        ? Number(fareSegmentId)
+        : null;
     },
     getTripFullRange(trip = this.selectedTripRecord) {
       const originStop = this.getTripOriginStop(trip);
@@ -1788,12 +2218,7 @@ export default {
         return null;
       }
 
-      const segmentId =
-        ticket.fare_segment_id ??
-        ticket.fareSegmentId ??
-        ticket.fareSegment?.id ??
-        ticket.fare_segment?.id ??
-        null;
+      const segmentId = this.getTicketFareSegmentId(ticket);
 
       if (segmentId !== null && segmentId !== undefined) {
         const segment = this.getTripFareSegments(trip).find(
@@ -1839,7 +2264,12 @@ export default {
         trip
       );
     },
-    isTicketIntervalOverlapping(ticket, originOrder, destinationOrder, trip = this.selectedTripRecord) {
+    isTicketIntervalOverlapping(
+      ticket,
+      originOrder,
+      destinationOrder,
+      trip = this.selectedTripRecord
+    ) {
       const range = this.getTicketSegmentRange(ticket, trip);
       if (!range) {
         return false;
@@ -1850,7 +2280,10 @@ export default {
         Number(range.destinationOrder) > Number(originOrder)
       );
     },
-    getOccupiedSeatsForSelection(trip = this.selectedTripRecord, fareSegment = this.selectedFareSegmentRecord) {
+    getOccupiedSeatsForSelection(
+      trip = this.selectedTripRecord,
+      fareSegment = this.selectedFareSegmentRecord
+    ) {
       const baseReserved = this.normalizeSeatNumbers(
         trip?.reservedSeats || trip?.occupiedSeats || trip?.reserved_seats || []
       );
@@ -1863,8 +2296,36 @@ export default {
         return [...new Set(baseReserved)];
       }
 
-      const occupied = new Set(baseReserved);
       const occupancyRecords = this.getTripOccupancyRecords(trip);
+
+      if (fareSegment) {
+        const occupied = new Set();
+
+        occupancyRecords.forEach((ticket) => {
+          if (
+            !this.isTicketIntervalOverlapping(
+              ticket,
+              range.originOrder,
+              range.destinationOrder,
+              trip
+            )
+          ) {
+            return;
+          }
+
+          this.normalizeSeatNumbers(
+            ticket?.seats || ticket?.seatMap || ticket?.selectedSeats
+          ).forEach((seat) => occupied.add(seat));
+        });
+
+        return [...occupied];
+      }
+
+      if (occupancyRecords.length === 0) {
+        return [...new Set(baseReserved)];
+      }
+
+      const occupied = new Set(baseReserved);
 
       occupancyRecords.forEach((ticket) => {
         if (
@@ -1878,15 +2339,15 @@ export default {
           return;
         }
 
-        this.normalizeSeatNumbers(ticket?.seats || ticket?.seatMap || ticket?.selectedSeats).forEach(
-          (seat) => occupied.add(seat)
-        );
+        this.normalizeSeatNumbers(
+          ticket?.seats || ticket?.seatMap || ticket?.selectedSeats
+        ).forEach((seat) => occupied.add(seat));
       });
 
       return [...occupied];
     },
     formatNumber(value) {
-      // Verificar si el valor es 0, null, undefined o no es un número
+      // Verificar si el valor es 0, null, undefined o no es un nÃºmero
       if (value === 0 || value === null || value === undefined || isNaN(value)) {
         return "0.0";
       }
@@ -1901,7 +2362,7 @@ export default {
       // Primero, redondea el valor a dos decimales
       value = Math.round((value + Number.EPSILON) * 100) / 100;
 
-      // Convierte el valor a cadena con formato de número local (en-US)
+      // Convierte el valor a cadena con formato de nÃºmero local (en-US)
       let formattedValue = value.toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -1911,38 +2372,6 @@ export default {
     },
     getSelectedTripBasePrice() {
       return Number(this.editedItem.price) || 0;
-    },
-    getTicketTypeAdjustment(ticket, basePrice = this.getSelectedTripBasePrice()) {
-      const normalizedBasePrice = Number(basePrice) || 0;
-      const adjustmentType =
-        ticket.adjustment_type ?? ticket.adjustmentType ?? "descuento";
-      const valueType = ticket.value_type ?? ticket.valueType ?? "monto";
-      const adjustmentValue =
-        Number(ticket.adjustment_value ?? ticket.adjustmentValue ?? 0) || 0;
-      const adjustmentAmount =
-        valueType === "porcentaje"
-          ? (normalizedBasePrice * adjustmentValue) / 100
-          : adjustmentValue;
-      const signedAdjustment =
-        adjustmentType === "recargo" ? adjustmentAmount : -adjustmentAmount;
-      const unitPrice = normalizedBasePrice + signedAdjustment;
-
-      return {
-        adjustment_type: adjustmentType,
-        adjustmentType: adjustmentType,
-        value_type: valueType,
-        valueType: valueType,
-        adjustment_value: adjustmentValue,
-        adjustmentValue: adjustmentValue,
-        base_price: normalizedBasePrice,
-        basePrice: normalizedBasePrice,
-        adjustment_amount: adjustmentAmount,
-        adjustmentAmount,
-        signed_adjustment: signedAdjustment,
-        signedAdjustment,
-        unit_price: unitPrice,
-        unitPrice,
-      };
     },
     getPromotionAdjustment(ticket, promotion, basePrice = null) {
       const unitPrice =
@@ -1972,12 +2401,13 @@ export default {
       };
     },
     normalizePromotions(promotions = []) {
-      return (Array.isArray(promotions) ? promotions : Object.values(promotions || {})).map(
-        (promotion) => ({
-          ...promotion,
-          discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
-        })
-      );
+      return (Array.isArray(promotions)
+        ? promotions
+        : Object.values(promotions || {})
+      ).map((promotion) => ({
+        ...promotion,
+        discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
+      }));
     },
     getPromotionDiscountType(promotion) {
       return (
@@ -2001,7 +2431,9 @@ export default {
       const discountType = this.getPromotionDiscountType(promotion);
       const value = Number(promotion?.percentage) || 0;
       const formattedValue = value.toLocaleString("es-CL");
-      return discountType === "porcentaje" ? `${formattedValue}%` : `${formattedValue} CLP`;
+      return discountType === "porcentaje"
+        ? `${formattedValue}%`
+        : `${formattedValue} CLP`;
     },
     getTicketTypePayableAmount(ticket) {
       const cant = Math.max(0, Number(ticket?.cant) || 0);
@@ -2011,7 +2443,8 @@ export default {
 
       return Math.max(
         0,
-        Number(ticket.line_total ?? ticket.lineTotal ?? ticket.base_price * cant ?? 0) || 0
+        Number(ticket.line_total ?? ticket.lineTotal ?? ticket.base_price * cant ?? 0) ||
+          0
       );
     },
     async showBranches() {
@@ -2028,7 +2461,7 @@ export default {
           this.branch_id = this.branches[0].id;
         } else {
           this.mostrarFila = false;
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.branches = [];
         }
       } catch (error) {
@@ -2062,7 +2495,7 @@ export default {
       return this.paleteColors.green; // Asiento disponible (verde)
     },
     isSeatAvailable(seat) {
-      // Verificar que sea un asiento válido, no reservado y no sea pasillo
+      // Verificar que sea un asiento vÃ¡lido, no reservado y no sea pasillo
       return (
         seat.type === "seat" && seat.label && !this.isSeatReserved(Number(seat.label))
       );
@@ -2097,8 +2530,13 @@ export default {
       this.editedItem.price = 0;
       this.seats = Number(selectedTrip.seats) || 0;
       this.seatMap = Array.isArray(selectedTrip.seatMap) ? selectedTrip.seatMap : [];
-      const selectedFareSegment = hasSelectedSegment ? this.selectedFareSegmentRecord : null;
-      this.reservedSeats = this.getOccupiedSeatsForSelection(selectedTrip, selectedFareSegment);
+      const selectedFareSegment = hasSelectedSegment
+        ? this.selectedFareSegmentRecord
+        : null;
+      this.reservedSeats = this.getOccupiedSeatsForSelection(
+        selectedTrip,
+        selectedFareSegment
+      );
 
       this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
       this.aviable = this.availableSeats.length;
@@ -2122,14 +2560,17 @@ export default {
       const selectedFareSegment = this.selectedFareSegmentRecord;
       this.editedItem.price = 0;
       this.selectedSeats = [];
-      this.reservedSeats = this.getOccupiedSeatsForSelection(selectedTrip, selectedFareSegment);
+      this.reservedSeats = this.getOccupiedSeatsForSelection(
+        selectedTrip,
+        selectedFareSegment
+      );
       this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
       this.aviable = this.availableSeats.length;
       this.recalculateTicketTotals();
     },
     generateAvailableSeats(seatMap, reservedSeats) {
       const availableSeats = [];
-      const reservedNumbers = reservedSeats.map(Number); // Convertir a números
+      const reservedNumbers = reservedSeats.map(Number); // Convertir a nÃºmeros
 
       seatMap.forEach((row) => {
         row.forEach((seat) => {
@@ -2148,13 +2589,13 @@ export default {
       return this.reservedSeats.includes(Number(seatNumber));
     },
     toggleSeat(seat) {
-      // Validación adicional de seguridad
+      // ValidaciÃ³n adicional de seguridad
       if (!this.isSeatAvailable(seat)) return;
 
       const seatNumber = Number(seat.label);
       const index = this.selectedSeats.indexOf(seatNumber);
 
-      // Limitar la selección al quantity definido
+      // Limitar la selecciÃ³n al quantity definido
       if (index === -1) {
         if (this.selectedSeats.length >= this.editedItem.quantity) {
           this.showAlert(
@@ -2169,7 +2610,7 @@ export default {
         this.selectedSeats.splice(index, 1);
       }
 
-      // Forzar actualización si es necesario
+      // Forzar actualizaciÃ³n si es necesario
       this.$forceUpdate();
     },
     calculateTotal() {
@@ -2199,44 +2640,33 @@ export default {
       const [h, m] = timeStr.split(":").map(Number);
       return h * 60 + m;
     },
+    getChileDateTime() {
+      return new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "America/Santiago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(new Date());
+    },
     filterTripsForReservation(trips, currentDate, currentTripId = null) {
-      const horaActualChile = this.obtenerHoraChile(); // Ej: '14:25'
-      const ahoraMinutos = this.timeToMinutes(horaActualChile); // Ej: 865
+      const nowChile = this.getChileDateTime();
 
       return trips.filter((trip) => {
-        // ✅ 1. Siempre incluir el viaje que se está editando
-        if (currentTripId !== null && trip.id === currentTripId) {
+        // âœ… 1. Siempre incluir el viaje que se estÃ¡ editando
+        if (currentTripId !== null && Number(trip.id) === Number(currentTripId)) {
           return true;
         }
 
-        // ❌ 2. Excluir si no tiene fecha o schedule
-        if (!trip.date || !trip.schedule) {
-          return false;
-        }
-
-        // 📅 Comparar fechas: asumimos formato 'YYYY-MM-DD'
-        const esHoy = trip.date === currentDate;
-        const esFuturo = trip.date > currentDate;
-
-        // ❌ Si es una fecha pasada (menor que hoy), excluir
-        if (trip.date < currentDate) {
-          return false;
-        }
-
-        // ✅ Si es futuro, incluir sin importar la hora
-        if (esFuturo) {
+        if (!trip?.arrival) {
           return true;
         }
 
-        // 🕒 Si es HOY, verificar que la hora de salida aún no ha pasado
-        if (esHoy) {
-          const scheduleMinutos = this.timeToMinutes(trip.schedule);
-          // Incluir solo si la hora de salida es >= hora actual
-          return scheduleMinutos >= ahoraMinutos;
-        }
-
-        // Por defecto, excluir (esto no debería ocurrir si las fechas son válidas)
-        return false;
+        const tripArrival = String(trip.arrival).slice(0, 19).replace("T", " ");
+        return tripArrival > nowChile;
       });
     },
     getChileDate() {
@@ -2247,38 +2677,14 @@ export default {
     async showAdd() {
       this.close();
       await this.$nextTick();
+      this.step = 1;
       this.editedItem.method = "Efectivo";
-      this.editedItem.fare_segment_id = null;
-      this.aviable = "";
       this.normal = "";
       this.selectedPromotion = "";
-      this.data = {};
-      this.seatMap = [];
-      this.data.branch_id = Number(this.branch_id);
-      this.data.date = this.dateFormattedSearch;
-      const formattedDate = this.dateFormattedSearch;
+      this.resetTripSelectionState(true);
       try {
-        const result = await handleRequest({
-          endpoint: "get-trip-date",
-          method: "POST",
-          data: this.data,
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.trips = this.filterTripsForReservation(
-            result.data.allTrips || [],
-            formattedDate,
-            null
-          );
-          this.promotions = this.normalizePromotions(result.data?.promotions || []);
-          this.tickettypes = [];
-        } else {
-          // Si no hay datos, asignamos un array vacío
-          this.trips = [];
-          this.promotions = [];
-          this.tickettypes = [];
-        }
+        await this.loadTripLocations();
+        this.tickettypes = [];
       } catch (error) {
         this.showAlert(
           "error",
@@ -2295,7 +2701,12 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
+      this.step = 1;
+      this.tripSearchText = "";
       this.selectedSeats = [];
+      this.selectedOriginLocationId = null;
+      this.selectedDestinationLocationId = null;
+      this.trips = [];
       this.editedIndex = -1;
       this.reservedSeats = [];
       this.availableSeats = [];
@@ -2334,7 +2745,7 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.tickets = result.data?.tickets || [];
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.tickets = [];
         }
       } catch (error) {
@@ -2350,7 +2761,7 @@ export default {
       }
     },
     areSeatsDifferent(originalSeats, editedSeats) {
-      // Convertir ambos arrays en cadenas de texto para una comparación profunda
+      // Convertir ambos arrays en cadenas de texto para una comparaciÃ³n profunda
       const originalSeatsString = JSON.stringify(originalSeats);
       const editedSeatsString = JSON.stringify(editedSeats);
       // Comparar las cadenas generadas
@@ -2381,7 +2792,10 @@ export default {
           quantity: Number(item.quantity) || 0,
         }));
 
-      return JSON.stringify(normalize(originalItems)) !== JSON.stringify(normalize(editedItems));
+      return (
+        JSON.stringify(normalize(originalItems)) !==
+        JSON.stringify(normalize(editedItems))
+      );
     },
     async save() {
       this.loading = true;
@@ -2439,9 +2853,9 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
-              // Aquí llamamos a la función de impresión con los datos del ticket
+              // AquÃ­ llamamos a la funciÃ³n de impresiÃ³n con los datos del ticket
               if (result.data && result.data.ticket) {
                 console.log("Ticket generado:", result.data.ticket);
                 this.currentTicket = {};
@@ -2457,7 +2871,7 @@ export default {
 
                 // Si necesitas la branch en this para usarla en el template
                 this.selectedBranch = branchEncontrada || null;
-                // Genera el QR después de que el componente se haya renderizado
+                // Genera el QR despuÃ©s de que el componente se haya renderizado
                 await this.$nextTick();
                 await this.generateQRCode();
                 //this.printTicket(result.data.ticket);
@@ -2472,7 +2886,7 @@ export default {
               this.editedIndex = -1;
             }
           } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2536,7 +2950,7 @@ export default {
               data: updatedFields,
             });
 
-            // Manejo de la respuesta según el resultado
+            // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -2548,7 +2962,7 @@ export default {
             }
           } catch (error) {
             this.editedIndex = -1;
-            // Este bloque captura errores inesperados fuera del manejo estándar
+            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2617,7 +3031,7 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.currentTicket = result.data?.ticket || {};
         } else {
-          // Si no hay datos, asignamos un array vacío
+          // Si no hay datos, asignamos un array vacÃ­o
           this.currentTicket = {};
         }
       } catch (error) {
@@ -2637,7 +3051,7 @@ export default {
 
         // Si necesitas la branch en this para usarla en el template
         this.selectedBranch = branchEncontrada || null;
-        // Genera el QR después de que el componente se haya renderizado
+        // Genera el QR despuÃ©s de que el componente se haya renderizado
         await this.$nextTick();
         await this.generateQRCode();
       }
@@ -2646,7 +3060,7 @@ export default {
       try {
         const printWindow = window.open("", "_blank");
 
-        // Generar ambos códigos QR
+        // Generar ambos cÃ³digos QR
         let qrImageOriginal = "";
         let qrImageControl = "";
         const qrData = this.currentTicket.qr || this.currentTicket.id;
@@ -2768,7 +3182,7 @@ export default {
             </head>
             <body>
                 <div class="ticket-container">
-                <!-- Encabezado con logo e información de sucursal -->
+                <!-- Encabezado con logo e informaciÃ³n de sucursal -->
                 <div class="header">
                     ${
                       this.selectedBranch?.image
@@ -2860,7 +3274,7 @@ export default {
                 
                 <br>
                 
-                <!-- Línea divisoria -->
+                <!-- LÃ­nea divisoria -->
                 <div class="dashed-divider"></div>
                 
                 <!-- Copia de control -->
@@ -2917,7 +3331,7 @@ export default {
                 
                 <br>
                 
-                <!-- Nota de impresión -->
+                <!-- Nota de impresiÃ³n -->
                 
                 
                 ${
@@ -2952,45 +3366,32 @@ export default {
     async editItem(item) {
       this.editedIndex = 1;
       this.aviable = "";
-      //this.originalItem = Object.assign({}, item);
-      //this.editedItem = Object.assign({}, item);
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
-      this.editedItem.fare_segment_id = item.fare_segment_id ?? item.fareSegmentId ?? null;
-      this.originalItem.tickettypes = _.cloneDeep(item.ticketItems || item.tickettypes || []);
-      this.editedItem.tickettypes = _.cloneDeep(item.ticketItems || item.tickettypes || []);
+      this.editedItem.fare_segment_id =
+        item.fare_segment_id ?? item.fareSegmentId ?? null;
+      this.originalItem.tickettypes = _.cloneDeep(
+        item.ticketItems || item.tickettypes || []
+      );
+      this.editedItem.tickettypes = _.cloneDeep(
+        item.ticketItems || item.tickettypes || []
+      );
       this.selectedSeats = item.seats;
-      this.data = {};
-      this.data.branch_id = this.branch_id;
-      this.data.ticket_id = item.id;
-
-      // Inicializar las variables de promoción
+      this.selectedOriginLocationId = null;
+      this.selectedDestinationLocationId = null;
       this.selectedPromotion = null;
-
-      const formattedDate = this.dateFormattedSearch;
-      this.data.date = this.dateFormattedSearch;
       try {
-        const result = await handleRequest({
-          endpoint: "get-trip-date",
-          method: "POST",
-          data: this.data,
-        });
+        await this.loadTripLocations();
+        this.tickettypes = [];
 
-        if (result.success) {
-          const currentTripId = item.trip_id; // El viaje al que pertenece este ticket
+        const originLabel = item.tripOrigin || item.origin || item.origin_label || "";
+        const destinationLabel =
+          item.tripDestination || item.destination || item.destination_label || "";
+        this.selectedOriginLocationId = this.findLocationIdByText(originLabel);
+        this.selectedDestinationLocationId = this.findLocationIdByText(destinationLabel);
 
-          this.trips = this.filterTripsForReservation(
-            result.data.allTrips || [],
-            formattedDate,
-            currentTripId
-          );
-          this.promotions = this.normalizePromotions(result.data?.promotions || []);
-          this.tickettypes = [];
-        } else {
-          // Si no hay datos, asignamos un array vacío
-          this.trips = [];
-          this.promotions = [];
-          this.tickettypes = [];
+        if (this.selectedOriginLocationId && this.selectedDestinationLocationId) {
+          await this.loadTripsBySelectedLocations(item.trip_id);
         }
       } catch (error) {
         this.showAlert(
@@ -3000,6 +3401,7 @@ export default {
         );
       } finally {
         this.updateSeats(item.trip_id, true);
+        this.step = this.editedItem.trip_id ? 2 : 1;
         this.dialog = true;
       }
     },
@@ -3026,7 +3428,7 @@ export default {
           data: request,
         });
 
-        // Manejo de la respuesta según el resultado
+        // Manejo de la respuesta segÃƒÂºn el resultado
         if (result.success) {
           this.showAlert("success", result.message, 3000);
           this.initialize();
@@ -3035,7 +3437,7 @@ export default {
           this.loading = false;
         }
       } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estándar
+        // Este bloque captura errores inesperados fuera del manejo estÃƒÂ¡ndar
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -3093,6 +3495,10 @@ export default {
       const source = Array.isArray(trip?.tripFares) ? trip.tripFares : [];
       const selectedFareSegmentId = Number(this.editedItem.fare_segment_id || 0);
 
+      if (!trip || !selectedFareSegmentId) {
+        return [];
+      }
+
       return source
         .filter((fare) => {
           const fareSegmentId = Number(
@@ -3103,21 +3509,23 @@ export default {
               0
           );
 
-          if (!selectedFareSegmentId) {
-            return false;
-          }
-
           return fareSegmentId === selectedFareSegmentId;
         })
         .map((fare) => this.normalizeTripFareDefinition(fare))
-        .filter((item) => item && item.trip_fare_id !== undefined && item.trip_fare_id !== null);
+        .filter(
+          (item) => item && item.trip_fare_id !== undefined && item.trip_fare_id !== null
+        );
     },
     normalizeTripFareDefinition(fare = {}) {
       const fareSegmentTicketType = fare.fareSegmentTicketType || {};
       const fareSegment = fareSegmentTicketType.fareSegment || fare.fareSegment || {};
-      const originStop = fareSegment.originRouteStop || fareSegment.origin_route_stop || null;
-      const destinationStop =
-        fareSegment.destinationRouteStop || fareSegment.destination_route_stop || null;
+      const originRouteStop =
+        fareSegment.originRouteStop ?? fareSegment.origin_route_stop ?? null;
+      const destinationRouteStop =
+        fareSegment.destinationRouteStop ?? fareSegment.destination_route_stop ?? null;
+      const price =
+        Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) ||
+        0;
 
       return {
         id: fare.id,
@@ -3134,16 +3542,11 @@ export default {
           "Tipo de pasajero",
         ticketTypeDescription:
           fareSegmentTicketType.ticketTypeDescription || fare.ticketTypeDescription || "",
-        base_price: Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) || 0,
-        price: Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) || 0,
+        base_price: price,
+        price,
         active: fare.active ?? true,
-        origin_label:
-          this.getFareSegmentRouteStopLabel(originStop?.location || originStop || fareSegment.originRouteStop) ||
-          "-",
-        destination_label:
-          this.getFareSegmentRouteStopLabel(
-            destinationStop?.location || destinationStop || fareSegment.destinationRouteStop
-          ) || "-",
+        origin_label: this.getFareSegmentRouteStopLabel(originRouteStop) || "-",
+        destination_label: this.getFareSegmentRouteStopLabel(destinationRouteStop) || "-",
         fareSegment,
         fareSegmentTicketType,
         name:
@@ -3183,12 +3586,18 @@ export default {
       return ticket ? Number(ticket.cant ?? ticket.quantity) || 0 : 0;
     },
     getMaxQuantity(ticket) {
-      return this.availableSeats.length - (this.totalSelected - this.getCurrentQuantity(ticket.trip_fare_id || ticket.id));
+      return (
+        this.availableSeats.length -
+        (this.totalSelected - this.getCurrentQuantity(ticket.trip_fare_id || ticket.id))
+      );
     },
     getTicketTypeDefinition(ticketOrId) {
       const ticketId =
-        typeof ticketOrId === "object" ? ticketOrId?.trip_fare_id ?? ticketOrId?.id : ticketOrId;
-      const currentTicket = typeof ticketOrId === "object" && ticketOrId ? ticketOrId : {};
+        typeof ticketOrId === "object"
+          ? ticketOrId?.trip_fare_id ?? ticketOrId?.id
+          : ticketOrId;
+      const currentTicket =
+        typeof ticketOrId === "object" && ticketOrId ? ticketOrId : {};
       const sourceTicket =
         this.getTicketTypeDefinitions().find(
           (ticket) => Number(ticket.trip_fare_id) === Number(ticketId)
@@ -3231,7 +3640,8 @@ export default {
         tripFareId: definition.trip_fare_id ?? definition.id ?? null,
         fare_segment_ticket_type_id: definition.fare_segment_ticket_type_id ?? null,
         ticketTypeName: definition.ticketTypeName || definition.name || "",
-        ticketTypeDescription: definition.ticketTypeDescription || definition.description || "",
+        ticketTypeDescription:
+          definition.ticketTypeDescription || definition.description || "",
         name: definition.name || definition.ticketTypeName || "",
         description: definition.description || definition.ticketTypeDescription || "",
         cant,
@@ -3239,12 +3649,8 @@ export default {
         base_price: basePrice,
         basePrice,
         price: basePrice,
-        unit_price: basePrice,
-        unitPrice: basePrice,
         line_total: lineTotal,
         lineTotal,
-        line_subtotal: lineTotal,
-        lineSubtotal: lineTotal,
         total: lineTotal,
         origin_label: definition.origin_label || "-",
         destination_label: definition.destination_label || "-",
@@ -3587,6 +3993,145 @@ export default {
   min-width: 140px;
 }
 
+.trip-sale-sheet {
+  overflow: hidden;
+}
+
+.trip-sale-subtitle {
+  opacity: 0.88;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.trip-sale-panel {
+  border-color: #d9e1ef;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.trip-sale-panel__header,
+.trip-sale-panel__row {
+  display: grid;
+  grid-template-columns: 1.85fr 0.78fr 0.9fr 1fr 0.72fr 0.72fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.trip-sale-panel__header {
+  padding: 6px 14px;
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef3fb 100%);
+  border-bottom: 1px solid #d9e1ef;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2a44;
+}
+
+.trip-sale-panel__row {
+  padding: 6px 14px;
+  border-bottom: 1px solid #e5eaf2;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.trip-sale-panel__row:last-child {
+  border-bottom: none;
+}
+
+.trip-sale-panel__row:hover {
+  border-color: rgba(25, 118, 210, 0.28);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.08);
+  background: #fafcff;
+}
+
+.trip-sale-panel__row--selected {
+  border-color: rgba(25, 118, 210, 0.42);
+  background: rgba(25, 118, 210, 0.04);
+}
+
+.trip-sale-col {
+  min-width: 0;
+}
+
+.trip-sale-col--route {
+  min-width: 0;
+}
+
+.trip-sale-col--schedule,
+.trip-sale-col--arrival,
+.trip-sale-col--vehicle,
+.trip-sale-col--price,
+.trip-sale-col--actions {
+  min-width: 0;
+}
+
+.trip-sale-col--price {
+  max-width: 130px;
+}
+
+.trip-sale-col--actions {
+  justify-self: end;
+}
+
+.trip-sale-summary {
+  overflow: hidden;
+  background: #fff;
+}
+
+.trip-sale-summary__header {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.trip-sale-summary__body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.trip-sale-summary__item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.trip-sale-summary__label {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  display: block;
+}
+
+.trip-sale-summary__value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+  min-width: 0;
+  line-height: 1.2;
+  display: block;
+}
+
+.trip-sale-row-meta {
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+.trip-sale-panel .v-chip {
+  height: 28px;
+}
+
+@media (max-width: 960px) {
+  .trip-sale-summary__body {
+    grid-template-columns: 1fr;
+  }
+}
+
 .v-icon {
   transition: all 0.3s ease;
 }
@@ -3602,7 +4147,7 @@ export default {
   transition: all 0.2s ease;
 }
 
-/* Tamaño moderado para iconos */
+/* TamaÃ±o moderado para iconos */
 .seat-icon,
 .aisle-icon {
   font-size: 36px !important;
@@ -3610,7 +4155,7 @@ export default {
   height: 100%;
 }
 
-/* Número de asiento mejor posicionado y visible */
+/* NÃºmero de asiento mejor posicionado y visible */
 .seat-number {
   position: absolute;
   top: 35%;
@@ -3658,14 +4203,14 @@ export default {
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
 
-/* Números más oscuros en asientos claros */
+/* NÃºmeros mÃ¡s oscuros en asientos claros */
 .seat-available .seat-number,
 .seat-available .aisle-indicator,
 .seat-aisle .aisle-indicator {
   color: #333;
 }
 
-/* Números claros en asientos oscuros */
+/* NÃºmeros claros en asientos oscuros */
 .seat-selected .seat-number,
 .seat-reserved .seat-number {
   color: #333;
@@ -3713,9 +4258,9 @@ export default {
     font-size: 12px;
   }
 
-  /* Ajuste fino para móviles */
+  /* Ajuste fino para mÃ³viles */
   .seat-number {
-    top: 28%; /* Puedes ajustar este valor según necesidad */
+    top: 28%; /* Puedes ajustar este valor segÃºn necesidad */
   }
 }
 .icono-concavo {
@@ -3726,7 +4271,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
+  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -3748,7 +4293,7 @@ export default {
   text-overflow: ellipsis;
 }
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
+/* MÃ¡xima especificidad para ocultar el thead */
 .v-data-table > .v-data-table__wrapper > table > thead,
 .v-data-table > .v-data-table__wrapper > .v-table > table > thead,
 .v-data-table__content > table > thead,
@@ -3768,6 +4313,3 @@ table.v-table > thead,
   display: none !important;
 }
 </style>
-
-
-
