@@ -11,148 +11,129 @@
   >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card
-    class="d-flex align-center pa-3"
-    elevation="0"
-    style="background-color: #f9f9f9"
-  >
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-ticket</v-icon>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-ticket</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Tickets</div>
-      <div class="text-body-2 text-grey">Gestionar Tickets</div>
+    <div>
+      <div class="busgo-page-title">Tickets</div>
+      <div class="busgo-page-subtitle">Gestionar tickets vendidos</div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
     <v-btn
-      class="text-subtitle-1 ml-12"
       :color="paleteColors.primary"
-      variant="tonal"
-      elevation="2"
-      prepend-icon="mdi-plus-circle"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
       @click="showAdd()"
     >
       Vender ticket
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%">
-    <v-card flat>
-      <!-- Barra superior: selecciÃ³n de sucursal + botÃ³n buscar + bÃºsqueda global -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- TÃ­tulo -->
-        <div class="text-subtitle-1 font-weight-bold">Listado deTickets Vendidos</div>
 
-        <!-- Spacer (solo visible en md+) -->
-        <v-spacer class="d-none d-md-block"></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">
+            Listado de tickets vendidos
+          </div>
 
-        <!-- Grupo: Autocomplete + BotÃ³n buscar -->
-        <div class="d-flex align-center gap-2 flex-grow-1" style="max-width: 25%">
-          <!-- Autocomplete de sucursales (mismo estilo que el original) -->
-          <v-autocomplete
-            :no-data-text="'No hay datos disponibles'"
-            v-model="branch_id"
-            v-if="mostrarFila"
-            :items="branches"
-            label="Seleccione una Sucursal"
-            prepend-inner-icon="mdi-store"
-            item-title="name"
-            class="mr-1"
-            item-value="id"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-            :rules="selectRules"
-            density="compact"
-            @update:modelValue="initialize"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item
-                v-bind="props"
-                :prepend-avatar="`${this.$axios.defaults.baseURL}images/${
-                  getTableRowItem(item).image
-                }`"
-              >
-              </v-list-item>
-            </template>
-          </v-autocomplete>
-
-          <!-- BotÃ³n de bÃºsqueda (actualizar datos) 
-          <v-btn icon @click="initialize" :color="paleteColors.primary" density="comfortable" :disabled="!branch_id"
-            class="mt-2 mt-md-0 mr-5 ml-1">
-            <v-icon>mdi-magnify</v-icon>
-          </v-btn>-->
+          <div class="busgo-card-subtitle">
+            Consulta ventas, rutas, asientos, métodos de pago y reimpresiones.
+          </div>
         </div>
+      </div>
 
-        <div class="flex-grow-1 mr-1" style="max-width: 15%">
-          <v-menu
-            v-model="menu2"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="290px"
-          >
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :modelValue="dateFormattedSearch"
-                prepend-inner-icon="mdi-calendar"
-                label="Fecha"
-                density="compact"
-                variant="solo-filled"
-                hide-details
-                single-line
-                flat
-              ></v-text-field>
-            </template>
-            <v-locale-provider locale="es">
-              <v-date-picker
-                header="Calendario"
-                title="Seleccione la fecha"
-                :color="paleteColors.primary"
-                :modelValue="input2"
-                @update:model-value="updateDateSearch"
-                format="yyyy-MM-dd"
-                :min="new Date().toISOString().split('T')[0]"
-              ></v-date-picker>
-            </v-locale-provider>
-          </v-menu>
-        </div>
+      <div class="ticket-toolbar px-6 pb-4">
+        <v-autocomplete
+          v-if="mostrarFila"
+          :no-data-text="'No hay datos disponibles'"
+          v-model="branch_id"
+          :items="branches"
+          placeholder="Seleccione una sucursal"
+          prepend-inner-icon="mdi-store"
+          item-title="name"
+          item-value="id"
+          variant="outlined"
+          hide-details
+          single-line
+          density="compact"
+          class="ticket-filter"
+          :rules="selectRules"
+          @update:modelValue="initialize"
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`"
+            />
+          </template>
+        </v-autocomplete>
 
-        <!-- Campo de bÃºsqueda global -->
-        <div class="flex-grow-1" style="max-width: 20%">
-          <v-text-field
-            v-model="search"
-            density="compact"
-            label="Buscar ticket"
-            prepend-inner-icon="mdi-magnify"
-            variant="solo-filled"
-            hide-details
-            single-line
-            flat
-          ></v-text-field>
-        </div>
-      </v-card-title>
+        <v-menu
+          v-model="menu2"
+          :close-on-content-click="false"
+          :nudge-right="40"
+          transition="scale-transition"
+          offset-y
+          min-width="290px"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-bind="props"
+              :modelValue="dateFormattedSearch"
+              prepend-inner-icon="mdi-calendar"
+              placeholder="Fecha"
+              density="compact"
+              variant="outlined"
+              hide-details
+              single-line
+              class="ticket-date-filter"
+            />
+          </template>
 
-      <!-- Separador -->
-      <v-divider class="my-2"></v-divider>
+          <v-locale-provider locale="es">
+            <v-date-picker
+              header="Calendario"
+              title="Seleccione la fecha"
+              :color="paleteColors.primary"
+              :modelValue="input2"
+              @update:model-value="updateDateSearch"
+              format="yyyy-MM-dd"
+              :min="new Date().toISOString().split('T')[0]"
+            />
+          </v-locale-provider>
+        </v-menu>
 
-      <!-- Tabla de viajes con filas personalizadas -->
+        <v-spacer />
+
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar ticket..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="ticket-search"
+        />
+      </div>
+
       <v-data-table
         :headers="headers"
         :items="tickets"
@@ -162,280 +143,222 @@
         :loading="loading"
         loading-text="Cargando datos..."
         :hide-default-header="true"
-        class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent"
+        class="busgo-table"
       >
-        <template v-slot:top>
-          <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card
-            flat
-            color="blue-grey-lighten-5"
-            class="mb-2 mx-1 rounded-lg"
-            elevation="1"
-            style="
-              border: 1px solid #eceff1;
-              height: 40px;
-              min-height: 40px;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <v-card-text
-              class="d-flex pa-2"
-              style="
-                width: 100%;
-                min-width: 0;
-                height: 100%;
-                padding: 0 16px !important;
-                display: flex;
-                align-items: center;
-              "
-            >
-              <!-- Negocio (20%) -->
-              <div style="width: 34%; min-width: 0" class="text-left font-weight-bold">
-                Ruta
-              </div>
-
-              <!-- Nombre (20%) -->
-
-              <!-- TelÃ©fono (10%) -->
-
-              <!-- DirecciÃ³n (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Fecha
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Horario
-              </div>
-
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Método
-              </div>
-
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Pasajes
-              </div>
-
-              <div style="width: 6%; min-width: 0" class="text-left font-weight-bold">
-                Asientos
-              </div>
-
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Precio
-              </div>
-
-              <div style="width: 8%; min-width: 0" class="text-left font-weight-bold">
-                Total
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div
-                style="width: 10%; min-width: 0"
-                class="d-flex justify-left font-weight-bold"
-              ></div>
-            </v-card-text>
-          </v-card>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="ticket-col-route">Ruta</div>
+            <div class="ticket-col-date">Fecha</div>
+            <div class="ticket-col-schedule">Horario</div>
+            <div class="ticket-col-method">Método</div>
+            <div class="ticket-col-quantity">Pasajes</div>
+            <div class="ticket-col-seats">Asientos</div>
+            <div class="ticket-col-price">Precio</div>
+            <div class="ticket-col-total">Total</div>
+            <div class="ticket-col-actions"></div>
+          </div>
         </template>
-        <!-- Fila personalizada -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card
-                class="mb-2 mx-1 rounded-lg"
-                elevation="1"
-                density="comfortable"
-                flat
-              >
-                <v-card-text
-                  class="d-flex align-center pa-2"
-                  style="width: 100%; min-width: 0"
-                >
-                  <div style="width: 34%; min-width: 0" class="text-truncate pr-2">
-                    <div class="d-flex align-center gap-2 text-truncate">
-                      <div class="font-weight-medium text-truncate">
-                        {{ slotProps.item.tripName }}
-                      </div>
-                      <v-chip
-                        v-if="getTicketFareSegment(slotProps.item)"
-                        size="x-small"
-                        :color="paleteColors.primary"
-                        variant="tonal"
-                        class="flex-shrink-0 ml-2"
-                      >
-                        Tramo
-                      </v-chip>
+            <td class="pa-0 border-0">
+              <div class="busgo-row ticket-row">
+                <div class="ticket-col-route">
+                  <div class="d-flex align-center min-width-0">
+                    <div class="ticket-route-main text-truncate">
+                      {{ slotProps.item.tripName }}
                     </div>
-                    <div
-                      class="d-flex align-center flex-wrap text-caption text-grey text-truncate mt-1"
+
+                    <v-chip
+                      v-if="getTicketFareSegment(slotProps.item)"
+                      size="x-small"
+                      :color="paleteColors.primary"
+                      variant="tonal"
+                      class="ml-2 flex-shrink-0"
                     >
-                      <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
-                      <span class="text-truncate">
-                        Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
-                      </span>
-                      <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-                      <span class="text-truncate">
-                        Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                      </span>
-                    </div>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Ruta: {{ slotProps.item.tripName }}<br />
-                        Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
-                        Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                      </span>
-                    </v-tooltip>
+                      Tramo
+                    </v-chip>
                   </div>
 
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.date }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Fecha: {{ slotProps.item.date }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                  <div class="ticket-route-meta">
+                    <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
 
-                  <div style="width: 10%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.schedule }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Horario: {{ slotProps.item.schedule }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    <span class="text-truncate">
+                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
+                    </span>
 
-                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.method }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Método: {{ slotProps.item.method }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
 
-                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.quantity }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Passajes: {{ slotProps.item.quantity }}
-                      </span>
-                    </v-tooltip>
+                    <span class="text-truncate">
+                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
+                    </span>
                   </div>
+                </div>
 
-                  <div style="width: 6%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ slotProps.item.seats }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Asientos: {{ slotProps.item.seats }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="ticket-col-date busgo-meta">
+                  <v-icon size="16" color="primary">mdi-calendar</v-icon>
+                  <span class="text-truncate">{{ slotProps.item.date }}</span>
+                </div>
 
-                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ formatNumber(Number(slotProps.item.price)) }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Precio: {{ formatNumber(Number(slotProps.item.price)) }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="ticket-col-schedule busgo-meta">
+                  <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
+                  <span class="text-truncate">{{ slotProps.item.schedule }}</span>
+                </div>
 
-                  <div style="width: 8%; min-width: 0" class="text-truncate text-left">
-                    <span>{{ formatNumber(Number(slotProps.item.total)) }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Total: {{ formatNumber(Number(slotProps.item.total)) }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div class="ticket-col-method busgo-meta">
+                  <span class="ticket-method-chip">
+                    {{ slotProps.item.method }}
+                  </span>
+                </div>
 
-                  <!-- Acciones -->
-                  <div
-                    class="d-flex gap-1"
-                    style="width: 10%; justify-content: flex-end; flex-wrap: nowrap"
+                <div class="ticket-col-quantity busgo-meta">
+                  <span>{{ slotProps.item.quantity }}</span>
+                </div>
+
+                <div class="ticket-col-seats busgo-meta">
+                  <v-icon size="16" color="primary">mdi-seat</v-icon>
+                  <span class="text-truncate">{{ slotProps.item.seats }}</span>
+                </div>
+
+                <div class="ticket-col-price ticket-money">
+                  ${{ formatNumber(Number(slotProps.item.price)) }}
+                </div>
+
+                <div class="ticket-col-total ticket-money ticket-money-total">
+                  ${{ formatNumber(Number(slotProps.item.total)) }}
+                </div>
+
+                <div class="ticket-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.green"
+                    @click="printerItem(slotProps.item)"
+                    title="Reimprimir Ticket"
                   >
-                    <!--<v-btn size="35" icon variant="outlined"
-                                            :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                                            :color="paleteColors.primary" @click="editItem(slotProps.item)"
-                                            class="flex-shrink-0 mr-1" title="Editar Ticket">
-                                            <v-icon size="20">mdi-pencil</v-icon>
-                                        </v-btn>-->
+                    <v-icon size="17">mdi-printer</v-icon>
+                  </v-btn>
 
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.green"
-                      @click="printerItem(slotProps.item)"
-                      class="flex-shrink-0 mr-1"
-                      title="Reimprimir Ticket"
-                    >
-                      <v-icon size="20">mdi-printer</v-icon>
-                    </v-btn>
-
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error"
-                      @click="deleteItem(slotProps.item)"
-                      class="flex-shrink-0"
-                      title="Eliminar Ticket"
-                    >
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Ticket"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
     </v-card>
   </v-container>
-  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card style="height: 100vh">
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-stepper
-            v-model="step"
-            :items="items"
-            hide-actions
-            style="max-height: calc(100vh - 72px); overflow-y: auto"
-          >
-            <template v-slot:item.1>
-              <div style="flex: 1; overflow-y: auto; padding: 16px">
-                <v-row style="margin-top: 5px">
+<v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
+  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+    <v-card class="ticket-sale-dialog-pro">
+
+      <!-- HEADER -->
+      <div class="ticket-sale-topbar">
+        <div class="ticket-sale-topbar__left">
+          <div class="ticket-sale-topbar__icon">
+            <v-icon size="28">mdi-ticket-confirmation-outline</v-icon>
+          </div>
+
+          <div>
+            <div class="ticket-sale-topbar__title">
+              {{ formTitle }}
+            </div>
+            <div class="ticket-sale-topbar__subtitle">
+              Venta guiada de pasajes por tramo, asiento y medio de pago
+            </div>
+          </div>
+        </div>
+
+        <v-spacer />
+
+        <v-chip
+          v-if="step === 1"
+          size="small"
+          variant="flat"
+          class="ticket-sale-step-chip"
+        >
+          Paso 1 · Viaje
+        </v-chip>
+
+        <v-chip
+          v-if="step === 2"
+          size="small"
+          variant="flat"
+          class="ticket-sale-step-chip"
+        >
+          Paso 2 · Pasajes y pago
+        </v-chip>
+
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          class="ticket-sale-close"
+          @click="close"
+        />
+      </div>
+
+      <!-- BODY -->
+      <v-card-text class="ticket-sale-body">
+        <v-stepper
+          v-model="step"
+          :items="items"
+          hide-actions
+          class="ticket-sale-stepper-pro"
+        >
+
+          <!-- STEP 1 -->
+          <template #item.1>
+            <div class="ticket-sale-layout">
+
+              <div class="ticket-sale-section-card">
+                <div class="ticket-sale-section-header">
+                  <div>
+                    <div class="ticket-sale-section-title">
+                      Selección del tramo
+                    </div>
+                    <div class="ticket-sale-section-subtitle">
+                      Elige origen, destino y luego selecciona el viaje disponible.
+                    </div>
+                  </div>
+                </div>
+
+                <v-row dense>
                   <v-col cols="12" md="6">
+                    <label class="ticket-sale-label">Origen</label>
                     <v-autocomplete
                       v-model="selectedOriginLocationId"
                       :items="locations"
-                      label="Seleccione el origen"
-                      prepend-icon="mdi-map-marker"
+                      placeholder="Seleccione el origen"
+                      prepend-inner-icon="mdi-map-marker-outline"
                       item-title="address"
                       item-value="id"
-                      variant="underlined"
-                      density="compact"
+                      variant="outlined"
+                      density="comfortable"
+                      rounded="lg"
                       clearable
+                      hide-details="auto"
                       :no-data-text="'No hay ubicaciones disponibles'"
                       @update:model-value="handleLocationSelectionChange"
                       :menu-props="{ maxHeight: 360, maxWidth: 520 }"
                     >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" title="" class="pa-3">
-                          <div class="d-flex flex-column">
-                            <strong class="text-truncate">{{
-                              getTableRowItem(item).address
-                            }}</strong>
-                            <span class="text-caption text-grey text-truncate">
-                              {{ getLocationSubtitle(getTableRowItem(item)) }}
-                            </span>
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" title="" class="ticket-location-option">
+                          <div class="ticket-location-option__title">
+                            {{ getTableRowItem(item).address }}
+                          </div>
+                          <div class="ticket-location-option__subtitle">
+                            {{ getLocationSubtitle(getTableRowItem(item)) }}
                           </div>
                         </v-list-item>
                       </template>
@@ -443,29 +366,30 @@
                   </v-col>
 
                   <v-col cols="12" md="6">
+                    <label class="ticket-sale-label">Destino</label>
                     <v-autocomplete
                       v-model="selectedDestinationLocationId"
                       :items="locations"
-                      label="Seleccione el destino"
-                      prepend-icon="mdi-map-marker-outline"
+                      placeholder="Seleccione el destino"
+                      prepend-inner-icon="mdi-map-marker-check-outline"
                       item-title="address"
                       item-value="id"
-                      variant="underlined"
-                      density="compact"
+                      variant="outlined"
+                      density="comfortable"
+                      rounded="lg"
                       clearable
+                      hide-details="auto"
                       :no-data-text="'No hay ubicaciones disponibles'"
                       @update:model-value="handleLocationSelectionChange"
                       :menu-props="{ maxHeight: 360, maxWidth: 520 }"
                     >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" title="" class="pa-3">
-                          <div class="d-flex flex-column">
-                            <strong class="text-truncate">{{
-                              getTableRowItem(item).address
-                            }}</strong>
-                            <span class="text-caption text-grey text-truncate">
-                              {{ getLocationSubtitle(getTableRowItem(item)) }}
-                            </span>
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" title="" class="ticket-location-option">
+                          <div class="ticket-location-option__title">
+                            {{ getTableRowItem(item).address }}
+                          </div>
+                          <div class="ticket-location-option__subtitle">
+                            {{ getLocationSubtitle(getTableRowItem(item)) }}
                           </div>
                         </v-list-item>
                       </template>
@@ -473,13 +397,16 @@
                   </v-col>
 
                   <v-col cols="12">
+                    <label class="ticket-sale-label">Buscar viaje</label>
                     <v-text-field
                       v-model="tripSearchText"
-                      label="Buscar viaje"
-                      prepend-icon="mdi-magnify"
-                      variant="underlined"
-                      density="compact"
+                      placeholder="Filtrar por ruta, patente, horario o tramo..."
+                      prepend-inner-icon="mdi-magnify"
+                      variant="outlined"
+                      density="comfortable"
+                      rounded="lg"
                       clearable
+                      hide-details="auto"
                       :disabled="
                         !selectedOriginLocationId ||
                         !selectedDestinationLocationId ||
@@ -487,471 +414,445 @@
                       "
                     />
                   </v-col>
-
-                  <v-col cols="12">
-                    <v-sheet border class="trip-sale-sheet">
-                      <v-row align="center">
-                        <v-col cols="12" md="12" class="grow ml-4">
-                          <div class="d-flex align-center mb-2">
-                            <v-icon color="primary" size="18" class="mr-2"
-                              >mdi-ticket-confirmation-outline</v-icon
-                            >
-                            <div>
-                              <div class="text-subtitle-1 font-weight-bold">
-                                Viajes y tramos
-                              </div>
-                              <div class="text-caption text-medium-emphasis">
-                                Selecciona una fila para continuar con la venta.
-                              </div>
-                            </div>
-                          </div>
-                        </v-col>
-                      </v-row>
-
-                      <v-card-text class="pt-4">
-                        <v-card
-                          variant="outlined"
-                          class="trip-sale-panel rounded-lg"
-                          elevation="0"
-                        >
-                          <div class="trip-sale-panel__header">
-                            <div class="trip-sale-col trip-sale-col--route">Ruta</div>
-                            <div class="trip-sale-col trip-sale-col--schedule">
-                              Salida
-                            </div>
-                            <div class="trip-sale-col trip-sale-col--arrival">
-                              Llegada
-                            </div>
-                            <div class="trip-sale-col trip-sale-col--vehicle">
-                              Vehículo
-                            </div>
-                            <div class="trip-sale-col trip-sale-col--price">
-                              Precio base
-                            </div>
-                            <div class="trip-sale-col trip-sale-col--actions">
-                              Acciones
-                            </div>
-                          </div>
-
-                          <div v-if="filteredTripSaleRows.length">
-                            <div
-                              v-for="tripRow in filteredTripSaleRows"
-                              :key="tripRow.id"
-                              class="trip-sale-panel__row"
-                              :class="{
-                                'trip-sale-panel__row--selected':
-                                  Number(tripRow.trip_id) ===
-                                    Number(editedItem.trip_id) &&
-                                  Number(tripRow.fare_segment_id) ===
-                                    Number(editedItem.fare_segment_id),
-                              }"
-                              @click="selectTripForSale(tripRow)"
-                            >
-                              <div class="trip-sale-col trip-sale-col--route">
-                                <div class="font-weight-medium text-truncate">
-                                  {{ tripRow.name }}
-                                </div>
-                                <div
-                                  class="text-caption text-medium-emphasis text-truncate trip-sale-row-meta"
-                                >
-                                  Origen: {{ tripRow.origin }} · Destino:
-                                  {{ tripRow.destination }}
-                                </div>
-                              </div>
-
-                              <div class="trip-sale-col trip-sale-col--schedule">
-                                <div class="font-weight-medium">
-                                  {{ tripRow.schedule || "-" }}
-                                </div>
-                                <div
-                                  class="text-caption text-medium-emphasis trip-sale-row-meta"
-                                >
-                                  Salida
-                                </div>
-                              </div>
-
-                              <div class="trip-sale-col trip-sale-col--arrival">
-                                <div class="font-weight-medium">
-                                  {{ tripRow.arrival || "-" }}
-                                </div>
-                                <div
-                                  class="text-caption text-medium-emphasis trip-sale-row-meta"
-                                >
-                                  Llegada
-                                </div>
-                              </div>
-
-                              <div class="trip-sale-col trip-sale-col--vehicle">
-                                <div class="font-weight-medium text-truncate">
-                                  {{ tripRow.plate }}
-                                </div>
-                                <div
-                                  class="text-caption text-medium-emphasis text-truncate trip-sale-row-meta"
-                                >
-                                  {{ tripRow.internal_number }}
-                                </div>
-                              </div>
-
-                              <div
-                                class="trip-sale-col trip-sale-col--price text-no-wrap"
-                              >
-                                {{ formatNumber(Number(tripRow.price)) }} CLP
-                              </div>
-
-                              <div
-                                class="trip-sale-col trip-sale-col--actions d-flex justify-end"
-                              >
-                                <v-chip
-                                  size="small"
-                                  :color="
-                                    Number(tripRow.trip_id) ===
-                                      Number(editedItem.trip_id) &&
-                                    Number(tripRow.fare_segment_id) ===
-                                      Number(editedItem.fare_segment_id)
-                                      ? paleteColors.active
-                                      : paleteColors.primary
-                                  "
-                                  :variant="
-                                    Number(tripRow.trip_id) ===
-                                      Number(editedItem.trip_id) &&
-                                    Number(tripRow.fare_segment_id) ===
-                                      Number(editedItem.fare_segment_id)
-                                      ? 'flat'
-                                      : 'tonal'
-                                  "
-                                  class="cursor-pointer"
-                                >
-                                  {{
-                                    Number(tripRow.trip_id) ===
-                                      Number(editedItem.trip_id) &&
-                                    Number(tripRow.fare_segment_id) ===
-                                      Number(editedItem.fare_segment_id)
-                                      ? "Seleccionado"
-                                      : "Seleccionar"
-                                  }}
-                                </v-chip>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div v-else class="pa-4 text-medium-emphasis">
-                            No hay viajes disponibles.
-                          </div>
-                        </v-card>
-                      </v-card-text>
-                    </v-sheet>
-                  </v-col>
                 </v-row>
+              </div>
 
-                <div class="d-flex align-center mt-4">
-                  <v-btn variant="tonal" color="grey" @click="close">Cancelar</v-btn>
-                  <v-spacer />
-                  <v-btn
-                    color="primary"
-                    :disabled="!editedItem.trip_id || !editedItem.fare_segment_id"
-                    @click="nextStep"
-                  >
-                    Continuar
-                  </v-btn>
+              <div class="ticket-sale-section-card mt-4">
+                <div class="ticket-sale-section-header">
+                  <div class="d-flex align-center">
+                    <div class="ticket-sale-mini-icon">
+                      <v-icon size="22">mdi-bus-clock</v-icon>
+                    </div>
+
+                    <div>
+                      <div class="ticket-sale-section-title">
+                        Viajes y tramos disponibles
+                      </div>
+                      <div class="ticket-sale-section-subtitle">
+                        Selecciona una fila para continuar con la venta.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="trip-sale-panel-pro">
+                  <div class="trip-sale-panel-pro__header">
+                    <div>Ruta</div>
+                    <div>Salida</div>
+                    <div>Llegada</div>
+                    <div>Vehículo</div>
+                    <div>Precio</div>
+                    <div></div>
+                  </div>
+
+                  <div v-if="filteredTripSaleRows.length">
+                    <div
+                      v-for="tripRow in filteredTripSaleRows"
+                      :key="tripRow.id"
+                      class="trip-sale-row-pro"
+                      :class="{
+                        'trip-sale-row-pro--selected':
+                          Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                          Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                      }"
+                      @click="selectTripForSale(tripRow)"
+                    >
+                      <div class="trip-sale-route">
+                        <div class="trip-sale-route__name">
+                          {{ tripRow.name }}
+                        </div>
+                        <div class="trip-sale-route__meta">
+                          {{ tripRow.origin }} → {{ tripRow.destination }}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div class="trip-sale-strong">{{ tripRow.schedule || "-" }}</div>
+                        <div class="trip-sale-muted">Salida</div>
+                      </div>
+
+                      <div>
+                        <div class="trip-sale-strong">{{ tripRow.arrival || "-" }}</div>
+                        <div class="trip-sale-muted">Llegada</div>
+                      </div>
+
+                      <div>
+                        <div class="trip-sale-strong">{{ tripRow.plate }}</div>
+                        <div class="trip-sale-muted">{{ tripRow.internal_number }}</div>
+                      </div>
+
+                      <div class="trip-sale-price">
+                        {{ formatNumber(Number(tripRow.price)) }} CLP
+                      </div>
+
+                      <div class="d-flex justify-end">
+                        <v-chip
+                          size="small"
+                          :color="
+                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                              ? paleteColors.active
+                              : paleteColors.primary
+                          "
+                          :variant="
+                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                              ? 'flat'
+                              : 'tonal'
+                          "
+                        >
+                          {{
+                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                              ? "Seleccionado"
+                              : "Seleccionar"
+                          }}
+                        </v-chip>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-else class="ticket-sale-empty">
+                    <v-icon size="42">mdi-bus-alert</v-icon>
+                    <div class="ticket-sale-empty__title">
+                      No hay viajes disponibles
+                    </div>
+                    <div class="ticket-sale-empty__text">
+                      Cambia el origen, destino o búsqueda para encontrar viajes.
+                    </div>
+                  </div>
                 </div>
               </div>
-            </template>
-            <template v-slot:item.2>
-              <div v-if="step === 2">
-                <v-row style="margin-top: 5px">
-                  <v-col cols="12" md="12">
-                    <v-sheet border rounded class="trip-sale-summary mb-4">
-                      <div class="trip-sale-summary__header">
+
+              <div class="ticket-sale-footer-actions">
+                <v-btn
+                  class="ticket-sale-btn-secondary"
+                  variant="flat"
+                  prepend-icon="mdi-close"
+                  @click="close"
+                >
+                  Cancelar
+                </v-btn>
+
+                <v-spacer />
+
+                <v-btn
+                  class="ticket-sale-btn-primary"
+                  variant="flat"
+                  append-icon="mdi-arrow-right"
+                  :disabled="!editedItem.trip_id || !editedItem.fare_segment_id"
+                  @click="nextStep"
+                >
+                  Continuar
+                </v-btn>
+              </div>
+            </div>
+          </template>
+
+          <!-- STEP 2 -->
+          <template #item.2>
+            <div v-if="step === 2" class="ticket-sale-layout">
+
+              <div class="ticket-sale-summary-pro">
+                <div>
+                  <div class="ticket-sale-section-title">
+                    Resumen de venta
+                  </div>
+                  <div class="ticket-sale-section-subtitle">
+                    Revisa el viaje y el tramo antes de guardar.
+                  </div>
+                </div>
+
+                <div class="ticket-sale-summary-grid">
+                  
                         <div>
-                          <div class="text-subtitle-2 font-weight-bold">
-                            Resumen de venta
-                          </div>
-                          <div class="text-caption text-medium-emphasis">
-                            Revisa el viaje y el tramo antes de continuar.
-                          </div>
+                    <span>Recorrido</span>
+                    <strong>
+                      {{
+                        selectedFareSegmentRecord?.label ||
+                        selectedFareSegmentRecord?.name ||
+                        "No seleccionado"
+                      }}
+                    </strong>
+                  </div>
+                  
+                  <div>
+                    <span>Ruta del viaje</span>
+                    <strong>{{ selectedTripRecord?.name || "No seleccionado" }}</strong>
+                  </div>
+
+            
+
+                  <div>
+                    <span>Precio tramo</span>
+                    <strong>
+                      {{ formatNumber(Number(selectedFareSegmentRecord?.base_price || 0)) }} CLP
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Total</span>
+                    <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
+                  </div>
+                </div>
+              </div>
+
+              <v-row dense class="mt-4">
+                <v-col cols="12" md="4">
+                  <div class="ticket-sale-section-card ticket-sale-fill">
+                    <div class="ticket-sale-section-header">
+                      <div>
+                        <div class="ticket-sale-section-title">
+                          Tipos de pasajero
+                        </div>
+                        <div class="ticket-sale-section-subtitle">
+                          Ingresa la cantidad por tipo de pasaje.
                         </div>
                       </div>
-                      <div class="trip-sale-summary__body">
-                        <div class="trip-sale-summary__item">
-                          <span class="trip-sale-summary__label">Viaje</span>
-                          <span class="trip-sale-summary__value text-truncate">
-                            {{ selectedTripRecord?.name || "No seleccionado" }}
-                          </span>
-                        </div>
-                        <div class="trip-sale-summary__item">
-                          <span class="trip-sale-summary__label">Tramo</span>
-                          <span class="trip-sale-summary__value text-truncate">
-                            {{
-                              selectedFareSegmentRecord?.label ||
-                              selectedFareSegmentRecord?.name ||
-                              "No seleccionado"
-                            }}
-                          </span>
-                        </div>
-                        <div class="trip-sale-summary__item">
-                          <span class="trip-sale-summary__label">Precio del tramo</span>
-                          <span class="trip-sale-summary__value">
-                            {{
-                              formatNumber(
-                                Number(selectedFareSegmentRecord?.base_price || 0)
-                              )
-                            }}
-                            CLP
-                          </span>
-                        </div>
-                      </div>
-                    </v-sheet>
-                  </v-col>
+                    </div>
 
-                  <v-col cols="12" md="6">
-                    <v-card>
-                      <v-card-title class="bg-primary">
-                        <span class="text-subtitle-2 ml-2">Tipos de Pasajero</span>
-                      </v-card-title>
-                      <v-card-text
-                        class="bg-white pt-4"
-                        style="min-height: 44vh; overflow-y: auto"
-                      >
-                        <div v-if="mergedTicketTypes.length > 0">
-                          <div
-                            v-for="ticket in mergedTicketTypes"
-                            :key="ticket.trip_fare_id || ticket.id"
-                            class="mb-2"
-                          >
-                            <v-row align="center">
-                              <v-col cols="12" md="6">
-                                <v-text-field
-                                  v-model.number="ticket.cant"
-                                  @update:model-value="
-                                    handleQuantityChange(ticket, $event)
-                                  "
-                                  @blur="validateQuantity(ticket)"
-                                  :label="ticket.ticketTypeName || ticket.name"
-                                  variant="underlined"
-                                  density="compact"
-                                  type="number"
-                                  min="0"
-                                  :error-messages="
-                                    (currentlyEditing === ticket.trip_fare_id &&
-                                      seatError) ||
-                                    quantityErrors[ticket.trip_fare_id]
-                                  "
-                                  hide-details="auto"
-                                ></v-text-field>
-                                <div
-                                  v-if="Number(ticket.cant) > 0"
-                                  class="ticket-total-preview text-caption text-primary mt-1"
-                                >
-                                  Total a pagar:
-                                  <strong>
-                                    {{
-                                      formatNumber(getTicketTypePayableAmount(ticket))
-                                    }}
-                                    CLP
-                                  </strong>
-                                </div>
-                              </v-col>
-                              <v-col cols="12" md="6" class="d-flex align-center">
-                                <div class="flex-grow-1 d-flex justify-end mb-3">
-                                  <div class="ticket-price-pill">
-                                    <span class="text-caption text-medium-emphasis">
-                                      Precio
-                                    </span>
-                                    <span
-                                      class="text-subtitle-2 font-weight-bold text-primary"
-                                    >
-                                      {{ formatNumber(Number(ticket.base_price)) }} CLP
-                                    </span>
-                                  </div>
-                                </div>
-                              </v-col>
-                            </v-row>
-                            <v-divider class="my-2"></v-divider>
-                          </div>
-                        </div>
-                        <div v-else class="text-center py-8">
-                          <v-icon size="large">mdi-ticket-confirmation-outline</v-icon>
-                          <p class="text-body-1 mt-2">
-                            No hay tipos de pasaje disponibles
-                          </p>
-                        </div>
-                      </v-card-text>
-                    </v-card>
-                  </v-col>
+                    <div class="ticket-type-list">
+                      <div v-if="mergedTicketTypes.length > 0">
+                        <div
+                          v-for="ticket in mergedTicketTypes"
+                          :key="ticket.trip_fare_id || ticket.id"
+                          class="ticket-type-card"
+                        >
+                          <div class="ticket-type-card__main">
+                            <div>
+                              <div class="ticket-type-card__title">
+                                {{ ticket.ticketTypeName || ticket.name }}
+                              </div>
 
-                  <v-col cols="12" md="3">
-                    <v-card style="max-width: 100%">
-                      <v-card-title :color="paleteColors.primary" class="bg-primary">
-                        <span class="text-subtitle-2 ml-2">Seleccione los asientos</span>
-                      </v-card-title>
-                      <v-card-text>
-                        <v-row>
-                          <v-col cols="12" class="d-flex align-center justify-center">
-                            <div
-                              class="seat-map-preview"
-                              style="display: flex; flex-direction: column"
-                            >
-                              <div
-                                v-for="(row, rowIndex) in seatMap"
-                                :key="rowIndex"
-                                class="seat-row"
-                                style="display: flex; flex-direction: row"
-                              >
-                                <template
-                                  v-for="(seat, seatIndex) in row"
-                                  :key="seatIndex"
-                                >
-                                  <div
-                                    v-if="seat.type"
-                                    :class="[
-                                      'seat-container',
-                                      'ma-1',
-                                      {
-                                        'seat-available': isSeatAvailable(seat),
-                                        'seat-selected': selectedSeats.includes(
-                                          Number(seat.label)
-                                        ),
-                                        'seat-reserved': isSeatReserved(seat.label),
-                                        'seat-aisle': seat.type === 'aisle',
-                                      },
-                                    ]"
-                                    @click="toggleSeat(seat)"
-                                  >
-                                    <v-icon
-                                      v-if="seat.type === 'seat'"
-                                      class="seat-icon"
-                                      size="30"
-                                    >
-                                      mdi-seat
-                                    </v-icon>
-
-                                    <v-icon
-                                      v-else-if="seat.type === 'aisle'"
-                                      class="aisle-icon"
-                                      size="30"
-                                    >
-                                      mdi-minus
-                                    </v-icon>
-
-                                    <span v-if="seat.type === 'seat'" class="seat-number">
-                                      {{ seat.label }}
-                                    </span>
-
-                                    <span
-                                      v-if="seat.type === 'aisle'"
-                                      class="aisle-indicator"
-                                    ></span>
-                                  </div>
-                                </template>
+                              <div class="ticket-type-card__price">
+                                {{ formatNumber(Number(ticket.base_price)) }} CLP
                               </div>
                             </div>
-                          </v-col>
-                        </v-row>
 
-                        <v-alert
-                          v-if="selectedSeats.length != editedItem.quantity"
-                          type="error"
-                          class="mt-3"
-                        >
-                          Debe Seleccionar {{ editedItem.quantity }} asiento(s).
-                        </v-alert>
-                      </v-card-text>
-                    </v-card>
-                  </v-col>
+                            <v-text-field
+                              v-model.number="ticket.cant"
+                              @update:model-value="handleQuantityChange(ticket, $event)"
+                              @blur="validateQuantity(ticket)"
+                              variant="outlined"
+                              density="compact"
+                              rounded="lg"
+                              type="number"
+                              min="0"
+                              hide-details="auto"
+                              class="ticket-type-card__input"
+                              :error-messages="
+                                (currentlyEditing === ticket.trip_fare_id && seatError) ||
+                                quantityErrors[ticket.trip_fare_id]
+                              "
+                            />
+                          </div>
 
-                  <v-col cols="12" md="3">
-                    <v-card style="max-width: 100%">
-                      <v-card-title :color="paleteColors.primary" class="bg-primary">
-                        <span class="text-subtitle-2 ml-2">Pagos de Pasajes</span>
-                      </v-card-title>
-                      <v-card-text>
-                        <div class="payment-methods-grid">
-                          <v-card
-                            v-for="method in paymentMethods"
-                            :key="method.value"
-                            class="payment-method-card"
-                            :class="[
-                              getCardClass(method),
-                              { 'payment-method-disabled': method.disabled },
-                            ]"
-                            @click="
-                              !method.disabled && (editedItem.method = method.value)
-                            "
+                          <div
+                            v-if="Number(ticket.cant) > 0"
+                            class="ticket-type-card__total"
                           >
-                            <v-card-text
-                              class="d-flex flex-column align-center justify-center payment-method-content pa-2"
+                            Total:
+                            <strong>
+                              {{ formatNumber(getTicketTypePayableAmount(ticket)) }} CLP
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-else class="ticket-sale-empty">
+                        <v-icon size="42">mdi-ticket-confirmation-outline</v-icon>
+                        <div class="ticket-sale-empty__title">
+                          No hay tipos de pasaje
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <div class="ticket-sale-section-card ticket-sale-fill">
+                    <div class="ticket-sale-section-header">
+                      <div>
+                        <div class="ticket-sale-section-title">
+                          Selección de asientos
+                        </div>
+                        <div class="ticket-sale-section-subtitle">
+                          Seleccionados {{ selectedSeats.length }} de {{ editedItem.quantity || 0 }}
+                        </div>
+                      </div>
+                    </div>
+
+                <div class="seat-map-shell">
+  <div class="seat-map-scroll">
+    <div class="seat-map-preview">
+                        <div
+                          v-for="(row, rowIndex) in seatMap"
+                          :key="rowIndex"
+                          class="seat-row"
+                        >
+                          <template
+                            v-for="(seat, seatIndex) in row"
+                            :key="seatIndex"
+                          >
+                            <div
+                              v-if="seat.type"
+                              :class="[
+                                'seat-container',
+                                {
+                                  'seat-available': isSeatAvailable(seat),
+                                  'seat-selected': selectedSeats.includes(Number(seat.label)),
+                                  'seat-reserved': isSeatReserved(seat.label),
+                                  'seat-aisle': seat.type === 'aisle'
+                                }
+                              ]"
+                              @click="toggleSeat(seat)"
                             >
                               <v-icon
-                                size="32"
-                                :color="getMethodColor(method.value)"
-                                class="mb-1"
+                                v-if="seat.type === 'seat'"
+                                class="seat-icon"
+                                size="44"
                               >
-                                {{ method.icon }}
+                                mdi-seat
                               </v-icon>
-                              <div class="payment-method-label text-center">
-                                {{ method.text }}
-                              </div>
-                            </v-card-text>
-                          </v-card>
-                        </div>
 
-                        <v-text-field
-                          v-model="editedItem.total"
-                          class="mt-4"
-                          label="Total a pagar"
-                          type="number"
-                          variant="underlined"
-                          density="compact"
-                          prepend-icon="mdi-cash"
-                          readonly
-                        ></v-text-field>
-                      </v-card-text>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </div>
-            </template>
-          </v-stepper>
+                              <v-icon
+                                v-else-if="seat.type === 'aisle'"
+                                class="aisle-icon"
+                                size="44"
+                              >
+                                mdi-minus
+                              </v-icon>
+
+                              <span v-if="seat.type === 'seat'" class="seat-number">
+                                {{ seat.label }}
+                              </span>
+
+                              <span v-if="seat.type === 'aisle'" class="aisle-indicator"></span>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+  </div>
+                    <v-alert
+                      v-if="selectedSeats.length != editedItem.quantity"
+                      type="error"
+                      variant="tonal"
+                      density="compact"
+                      class="mt-4"
+                    >
+                      Debe seleccionar {{ editedItem.quantity }} asiento(s).
+                    </v-alert>
+                  </div>
+                </v-col>
+
+          <v-col cols="12" md="2">
+  <div class="ticket-sale-section-card ticket-sale-fill ticket-payment-panel">
+    <div class="ticket-sale-section-header ticket-payment-header">
+      <div>
+        <div class="ticket-sale-section-title">
+          Pago
+        </div>
+        <div class="ticket-sale-section-subtitle">
+          Medio de pago
+        </div>
+      </div>
+    </div>
+
+    <div class="payment-methods-grid-pro">
+      <v-card
+        v-for="method in paymentMethods"
+        :key="method.value"
+        class="payment-method-card-pro"
+        :class="[
+          getCardClass(method),
+          { 'payment-method-disabled': method.disabled }
+        ]"
+        @click="!method.disabled && (editedItem.method = method.value)"
+      >
+        <v-card-text class="payment-method-content-pro">
+          <v-icon
+            size="24"
+            :color="getMethodColor(method.value)"
+          >
+            {{ method.icon }}
+          </v-icon>
+
+          <div class="payment-method-label">
+            {{ method.text }} 
+          </div>
         </v-card-text>
-        <template v-if="step === 2">
-          <v-divider></v-divider>
-          <v-card-actions>
-            <v-btn :color="paleteColors.gris" variant="flat" @click="prevStep"
-              >Volver</v-btn
-            >
-            <v-spacer></v-spacer>
-            <v-btn
-              :color="paleteColors.primary"
-              variant="flat"
-              @click="save"
-              :disabled="
-                !valid ||
-                Number(selectedSeats.length) !== Number(editedItem.quantity) ||
-                !editedItem.method
-              "
-              :loading="loading"
-              >Guardar</v-btn
-            >
-          </v-card-actions>
-        </template>
       </v-card>
-    </v-form>
-  </v-dialog>
+    </div>
+
+    <div class="ticket-total-box ticket-total-box-compact">
+      <span>Total</span>
+      <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
+    </div>
+  </div>
+</v-col>
+              </v-row>
+
+              <div class="ticket-sale-footer-actions">
+                <v-btn
+                  class="ticket-sale-btn-secondary"
+                  variant="flat"
+                  prepend-icon="mdi-arrow-left"
+                  @click="prevStep"
+                >
+                  Volver
+                </v-btn>
+
+                <v-spacer />
+
+                <v-btn
+                  class="ticket-sale-btn-primary"
+                  variant="flat"
+                  prepend-icon="mdi-content-save-outline"
+                  @click="save"
+                  :disabled="
+                    !valid ||
+                    Number(selectedSeats.length) !== Number(editedItem.quantity) ||
+                    !editedItem.method
+                  "
+                  :loading="loading"
+                >
+                  Guardar venta
+                </v-btn>
+              </div>
+            </div>
+          </template>
+        </v-stepper>
+      </v-card-text>
+    </v-card>
+  </v-form>
+</v-dialog>
+
   <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
+    <v-card class="busgo-dialog-card">
       <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4">Eliminar un Ticket</span>
+        <span class="text-subtitle-2 ml-4">
+          Eliminar un Ticket
+        </span>
       </v-toolbar>
 
       <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el ticket seleccionado?</v-card-text
-      >
-      <v-divider></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+        ¿Desea eliminar el ticket seleccionado?
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions class="busgo-dialog-actions">
+        <v-spacer />
+
+        <v-btn
+          :color="paleteColors.gris"
+          variant="flat"
+          @click="closeDelete"
+        >
           Cancelar
         </v-btn>
+
         <v-btn
           :color="paleteColors.error"
           variant="flat"
@@ -965,11 +866,9 @@
   </v-dialog>
 
   <v-dialog v-model="showTicketDialog" max-width="500" persistent>
-    <v-card>
-      <v-card-title style="position: relative">
-        <!-- Contenedor principal centrado -->
+    <v-card class="ticket-print-card">
+      <v-card-title class="ticket-print-header">
         <div class="d-flex flex-column align-center" style="width: 100%">
-          <!-- Logo de la sucursal -->
           <v-avatar v-if="selectedBranch?.image" size="80" class="mb-3">
             <img
               :src="`${this.$axios.defaults.baseURL}images/${selectedBranch.image}`"
@@ -978,31 +877,34 @@
             />
           </v-avatar>
 
-          <!-- Información de la sucursal -->
           <div class="text-center">
             <div class="text-subtitle-1 font-weight-bold">
               {{ selectedBranch?.name || "Nombre Sucursal" }}
             </div>
+
             <div class="text-body-2" v-if="selectedBranch?.rut">
               RUT: {{ selectedBranch.rut }}
             </div>
+
             <div class="text-body-2" v-if="selectedBranch?.address">
               Dirección: {{ selectedBranch.address }}
             </div>
+
             <div class="text-body-2" v-if="selectedBranch?.phone">
               Teléfono: {{ selectedBranch.phone }}
             </div>
+
             <div class="text-body-2" v-if="selectedBranch?.id">
               Folio N° {{ currentTicket.id }}
             </div>
           </div>
         </div>
 
-        <!-- Botón de impresión -->
         <v-btn
           icon
           @click="printTicket"
-          style="position: absolute; right: 16px; top: 16px"
+          class="ticket-print-button"
+          title="Imprimir"
         >
           <v-icon>mdi-printer</v-icon>
         </v-btn>
@@ -1010,10 +912,11 @@
 
       <v-card-text>
         <div class="ticket-container">
-          <!-- Ticket original -->
-
           <div class="d-flex justify-space-between align-center mb-3">
-            <div class="font-weight-medium">Fecha: {{ currentTicket.date }}</div>
+            <div class="font-weight-medium">
+              Fecha: {{ currentTicket.date }}
+            </div>
+
             <div class="font-weight-medium">
               Hora: {{ currentTicket.schedule || "--:--" }}
             </div>
@@ -1021,10 +924,12 @@
 
           <div class="mb-3">
             <div class="font-weight-bold mb-1">Recorrido:</div>
+
             <div>
               <span class="font-weight-medium mr-1">Origen:</span>
               <span>{{ currentTicket.tripOrigin || "No especificado" }}</span>
             </div>
+
             <div>
               <span class="font-weight-medium mr-1">Destino:</span>
               <span>{{ currentTicket.tripDestination || "No especificado" }}</span>
@@ -1036,29 +941,36 @@
               <span class="font-weight-medium mr-1">Precio:</span>
               <span>${{ formatNumber(currentTicket.total) }}</span>
             </div>
+
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
             </div>
           </div>
+
           <br />
+
           <div class="text-center">
             <canvas ref="qrCanvasOriginal" style="width: 150px; height: 150px"></canvas>
           </div>
+
           <br />
-          <!-- Línea divisoria que ocupa todo el ancho -->
+
           <div class="dashed-divider my-3"></div>
 
-          <!-- Copia de control -->
           <div class="text-center caption mb-3">
             -Copia de control-
+
             <div class="text-body-2" v-if="currentTicket?.id">
               Folio N° {{ currentTicket.id }}
             </div>
           </div>
 
           <div class="d-flex justify-space-between align-center mb-3">
-            <div class="font-weight-medium">Fecha: {{ currentTicket.date }}</div>
+            <div class="font-weight-medium">
+              Fecha: {{ currentTicket.date }}
+            </div>
+
             <div class="font-weight-medium">
               Hora: {{ currentTicket.schedule || "--:--" }}
             </div>
@@ -1066,10 +978,12 @@
 
           <div class="mb-3">
             <div class="font-weight-bold mb-1">Recorrido:</div>
+
             <div>
               <span class="font-weight-medium mr-1">Origen:</span>
               <span>{{ currentTicket.tripOrigin || "No especificado" }}</span>
             </div>
+
             <div>
               <span class="font-weight-medium mr-1">Destino:</span>
               <span>{{ currentTicket.tripDestination || "No especificado" }}</span>
@@ -1081,18 +995,23 @@
               <span class="font-weight-medium mr-1">Precio:</span>
               <span>${{ formatNumber(currentTicket.total) }}</span>
             </div>
+
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
             </div>
           </div>
+
           <br />
+
           <div class="text-center">
             <canvas ref="qrCanvasControl" style="width: 150px; height: 150px"></canvas>
           </div>
+
           <br />
-          <!-- Nota de impresión -->
-          <v-divider class="my-2"></v-divider>
+
+          <v-divider class="my-2" />
+
           <div
             v-if="currentTicket.print > 1"
             class="text-center caption mt-2 uppercase-text"
@@ -1102,9 +1021,17 @@
         </div>
       </v-card-text>
 
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="showTicketDialog = false">Cerrar</v-btn>
+      <v-card-actions class="busgo-dialog-actions">
+        <v-spacer />
+
+        <v-btn
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-close"
+          @click="showTicketDialog = false"
+        >
+          Cerrar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -3915,25 +3842,8 @@ export default {
 };
 </script>
 <style>
-.payment-method-card {
-  border: 3px solid #e0e0e0 !important;
-  transition: all 0.2s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: transparent !important;
-  width: clamp(78px, 22vw, 90px);
-  min-width: 78px;
-  height: clamp(84px, 24vw, 96px);
-  min-height: 84px;
-  overflow: hidden;
-  flex: 0 1 auto;
-}
 
-.payment-method-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
-}
+
 
 .payment-method-disabled {
   opacity: 0.45;
@@ -4147,25 +4057,34 @@ export default {
   transition: all 0.2s ease;
 }
 
-/* TamaÃ±o moderado para iconos */
-.seat-icon,
-.aisle-icon {
-  font-size: 36px !important;
-  width: 100%;
-  height: 100%;
+
+
+.seat-number{
+    position:absolute;
+
+    top:30%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    min-width:18px;
+
+    text-align:center;
+
+    font-size:14px;
+    font-weight:900;
+
+    color:#000;
+
+    -webkit-text-stroke:0.8px #fff;
+
+    line-height:1;
+
+    font-variant-numeric: tabular-nums;
+
+    pointer-events:none;
 }
 
-/* NÃºmero de asiento mejor posicionado y visible */
-.seat-number {
-  position: absolute;
-  top: 35%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: bold;
-  color: #333; /* Color oscuro para mejor contraste */
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
-}
 
 /* Indicador de pasillo */
 .aisle-indicator {
@@ -4179,23 +4098,11 @@ export default {
 }
 
 /* Colores para diferentes estados */
-.seat-available {
-  color: #4caf50; /* Verde para disponibles */
-}
 
-.seat-selected {
-  color: #2196f3; /* Azul para seleccionados */
-}
 
-.seat-reserved {
-  color: #f44336; /* Rojo para reservados */
-  cursor: not-allowed;
-}
 
-.seat-aisle {
-  color: #9e9e9e; /* Gris para pasillos */
-  cursor: default;
-}
+
+
 
 /* Efecto hover para asientos disponibles */
 .seat-available:hover {
@@ -4207,14 +4114,19 @@ export default {
 .seat-available .seat-number,
 .seat-available .aisle-indicator,
 .seat-aisle .aisle-indicator {
-  color: #333;
+    color: #fefefe;
+  font-weight: bold;
+  padding-top: 8px;
+   border: #fbfbfb;
 }
 
 /* NÃºmeros claros en asientos oscuros */
 .seat-selected .seat-number,
 .seat-reserved .seat-number {
-  color: #333;
+  color: #ffffff;
   font-weight: bold;
+  padding-top: 8px;
+   border: #ffffff;
 }
 @media (max-width: 768px) {
   .payment-methods-grid {
@@ -4222,12 +4134,7 @@ export default {
     justify-content: space-between;
   }
 
-  .payment-method-card {
-    width: clamp(74px, 28vw, 84px);
-    min-width: 74px;
-    height: clamp(80px, 30vw, 90px);
-    min-height: 80px;
-  }
+
 
   .payment-method-label {
     font-size: 0.68rem;
@@ -4312,4 +4219,752 @@ table.v-table > thead,
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
 }
+
+.ticket-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ticket-filter {
+  width: 260px;
+  min-width: 260px;
+}
+
+.ticket-date-filter {
+  width: 180px;
+  min-width: 180px;
+}
+
+.ticket-search {
+  width: 300px;
+  min-width: 260px;
+}
+
+.ticket-col-route {
+  width: 34%;
+  min-width: 0;
+}
+
+.ticket-col-date {
+  width: 10%;
+  min-width: 0;
+}
+
+.ticket-col-schedule {
+  width: 10%;
+  min-width: 0;
+}
+
+.ticket-col-method {
+  width: 8%;
+  min-width: 0;
+}
+
+.ticket-col-quantity {
+  width: 6%;
+  min-width: 0;
+}
+
+.ticket-col-seats {
+  width: 10%;
+  min-width: 0;
+}
+
+.ticket-col-price {
+  width: 8%;
+  min-width: 0;
+}
+
+.ticket-col-total {
+  width: 8%;
+  min-width: 0;
+}
+
+.ticket-col-actions {
+  width: 10%;
+  min-width: 0;
+}
+
+.ticket-row {
+  min-height: 66px;
+}
+
+.ticket-route-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ticket-route-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  min-width: 0;
+}
+
+.ticket-method-chip {
+  max-width: 100%;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ticket-money {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticket-money-total {
+  color: #15803d;
+  font-weight: 800;
+}
+
+.ticket-sale-dialog {
+  height: 100vh;
+}
+
+.ticket-sale-stepper {
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+
+.ticket-sale-step-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.ticket-print-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.ticket-print-header {
+  position: relative;
+}
+
+.ticket-print-button {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+
+.busgo-dialog-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.busgo-dialog-actions {
+  padding: 14px 18px;
+  background: #f8fafc;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .ticket-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ticket-filter,
+  .ticket-date-filter,
+  .ticket-search {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .ticket-col-route,
+  .ticket-col-date,
+  .ticket-col-schedule,
+  .ticket-col-method,
+  .ticket-col-quantity,
+  .ticket-col-seats ,
+  .ticket-col-price,
+  .ticket-col-total,
+  .ticket-col-actions {
+    width: 100%;
+  }
+
+  .ticket-route-meta {
+    flex-wrap: wrap;
+  }
+}
+
+.ticket-sale-dialog-pro {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.ticket-sale-topbar {
+  min-height: 76px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ticket-sale-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ticket-sale-topbar__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-sale-topbar__title {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.ticket-sale-topbar__subtitle {
+  font-size: 13px;
+  opacity: 0.78;
+  margin-top: 3px;
+}
+
+.ticket-sale-step-chip {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.ticket-sale-close {
+  color: #ffffff !important;
+}
+
+.ticket-sale-body {
+  padding: 20px 24px 24px !important;
+}
+
+.ticket-sale-stepper-pro {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ticket-sale-layout {
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.ticket-sale-section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.ticket-sale-fill {
+  height: 100%;
+}
+
+.ticket-sale-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ticket-sale-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ticket-sale-section-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.ticket-sale-mini-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.ticket-sale-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 7px;
+}
+
+.ticket-location-option {
+  padding: 12px 14px !important;
+}
+
+.ticket-location-option__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticket-location-option__subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-sale-panel-pro {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.trip-sale-panel-pro__header {
+  display: grid;
+  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.9fr 0.8fr;
+  gap: 12px;
+  padding: 13px 16px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.trip-sale-row-pro {
+  display: grid;
+  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.9fr 0.8fr;
+  gap: 12px;
+  align-items: center;
+  padding: 15px 16px;
+  border-top: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.trip-sale-row-pro:hover {
+  background: #f8fafc;
+}
+
+.trip-sale-row-pro--selected {
+  background: #eef2ff;
+  border-left: 4px solid #0f172a;
+}
+
+.trip-sale-route {
+  min-width: 0;
+}
+
+.trip-sale-route__name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-sale-route__meta,
+.trip-sale-muted {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.trip-sale-strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.trip-sale-price {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.ticket-sale-empty {
+  padding: 38px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.ticket-sale-empty__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #475569;
+  margin-top: 10px;
+}
+
+.ticket-sale-empty__text {
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.ticket-sale-footer-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 16px 0 0;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #f8fafc 32%);
+}
+
+.ticket-sale-btn-secondary {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 13px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 130px;
+}
+
+.ticket-sale-btn-primary {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-radius: 13px !important;
+  text-transform: none !important;
+  font-weight: 900 !important;
+  min-width: 150px;
+}
+
+.ticket-sale-btn-primary.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #ffffff !important;
+}
+
+.ticket-sale-summary-pro {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.ticket-sale-summary-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ticket-sale-summary-grid div {
+  min-width: 0;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.ticket-sale-summary-grid span {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.ticket-sale-summary-grid strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticket-type-list {
+  max-height: 58vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ticket-type-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 13px;
+  margin-bottom: 10px;
+  background: #ffffff;
+}
+
+.ticket-type-card__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ticket-type-card__title {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.ticket-type-card__price {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.ticket-type-card__input {
+  max-width: 96px;
+}
+
+.ticket-type-card__total {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.seat-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+.seat-container {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.seat-container:hover {
+  transform: translateY(-1px);
+}
+
+.seat-available {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.seat-selected {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.22);
+}
+
+.seat-reserved {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.seat-aisle {
+  background: transparent !important;
+  color: #cbd5e1 !important;
+  cursor: default;
+}
+
+.seat-number {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.payment-methods-grid-pro {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.payment-method-card-pro {
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.payment-method-card-pro:hover {
+  transform: translateY(-1px);
+}
+
+.payment-method-content-pro {
+  min-height: 72px;
+  padding: 12px !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.payment-method-label {
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.payment-method-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ticket-total-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.ticket-total-box span {
+  display: block;
+  font-size: 12px;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.ticket-total-box strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+@media (max-width: 960px) {
+  .ticket-sale-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trip-sale-panel-pro__header {
+    display: none;
+  }
+
+  .trip-sale-row-pro {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ticket-sale-topbar {
+    padding: 14px 16px;
+  }
+
+  .ticket-sale-topbar__subtitle,
+  .ticket-sale-step-chip {
+    display: none;
+  }
+
+  .ticket-sale-body {
+    padding: 14px !important;
+  }
+
+  .ticket-sale-section-card,
+  .ticket-sale-summary-pro {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .ticket-sale-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-sale-footer-actions {
+    gap: 8px;
+  }
+
+  .ticket-sale-btn-secondary,
+  .ticket-sale-btn-primary {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.seat-map-shell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.seat-map-scroll {
+  width: 100%;
+  max-height: 430px;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 6px;
+}
+
+.seat-map-preview {
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.seat-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 600px) {
+  .seat-map-scroll {
+    max-height: 360px;
+  }
+}
+
 </style>
