@@ -1,0 +1,389 @@
+/* =======================================================
+   BUSGO DESIGN SYSTEM
+   ======================================================= */
+
+:root{
+
+--busgo-border:#E5E7EB;
+
+--busgo-border-soft:#EEF2F7;
+
+--busgo-surface:#FFFFFF;
+
+--busgo-surface-alt:#F8FAFC;
+
+--busgo-text:#111827;
+
+--busgo-text-soft:#64748B;
+
+--busgo-radius-lg:18px;
+
+--busgo-radius-md:12px;
+
+--busgo-shadow:
+
+0 1px 2px rgba(15,23,42,.04),
+
+0 4px 12px rgba(15,23,42,.05);
+
+}
+
+
+/* =======================================================
+   LAYOUT
+   ======================================================= */
+
+.busgo-page{
+
+padding:24px;
+
+}
+
+.busgo-card{
+
+background:var(--busgo-surface);
+
+border:1px solid var(--busgo-border);
+
+border-radius:var(--busgo-radius-lg);
+
+overflow:hidden;
+
+box-shadow:var(--busgo-shadow);
+
+}
+
+.busgo-section{
+
+padding:24px;
+
+}
+
+
+/* =======================================================
+   HEADER
+   ======================================================= */
+
+.busgo-page-header{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+padding:18px 24px;
+
+background:var(--busgo-surface-alt);
+
+border-bottom:1px solid var(--busgo-border);
+
+}
+
+.busgo-page-icon{
+
+border-radius:14px;
+
+}
+
+.busgo-page-title{
+
+font-size:22px;
+
+font-weight:700;
+
+color:var(--busgo-text);
+
+}
+
+.busgo-page-subtitle{
+
+font-size:13px;
+
+color:var(--busgo-text-soft);
+
+margin-top:2px;
+
+}
+
+.busgo-page-actions{
+
+margin-left:auto;
+
+display:flex;
+
+gap:8px;
+
+}
+
+
+/* =======================================================
+   SEARCH
+   ======================================================= */
+
+.busgo-search{
+
+max-width:380px;
+
+min-width:280px;
+
+}
+
+
+/* =======================================================
+   CARD HEADER
+   ======================================================= */
+
+.busgo-card-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:24px;
+
+padding:20px 24px;
+
+}
+
+.busgo-card-title{
+
+font-size:16px;
+
+font-weight:700;
+
+color:var(--busgo-text);
+
+}
+
+.busgo-card-subtitle{
+
+font-size:13px;
+
+color:var(--busgo-text-soft);
+
+}
+
+
+/* =======================================================
+   TABLE
+   ======================================================= */
+
+.busgo-table{
+
+background:transparent;
+
+max-height:68vh;
+
+overflow:auto;
+
+}
+
+.busgo-table-head{
+
+display:flex;
+
+align-items:center;
+
+padding:0 20px;
+
+height:42px;
+
+margin:0 16px 6px;
+
+border-radius:12px;
+
+background:var(--busgo-surface-alt);
+
+font-size:12px;
+
+font-weight:700;
+
+text-transform:uppercase;
+
+color:var(--busgo-text-soft);
+
+}
+
+.busgo-row{
+
+display:flex;
+
+align-items:center;
+
+min-height:58px;
+
+padding:8px 20px;
+
+margin:0 16px 6px;
+
+border:1px solid var(--busgo-border-soft);
+
+border-radius:12px;
+
+background:white;
+
+transition:all .15s ease;
+
+}
+
+.busgo-row:hover{
+
+background:#fafafa;
+
+border-color:#dbeafe;
+
+}
+
+
+/* =======================================================
+   CELLS
+   ======================================================= */
+
+.busgo-name-cell{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.busgo-avatar{
+
+border:1px solid var(--busgo-border);
+
+}
+
+.busgo-name{
+
+font-size:14px;
+
+font-weight:600;
+
+overflow:hidden;
+
+white-space:nowrap;
+
+text-overflow:ellipsis;
+
+}
+
+.busgo-meta{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+font-size:13px;
+
+color:#374151;
+
+}
+
+
+/* =======================================================
+   BUTTONS
+   ======================================================= */
+
+.busgo-actions{
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:5px;
+
+}
+
+.busgo-action{
+
+width:30px;
+
+height:30px;
+
+}
+
+
+/* =======================================================
+   FOOTER
+   ======================================================= */
+
+.busgo-footer{
+
+padding:14px 24px;
+
+border-top:1px solid var(--busgo-border-soft);
+
+}
+
+
+/* =======================================================
+   SCROLL
+   ======================================================= */
+
+.busgo-table::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+.busgo-table::-webkit-scrollbar-thumb{
+
+background:#CBD5E1;
+
+border-radius:30px;
+
+}
+
+
+/* =======================================================
+   RESPONSIVE
+   ======================================================= */
+
+@media(max-width:960px){
+
+.busgo-card-header{
+
+flex-direction:column;
+
+align-items:stretch;
+
+}
+
+.busgo-search{
+
+max-width:100%;
+
+min-width:100%;
+
+}
+
+.busgo-table-head{
+
+display:none;
+
+}
+
+.busgo-row{
+
+flex-direction:column;
+
+align-items:stretch;
+
+gap:12px;
+
+}
+
+.busgo-actions{
+
+justify-content:flex-start;
+
+}
+
+}

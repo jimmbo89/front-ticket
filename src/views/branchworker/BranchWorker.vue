@@ -1,80 +1,85 @@
 <template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
+  <v-snackbar
+    class="mt-12"
+    location="right top"
+    :timeout="sb_timeout"
+    :color="sb_type"
+    elevation="24"
+    :multi-line="true"
+    vertical
+    v-model="snackbar"
+  >
     <v-row>
       <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
+        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
       </v-col>
+
       <v-col md="10">
         <h4>{{ sb_title }}</h4>
         {{ sb_message }}
-        <div v-if="branch">
-          <!-- Aquí puedes agregar más información sobre la sucursal -->
-        </div>
+
+        <div v-if="branch"></div>
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-img :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
-                            alt="image" class="icono-concavo" cover></v-img>
+
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-img
+        :src="`${this.$axios.defaults.baseURL}images/${this.branch.image}?t=${getCacheTimestamp()}`"
+        alt="Sucursal"
+        cover
+      />
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">{{ this.branch.name }}</div>
-      <div class="text-body-2 text-grey">Gestionar Trabajdores de la Sucursal</div>
+    <div>
+      <div class="busgo-page-title">
+        {{ this.branch.name }}
+      </div>
+
+      <div class="busgo-page-subtitle">
+        Gestionar trabajadores de la sucursal
+      </div>
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-spacer />
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-btn
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAdd()"
+    >
       Agregar Trabajador
     </v-btn>
   </v-card>
-      <!--<v-card-text>
-        <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>
-        <v-data-table :headers="headers" :search="search" :items="branchworkers" class="elevation-1"
-          style="max-height: 65vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-          <template v-slot:item.actions="{ item }">
-            <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-              elevation="1" title="Editar Trabajador"></v-btn>
-            <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-              elevation="1" title="Eliminar Trabajador"></v-btn>
-          </template>
-          <template v-slot:item.workerName="{ item }">
-            <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="large">
-              <v-img :src="`${this.$axios.defaults.baseURL}images/${item.workerImage
-                }?v=${imageVersion}`" alt="image"></v-img> </v-avatar>
-            {{ item.workerName }}
-          </template>
-        </v-data-table>
-      </v-card-text>-->
-      <v-card flat>
-      <v-card-title class="d-flex align-center text-body-1">
-        Listado de trabajadores
 
-        <v-spacer></v-spacer>
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="busgo-card-title">
+            Listado de trabajadores
+          </div>
+
+          <div class="busgo-card-subtitle">
+            Administra los trabajadores asignados a esta sucursal.
+          </div>
+        </div>
 
         <v-text-field
           v-model="search"
           density="compact"
-          label="Buscar trabajador"
+          placeholder="Buscar trabajador..."
           prepend-inner-icon="mdi-magnify"
-          variant="solo-filled"
+          variant="outlined"
           hide-details
           single-line
-          flat
-        ></v-text-field>
-      </v-card-title>
-
-      <v-divider class="my-2"></v-divider>
+          class="busgo-search"
+        />
+      </div>
 
       <v-data-table
         :headers="headers"
@@ -84,162 +89,233 @@
         no-data-text="No hay datos disponibles"
         :loading="loading"
         loading-text="Cargando datos..."
-        class="elevation-1"
         :hide-default-header="true"
-      style="max-height: 68vh; overflow-y: auto; background: transparent"
+        class="busgo-table"
       >
-          <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
-                Nombre del Trabajador
-              </div>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="branch-worker-col-name">
+              Nombre
+            </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 30%; min-width: 0" class="text-left font-weight-bold">
-                Rol
-              </div>
+            <div class="branch-worker-col-role">
+              Rol
+            </div>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 30%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+            <div class="branch-worker-col-actions"></div>
+          </div>
         </template>
-    <!-- Slot personalizado para cada fila -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              
-              <!-- Columna 1: Nombre del trabajador con avatar -->
-              <div class="d-flex align-center" style="width: 40%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                  <v-img
-                    :src="`${$axios.defaults.baseURL}images/${slotProps.item.workerImage}?v=${imageVersion}`"
-                    alt="Foto del trabajador"
-                    class="icono-concavo"
-                    cover
-                  ></v-img>
-                </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.workerName }}</span>
-                <v-tooltip activator="parent" location="top" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Nombre: {{ slotProps.item.workerName }}
+
+        <template #item="slotProps">
+          <tr>
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="branch-worker-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-img
+                      :src="`${$axios.defaults.baseURL}images/${slotProps.item.workerImage}?v=${imageVersion}`"
+                      alt="Foto del trabajador"
+                      cover
+                    />
+                  </v-avatar>
+
+                  <div class="busgo-name">
+                    {{ slotProps.item.workerName }}
+                  </div>
+                </div>
+
+                <div class="branch-worker-col-role busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-account-tie
+                  </v-icon>
+
+                  <span class="branch-worker-role-chip">
+                    {{ slotProps.item.roleName }}
                   </span>
-                </v-tooltip>
+                </div>
+
+                <div class="branch-worker-col-actions busgo-actions">
+                 
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar trabajador"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
               </div>
-
-              <!-- Columna 2: Rol -->
-              <div style="width: 30%; min-width: 0" class="text-truncate">
-                <span>{{ slotProps.item.roleName }}</span>
-                <v-tooltip activator="parent" location="top" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Rol: {{ slotProps.item.roleName }}
-                  </span>
-                </v-tooltip>
-              </div>
-
-              <!-- Columna 3: Acciones -->
-              <div class="d-flex gap-1" style="width: 30%; justify-content: flex-end; flex-wrap: nowrap">
-                <v-btn
-                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.primary"
-                  @click="editItem(slotProps.item)"
-                  class="flex-shrink-0 mr-1"
-                  title="Editar trabajador"
-                >
-                  <v-icon size="20">mdi-pencil</v-icon>
-                </v-btn>
-                <v-btn
-                  size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                  :color="paleteColors.error"
-                  @click="deleteItem(slotProps.item)"
-                  class="flex-shrink-0"
-                  title="Eliminar trabajador"
-                >
-                  <v-icon size="20">mdi-delete</v-icon>
-                </v-btn>
-              </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-</v-card>
-
-  <v-dialog v-model="dialog" max-width="400px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.worker_id"
-                  :items="workers" label="Trabajadores" prepend-icon="mdi-account" item-title="name" item-value="id"
-                  variant="underlined" :rules="selectRules" :disabled="this.editedIndex === 1">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
-                      :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name">
-                      <v-list-item-subtitle class="d-flex flex-column">
-                        <div>Correo: {{ item.raw.email }}</div>
-                        <div>Rol: {{ item.raw.roleName }}</div>
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                  </template>
-                </v-autocomplete>
-              </v-col>
-              <!--<v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.role_id" :items="roles"
-                  label="Roles" prepend-icon="mdi-account-tie" item-title="name" item-value="id" variant="underlined"
-                  :rules="selectRules">
-                </v-autocomplete>
-              </v-col>-->
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid" :loading="loading">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Trabajdor</span>
-      </v-toolbar>
-
-      <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el Trabajador seleccionado?</v-card-text>
-      <v-divider></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete"> Cancelar </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm"> Aceptar </v-btn>
-      </v-card-actions>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
     </v-card>
-  </v-dialog>
+  </v-container>
+
+<v-dialog v-model="dialog" max-width="520px" persistent>
+  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+    <v-card class="busgo-worker-dialog" elevation="18">
+
+      <div class="busgo-worker-header">
+        <div class="busgo-worker-icon">
+          <v-icon size="28">mdi-account-plus-outline</v-icon>
+        </div>
+
+        <div>
+          <div class="busgo-worker-title">
+            {{ formTitle }}
+          </div>
+          <div class="busgo-worker-subtitle">
+            Asigna un trabajador a esta sucursal
+          </div>
+        </div>
+
+        <v-spacer />
+
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          class="busgo-worker-close"
+          @click="close"
+        />
+      </div>
+
+      <v-card-text class="busgo-worker-body">
+        <label class="busgo-field-label">Trabajador</label>
+
+        <v-autocomplete
+          :no-data-text="'No hay datos disponibles'"
+          v-model="editedItem.worker_id"
+          :items="workers"
+          placeholder="Buscar trabajador..."
+          prepend-inner-icon="mdi-account-search-outline"
+          item-title="name"
+          item-value="id"
+          variant="outlined"
+          density="comfortable"
+          rounded="lg"
+          :rules="selectRules"
+          :disabled="this.editedIndex === 1"
+          hide-details="auto"
+          clearable
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              class="busgo-worker-option"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
+              :title="item.raw.name"
+            >
+              <v-list-item-subtitle class="busgo-worker-option-subtitle">
+                <div>
+                  <v-icon size="14">mdi-email-outline</v-icon>
+                  Correo: {{ item.raw.email }}
+                </div>
+                <div>
+                  <v-icon size="14">mdi-shield-account-outline</v-icon>
+                  Rol: {{ item.raw.roleName }}
+                </div>
+              </v-list-item-subtitle>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
+      </v-card-text>
+
+      <v-card-actions class="busgo-worker-actions">
+        <v-btn
+          class="busgo-worker-cancel"
+          variant="flat"
+          @click="close"
+        >
+          Cancelar
+        </v-btn>
+
+        <v-btn
+          class="busgo-worker-save"
+          variant="flat"
+          @click="save"
+          :disabled="!valid"
+          :loading="loading"
+        >
+          Guardar
+        </v-btn>
+      </v-card-actions>
+
+    </v-card>
+  </v-form>
+</v-dialog>
+
+ <v-dialog v-model="dialogDelete" max-width="480px" persistent>
+  <v-card class="busgo-delete-dialog" elevation="18">
+
+    <div class="busgo-delete-header">
+      <div class="busgo-delete-icon">
+        <v-icon size="30">mdi-account-remove-outline</v-icon>
+      </div>
+
+      <div>
+        <div class="busgo-delete-title">
+          Eliminar Trabajador
+        </div>
+        <div class="busgo-delete-subtitle">
+          Esta acción no se puede deshacer
+        </div>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        icon="mdi-close"
+        variant="text"
+        size="small"
+        class="busgo-delete-close"
+        @click="closeDelete"
+      />
+    </div>
+
+    <v-card-text class="busgo-delete-body">
+      <div class="busgo-delete-message">
+        ¿Desea eliminar el trabajador seleccionado?
+      </div>
+
+      <div class="busgo-delete-warning">
+        <v-icon size="20">mdi-information-outline</v-icon>
+        <span>
+          Verifique que el trabajador no tenga viajes, ventas o permisos asociados antes de continuar.
+        </span>
+      </div>
+    </v-card-text>
+
+    <v-card-actions class="busgo-delete-actions">
+      <v-btn
+        class="busgo-delete-cancel"
+        variant="flat"
+        @click="closeDelete"
+      >
+        Cancelar
+      </v-btn>
+
+      <v-btn
+        class="busgo-delete-confirm"
+        variant="flat"
+        @click="deleteItemConfirm"
+      >
+        Eliminar
+      </v-btn>
+    </v-card-actions>
+
+  </v-card>
+</v-dialog>
 </template>
 
 <script>
@@ -618,24 +694,166 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-/*.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
+.branch-worker-col-name {
+  width: 45%;
+  min-width: 0;
 }
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}*/
+
+.branch-worker-col-role {
+  width: 35%;
+  min-width: 0;
+}
+
+.branch-worker-col-actions {
+  width: 20%;
+  min-width: 0;
+}
+
+.branch-worker-role-chip {
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 960px) {
+  .branch-worker-col-name,
+  .branch-worker-col-role,
+  .branch-worker-col-actions {
+    width: 100%;
+  }
+}
+
+.busgo-worker-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-worker-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  color: #ffffff;
+}
+
+.busgo-worker-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-worker-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.busgo-worker-subtitle {
+  font-size: 13px;
+  opacity: 0.78;
+  margin-top: 3px;
+}
+
+.busgo-worker-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-worker-body {
+  padding: 24px !important;
+  background: #f8fafc;
+}
+
+.busgo-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.busgo-worker-option {
+  border-radius: 14px !important;
+  margin: 4px 8px !important;
+}
+
+.busgo-worker-option-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+  color: #64748b !important;
+  font-size: 12px;
+}
+
+.busgo-worker-option-subtitle div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.busgo-worker-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-worker-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 110px;
+}
+
+.busgo-worker-save {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+.busgo-worker-save.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 600px) {
+  .busgo-worker-header {
+    padding: 18px;
+  }
+
+  .busgo-worker-body {
+    padding: 18px !important;
+  }
+
+  .busgo-worker-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-worker-cancel,
+  .busgo-worker-save {
+    flex: 1;
+  }
+}
 </style>

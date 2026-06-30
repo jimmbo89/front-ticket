@@ -11,10 +11,11 @@ import { createApp } from "vue";
 import snotify from "vue3-snotify";
 import "vue3-snotify/style";
 import axios from './axios' // Importa la instancia configurada
+
+import 'vuetify/styles' 
+import './assets/styles/busgo.css'
+
 import DatePicker from "./components/DatePicker.vue";
-
-
-
 // Plugins
 import { registerPlugins } from "@/plugins";
 

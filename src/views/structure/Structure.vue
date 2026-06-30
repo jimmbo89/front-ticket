@@ -11,143 +11,153 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0">
-    <!-- Icono 
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-bus-side</v-icon>
+ <!-- HEADER BUSGO -->
+  <v-card class="busgo-page-header" elevation="0">
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
+      <v-icon>mdi-seat-passenger</v-icon>
     </v-avatar>
+
     <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Estructura de Asientos</div>
-      <div class="text-body-2 text-grey">Gestionar Estructura de Asientos</div>
-    </div>-->
+      <div class="text-h6 font-weight-bold">
+        Estructuras de Asientos
+      </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+      <div class="text-body-2 text-medium-emphasis">
+        Gestionar estructuras y distribución de asientos
+      </div>
+    </div>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
+    <v-spacer />
+
+    <v-btn
+      :color="paleteColors.primary"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-plus"
+      class="busgo-add-btn"
+      @click="showAdd()"
+    >
       Agregar Estructura
     </v-btn>
   </v-card>
-  <v-container style="min-width: 100%;">
-    <v-card flat>
-      <!-- Barra superior: selección de sucursal + botón buscar + búsqueda global -->
-      <v-card-title class="d-flex flex-wrap align-center gap-4 pb-2">
-        <!-- Título -->
-        <div class="text-subtitle-1 font-weight-bold">Listado de Estructuras de Asientos</div>
 
-        <!-- Spacer (solo visible en md+) -->
-        <v-spacer class="d-none d-md-block"></v-spacer>
-        <!-- Campo de búsqueda global -->
-        <div class="flex-grow-1" style="max-width: 300px">
-          <v-text-field v-model="search" density="compact" label="Buscar estructura" prepend-inner-icon="mdi-magnify"
-            variant="solo-filled" hide-details single-line flat></v-text-field>
+  <!-- CONTENIDO -->
+  <v-container fluid class="busgo-container">
+    <v-card class="busgo-card" elevation="0">
+      <div class="busgo-card-header">
+        <div>
+          <div class="text-subtitle-1 font-weight-bold">
+            Listado de estructuras
+          </div>
+
+          <div class="text-caption text-medium-emphasis">
+            Administra los diagramas usados por los vehículos.
+          </div>
         </div>
-      </v-card-title>
 
-      <!-- Tabla de viajes con filas personalizadas -->
-      <v-data-table :headers="headers" :items="structures" :search="search"
-        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-        loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto; background: transparent">
-        <template v-slot:top>
-          <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card flat color="blue-grey-lighten-5" class="mb-2 mx-1 rounded-lg" elevation="1"
-            style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center">
-            <v-card-text class="d-flex pa-2"
-              style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center">
-              <!-- Negocio (20%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar estructura..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          single-line
+          class="busgo-search"
+        />
+      </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Asientos
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 60%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 10%; min-width: 0" class="d-flex justify-left font-weight-bold">
-
-              </div>
-            </v-card-text>
-          </v-card>
+      <v-data-table
+        :headers="headers"
+        :items="structures"
+        :search="search"
+        :items-per-page-text="'Elementos por página'"
+        no-data-text="No hay datos disponibles"
+        :loading="loading"
+        loading-text="Cargando datos..."
+        :hide-default-header="true"
+        class="busgo-table"
+      >
+        <template #top>
+          <div class="structure-table-head">
+            <div class="structure-col-name">Nombre</div>
+            <div class="structure-col-seats">Asientos</div>
+            <div class="structure-col-description">Descripción</div>
+            <div class="structure-col-actions"></div>
+          </div>
         </template>
-        <!-- Fila personalizada -->
-        <template v-slot:item="slotProps">
+
+        <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Ruta -->
-                  <div style="width: 20%; min-width: 0" class="text-truncate">
+            <td class="pa-0 border-0">
+              <div class="busgo-row">
+                <div class="structure-col-name busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
+                  >
+                    <v-icon color="primary" size="20">
+                      mdi-seat-outline
+                    </v-icon>
+                  </v-avatar>
+
+                  <div class="busgo-name-text">
                     <span>{{ slotProps.item.name }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Nombre: {{ slotProps.item.name }}
-                      </span>
-                    </v-tooltip>
                   </div>
-                  <div class="d-flex align-center gap-1" style="width: 10%; min-width: 0; cursor: pointer;"
-                    @click="openDialog(slotProps.item)">
-                    <v-icon size="18" color="primary">mdi-seat-outline</v-icon>
-                    <span style="font-weight: 500; color: var(--v-theme-primary);">{{ slotProps.item.seatCount }}</span>
+                </div>
 
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        🔍 Haz clic para ver la estructura completa | Asientos: {{ slotProps.item.seatCount }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                <div
+                  class="structure-col-seats busgo-info-cell structure-seats-click"
+                  @click="openDialog(slotProps.item)"
+                >
+                  <v-icon size="16" color="primary">
+                    mdi-seat-outline
+                  </v-icon>
 
-                  <!-- Origen con avatar -->
-                  <div class="d-flex align-center" style="width: 60%; min-width: 0">
-                    <span class="text-truncate">{{ slotProps.item.description }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Descripción: {{ slotProps.item.description }}
-                      </span>
-                    </v-tooltip>
-                  </div>
+                  <span>{{ slotProps.item.seatCount }}</span>
+                </div>
 
-                  <!-- Acciones -->
-                  <div class="d-flex gap-1" style="width: 10%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar Estructura">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
+                <div class="structure-col-description busgo-info-cell">
+                  <span class="text-truncate">
+                    {{ slotProps.item.description }}
+                  </span>
+                </div>
 
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Estructura">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                <div class="structure-col-actions busgo-actions">
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.primary"
+                    @click="editItem(slotProps.item)"
+                    title="Editar Estructura"
+                  >
+                    <v-icon size="17">mdi-pencil</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    size="30"
+                    icon
+                    variant="tonal"
+                    :color="paleteColors.error"
+                    @click="deleteItem(slotProps.item)"
+                    title="Eliminar Estructura"
+                  >
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
-      <v-card-actions class="pa-4">
-    <v-spacer></v-spacer>
-    <v-btn
-      variant="flat"
-      :color="paleteColors.gris"
-      to="/company"
-      aria-label="Volver a Empresa"
-    >
-      Volver
-    </v-btn>
-  </v-card-actions>
+
+
     </v-card>
   </v-container>
+
   <!-- Diálogo para crear una nueva estructura-->
   <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
     <v-card>
@@ -630,64 +640,7 @@ export default {
       seat.label = ''; // Los pasillos no tienen número
 
       // No se incrementa el contador de asientos
-    },
-    /*resetSeatsFrom(rowIndex, seatIndex) {
-      const seatMap = this.editedItem.seatMap;
-
-      // Obtener el asiento seleccionado
-      const selectedSeat = seatMap[rowIndex][seatIndex];
-      // Si es un seat, reducir selectedCount en 1
-      if (selectedSeat.type === 'seat') {
-        this.selectedCount = parseInt(selectedSeat.label) - 1 || 0;
-      }
-      // Si es un aisle, buscar el primer seat antes del aisle y tomar su valor
-      else if (selectedSeat.type === 'aisle') {
-        let foundSeat = null;
-
-        // Buscar hacia atrás desde el aisle seleccionado
-        for (let i = rowIndex; i >= 0; i--) {
-          // Determinar el índice de inicio para la fila actual
-          const startIndex = (i === rowIndex) ? seatIndex - 1 : seatMap[i].length - 1;
-
-          // Iterar desde el índice de inicio hacia atrás
-          for (let j = startIndex; j >= 0; j--) {
-            if (seatMap[i][j].type === 'seat') {
-              foundSeat = seatMap[i][j];
-              break;
-            }
-          }
-
-          // Si se encontró un seat, salir del bucle
-          if (foundSeat) {
-            break;
-          }
-        }
-
-        // Si se encontró un seat antes del aisle, actualizar selectedCount
-        if (foundSeat) {
-          console.log('foundSeat.label:', foundSeat.label); // Verificar el valor encontrado
-          this.selectedCount = parseInt(foundSeat.label) || 0;
-        } else {
-          console.log('No se encontró un seat antes del aisle.'); // Mensaje de depuración
-        }
-      }
-
-      // Reiniciar todos los asientos y pasillos a partir del seleccionado
-      for (let i = rowIndex; i < seatMap.length; i++) {
-        for (let j = (i === rowIndex ? seatIndex : 0); j < seatMap[i].length; j++) {
-          const currentSeat = seatMap[i][j];
-
-          // Reiniciar el asiento o pasillo
-          currentSeat.type = undefined;
-          currentSeat.selected = false;
-          currentSeat.label = '';
-        }
-      }
-
-      // Actualizar nextSeatNumber
-      this.nextSeatNumber = this.selectedCount + 1;
-    },*/
-    resetSeatsFrom(rowIndex, seatIndex) {
+    }, resetSeatsFrom(rowIndex, seatIndex) {
       const seatMap = this.editedItem.seatMap;
 
       // Obtener el asiento seleccionado
@@ -720,64 +673,7 @@ export default {
       } else {
         return paleteColors.grey;
       }
-    },
-    /*async loadItems({ page, itemsPerPage, isSearch = false }) {
-      this.loading = true;
-      // Verifica si los datos de la página solicitada ya están cargados
-      // Solo verifica si los datos ya están cargados si no es una búsqueda
-      if (!isSearch) {
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const isPageLoaded = this.structures.slice(startIndex, endIndex).length === itemsPerPage;
-
-        if (isPageLoaded) {
-          this.loading = false;
-          this.structures = [];
-          return;
-        }
-      }
-
-
-      try {
-        // Realiza la solicitud al servidor
-        const result = await this.fetchData({ page, itemsPerPage, search: this.search });
-
-        if (result.success) {
-          const { structures, total, nextCursor } = result.data;
-          this.structures.push(...structures);
-          this.totalItems = total;
-          this.cursor = nextCursor; // Actualiza el cursor para la próxima página
-        } else {
-          this.structures = [];
-          this.totalItems = 0;
-        }
-      } catch (error) {
-        this.showAlert('error', 'Ocurrió un error inesperado al cargar los datos.', 3000);
-      } finally {
-        this.loading = false;
-      }
-    },
-    async fetchData({ page, itemsPerPage, search }) {
-      const data = {
-        cursor: this.cursor,
-        limit: itemsPerPage,
-        page,
-        search, // Envía el término de búsqueda al servidor
-      };
-
-      return await handleRequest({
-        endpoint: 'structure-cursor',
-        method: 'POST',
-        data: data,
-      });
-    },
-    handleSearch() {
-      console.log("Búsqueda realizada:", this.search); // Verifica que el método se ejecuta
-      // Reinicia la paginación y carga los datos con el término de búsqueda
-      this.cursor = null; // Reinicia el cursor
-      this.loadItems({ page: 1, itemsPerPage: this.itemsPerPage, isSearch: true });
-    },*/
-    // Genera la matriz de asientos con 4 columnas y el número mínimo de filas
+    }, // Genera la matriz de asientos con 4 columnas y el número mínimo de filas
     shouldDisplayRow(row, rowIndex) {
       // Si no es la última fila, siempre se muestra
       if (rowIndex !== this.item.seatMap.length - 1) return true;
@@ -808,61 +704,6 @@ export default {
       this.selectedCount = 0; // Reinicia el contador de asientos seleccionados
       this.nextSeatNumber = 1; // Reinicia el contador de números de asiento
     },
-    /*generateSeatMap() {
-      const totalSeats = this.editedItem.seatCount;
-      const columns = totalSeats <= 5 ? 4 : 5; // Número fijo de columnas
-      const fileMas = totalSeats <= columns ? 2 : 1;
-      console.log('fileMas');
-      console.log(fileMas);
-      const rows = Math.ceil(totalSeats / columns) + fileMas; // Número de filas
-      this.seatMap = [];
-      this.editedItem.seatMap = [];
-
-      for (let i = 0; i < rows; i++) {
-        const row = [];
-        for (let j = 0; j < columns; j++) {
-          row.push({ label: '', selected: false, disabled: false, type: '' }); // Todas las celdas son seleccionables
-        }
-        this.seatMap.push(row);
-        this.editedItem.seatMap.push(row);
-      }
-
-      this.selectedCount = 0; // Reinicia el contador de asientos seleccionados
-      this.nextSeatNumber = 1; // Reinicia el contador de números de asiento
-    },*/
-    // Cambia el estado de selección de un asiento
-    /*toggleSeat(rowIndex, seatIndex) {
-      const seat = this.editedItem.seatMap[rowIndex][seatIndex];
-
-      // Verificar si se puede seleccionar más asientos|
-      if (!seat.selected && this.selectedCount >= this.editedItem.seatCount) {
-        return; // No se pueden seleccionar más asientos
-      }
-
-      // Cambiar el estado de selección del asiento
-      seat.selected = !seat.selected;
-
-      if (seat.selected) {
-        // Asignar el siguiente número disponible
-        seat.label = `${this.nextSeatNumber}`;
-        this.nextSeatNumber++;
-        this.selectedCount++;
-
-        // Agregar el número del asiento seleccionado al array 'editedItem.seats'
-        this.editedItem.seats.push(this.nextSeatNumber - 1); // Usamos nextSeatNumber-1 porque ya se incrementó
-      } else {
-        // Eliminar la etiqueta del asiento deseleccionado
-        seat.label = '';
-        this.nextSeatNumber--;
-        this.selectedCount--;
-
-        // Eliminar el número del asiento deseleccionado del array 'editedItem.seats'
-        const index = this.editedItem.seats.indexOf(parseInt(seat.label));
-        if (index !== -1) {
-          this.editedItem.seats.splice(index, 1);
-        }
-      }
-    },*/
     deselectFollowingSeats(seatNumber) {
       // Recorrer todos los asientos para deseleccionar los que tienen un número mayor
       this.editedItem.seatMap.forEach(row => {
@@ -1425,4 +1266,255 @@ table.v-table > thead,
 .hidden-header .v-data-table__content > table > thead {
   display: none !important;
 }
+.busgo-page-header {
+  display: flex;
+  align-items: center;
+  padding: 18px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.busgo-page-icon {
+  border-radius: 14px;
+}
+
+.busgo-add-btn {
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.busgo-container {
+  padding: 24px;
+}
+
+.busgo-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.busgo-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
+}
+
+.busgo-search {
+  max-width: 380px;
+}
+
+.busgo-table {
+  max-height: calc(100vh - 285px);
+  overflow-y: auto;
+  background: transparent;
+}
+
+.structure-table-head {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  margin: 0 16px 6px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.busgo-row {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 20px;
+  margin: 0 16px 6px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: 0.15s ease;
+}
+
+.busgo-row:hover {
+  background: #f8fafc;
+  border-color: #dbeafe;
+}
+
+.structure-col-name {
+  width: 25%;
+  min-width: 0;
+}
+
+.structure-col-seats {
+  width: 12%;
+  min-width: 0;
+}
+
+.structure-col-description {
+  width: 48%;
+  min-width: 0;
+}
+
+.structure-col-actions {
+  width: 15%;
+  min-width: 0;
+}
+
+.busgo-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.busgo-avatar {
+  border: 1px solid #e5e7eb;
+}
+
+.busgo-name-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.busgo-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.structure-seats-click {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.busgo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+.busgo-footer {
+  padding: 12px 24px 18px;
+  border-top: 1px solid #eef2f7;
+}
+
+.border-0 {
+  border: 0 !important;
+}
+
+.busgo-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.busgo-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+.seat-map-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+}
+
+.seat-row {
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.seat-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seat-icon,
+.seat-icon-card {
+  cursor: pointer;
+  position: relative;
+}
+
+.seat-label,
+.seat-label-card {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+}
+
+.aisle-icon {
+  cursor: pointer;
+  position: relative;
+  opacity: 0.7;
+  width: 40px;
+  height: 40px;
+}
+
+.aisle-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.seat-button,
+.seat-button-preview {
+  min-width: 36px;
+  height: 36px;
+  margin: 2px;
+}
+
+@media (max-width: 960px) {
+  .busgo-page-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .busgo-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .busgo-search {
+    max-width: 100%;
+  }
+
+  .structure-table-head {
+    display: none;
+  }
+
+  .busgo-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .structure-col-name,
+  .structure-col-seats,
+  .structure-col-description,
+  .structure-col-actions {
+    width: 100%;
+  }
+
+  .busgo-actions {
+    justify-content: flex-start;
+  }
+}
+
 </style>

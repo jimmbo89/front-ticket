@@ -11,268 +11,175 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-    <!-- Icono -->
-    <v-avatar :color="paleteColors.primary" class="icono-concavo">
-      <v-icon cover>mdi-account</v-icon>
-    </v-avatar>
+ <v-card class="branch-page-header" elevation="0">
+  <v-avatar :color="paleteColors.primary" class="branch-page-icon">
+    <v-icon>mdi-account-group</v-icon>
+  </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Trabajadores</div>
-      <div class="text-body-2 text-grey">Gestionar Trabajadores</div>
+  <div class="ml-4">
+    <div class="text-h6 font-weight-bold">Trabajadores</div>
+
+    <div class="text-body-2 text-medium-emphasis">
+      Gestionar trabajadores
+    </div>
+  </div>
+
+  <v-spacer />
+
+  <v-btn
+    :color="paleteColors.primary"
+    variant="flat"
+    elevation="0"
+    prepend-icon="mdi-plus"
+    class="add-branch-btn"
+    @click="showAdd()"
+  >
+    Agregar Trabajador
+  </v-btn>
+</v-card>
+
+<v-container fluid class="branch-container">
+  <v-card class="branch-card" elevation="0">
+    <div class="branch-card-header">
+      <div>
+        <div class="text-subtitle-1 font-weight-bold">
+          Listado de trabajadores
+        </div>
+
+        <div class="text-caption text-medium-emphasis">
+          Administra usuarios, roles, datos personales y accesos del sistema.
+        </div>
+      </div>
+
+      <v-text-field
+        v-model="search"
+        density="compact"
+        placeholder="Buscar trabajador..."
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        hide-details
+        single-line
+        class="branch-search"
+      />
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
-
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAdd()">
-      Agregar Trabajador
-    </v-btn>
-  </v-card>
-    <v-container style="min-width: 100%; min-height: 100%">
-  <!--<v-card elevation="6" class="mx-2">
-    <v-card-text>
-      <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-        hide-details>
-      </v-text-field>
-      <v-data-table :headers="headers" :search="search" :items="workers" class="elevation-1"
-        style="max-height: 68vh; overflow-y: auto;" :items-per-page-text="'Elementos por páginas'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-        <template v-slot:item.actions="{ item }">
-          <v-btn density="comfortable" icon="mdi-pencil" @click="editItem(item)" :color="paleteColors.primary" variant="tonal"
-            elevation="1" title="Editar Trabajador"></v-btn>
-            <v-btn density="comfortable" icon="mdi-lock-reset" @click="changePass(item)" :color="paleteColors.teal" variant="tonal"
-                elevation="1" class="mr-1 ml-1" title="Modificar contraseña"></v-btn>
-          <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)" :color="paleteColors.error" variant="tonal"
-            elevation="1" title="Eliminar Trabajador"></v-btn>
-        </template>
-        <template v-slot:item.name="{ item }">
-          <v-avatar class="mr-1" elevation="3" color="grey-lighten-4" size="small">
-            <v-img :src="`${this.$axios.defaults.baseURL}images/${item.image}?v=${imageVersion}`" alt="image"></v-img>
-          </v-avatar>
-          {{ item.name }}
-        </template>
-      </v-data-table>
-    </v-card-text>
-  </v-card>
-  -->
-  <v-card flat>
-  <v-card-title class="d-flex align-center text-body-1">
-    Listado de trabajadores
-
-    <v-spacer></v-spacer>
-
-    <v-text-field
-      v-model="search"
-      density="compact"
-      label="Buscar Trabajador"
-      prepend-inner-icon="mdi-magnify"
-      variant="solo-filled"
-      hide-details
-      single-line
-      flat
-    ></v-text-field>
-  </v-card-title>
-  <v-data-table
-    :headers="headers"
-    :items="workers"
-    :search="search"
-    :items-per-page-text="'Elementos por página'"
-    no-data-text="No hay datos disponibles"
-    :loading="loading"
-    loading-text="Cargando datos..."
-    :hide-default-header="true"
-    class="elevation-1 hidden-header"
-    style="max-height: 68vh; overflow-y: auto; background: transparent"
-  >
-  <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
+    <v-data-table
+      :headers="headers"
+      :items="workers"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      :hide-default-header="true"
+      class="branch-table"
     >
-              <!-- Negocio (20%) -->
-              <div style="width: 25%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
+      <template #top>
+        <div class="worker-table-head">
+          <div class="worker-col-name">Nombre</div>
+          <div class="worker-col-user">Usuario</div>
+          <div class="worker-col-email">Correo</div>
+          <div class="worker-col-phone">Teléfono</div>
+          <div class="worker-col-rut">Rut</div>
+          <div class="worker-col-role">Rol</div>
+          <div class="worker-col-address">Dirección</div>
+          <div class="worker-col-actions"></div>
+        </div>
+      </template>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Usuario
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Correo
-              </div>
-
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Teléfono
-              </div>
-
-               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Rut
-              </div>
-
-               <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Rol
-              </div>
-
-               <div style="width: 20%; min-width: 0" class="text-left font-weight-bold">
-                Dirección
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 20%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
-    <!-- Slot personalizado para cada fila -->
-    <template v-slot:item="slotProps">
-      <tr>
-        <td colspan="100%" style="padding: 0; border: none">
-          <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-            <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-              
-              <!-- Columna 1: Nombre con avatar -->
-              <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
+      <template #item="slotProps">
+        <tr>
+          <td class="pa-0 border-0">
+            <div class="worker-row">
+              <div class="worker-col-name worker-name-cell">
+                <v-avatar
+                  size="36"
+                  rounded="lg"
+                  color="grey-lighten-4"
+                  class="branch-avatar"
+                >
                   <v-img
                     :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
-                    class="icono-concavo"
                     cover
-                  ></v-img>
+                  />
                 </v-avatar>
-                <span class="text-truncate">{{ slotProps.item.name }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Nombre: {{ slotProps.item.name }}
-                  </span>
-                </v-tooltip>
+
+                <div class="branch-name-text">
+                  <span>{{ slotProps.item.name }}</span>
+                </div>
               </div>
 
-              <!-- Columna 2: Usuario -->
-              <div style="width: 15%; min-width: 0" class="text-truncate text-center text-start">
-                <span>{{ slotProps.item.user }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Usuario: {{ slotProps.item.user }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-user branch-info-cell">
+                <span class="text-truncate">{{ slotProps.item.user }}</span>
               </div>
 
-              <!-- Columna 3: Correo -->
-              <div style="width: 20%; min-width: 0" class="text-truncate text-center text-start">
-                <span>{{ slotProps.item.email }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Correo: {{ slotProps.item.email }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-email branch-info-cell">
+                <v-icon size="16" color="primary">mdi-email-outline</v-icon>
+                <span class="text-truncate">{{ slotProps.item.email }}</span>
               </div>
 
-              <!-- Columna 4: Teléfono -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
-                <span>{{ slotProps.item.phone }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Teléfono: {{ slotProps.item.phone }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-phone branch-info-cell">
+                <v-icon size="16" color="primary">mdi-phone</v-icon>
+                <span class="text-truncate">{{ slotProps.item.phone }}</span>
               </div>
 
-              <!-- Columna 5: Rut -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
-                <span>{{ slotProps.item.rut }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    RUT: {{ slotProps.item.rut }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-rut branch-info-cell">
+                <span class="text-truncate">{{ slotProps.item.rut }}</span>
               </div>
 
-              <!-- Columna 6: Rol -->
-              <div style="width: 10%; min-width: 0" class="text-truncate text-center text-start">
-                <span>{{ slotProps.item.role }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Rol: {{ slotProps.item.role }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-role branch-info-cell">
+                <span class="worker-role-chip">
+                  {{ slotProps.item.role }}
+                </span>
               </div>
 
-              <!-- Columna 7: Dirección -->
-              <div style="width: 20%; min-width: 0" class="text-truncate text-start">
-                <span>{{ slotProps.item.address }}</span>
-                <v-tooltip activator="parent" location="bottom" max-width="350px">
-                  <span style="white-space: normal; word-break: break-word">
-                    Dirección: {{ slotProps.item.address }}
-                  </span>
-                </v-tooltip>
+              <div class="worker-col-address branch-info-cell">
+                <v-icon size="16" color="primary">mdi-map-marker-outline</v-icon>
+                <span class="text-truncate">{{ slotProps.item.address }}</span>
               </div>
 
-              <!-- Columna 8: Acciones -->
-              <div class="d-flex gap-1" style="width: 20%; justify-content: flex-end; flex-wrap: nowrap">
+              <div class="worker-col-actions branch-actions">
                 <v-btn
-                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                  size="30"
+                  icon
+                  variant="tonal"
                   :color="paleteColors.primary"
                   @click="editItem(slotProps.item)"
-                  class="flex-shrink-0 mr-1"
                   title="Editar Trabajador"
                 >
-                  <v-icon size="20">mdi-pencil</v-icon>
+                  <v-icon size="17">mdi-pencil</v-icon>
                 </v-btn>
 
                 <v-btn
-                 size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                  size="30"
+                  icon
+                  variant="tonal"
                   :color="paleteColors.teal"
                   @click="changePass(slotProps.item)"
-                  class="flex-shrink-0 mr-1"
                   title="Modificar contraseña"
                 >
-                  <v-icon size="20">mdi-lock-reset</v-icon>
+                  <v-icon size="17">mdi-lock-reset</v-icon>
                 </v-btn>
 
                 <v-btn
-                  size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
+                  size="30"
+                  icon
+                  variant="tonal"
                   :color="paleteColors.error"
                   @click="deleteItem(slotProps.item)"
-                  class="flex-shrink-0"
                   title="Eliminar Trabajador"
                 >
-                  <v-icon size="20">mdi-delete</v-icon>
+                  <v-icon size="17">mdi-delete</v-icon>
                 </v-btn>
               </div>
-            </v-card-text>
-          </v-card>
-        </td>
-      </tr>
-    </template>
-  </v-data-table>
-  <v-card-actions class="pa-4">
-    <v-spacer></v-spacer>
-    <v-btn
-      variant="flat"
-      :color="paleteColors.gris"
-      to="/company"
-      aria-label="Volver a Empresa"
-    >
-      Volver
-    </v-btn>
-  </v-card-actions>
-</v-card>
+            </div>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+
+
+  </v-card>
 </v-container>
   <v-dialog v-model="dialog" max-width="700px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
@@ -959,4 +866,94 @@ table.v-table > thead,
   display: none !important;
 }
 
+
+.worker-table-head {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  margin: 0 16px 6px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.worker-row {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 20px;
+  margin: 0 16px 6px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: 0.15s ease;
+}
+
+.worker-row:hover {
+  background: #f8fafc;
+  border-color: #dbeafe;
+}
+
+.worker-col-name {
+  width: 18%;
+  min-width: 0;
+}
+
+.worker-col-user {
+  width: 11%;
+  min-width: 0;
+}
+
+.worker-col-email {
+  width: 18%;
+  min-width: 0;
+}
+
+.worker-col-phone {
+  width: 11%;
+  min-width: 0;
+}
+
+.worker-col-rut {
+  width: 10%;
+  min-width: 0;
+}
+
+.worker-col-role {
+  width: 10%;
+  min-width: 0;
+}
+
+.worker-col-address {
+  width: 14%;
+  min-width: 0;
+}
+
+.worker-col-actions {
+  width: 8%;
+  min-width: 0;
+}
+
+.worker-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.worker-role-chip {
+  max-width: 100%;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 </style>

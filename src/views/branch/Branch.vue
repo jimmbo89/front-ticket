@@ -11,273 +11,379 @@
       </v-col>
     </v-row>
   </v-snackbar>
-  <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
+  <v-card class="branch-page-header"  elevation="0" >
     <!-- Icono -->
     <v-avatar :color="paleteColors.primary" class="icono-concavo">
       <v-icon cover>mdi-store</v-icon>
     </v-avatar>
 
-    <!-- Texto -->
-    <div class="ml-4">
-      <div class="text-h6 font-weight-medium">Sucursales</div>
-      <div class="text-body-2 text-grey">Gestionar Sucursales</div>
+   
+
+  <div class="ml-4">
+    <div class="text-h6 font-weight-bold">Sucursales</div>
+    <div class="text-body-2 text-medium-emphasis">Gestionar sucursales</div>
+  </div>
+
+  <v-spacer />
+
+  <v-btn
+    :color="paleteColors.primary"
+    variant="flat"
+    elevation="0"
+    prepend-icon="mdi-plus"
+    class="add-branch-btn"
+    @click="showAddBranch"
+  >
+    Agregar Sucursal
+  </v-btn>
+</v-card>
+
+<v-container fluid class="branch-container">
+  <v-card class="branch-card" elevation="0">
+    <div class="branch-card-header">
+      <div>
+        <div class="text-subtitle-1 font-weight-bold">
+          Listado de sucursales
+        </div>
+        <div class="text-caption text-medium-emphasis">
+          Administra la información de todas las sucursales registradas.
+        </div>
+      </div>
+
+      <v-text-field
+        v-model="search"
+        density="compact"
+        placeholder="Buscar sucursal..."
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        hide-details
+        single-line
+        class="branch-search"
+      />
     </div>
 
-    <!-- Botones -->
-    <v-spacer></v-spacer>
+    <v-data-table
+      :headers="headers"
+      :items="branches"
+      :search="search"
+      :items-per-page-text="'Elementos por página'"
+      no-data-text="No hay datos disponibles"
+      :loading="loading"
+      loading-text="Cargando datos..."
+      class="branch-table"
+      :hide-default-header="true"
+    >
+      <template #top>
+        <div class="branch-table-head">
+          <div class="branch-col-name">Nombre</div>
+          <div class="branch-col-phone">Teléfono</div>
+          <div class="branch-col-address">Dirección</div>
+          <div class="branch-col-actions"></div>
+        </div>
+      </template>
 
-    <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-      prepend-icon="mdi-plus-circle" @click="showAddBranch">
-      Agregar Sucursal
-    </v-btn>
+      <template #item="slotProps">
+        <tr>
+          <td class="pa-0 border-0">
+            <div class="branch-row">
+              <div class="branch-col-name branch-name-cell">
+                <v-avatar size="36" rounded="lg" color="grey-lighten-4" class="branch-avatar">
+                  <v-img
+                    :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
+                    cover
+                  />
+                </v-avatar>
+
+                <div class="branch-name-text">
+                  <span>{{ slotProps.item.name }}</span>
+                </div>
+              </div>
+
+              <div class="branch-col-phone branch-info-cell">
+                <v-icon size="16" color="primary">mdi-phone</v-icon>
+                <span class="text-truncate">{{ slotProps.item.phone }}</span>
+              </div>
+
+              <div class="branch-col-address branch-info-cell">
+                <v-icon size="16" color="primary">mdi-map-marker-outline</v-icon>
+                <span class="text-truncate">{{ slotProps.item.address }}</span>
+              </div>
+
+              <div class="branch-col-actions branch-actions">
+                <v-btn
+                  size="30"
+                  icon
+                  variant="tonal"
+                  :color="paleteColors.green"
+                  @click="showAddWorker(slotProps.item)"
+                  title="Agregar trabajador"
+                >
+                  <v-icon size="17">mdi-account-plus</v-icon>
+                </v-btn>
+
+                <v-btn
+                  size="30"
+                  icon
+                  variant="tonal"
+                  :color="paleteColors.orange"
+                  @click="showAddVehicle(slotProps.item)"
+                  title="Agregar vehículo"
+                >
+                  <v-icon size="17">mdi-bus</v-icon>
+                </v-btn>
+
+                <v-btn
+                  size="30"
+                  icon
+                  variant="tonal"
+                  :color="paleteColors.route"
+                  @click="showAddRoute(slotProps.item)"
+                  title="Agregar ruta"
+                >
+                  <v-icon size="17">mdi-map-marker-path</v-icon>
+                </v-btn>
+
+                <v-btn
+                  size="30"
+                  icon
+                  variant="tonal"
+                  :color="paleteColors.primary"
+                  @click="editItem(slotProps.item)"
+                  title="Editar"
+                >
+                  <v-icon size="17">mdi-pencil</v-icon>
+                </v-btn>
+
+                <v-btn
+                  size="30"
+                  icon
+                  variant="tonal"
+                  :color="paleteColors.error"
+                  @click="deleteItem(slotProps.item)"
+                  title="Eliminar"
+                >
+                  <v-icon size="17">mdi-delete</v-icon>
+                </v-btn>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </template>
+    </v-data-table>
+
+   
+    
   </v-card>
-  <v-container style="min-width: 100%;">
-    <v-card flat>
-      <!--<v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-          hide-details>
-        </v-text-field>-->
-      <v-card-title class="d-flex align-center text-body-1">
-        <!--<v-avatar :color="paleteColors.primary" size="40">
-      <v-icon>mdi-store</v-icon>
-    </v-avatar> &nbsp;-->
-        Listado de sucursales
+</v-container>
 
-        <v-spacer></v-spacer>
+ <v-dialog v-model="dialog" max-width="620px" persistent>
+  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+    <v-card class="busgo-dialog-card" elevation="18">
 
-        <v-text-field v-model="search" density="compact" label="Buscar Sucursal" prepend-inner-icon="mdi-magnify"
-          variant="solo-filled" hide-details single-line flat></v-text-field>
-      </v-card-title>
+      <!-- HEADER -->
+      <div class="busgo-dialog-header">
+        <div class="busgo-dialog-icon">
+          <v-icon size="28">mdi-store-marker-outline</v-icon>
+        </div>
 
-      <v-data-table :headers="headers" :items="branches" :search="search" :items-per-page-text="'Elementos por páginas'"
-        no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..." class="elevation-1"
-         style="max-height: 68vh; overflow-y: auto; background: transparent" :hide-default-header="true">
-        <!-- Header como tarjeta (fuera de thead) -->
-       <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) 
-              <div style="width: 20%; min-width: 0" class="text-left text-subtitle-2">
-                Empresa
-              </div>-->
+        <div>
+          <div class="busgo-dialog-title">
+            {{ formTitle }}
+          </div>
+          <div class="busgo-dialog-subtitle">
+            Administra la información principal de la sucursal
+          </div>
+        </div>
 
-              <!-- Nombre (20%) -->
-              <div style="width: 25%; min-width: 0" class="text-left text-subtitle-2">
-                Nombre
+        <v-spacer />
+
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          class="busgo-dialog-close"
+          @click="close"
+        />
+      </div>
+
+      <!-- BODY -->
+      <v-card-text class="busgo-dialog-body">
+        <v-row dense>
+
+          <v-col cols="12">
+            <label class="busgo-field-label">Nombre de la sucursal</label>
+            <v-text-field
+              v-model="editedItem.name"
+              clearable
+              placeholder="Ej: Terminal Puerto Montt"
+              prepend-inner-icon="mdi-store-outline"
+              variant="outlined"
+              density="comfortable"
+              rounded="lg"
+              :rules="nameRules"
+              hide-details="auto"
+            />
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <label class="busgo-field-label">Teléfono</label>
+            <v-text-field
+              v-model="editedItem.phone"
+              clearable
+              placeholder="+56912345678"
+              prepend-inner-icon="mdi-phone-outline"
+              variant="outlined"
+              density="comfortable"
+              rounded="lg"
+              :rules="mobileRules"
+              hide-details="auto"
+            />
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <label class="busgo-field-label">Dirección</label>
+            <v-text-field
+              v-model="editedItem.address"
+              clearable
+              placeholder="Ej: Av. Principal 123"
+              prepend-inner-icon="mdi-map-marker-outline"
+              variant="outlined"
+              density="comfortable"
+              rounded="lg"
+              hide-details="auto"
+            />
+          </v-col>
+
+          <v-col cols="12">
+            <div class="busgo-upload-section">
+              <div class="busgo-upload-info">
+                <label class="busgo-field-label">Imagen de la sucursal</label>
+
+                <v-file-input
+                  clearable
+                  v-model="file"
+                  ref="fileInput"
+                  variant="outlined"
+                  density="comfortable"
+                  rounded="lg"
+                  name="file"
+                  accept=".png, .jpg, .jpeg"
+                  prepend-inner-icon="mdi-image-plus-outline"
+                  prepend-icon=""
+                  label="Seleccionar imagen"
+                  hide-details="auto"
+                  @change="onFileSelected"
+                />
               </div>
 
-              <!-- Teléfono (10%) -->
-              <div style="width: 15%; min-width: 0" class="text-left text-subtitle-2">
-                Teléfono
+              <div class="busgo-image-preview">
+                <img
+                  v-if="imagenDisponible()"
+                  :src="imgedit"
+                  alt="Imagen sucursal"
+                />
+
+                <div v-else class="busgo-image-empty">
+                  <v-icon size="34">mdi-image-outline</v-icon>
+                  <span>Sin imagen</span>
+                </div>
               </div>
+            </div>
+          </v-col>
 
-              <!-- Dirección (25%) -->
-              <div style="width: 35%; min-width: 0" class="text-left text-subtitle-2">
-                Dirección
-              </div>
+        </v-row>
+      </v-card-text>
 
-              <!-- Acciones (25%) -->
-              <div style="width: 25%; min-width: 0" class="d-flex justify-left text-subtitle-2">
-                
-              </div>
-            </v-card-text>
-          </v-card>
-        </template>
-
-        <!-- Fila personalizada (tu código actual, sin cambios) -->
-        <template v-slot:item="slotProps">
-          <tr>
-            <td style="padding: 0; border: none">
-              <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-                <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                  <!-- Negocio -->
-                  <!--<div class="d-flex align-center" style="width: 20%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.companyImage}?t=${getCacheTimestamp()}`"
-                        class="icono-concavo" cover></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.companyName }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Empresa: {{ slotProps.item.companyName }}
-                      </span>
-                    </v-tooltip>
-                  </div>-->
-
-                  <!-- Nombre -->
-                  <div class="d-flex align-center" style="width: 25%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?t=${getCacheTimestamp()}`"
-                        class="icono-concavo" cover></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.name }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Nombre: {{ slotProps.item.name }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Teléfono -->
-                  <div style="width: 15%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.phone }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Teléfono: {{ slotProps.item.phone }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Dirección -->
-                  <div style="width: 35%; min-width: 0" class="text-truncate">
-                    <span>{{ slotProps.item.address }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Dirección: {{ slotProps.item.address }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Acciones -->
-                  <div class="d-flex gap-1" style="width: 25%; justify-content: flex-end; flex-wrap: nowrap">
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.green" @click="showAddWorker(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Agregar trabajador">
-                      <v-icon size="20">mdi-account-plus</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.orange" @click="showAddVehicle(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Agregar vehículo">
-                      <v-icon size="20">mdi-car</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.route" @click="showAddRoute(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Agregar ruta">
-                      <v-icon size="20">mdi-map-marker-path</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary" @click="editItem(slotProps.item)" class="flex-shrink-0 mr-1"
-                      title="Editar">
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </td>
-          </tr>
-        </template>
-      </v-data-table>
-      <v-card-actions class="pa-4">
-    <v-spacer></v-spacer>
-    <v-btn
-      variant="flat"
-      :color="paleteColors.gris"
-      to="/company"
-      aria-label="Volver a Empresa"
-    >
-      Volver
-    </v-btn>
-  </v-card-actions>
-    </v-card>
-  </v-container>
-
-  <v-dialog v-model="dialog" max-width="550px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <!--<v-col cols="12" md="12">
-                <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="editedItem.company_id"
-                  :items="companies" label="Negocios" prepend-icon="mdi-store-outline" item-title="name" item-value="id"
-                  variant="underlined" :rules="selectRules">
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props"
-                      :prepend-avatar="`${this.$axios.defaults.baseURL}images/${item.raw.image}`"
-                      :title="item.raw.name"></v-list-item>
-                  </template>
-                </v-autocomplete>
-              </v-col>-->
-              <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.name" clearable label="Nombre" prepend-icon="mdi-store"
-                  variant="underlined" :rules="nameRules"></v-text-field>
-              </v-col>
-              <!--<v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.rut" clearable label="Rut" prepend-icon="mdi-identifier"
-                  variant="underlined" :rules="rutRules"></v-text-field>
-              </v-col>-->
-              <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.phone" clearable label="Teléfono" placeholder="+56912345678"
-                  prepend-icon="mdi-phone" variant="underlined" :rules="mobileRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" md="12">
-                <v-text-field v-model="editedItem.address" clearable label="Dirección"
-                  prepend-icon="mdi-map-marker-outline" variant="underlined"></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-file-input clearable v-model="file" ref="fileInput" label="Imagen Sucursal" variant="underlined"
-                  density="compact" name="file" accept=".png, .jpg, .jpeg" @change="onFileSelected">
-                </v-file-input>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
-                  <img v-if="imagenDisponible()" :src="imgedit" height="120" width="210" />
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-          <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-            :loading="loading">Aceptar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4"> Eliminar Sucursal</span>
-      </v-toolbar>
-
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar la sucursal seleccionada?</v-card-text>
-      <v-divider></v-divider>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
+      <!-- ACTIONS -->
+      <v-card-actions class="busgo-dialog-actions">
+        <v-btn
+          class="busgo-btn-cancel"
+          variant="flat"
+          @click="close"
+        >
           Cancelar
         </v-btn>
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm">
-          Aceptar
+
+        <v-btn
+          class="busgo-btn-save"
+          variant="flat"
+          @click="save"
+          :disabled="!valid"
+          :loading="loading"
+        >
+          Guardar cambios
         </v-btn>
       </v-card-actions>
+
     </v-card>
-  </v-dialog>
+  </v-form>
+</v-dialog>
+
+
+<v-dialog v-model="dialogDelete" max-width="480px" persistent>
+  <v-card class="busgo-delete-dialog" elevation="18">
+
+    <!-- HEADER -->
+    <div class="busgo-delete-header">
+      <div class="busgo-delete-icon">
+        <v-icon size="30">mdi-alert-outline</v-icon>
+      </div>
+
+      <div>
+        <div class="busgo-delete-title">
+          Eliminar Sucursal
+        </div>
+        <div class="busgo-delete-subtitle">
+          Esta acción no se puede deshacer
+        </div>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        icon="mdi-close"
+        variant="text"
+        size="small"
+        class="busgo-delete-close"
+        @click="closeDelete"
+      />
+    </div>
+
+    <!-- BODY -->
+    <v-card-text class="busgo-delete-body">
+      <div class="busgo-delete-message">
+        ¿Desea eliminar la sucursal seleccionada?
+      </div>
+
+      <div class="busgo-delete-warning">
+        <v-icon size="20">mdi-information-outline</v-icon>
+        <span>
+          Verifique que la sucursal no tenga información importante asociada antes de continuar.
+        </span>
+      </div>
+    </v-card-text>
+
+    <!-- ACTIONS -->
+    <v-card-actions class="busgo-delete-actions">
+      <v-btn
+        class="busgo-delete-cancel"
+        variant="flat"
+        @click="closeDelete"
+      >
+        Cancelar
+      </v-btn>
+
+      <v-btn
+        class="busgo-delete-confirm"
+        variant="flat"
+        @click="deleteItemConfirm"
+      >
+        Eliminar
+      </v-btn>
+    </v-card-actions>
+
+  </v-card>
+</v-dialog>
 
   <!-- Diálogo donde se mostrarán los detalles del trabajador -->
   <v-dialog v-model="dialogBranchWorker" fullscreen transition="dialog-bottom-transition">
@@ -832,25 +938,459 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-/*.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
+.branch-page-header {
+  display: flex;
+  align-items: center;
+  padding: 18px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
 }
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}*/
+
+.branch-page-icon {
+  border-radius: 14px;
+}
+
+.add-branch-btn {
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.branch-container {
+  padding: 24px;
+}
+
+.branch-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.branch-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
+}
+
+.branch-search {
+  max-width: 380px;
+}
+
+.branch-table {
+  max-height: calc(100vh - 285px);
+  overflow-y: auto;
+  background: transparent;
+}
+
+.branch-table-head {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  margin: 0 16px 6px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.branch-row {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 20px;
+  margin: 0 16px 6px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: 0.15s ease;
+}
+
+.branch-row:hover {
+  background: #f8fafc;
+  border-color: #dbeafe;
+}
+
+.branch-col-name {
+  width: 30%;
+  min-width: 0;
+}
+
+.branch-col-phone {
+  width: 18%;
+  min-width: 0;
+}
+
+.branch-col-address {
+  width: 32%;
+  min-width: 0;
+}
+
+.branch-col-actions {
+  width: 20%;
+  min-width: 0;
+}
+
+.branch-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.branch-avatar {
+  border: 1px solid #e5e7eb;
+}
+
+.branch-name-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.branch-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.branch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+.branch-footer {
+  padding: 12px 24px 18px;
+  border-top: 1px solid #eef2f7;
+}
+
+.border-0 {
+  border: 0 !important;
+}
+
+.branch-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.branch-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+@media (max-width: 960px) {
+  .branch-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .branch-search {
+    max-width: 100%;
+  }
+
+  .branch-table-head {
+    display: none;
+  }
+
+  .branch-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .branch-col-name,
+  .branch-col-phone,
+  .branch-col-address,
+  .branch-col-actions {
+    width: 100%;
+  }
+
+  .branch-actions {
+    justify-content: flex-start;
+  }
+}
+
+.busgo-dialog-card {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  color: #ffffff;
+}
+
+.busgo-dialog-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.busgo-dialog-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.busgo-dialog-subtitle {
+  font-size: 13px;
+  opacity: 0.78;
+  margin-top: 3px;
+}
+
+.busgo-dialog-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-dialog-body {
+  padding: 24px !important;
+  background: #f8fafc;
+}
+
+.busgo-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 7px;
+  letter-spacing: 0.02em;
+}
+
+.busgo-upload-section {
+  display: grid;
+  grid-template-columns: 1fr 210px;
+  gap: 18px;
+  align-items: end;
+  padding: 16px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.busgo-upload-info {
+  min-width: 0;
+}
+
+.busgo-image-preview {
+  width: 210px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.busgo-image-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.busgo-dialog-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-btn-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 110px;
+}
+
+.busgo-btn-save {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 150px;
+}
+
+.busgo-btn-save.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 600px) {
+  .busgo-dialog-header {
+    padding: 18px;
+  }
+
+  .busgo-dialog-body {
+    padding: 18px !important;
+  }
+
+  .busgo-upload-section {
+    grid-template-columns: 1fr;
+  }
+
+  .busgo-image-preview {
+    width: 100%;
+    height: 160px;
+  }
+
+  .busgo-dialog-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-btn-cancel,
+  .busgo-btn-save {
+    flex: 1;
+  }
+}
+
+.busgo-delete-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.busgo-delete-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 55%, #dc2626 100%);
+  color: #ffffff;
+}
+
+.busgo-delete-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.busgo-delete-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.busgo-delete-subtitle {
+  font-size: 13px;
+  opacity: 0.82;
+  margin-top: 3px;
+}
+
+.busgo-delete-close {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.busgo-delete-body {
+  padding: 24px !important;
+  background: #fff7f7;
+}
+
+.busgo-delete-message {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 14px;
+}
+
+.busgo-delete-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.busgo-delete-actions {
+  padding: 18px 24px !important;
+  background: #ffffff;
+  border-top: 1px solid #fee2e2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.busgo-delete-cancel {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  min-width: 110px;
+}
+
+.busgo-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .busgo-delete-header {
+    padding: 18px;
+  }
+
+  .busgo-delete-body {
+    padding: 18px !important;
+  }
+
+  .busgo-delete-actions {
+    padding: 16px 18px !important;
+  }
+
+  .busgo-delete-cancel,
+  .busgo-delete-confirm {
+    flex: 1;
+  }
+}
 
 </style>
