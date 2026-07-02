@@ -13,26 +13,13 @@
     </v-card>
     <v-card flat>
         <v-card-text>
-            <v-tabs v-model="tabs" color="primary" grow class="text-subtitle-1">
-                <v-tab :value="1">
-                    <v-icon icon="mdi-steering"></v-icon>Viajes
-                </v-tab>
-                <v-tab :value="2">
-                    <v-icon icon="mdi-map-marker-path"></v-icon>Plantillas de Viaje
-                </v-tab>
-            </v-tabs>
+         
 
             <!-- Contenido de las pestañas: ahora controlado manualmente -->
             <div class="pa-0 flex-grow-1">
-                <v-window v-model="tabs">
-                    <v-window-item :value="1">
+              
                         <trip />
-                    </v-window-item>
-
-                    <v-window-item :value="2">
-                        <tripTemplate />
-                    </v-window-item>
-                </v-window>
+                   
             </div>
         </v-card-text>
     </v-card>

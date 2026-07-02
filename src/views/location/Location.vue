@@ -51,7 +51,7 @@
         <div>
           <div class="busgo-card-title">Listado de ubicaciones</div>
           <div class="busgo-card-subtitle">
-            Administra direcciones, coordenadas, país y ciudad.
+            Administra direcciones, coordenadas, país, ciudad y estado.
           </div>
         </div>
 
@@ -78,104 +78,29 @@
         :hide-default-header="true"
         class="busgo-table"
       >
-        <template v-slot:top>
-          <!-- Tarjeta de encabezado con alto fijo -->
-          <v-card
-            flat
-            color="blue-grey-lighten-5"
-            class="mb-2 mx-1 rounded-lg"
-            elevation="1"
-            style="
-              border: 1px solid #eceff1;
-              height: 40px;
-              min-height: 40px;
-              display: flex;
-              align-items: center;
-            "
-          >
-            <v-card-text
-              class="d-flex pa-2"
-              style="
-                width: 100%;
-                min-width: 0;
-                height: 100%;
-                padding: 0 16px !important;
-                display: flex;
-                align-items: center;
-              "
-            >
-              <!-- Negocio (20%) -->
-              <div style="width: 40%; min-width: 0" class="text-left font-weight-bold">
-                Dirección
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Longitud
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Latitud
-              </div>
-
-              <!-- Dirección (25%) -->
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                País
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Ciudad
-              </div>
-
-              <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                Estado
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div
-                style="width: 10%; min-width: 0"
-                class="d-flex justify-left font-weight-bold"
-              ></div>
-            </v-card-text>
-          </v-card>
+        <template #top>
+          <div class="busgo-table-head">
+            <div class="location-list-col-address">Nombre</div>
+            <div class="location-list-col-longitude">Longitud</div>
+            <div class="location-list-col-latitude">Latitud</div>
+            <div class="location-list-col-country">País</div>
+            <div class="location-list-col-city">Ciudad</div>
+            <div class="location-list-col-status">Estado</div>
+            <div class="location-list-col-actions"></div>
+          </div>
         </template>
 
         <template #item="slotProps">
           <tr>
-            <td colspan="100%" style="padding: 0; border: none">
-              <v-card
-                class="mb-2 mx-1 rounded-lg"
-                elevation="1"
-                density="comfortable"
-                flat
-              >
-                <v-card-text
-                  class="d-flex align-center pa-2"
-                  style="width: 100%; min-width: 0"
-                >
-                  <!-- Dirección con avatar -->
-                  <div class="d-flex align-center" style="width: 40%; min-width: 0">
-                    <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                      <v-img
-                        :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
-                        cover
-                      ></v-img>
-                    </v-avatar>
-                    <span class="text-truncate">{{ slotProps.item.address }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Dirección: {{ slotProps.item.address }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Longitud -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="text-truncate text-center text-start"
+            <td class="pa-0 border-0">
+              <div class="busgo-row location-list-row">
+                <div class="location-list-col-address busgo-name-cell">
+                  <v-avatar
+                    size="36"
+                    rounded="lg"
+                    color="grey-lighten-4"
+                    class="busgo-avatar"
                   >
-                     <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                     <v-img
                       :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
                       cover
@@ -185,33 +110,83 @@
                   <div class="busgo-name">
                     {{ slotProps.item.address }}
                   </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Dirección: {{ slotProps.item.address }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="location-col-longitude busgo-meta">
+                <div class="location-list-col-longitude busgo-meta">
                   <span class="text-truncate">
                     {{ slotProps.item.longitude }}
                   </span>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Longitud: {{ slotProps.item.longitude }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="location-col-latitude busgo-meta">
+                <div class="location-list-col-latitude busgo-meta">
                   <span class="text-truncate">
                     {{ slotProps.item.latitude }}
                   </span>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Latitud: {{ slotProps.item.latitude }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="location-col-country busgo-meta">
+                <div class="location-list-col-country busgo-meta">
                   <span class="text-truncate">
                     {{ slotProps.item.country }}
                   </span>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      País: {{ slotProps.item.country }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="location-col-city busgo-meta">
+                <div class="location-list-col-city busgo-meta">
                   <span class="text-truncate">
                     {{ slotProps.item.city }}
                   </span>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Ciudad: {{ slotProps.item.city }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="location-col-actions busgo-actions">
+                <div class="location-list-col-status">
+                  <v-chip
+                    size="small"
+                    :color="
+                      slotProps.item.active
+                        ? paleteColors.active
+                        : paleteColors.inactive
+                    "
+                    :text-color="paleteColors.white"
+                  >
+                    {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                  </v-chip>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
+                    </span>
+                  </v-tooltip>
+                </div>
+
+                <div class="location-list-col-actions busgo-actions">
                   <v-btn
                     size="30"
                     icon
@@ -230,95 +205,21 @@
                     :color="paleteColors.error"
                     @click="deleteItem(slotProps.item)"
                     title="Eliminar Lugar"
-                  />
-                    <span>{{ slotProps.item.country }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        País: {{ slotProps.item.country }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Ciudad -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="text-truncate text-center text-start"
                   >
-                    <span>{{ slotProps.item.city }}</span>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Ciudad: {{ slotProps.item.city }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Estado -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="d-flex align-center"
-                  >
-                    <v-chip
-                      :color="
-                        slotProps.item.active
-                          ? paleteColors.active
-                          : paleteColors.inactive
-                      "
-                      :text-color="paleteColors.white"
-                    >
-                      {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                    </v-chip>
-                    <v-tooltip activator="parent" location="bottom" max-width="350px">
-                      <span style="white-space: normal; word-break: break-word">
-                        Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <!-- Acciones -->
-                  <div
-                    class="d-flex gap-1"
-                    style="width: 10%; justify-content: flex-end; flex-wrap: nowrap"
-                  >
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.primary"
-                      @click="editItem(slotProps.item)"
-                      class="flex-shrink-0 mr-1"
-                      title="Editar Lugar"
-                    >
-                      <v-icon size="20">mdi-pencil</v-icon>
-                    </v-btn>
-
-                    <v-btn
-                      size="35"
-                      icon
-                      variant="outlined"
-                      :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error"
-                      @click="deleteItem(slotProps.item)"
-                      class="flex-shrink-0"
-                      title="Eliminar Lugar"
-                    >
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
+                    <v-icon size="17">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
             </td>
           </tr>
         </template>
       </v-data-table>
-
-
     </v-card>
   </v-container>
 
   <v-dialog v-model="dialog" max-width="700px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
+      <v-card class="busgo-dialog-card">
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
         </v-toolbar>
@@ -372,6 +273,7 @@
                   variant="underlined"
                 />
               </v-col>
+
               <v-col cols="12" md="6" class="d-flex align-center">
                 <div class="d-flex align-center compact-switch-line">
                   <v-switch
@@ -385,6 +287,7 @@
                     density="compact"
                     class="custom-switch compact-inline-switch"
                   />
+
                   <span
                     class="text-body-1 compact-switch-label"
                     :style="{ color: switchColor }"
@@ -411,7 +314,12 @@
               </v-col>
 
               <v-col cols="12" md="6">
-                <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
+                <v-card
+                  elevation="6"
+                  class="mx-auto location-preview-card"
+                  max-width="210"
+                  max-height="120"
+                >
                   <img
                     v-if="imagenDisponible()"
                     :src="imgedit"
@@ -426,7 +334,7 @@
 
         <v-divider />
 
-        <v-card-actions>
+        <v-card-actions class="busgo-dialog-actions">
           <v-spacer />
 
           <v-btn
@@ -452,7 +360,7 @@
   </v-dialog>
 
   <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
+    <v-card class="busgo-dialog-card">
       <v-toolbar :color="paleteColors.error">
         <span class="text-subtitle-2 ml-4">
           Eliminar ubicación
@@ -465,7 +373,7 @@
 
       <v-divider />
 
-      <v-card-actions>
+      <v-card-actions class="busgo-dialog-actions">
         <v-spacer />
 
         <v-btn
@@ -1336,5 +1244,79 @@ justify-content:flex-start;
 
 }
 
+}
+
+.location-list-col-address {
+  width: 34%;
+  min-width: 0;
+}
+
+.location-list-col-longitude {
+  width: 10%;
+  min-width: 0;
+}
+
+.location-list-col-latitude {
+  width: 10%;
+  min-width: 0;
+}
+
+.location-list-col-country {
+  width: 10%;
+  min-width: 0;
+}
+
+.location-list-col-city {
+  width: 10%;
+  min-width: 0;
+}
+
+.location-list-col-status {
+  width: 12%;
+  min-width: 0;
+}
+
+.location-list-col-actions {
+  width: 14%;
+  min-width: 0;
+}
+
+.location-list-row {
+  min-height: 62px;
+}
+
+.location-preview-card {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.compact-switch-line {
+  gap: 8px;
+}
+
+.compact-switch-label {
+  font-weight: 600;
+}
+
+.busgo-dialog-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.busgo-dialog-actions {
+  padding: 14px 18px;
+  background: #f8fafc;
+}
+
+@media (max-width: 960px) {
+  .location-list-col-address,
+  .location-list-col-longitude,
+  .location-list-col-latitude,
+  .location-list-col-country,
+  .location-list-col-city,
+  .location-list-col-status,
+  .location-list-col-actions {
+    width: 100%;
+  }
 }
 </style>
