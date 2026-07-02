@@ -1123,19 +1123,6 @@
                           <strong>Relación de Trabajadores</strong>
                         </span>
                       </v-col>
-
-                      <v-col cols="12" md="4" class="text-right">
-                        <v-btn
-                          class="text-subtitle-1"
-                          :color="paleteColors.white"
-                          variant="tonal"
-                          elevation="2"
-                          prepend-icon="mdi-plus-circle"
-                          @click="showAssiegnedWorker"
-                        >
-                          Asignar Trabajador
-                        </v-btn>
-                      </v-col>
                     </v-row>
                   </v-toolbar>
 

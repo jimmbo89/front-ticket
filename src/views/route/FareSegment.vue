@@ -534,8 +534,11 @@
                           step="1"
                           variant="underlined"
                           density="compact"
-                          hide-details
-                          :rules="ticketTypePriceRules(ticketType)"
+                          hide-details="auto"
+                          persistent-hint
+                          :hint="ticketTypePriceHint(ticketType)"
+                          :rules="ticketType.active ? ticketTypePriceRules(ticketType) : []"
+                          :disabled="ticketType.active === false"
                         ></v-text-field>
                       </div>
 
@@ -555,6 +558,7 @@
                             inset
                             density="compact"
                             class="fare-segment-row-switch"
+                            @update:model-value="onTicketTypeActiveChange"
                           />
                           <span
                             class="fare-segment-status-label text-body-2"
@@ -1108,6 +1112,30 @@ export default {
         (v) => ticketType.active === false || Number(v) >= 0 || "Debe ser mayor o igual a 0",
       ];
     },
+    ticketTypePriceHint(ticketType) {
+      if (ticketType.active === false) {
+        return "";
+      }
+
+      const priceValue = Number(ticketType.base_price);
+      const hasValidPrice =
+        ticketType.base_price !== "" &&
+        ticketType.base_price !== null &&
+        ticketType.base_price !== undefined &&
+        !Number.isNaN(priceValue) &&
+        priceValue >= 0;
+
+      return hasValidPrice
+        ? ""
+        : "Si el tipo de pasajero esta habilitado, el precio base es obligatorio.";
+    },
+    onTicketTypeActiveChange() {
+      this.$nextTick(() => {
+        if (this.$refs.form && typeof this.$refs.form.validate === "function") {
+          this.$refs.form.validate();
+        }
+      });
+    },
     addFareSegmentTicketType() {
       const nextTicketType = this.ticketTypes.find(
         (ticketType) =>
@@ -1282,11 +1310,14 @@ export default {
           : []
       ).find((ticketType) => {
         const isActive = ticketType.active !== false;
-        const hasPrice =
+        const priceValue = Number(ticketType.base_price);
+        const hasValidPrice =
           ticketType.base_price !== "" &&
           ticketType.base_price !== null &&
-          ticketType.base_price !== undefined;
-        return isActive && !hasPrice;
+          ticketType.base_price !== undefined &&
+          !Number.isNaN(priceValue) &&
+          priceValue >= 0;
+        return isActive && !hasValidPrice;
       });
 
       if (activeTicketTypeWithoutPrice) {

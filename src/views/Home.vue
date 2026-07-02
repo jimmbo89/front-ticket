@@ -336,6 +336,7 @@ export default {
       sb_timeout: 2000,
       sb_title: "",
       sb_icon: "",
+      role_id: "",
       role: "",
       paleteColors: paleteColors,
       showWelcomeMessage: false, // Controlar si se muestra el mensaje de bienvenida
@@ -366,7 +367,7 @@ export default {
     setInterval(this.updateDateTime, 1000);
 
     this.role = JSON.parse(LocalStorageService.getItem("role"));
-    if (this.role === "Administrador") {
+    if (this.normalizeRole(this.role) === "ADMINISTRADOR") {
       this.company_id = JSON.parse(LocalStorageService.getItem("business_id"));
       this.type = "Negocio";
     } else {
@@ -578,6 +579,11 @@ export default {
       this.sb_message = sb_message;
       this.sb_timeout = sb_timeout;
       this.snackbar = true;
+    },
+    normalizeRole(role) {
+      return String(role || "")
+        .trim()
+        .toUpperCase();
     },
   },
 };

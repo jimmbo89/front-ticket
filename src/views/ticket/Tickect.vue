@@ -147,7 +147,7 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="ticket-col-route">Ruta</div>
+            <div class="ticket-col-route">Tramos</div>
             <div class="ticket-col-date">Fecha</div>
             <div class="ticket-col-schedule">Horario</div>
             <div class="ticket-col-method">Método</div>
@@ -166,7 +166,17 @@
                 <div class="ticket-col-route">
                   <div class="d-flex align-center min-width-0">
                     <div class="ticket-route-main text-truncate">
-                      {{ slotProps.item.tripName }}
+                      <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
+
+                      <span class="text-truncate">
+                        {{ getTicketRouteOriginLabel(slotProps.item) }}
+                      </span>
+
+                      <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+
+                      <span class="text-truncate">
+                        {{ getTicketRouteDestinationLabel(slotProps.item) }}
+                      </span>
                     </div>
 
                     <v-chip
@@ -181,18 +191,18 @@
                   </div>
 
                   <div class="ticket-route-meta">
-                    <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
-
                     <span class="text-truncate">
-                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
-                    </span>
-
-                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-
-                    <span class="text-truncate">
-                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
+                      Ruta: {{ slotProps.item.tripName }}
                     </span>
                   </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="420px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Ruta: {{ slotProps.item.tripName }}<br />
+                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
+                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
                 <div class="ticket-col-date busgo-meta">
