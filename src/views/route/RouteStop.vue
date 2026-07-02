@@ -290,7 +290,7 @@
                   variant="underlined"
                   type="number"
                   min="1"
-                  :rules="numberRules"
+                  :rules="stopOrderRules"
                 ></v-text-field>
               </v-col>
 
@@ -525,6 +525,15 @@ export default {
     routeTitle() {
       return this.route?.name ? `Paradas de ${this.route.name}` : "Paradas de la ruta";
     },
+    stopOrderRules() {
+      return [
+        (v) => (v !== null && v !== undefined && v !== "") || "El campo es requerido",
+        (v) => !Number.isNaN(Number(v)) || "Debe ser un número válido",
+        (v) => Number(v) >= 1 || "El orden debe ser mayor o igual a 1",
+        (v) =>
+          !this.hasDuplicateStopOrder(v) || "Ya existe una parada con ese orden en esta ruta",
+      ];
+    },
   },
   mounted() {
     this.company_id = this.route?.company_id || LocalStorageService.getItem("business_id");
@@ -557,6 +566,31 @@ export default {
         allows_alighting: item.allows_alighting ?? true,
         active: item.active ?? true,
       };
+    },
+    getNextStopOrder() {
+      const stopOrders = (Array.isArray(this.routeStops) ? this.routeStops : [])
+        .map((stop) => Number(stop.stop_order ?? stop.stopOrder))
+        .filter((value) => Number.isFinite(value) && value > 0);
+
+      if (!stopOrders.length) {
+        return 1;
+      }
+
+      return Math.max(...stopOrders) + 1;
+    },
+    hasDuplicateStopOrder(value) {
+      const stopOrder = Number(value);
+      if (!Number.isFinite(stopOrder) || stopOrder < 1) {
+        return false;
+      }
+
+      return (Array.isArray(this.routeStops) ? this.routeStops : []).some((stop) => {
+        if (this.editedIndex !== -1 && Number(stop.id) === Number(this.editedItem.id)) {
+          return false;
+        }
+
+        return Number(stop.stop_order ?? stop.stopOrder) === stopOrder;
+      });
     },
     async loadLocations() {
       const result = await handleRequest({
@@ -613,6 +647,7 @@ export default {
         await this.loadLocations();
         this.editedItem.company_id = this.company_id;
         this.editedItem.route_id = this.route_id;
+        this.editedItem.stop_order = this.getNextStopOrder();
         this.dialog = true;
       } catch (error) {
         this.showAlert("error", "Ocurrió un error inesperado al procesar la solicitud.", 3000);
@@ -627,6 +662,15 @@ export default {
       this.editedIndex = -1;
     },
     async save() {
+      if (this.hasDuplicateStopOrder(this.editedItem.stop_order)) {
+        this.showAlert(
+          "warning",
+          "Ya existe una parada con ese orden. Elige otro número para continuar.",
+          3000
+        );
+        return;
+      }
+
       this.loading = true;
       try {
         const payload = {

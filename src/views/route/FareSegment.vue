@@ -737,19 +737,18 @@ export default {
       return `${year}-${month}-${day}`;
     },
     destinationStops() {
-      const originStop = this.getRouteStopById(this.editedItem.origin_route_stop_id);
-      if (!originStop) {
-        return this.routeStops.filter((stop) => this.canBeDestinationStop(stop));
-      }
-
       return this.routeStops.filter(
         (stop) =>
           this.canBeDestinationStop(stop) &&
-          Number(stop.stop_order) > Number(originStop.stop_order)
+          Number(stop.id) !== Number(this.editedItem.origin_route_stop_id)
       );
     },
     originStops() {
-      return this.routeStops.filter((stop) => this.canBeOriginStop(stop));
+      return this.routeStops.filter(
+        (stop) =>
+          this.canBeOriginStop(stop) &&
+          Number(stop.id) !== Number(this.editedItem.destination_route_stop_id)
+      );
     },
     hasMoreFareSegmentTicketTypes() {
       return this.ticketTypes.some(
@@ -782,6 +781,8 @@ export default {
       ) {
         this.editedItem.destination_route_stop_id = "";
       }
+
+      this.validateFareSegmentCombination();
     },
     "editedItem.valid_from"(newValue) {
       if (
@@ -791,6 +792,9 @@ export default {
       ) {
         this.editedItem.valid_to = "";
       }
+    },
+    "editedItem.destination_route_stop_id"() {
+      this.validateFareSegmentCombination();
     },
   },
   methods: {
@@ -818,6 +822,43 @@ export default {
         stop?.allows_alighting === 1 ||
         stop?.allows_alighting === "1"
       );
+    },
+    hasDuplicateFareSegment(originRouteStopId, destinationRouteStopId) {
+      if (!originRouteStopId || !destinationRouteStopId) {
+        return false;
+      }
+
+      const currentSegmentId = Number(this.editedItem?.id || 0);
+      return this.fareSegments.some((segment) => {
+        if (Number(segment.id) === currentSegmentId) {
+          return false;
+        }
+
+        return (
+          Number(segment.origin_route_stop_id) === Number(originRouteStopId) &&
+          Number(segment.destination_route_stop_id) === Number(destinationRouteStopId)
+        );
+      });
+    },
+    validateFareSegmentCombination() {
+      const originRouteStopId = this.editedItem.origin_route_stop_id;
+      const destinationRouteStopId = this.editedItem.destination_route_stop_id;
+
+      if (!originRouteStopId || !destinationRouteStopId) {
+        return true;
+      }
+
+      if (this.hasDuplicateFareSegment(originRouteStopId, destinationRouteStopId)) {
+        this.showAlert(
+          "warning",
+          "Ya existe un tramo con ese origen y destino. Cambia la combinación antes de continuar.",
+          3500
+        );
+        this.editedItem.destination_route_stop_id = "";
+        return false;
+      }
+
+      return true;
     },
     normalizeRouteStop(stop = {}) {
       return {
@@ -1209,6 +1250,12 @@ export default {
           "El origen debe estar antes que el destino dentro de la ruta.",
           3000
         );
+        return false;
+      }
+
+      if (
+        !this.validateFareSegmentCombination()
+      ) {
         return false;
       }
 

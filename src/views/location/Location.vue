@@ -154,109 +154,58 @@
                   class="d-flex align-center pa-2"
                   style="width: 100%; min-width: 0"
                 >
-                  <!-- DirecciÃ³n con avatar -->
                   <div class="d-flex align-center" style="width: 40%; min-width: 0">
                     <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
                       <v-img
                         :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
                         cover
-                      ></v-img>
+                      />
                     </v-avatar>
                     <span class="text-truncate">{{ slotProps.item.address }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        DirecciÃ³n: {{ slotProps.item.address }}
+                        Dirección: {{ slotProps.item.address }}
                       </span>
                     </v-tooltip>
                   </div>
 
-                  <!-- Longitud -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="text-truncate text-center text-start"
-                  >
-                     <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                    <v-img
-                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
-                      cover
-                    />
-                  </v-avatar>
-
-                  <div class="busgo-name">
-                    {{ slotProps.item.address }}
-                  </div>
-                </div>
-
-                <div class="location-col-longitude busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.longitude }}
-                  </span>
-                </div>
-
-                <div class="location-col-latitude busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.latitude }}
-                  </span>
-                </div>
-
-                <div class="location-col-country busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.country }}
-                  </span>
-                </div>
-
-                <div class="location-col-city busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.city }}
-                  </span>
-                </div>
-
-                <div class="location-col-actions busgo-actions">
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.primary"
-                    @click="editItem(slotProps.item)"
-                    title="Editar Lugar"
-                  >
-                    <v-icon size="17">mdi-pencil</v-icon>
-                  </v-btn>
-
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.error"
-                    @click="deleteItem(slotProps.item)"
-                    title="Eliminar Lugar"
-                  />
-                    <span>{{ slotProps.item.country }}</span>
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-start">
+                    <span>{{ slotProps.item.longitude ?? "-" }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        PaÃ­s: {{ slotProps.item.country }}
+                        Longitud: {{ slotProps.item.longitude ?? "-" }}
                       </span>
                     </v-tooltip>
                   </div>
 
-                  <!-- Ciudad -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="text-truncate text-center text-start"
-                  >
-                    <span>{{ slotProps.item.city }}</span>
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-start">
+                    <span>{{ slotProps.item.latitude ?? "-" }}</span>
                     <v-tooltip activator="parent" location="bottom" max-width="350px">
                       <span style="white-space: normal; word-break: break-word">
-                        Ciudad: {{ slotProps.item.city }}
+                        Latitud: {{ slotProps.item.latitude ?? "-" }}
                       </span>
                     </v-tooltip>
                   </div>
 
-                  <!-- Estado -->
-                  <div
-                    style="width: 10%; min-width: 0"
-                    class="d-flex align-center"
-                  >
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-start">
+                    <span>{{ slotProps.item.country || "-" }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        País: {{ slotProps.item.country || "-" }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <div style="width: 10%; min-width: 0" class="text-truncate text-start">
+                    <span>{{ slotProps.item.city || "-" }}</span>
+                    <v-tooltip activator="parent" location="bottom" max-width="350px">
+                      <span style="white-space: normal; word-break: break-word">
+                        Ciudad: {{ slotProps.item.city || "-" }}
+                      </span>
+                    </v-tooltip>
+                  </div>
+
+                  <div style="width: 10%; min-width: 0" class="d-flex align-center">
                     <v-chip
                       :color="
                         slotProps.item.active
@@ -274,7 +223,6 @@
                     </v-tooltip>
                   </div>
 
-                  <!-- Acciones -->
                   <div
                     class="d-flex gap-1"
                     style="width: 10%; justify-content: flex-end; flex-wrap: nowrap"
@@ -1338,3 +1286,4 @@ justify-content:flex-start;
 
 }
 </style>
+

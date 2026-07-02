@@ -441,6 +441,7 @@
                     <div>Salida</div>
                     <div>Llegada</div>
                     <div>Vehículo</div>
+                    <div>Disponibles</div>
                     <div>Precio</div>
                     <div></div>
                   </div>
@@ -479,6 +480,10 @@
                       <div>
                         <div class="trip-sale-strong">{{ tripRow.plate }}</div>
                         <div class="trip-sale-muted">{{ tripRow.internal_number }}</div>
+                      </div>
+
+                      <div class="trip-sale-price">
+                        {{ Number(tripRow.availableSeats) }}
                       </div>
 
                       <div class="trip-sale-price">
@@ -1085,6 +1090,7 @@ export default {
     selectedSeats: [], // AquÃ­ se almacenan los asientos seleccionados
     reservedSeats: [],
     availableSeats: [],
+    availableSeatNumbers: [],
     aviable: "",
     branches: [],
     showSeatsMenu: false,
@@ -1411,6 +1417,8 @@ export default {
             return;
           }
 
+          const fareAvailability = this.getTripFareAvailabilityForSegment(trip, fare);
+
           rows.push({
             id: `${trip.id}-${fare.id}`,
             trip_id: Number(trip.id),
@@ -1424,6 +1432,7 @@ export default {
             plate: trip.plate || trip.vehicleName || "-",
             internal_number: this.getTripInternalNumber(trip),
             price: Number(fare.price ?? fare.base_price ?? 0) || 0,
+            availableSeats: Number(fareAvailability.availableSeats) || 0,
           });
         });
       });
@@ -1570,6 +1579,7 @@ export default {
       this.selectedSeats = [];
       this.reservedSeats = [];
       this.availableSeats = [];
+      this.availableSeatNumbers = [];
       this.seatMap = [];
       this.aviable = 0;
       this.trips = [];
@@ -1685,6 +1695,7 @@ export default {
       this.editedItem.trip_id = null;
       this.editedItem.fare_segment_id = null;
       this.selectedSeats = [];
+      this.availableSeatNumbers = [];
       this.currentlyEditing = null;
       this.step = 1;
     },
@@ -1818,6 +1829,109 @@ export default {
       });
 
       return Array.from(uniqueSegments.values());
+    },
+    normalizeTripFareRecord(fare = {}) {
+      const fareSegmentTicketType = fare?.fareSegmentTicketType || {};
+      const fareSegment = fareSegmentTicketType?.fareSegment || fare?.fareSegment || {};
+      const availableSeatNumbers = this.normalizeSeatNumbers(
+        fare.availableSeatNumbers ?? fare.available_seat_numbers ?? []
+      );
+      const occupiedSeats = this.normalizeSeatNumbers(
+        fare.occupiedSeats ?? fare.occupied_seats ?? []
+      );
+      const reservedSeats = this.normalizeSeatNumbers(
+        fare.reservedSeats ?? fare.reserved_seats ?? []
+      );
+      const availableSeats = Number(
+        fare.availableSeats ??
+          fare.available_seats ??
+          availableSeatNumbers.length ??
+          0
+      );
+
+      return {
+        ...fare,
+        id: fare.id ?? null,
+        fare_segment_id:
+          fare.fare_segment_id ??
+          fareSegmentTicketType.fare_segment_id ??
+          fareSegment?.id ??
+          null,
+        fareSegmentTicketType,
+        fareSegment,
+        availableSeatNumbers,
+        occupiedSeats,
+        reservedSeats,
+        availableSeats: Number.isFinite(availableSeats) ? availableSeats : 0,
+        price:
+          Number(fare.price ?? fare.base_price ?? fareSegmentTicketType.base_price ?? 0) ||
+          0,
+        base_price:
+          Number(fare.base_price ?? fare.price ?? fareSegmentTicketType.base_price ?? 0) ||
+          0,
+      };
+    },
+    getTripFareRecords(trip = this.selectedTripRecord) {
+      return (Array.isArray(trip?.tripFares) ? trip.tripFares : [])
+        .map((fare) => this.normalizeTripFareRecord(fare))
+        .filter((fare) => fare && fare.id !== null && fare.id !== undefined);
+    },
+    getTripFareRecordForSegment(trip = this.selectedTripRecord, segment = null) {
+      const segmentId = Number(
+        segment?.id ??
+          segment?.fare_segment_id ??
+          segment?.fareSegmentTicketType?.fare_segment_id ??
+          this.editedItem.fare_segment_id ??
+          0
+      );
+
+      if (!segmentId) {
+        return null;
+      }
+
+      return (
+        this.getTripFareRecords(trip).find((fare) => {
+          const fareSegmentId = Number(
+            fare.fare_segment_id ??
+              fare.fareSegmentTicketType?.fare_segment_id ??
+              fare.fareSegment?.id ??
+              fare.fareSegmentTicketType?.fareSegment?.id ??
+              0
+          );
+
+          return fareSegmentId === segmentId;
+        }) || null
+      );
+    },
+    getTripFareAvailabilityForSegment(trip = this.selectedTripRecord, segment = null) {
+      const fareRecord = this.getTripFareRecordForSegment(trip, segment);
+
+      if (fareRecord) {
+        const availableSeatNumbers = Array.isArray(fareRecord.availableSeatNumbers)
+          ? fareRecord.availableSeatNumbers
+          : [];
+        const availableSeats = Number.isFinite(Number(fareRecord.availableSeats))
+          ? Number(fareRecord.availableSeats)
+          : availableSeatNumbers.length;
+
+        return {
+          availableSeats,
+          availableSeatNumbers,
+          occupiedSeats: Array.isArray(fareRecord.occupiedSeats)
+            ? fareRecord.occupiedSeats
+            : [],
+          reservedSeats: Array.isArray(fareRecord.reservedSeats)
+            ? fareRecord.reservedSeats
+            : [],
+        };
+      }
+
+      return {
+        availableSeats: 0,
+        availableSeatNumbers: [],
+        occupiedSeats: [],
+        reservedSeats: [],
+      };
     },
     getFareSegmentOriginStop(segment, trip = this.selectedTripRecord) {
       if (!segment) {
@@ -2422,14 +2536,17 @@ export default {
       return this.paleteColors.green; // Asiento disponible (verde)
     },
     isSeatAvailable(seat) {
-      // Verificar que sea un asiento vÃ¡lido, no reservado y no sea pasillo
       return (
-        seat.type === "seat" && seat.label && !this.isSeatReserved(Number(seat.label))
+        seat.type === "seat" &&
+        seat.label &&
+        this.availableSeatNumbers.includes(Number(seat.label)) &&
+        !this.isSeatReserved(Number(seat.label))
       );
     },
     updateSeats(tripId, preserveTicketItems = false) {
       this.availableSeats = [];
       this.reservedSeats = [];
+      this.availableSeatNumbers = [];
       this.aviable = 0;
       this.selectedSeats = [];
 
@@ -2460,12 +2577,19 @@ export default {
       const selectedFareSegment = hasSelectedSegment
         ? this.selectedFareSegmentRecord
         : null;
+      const fareAvailability = this.getTripFareAvailabilityForSegment(
+        selectedTrip,
+        selectedFareSegment
+      );
+      this.availableSeatNumbers = [...fareAvailability.availableSeatNumbers];
       this.reservedSeats = this.getOccupiedSeatsForSelection(
         selectedTrip,
         selectedFareSegment
       );
 
-      this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
+      this.availableSeats = this.availableSeatNumbers.length
+        ? [...this.availableSeatNumbers]
+        : this.generateAvailableSeats(this.seatMap, this.reservedSeats);
       this.aviable = this.availableSeats.length;
 
       if (this.editedIndex > -1 && this.editedItem.seats?.length) {
@@ -2487,15 +2611,26 @@ export default {
       const selectedFareSegment = this.selectedFareSegmentRecord;
       this.editedItem.price = 0;
       this.selectedSeats = [];
+      const fareAvailability = this.getTripFareAvailabilityForSegment(
+        selectedTrip,
+        selectedFareSegment
+      );
+      this.availableSeatNumbers = [...fareAvailability.availableSeatNumbers];
       this.reservedSeats = this.getOccupiedSeatsForSelection(
         selectedTrip,
         selectedFareSegment
       );
-      this.availableSeats = this.generateAvailableSeats(this.seatMap, this.reservedSeats);
+      this.availableSeats = this.availableSeatNumbers.length
+        ? [...this.availableSeatNumbers]
+        : this.generateAvailableSeats(this.seatMap, this.reservedSeats);
       this.aviable = this.availableSeats.length;
       this.recalculateTicketTotals();
     },
     generateAvailableSeats(seatMap, reservedSeats) {
+      if (Array.isArray(this.availableSeatNumbers) && this.availableSeatNumbers.length) {
+        return [...new Set(this.availableSeatNumbers.map(Number))];
+      }
+
       const availableSeats = [];
       const reservedNumbers = reservedSeats.map(Number); // Convertir a nÃºmeros
 
@@ -2579,8 +2714,31 @@ export default {
         hour12: false,
       }).format(new Date());
     },
+    normalizeTripDateTime(value, fallbackDate = null) {
+      const rawValue = String(value || "").trim();
+      if (!rawValue) {
+        return null;
+      }
+
+      const normalized = rawValue.replace("T", " ");
+      if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(:\d{2})?$/.test(normalized)) {
+        return normalized.length === 16 ? `${normalized}:00` : normalized.slice(0, 19);
+      }
+
+      const timeMatch = normalized.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+      if (!timeMatch) {
+        return normalized;
+      }
+
+      const datePart = String(fallbackDate || this.getChileDate()).split("T")[0];
+      const hours = timeMatch[1].padStart(2, "0");
+      const minutes = timeMatch[2];
+      const seconds = (timeMatch[3] || "00").padStart(2, "0");
+      return `${datePart} ${hours}:${minutes}:${seconds}`;
+    },
     filterTripsForReservation(trips, currentDate, currentTripId = null) {
       const nowChile = this.getChileDateTime();
+      const referenceDate = String(currentDate || this.getChileDate()).split("T")[0];
 
       return trips.filter((trip) => {
         // âœ… 1. Siempre incluir el viaje que se estÃ¡ editando
@@ -2592,7 +2750,11 @@ export default {
           return true;
         }
 
-        const tripArrival = String(trip.arrival).slice(0, 19).replace("T", " ");
+        const tripArrival = this.normalizeTripDateTime(trip.arrival, referenceDate);
+        if (!tripArrival) {
+          return true;
+        }
+
         return tripArrival > nowChile;
       });
     },
@@ -2637,6 +2799,7 @@ export default {
       this.editedIndex = -1;
       this.reservedSeats = [];
       this.availableSeats = [];
+      this.availableSeatNumbers = [];
       this.seatMap = [];
       this.aviable = 0;
     },
@@ -4560,7 +4723,7 @@ table.v-table > thead,
 
 .trip-sale-panel-pro__header {
   display: grid;
-  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.9fr 0.8fr;
+  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
   gap: 12px;
   padding: 13px 16px;
   background: #f1f5f9;
@@ -4573,7 +4736,7 @@ table.v-table > thead,
 
 .trip-sale-row-pro {
   display: grid;
-  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.9fr 0.8fr;
+  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
   gap: 12px;
   align-items: center;
   padding: 15px 16px;
