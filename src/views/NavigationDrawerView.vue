@@ -25,7 +25,7 @@
         "
         prepend-icon="mdi-bus"
         title="Viajes"
-        to="trip-home"
+        to="trip"
         class="drawer-item"
       />
 
@@ -34,6 +34,14 @@
         prepend-icon="mdi-ticket-confirmation-outline"
         title="Venta de Tickets"
         to="ticket"
+        class="drawer-item"
+      />
+
+          <v-list-item
+        v-if="hasPermission(['view_tickets', 'view_tickets_company'])"
+        prepend-icon="mdi-ticket-confirmation-outline"
+        title="Plantillas de Viaje"
+        to="trip-template"
         class="drawer-item"
       />
 
