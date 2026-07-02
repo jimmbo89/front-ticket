@@ -338,7 +338,7 @@
                     <label class="ticket-sale-label">Origen</label>
                     <v-autocomplete
                       v-model="selectedOriginLocationId"
-                      :items="locations"
+                      :items="originLocationOptions"
                       placeholder="Seleccione el origen"
                       prepend-inner-icon="mdi-map-marker-outline"
                       item-title="address"
@@ -369,7 +369,7 @@
                     <label class="ticket-sale-label">Destino</label>
                     <v-autocomplete
                       v-model="selectedDestinationLocationId"
-                      :items="locations"
+                      :items="destinationLocationOptions"
                       placeholder="Seleccione el destino"
                       prepend-inner-icon="mdi-map-marker-check-outline"
                       item-title="address"
@@ -707,6 +707,12 @@
                                   'seat-available': isSeatAvailable(seat),
                                   'seat-selected': selectedSeats.includes(Number(seat.label)),
                                   'seat-reserved': isSeatReserved(seat.label),
+                                  'seat-disabled':
+                                    seat.type === 'seat' &&
+                                    seat.label &&
+                                    !isSeatAvailable(seat) &&
+                                    !isSeatReserved(seat.label) &&
+                                    !selectedSeats.includes(Number(seat.label)),
                                   'seat-aisle': seat.type === 'aisle'
                                 }
                               ]"
@@ -1328,6 +1334,16 @@ export default {
 
       return this.getFareSegmentOptions(trip);
     },
+    originLocationOptions() {
+      return (Array.isArray(this.locations) ? this.locations : []).filter(
+        (location) => Number(location.id) !== Number(this.selectedDestinationLocationId)
+      );
+    },
+    destinationLocationOptions() {
+      return (Array.isArray(this.locations) ? this.locations : []).filter(
+        (location) => Number(location.id) !== Number(this.selectedOriginLocationId)
+      );
+    },
     tripSaleRows() {
       return this.buildTripSaleRows(this.trips);
     },
@@ -1440,8 +1456,22 @@ export default {
       return rows;
     },
     getTicketFareSegment(ticket) {
+      const directSegment =
+        ticket?.fareSegment ?? ticket?.fare_segment ?? ticket?.fareSegmentData ?? null;
+      if (directSegment) {
+        return directSegment;
+      }
+
+      const ticketItems = Array.isArray(ticket?.ticketItems) ? ticket.ticketItems : [];
+      const firstItem = ticketItems[0] || null;
+      const tripFare = firstItem?.tripFare || null;
+
       return (
-        ticket?.fareSegment ?? ticket?.fare_segment ?? ticket?.fareSegmentData ?? null
+        tripFare?.fareSegment ??
+        tripFare?.fareSegmentTicketType?.fareSegment ??
+        tripFare?.fare_segment?.fareSegment ??
+        tripFare?.fareSegmentData ??
+        null
       );
     },
     getFareSegmentRouteStopLabel(routeStop) {
@@ -1662,6 +1692,19 @@ export default {
       }
     },
     async handleLocationSelectionChange() {
+      if (
+        this.selectedOriginLocationId &&
+        this.selectedDestinationLocationId &&
+        Number(this.selectedOriginLocationId) === Number(this.selectedDestinationLocationId)
+      ) {
+        this.selectedDestinationLocationId = null;
+        this.showAlert(
+          "warning",
+          "El origen y el destino no pueden ser la misma ubicación.",
+          3000
+        );
+      }
+
       this.resetTripSelectionState(true);
       this.step = 1;
 
@@ -1932,6 +1975,19 @@ export default {
         occupiedSeats: [],
         reservedSeats: [],
       };
+    },
+    getReservedSeatNumbersForSegment(trip = this.selectedTripRecord, segment = null) {
+      const fareAvailability = this.getTripFareAvailabilityForSegment(trip, segment);
+
+      if (fareAvailability.reservedSeats.length) {
+        return [...new Set(fareAvailability.reservedSeats.map(Number))];
+      }
+
+      if (fareAvailability.occupiedSeats.length) {
+        return [...new Set(fareAvailability.occupiedSeats.map(Number))];
+      }
+
+      return this.getOccupiedSeatsForSelection(trip, segment);
     },
     getFareSegmentOriginStop(segment, trip = this.selectedTripRecord) {
       if (!segment) {
@@ -2329,6 +2385,14 @@ export default {
         trip?.reservedSeats || trip?.occupiedSeats || trip?.reserved_seats || []
       );
 
+      const fareAvailability = this.getTripFareAvailabilityForSegment(trip, fareSegment);
+      if (fareAvailability.reservedSeats.length) {
+        return [...new Set(fareAvailability.reservedSeats.map(Number))];
+      }
+      if (fareAvailability.occupiedSeats.length) {
+        return [...new Set(fareAvailability.occupiedSeats.map(Number))];
+      }
+
       const range = fareSegment
         ? this.getSegmentRange(fareSegment, trip)
         : this.getTripFullRange(trip);
@@ -2533,6 +2597,9 @@ export default {
       if (seat.type === "aisle") {
         return this.paleteColors.gris; // Pasillo (gris)
       }
+      if (!this.isSeatAvailable(seat)) {
+        return this.paleteColors.gris; // Asiento deshabilitado
+      }
       return this.paleteColors.green; // Asiento disponible (verde)
     },
     isSeatAvailable(seat) {
@@ -2582,7 +2649,7 @@ export default {
         selectedFareSegment
       );
       this.availableSeatNumbers = [...fareAvailability.availableSeatNumbers];
-      this.reservedSeats = this.getOccupiedSeatsForSelection(
+      this.reservedSeats = this.getReservedSeatNumbersForSegment(
         selectedTrip,
         selectedFareSegment
       );
@@ -2616,7 +2683,7 @@ export default {
         selectedFareSegment
       );
       this.availableSeatNumbers = [...fareAvailability.availableSeatNumbers];
-      this.reservedSeats = this.getOccupiedSeatsForSelection(
+      this.reservedSeats = this.getReservedSeatNumbersForSegment(
         selectedTrip,
         selectedFareSegment
       );
@@ -4966,6 +5033,13 @@ table.v-table > thead,
   color: #b91c1c !important;
   cursor: not-allowed;
   opacity: 0.8;
+}
+
+.seat-disabled {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .seat-aisle {

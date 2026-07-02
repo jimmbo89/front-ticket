@@ -355,6 +355,7 @@
                   item-title="locationName"
                   item-value="id"
                   variant="underlined"
+                  density="compact"
                   :rules="selectRules"
                 >
                   <template v-slot:item="{ props, item }">
@@ -382,6 +383,7 @@
                   item-title="locationName"
                   item-value="id"
                   variant="underlined"
+                  density="compact"
                   :rules="selectRules"
                 >
                   <template v-slot:item="{ props, item }">
@@ -406,6 +408,7 @@
                   prepend-icon="mdi-currency-usd"
                   variant="underlined"
                   type="number"
+                  density="compact"
                   min="0"
                   :rules="numberRules"
                 ></v-text-field>
@@ -532,6 +535,7 @@
                           variant="underlined"
                           density="compact"
                           hide-details
+                          :rules="ticketTypePriceRules(ticketType)"
                         ></v-text-field>
                       </div>
 
@@ -572,7 +576,7 @@
                   </div>
                 </v-card>
 
-                <div class="mt-3">
+                <!--<div class="mt-3">
                   <v-btn
                     variant="outlined"
                     :color="paleteColors.primary"
@@ -582,7 +586,7 @@
                   >
                     Agregar tipo de pasaje
                   </v-btn>
-                </div>
+                </div>-->
               </v-col>
             </v-row>
           </v-container>
@@ -1091,6 +1095,19 @@ export default {
         return payload;
       });
     },
+    ticketTypePriceRules(ticketType) {
+      return [
+        (v) =>
+          ticketType.active === false ||
+          (v !== "" && v !== null && v !== undefined) ||
+          "El precio base es obligatorio para tipos habilitados",
+        (v) =>
+          ticketType.active === false ||
+          !Number.isNaN(Number(v)) ||
+          "Debe ser un numero valido",
+        (v) => ticketType.active === false || Number(v) >= 0 || "Debe ser mayor o igual a 0",
+      ];
+    },
     addFareSegmentTicketType() {
       const nextTicketType = this.ticketTypes.find(
         (ticketType) =>
@@ -1256,6 +1273,28 @@ export default {
       if (
         !this.validateFareSegmentCombination()
       ) {
+        return false;
+      }
+
+      const activeTicketTypeWithoutPrice = (
+        Array.isArray(this.editedItem.fareSegmentTicketTypes)
+          ? this.editedItem.fareSegmentTicketTypes
+          : []
+      ).find((ticketType) => {
+        const isActive = ticketType.active !== false;
+        const hasPrice =
+          ticketType.base_price !== "" &&
+          ticketType.base_price !== null &&
+          ticketType.base_price !== undefined;
+        return isActive && !hasPrice;
+      });
+
+      if (activeTicketTypeWithoutPrice) {
+        this.showAlert(
+          "warning",
+          "Cada tipo de pasaje habilitado debe tener un precio base.",
+          3000
+        );
         return false;
       }
 
