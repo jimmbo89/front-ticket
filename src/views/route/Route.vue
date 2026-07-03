@@ -131,12 +131,12 @@
                   </v-avatar>
 
                   <span class="route-list-location text-truncate">
-                    {{ slotProps.item.originName }}
+                    {{ slotProps.item.originAddress }}
                   </span>
 
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Origen: {{ slotProps.item.originName }}
+                      Origen: {{ slotProps.item.originAddress }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -156,12 +156,12 @@
                   </v-avatar>
 
                   <span class="route-list-location text-truncate">
-                    {{ slotProps.item.destinationName }}
+                    {{ slotProps.item.destinationAddress }}
                   </span>
 
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Destino: {{ slotProps.item.destinationName }}
+                      Destino: {{ slotProps.item.destinationAddress }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -595,6 +595,21 @@ export default {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
+    normalizeRouteRecord(route = {}) {
+      return {
+        ...route,
+        id: route.id ?? route.route_id ?? "",
+        route_id: route.route_id ?? route.id ?? "",
+        origin_id: route.origin_id ?? route.originId ?? "",
+        destination_id: route.destination_id ?? route.destinationId ?? "",
+        originAddress: route.originAddress ?? route.originName ?? "",
+        originName: route.originName ?? route.originAddress ?? "",
+        destinationAddress: route.destinationAddress ?? route.destinationName ?? "",
+        destinationName: route.destinationName ?? route.destinationAddress ?? "",
+        originImage: route.originImage ?? "locations/default.jpg",
+        destinationImage: route.destinationImage ?? "locations/default.jpg",
+      };
+    },
     async showAdd() {
       //this.close();
       this.data = {};
@@ -641,14 +656,16 @@ export default {
       try {
         this.loading = true;
         const result = await handleRequest({
-          endpoint: "branch-routes",
-          method: "POST",
+          endpoint: "route",
+          method: "GET",
           data: {},
         });
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.branchRoutes = result.data?.branchRoutes || [];
+          this.branchRoutes = (result.data?.routes || []).map((route) =>
+            this.normalizeRouteRecord(route)
+          );
         } else {
           // Si no hay datos, asignamos un array vacío
           this.branchRoutes = [];
@@ -777,8 +794,8 @@ export default {
     },
     async editItem(item) {
       this.editedIndex = 1;
-      this.originalItem = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item);
+      this.originalItem = Object.assign({}, this.normalizeRouteRecord(item));
+      this.editedItem = Object.assign({}, this.normalizeRouteRecord(item));
       this.data = {};
       try {
         const result = await handleRequest({

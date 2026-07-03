@@ -346,7 +346,31 @@
             <template #item.1>
               <div class="trip-template-step-content">
                 <v-row style="margin-top: 5px">
-                  <v-col cols="12" md="12">
+                  <v-col v-if="mostrarFila" cols="12" md="6">
+                    <v-autocomplete
+                      :no-data-text="'No hay datos disponibles'"
+                      v-model="editedItem.branch_id"
+                      :items="branches"
+                      label="Sucursal"
+                      prepend-icon="mdi-store"
+                      item-title="name"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
+                      :disabled="editedIndex !== -1"
+                      @update:model-value="onTemplateBranchChange"
+                    >
+                      <template #item="{ props, item }">
+                        <v-list-item
+                          v-bind="props"
+                          :prepend-avatar="getImageUrl(item.raw.image)"
+                        />
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
                     <v-autocomplete
                       :no-data-text="'No hay datos disponibles'"
                       v-model="editedItem.route_id"
@@ -1190,27 +1214,49 @@
                       </template>
 
                       <template #item.actions="{ item }">
-                        <v-btn
-                          density="comfortable"
-                          :icon="isWorkerAssociated(item) ? 'mdi-delete' : 'mdi-plus'"
-                          @click="
-                            isWorkerAssociated(item)
-                              ? deleteItemWorker(item)
-                              : saveAssignedWorker(item)
-                          "
-                          :color="
-                            isWorkerAssociated(item)
-                              ? paleteColors.error
-                              : paleteColors.success
-                          "
-                          variant="tonal"
-                          elevation="1"
-                          :title="
-                            isWorkerAssociated(item)
-                              ? 'Eliminar Relación'
-                              : 'Agregar Relación'
-                          "
-                        />
+                        <div class="trip-worker-assignment-inline">
+                          <v-switch
+                            :model-value="isWorkerAssociated(item)"
+                            @update:model-value="
+                              (value) => {
+                                value
+                                  ? saveAssignedWorker(item)
+                                  : deleteItemWorker(item);
+                              }
+                            "
+                            :true-value="true"
+                            :false-value="false"
+                            :color="
+                              isWorkerAssociated(item)
+                                ? paleteColors.green
+                                : paleteColors.grey
+                            "
+                            :base-color="
+                              isWorkerAssociated(item)
+                                ? paleteColors.green
+                                : paleteColors.grey
+                            "
+                            density="compact"
+                            hide-details
+                            inset
+                            class="trip-worker-assignment-switch"
+                            :title="
+                              isWorkerAssociated(item)
+                                ? 'Quitar trabajador del viaje'
+                                : 'Asignar trabajador al viaje'
+                            "
+                          />
+                          <span
+                            class="text-body-2 trip-worker-assignment-label"
+                            :style="{
+                              color: isWorkerAssociated(item)
+                                ? paleteColors.green
+                                : paleteColors.grey
+                            }"
+                          >
+                            {{ isWorkerAssociated(item) ? "Asignado" : "Sin asignar" }}
+                          </span>
+                        </div>
                       </template>
                     </v-data-table>
                   </v-card-text>
@@ -1696,12 +1742,18 @@ export default {
           ),
           fareSegmentTicketTypes: ticketTypes.map((ticketType) => {
             const existingFare = fareMap.get(Number(ticketType.id));
+            const routeActive =
+              ticketType.active ??
+              ticketType.ticketTypeActive ??
+              ticketType.ticketType?.active ??
+              false;
+
             return {
               id: existingFare?.id || "",
               fare_segment_ticket_type_id: ticketType.id,
               price:
                 existingFare?.price ?? ticketType.base_price ?? ticketType.basePrice ?? 0,
-              active: existingFare?.active ?? true,
+              active: existingFare?.active ?? routeActive,
               source_type: existingFare?.source_type || "auto",
               ticketTypeName:
                 ticketType.ticketTypeName ||
@@ -1851,6 +1903,9 @@ export default {
 
       // Retorna true si al menos uno coincide
       return perms.some((p) => this.permissions.includes(p));
+    },
+    getImageUrl(imagePath) {
+      return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
     },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del dÃ­a actual
@@ -2117,47 +2172,23 @@ export default {
       this.menu = false;
     },
     async showAdd() {
-      this.close();
       this.step = 1;
       this.data = {};
       this.filteredWorkers = [];
       this.templateStopRows = [];
       this.templateFareRows = [];
       this.expandedTemplateFareIds = [];
-      this.data.branch_id = this.branch_id;
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem);
       this.originalItem = Object.assign({}, this.defaultItem);
+      this.editedItem.branch_id = this.branch_id;
       this.timeSlotsKey = Date.now();
-      try {
-        const result = await handleRequest({
-          endpoint: "get-routes-vehicle-workers",
-          method: "POST",
-          data: this.data,
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.routes = result.data?.triproutes || [];
-          this.vehicles = result.data?.tripvehicles || [];
-          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
-          this.syncTemplateStopsFromRoute(true);
-          this.syncTemplateFareRows(true);
-        } else {
-          // Si no hay datos, asignamos un array vacÃ­o
-          this.routes = [];
-          this.vehicles = [];
-          this.workers = [];
-        }
-      } catch (error) {
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.dialog = true;
-      }
+      await this.loadTripTemplateFormData(this.editedItem.branch_id, {
+        resetSelections: true,
+      });
+      this.syncTemplateStopsFromRoute(true);
+      this.syncTemplateFareRows(true);
+      this.dialog = true;
     },
     close() {
       this.dialog = false;
@@ -2269,6 +2300,80 @@ export default {
         this.loading = false;
       }
     },
+    async loadTripTemplateFormData(branchId, { resetSelections = false } = {}) {
+      const normalizedBranchId =
+        branchId ?? this.editedItem.branch_id ?? this.branch_id;
+
+      if (
+        normalizedBranchId === "null" ||
+        normalizedBranchId === null ||
+        normalizedBranchId === ""
+      ) {
+        this.routes = [];
+        this.vehicles = [];
+        this.workers = [];
+        this.filteredWorkers = [];
+
+        if (resetSelections) {
+          this.editedItem.route_id = "";
+          this.editedItem.vehicle_id = "";
+          this.editedItem.workers = [];
+          this.templateStopRows = [];
+          this.templateFareRows = [];
+          this.expandedTemplateFareIds = [];
+          this.estimated = 0;
+        }
+
+        return;
+      }
+
+      this.data = {};
+      this.data.branch_id = normalizedBranchId;
+
+      try {
+        const result = await handleRequest({
+          endpoint: "get-routes-vehicle-workers",
+          method: "POST",
+          data: this.data,
+        });
+
+        if (result.success) {
+          this.routes = result.data?.triproutes || [];
+          this.vehicles = result.data?.tripvehicles || [];
+          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
+
+          if (resetSelections) {
+            this.editedItem.route_id = "";
+            this.editedItem.vehicle_id = "";
+            this.editedItem.workers = [];
+            this.templateStopRows = [];
+            this.templateFareRows = [];
+            this.expandedTemplateFareIds = [];
+            this.estimated = 0;
+            this.filteredWorkers = [];
+          } else {
+            this.filterWorkers();
+          }
+        } else {
+          this.routes = [];
+          this.vehicles = [];
+          this.workers = [];
+          this.filteredWorkers = [];
+        }
+      } catch (error) {
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000
+        );
+      }
+    },
+    async onTemplateBranchChange(branchId) {
+      this.editedItem.branch_id = branchId;
+      await this.loadTripTemplateFormData(branchId, { resetSelections: true });
+      this.syncTemplateStopsFromRoute(true);
+      this.syncTemplateFareRows(true);
+    },
     async save() {
       this.loading = true;
       if (this.editedIndex === -1) {
@@ -2309,7 +2414,7 @@ export default {
             return obj;
           }, {});
         if (Object.keys(updatedFields).length > 0) {
-          updatedFields.branch_id = this.branch_id;
+          updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
           try {
             const result = await handleRequest({
               endpoint: "trip-template",
@@ -2320,6 +2425,7 @@ export default {
             // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
+              this.branch_id = this.editedItem.branch_id ?? this.branch_id;
               this.initialize();
               this.loading = false;
             } else {
@@ -2392,6 +2498,7 @@ export default {
           }, {});
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.id = this.editedItem.id;
+          updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
           try {
             const result = await handleRequest({
               endpoint: "trip-template",
@@ -2402,6 +2509,7 @@ export default {
             // Manejo de la respuesta segÃºn el resultado
             if (result.success) {
               this.showAlert("success", result.message, 3000);
+              this.branch_id = this.editedItem.branch_id ?? this.branch_id;
               this.initialize();
               this.loading = false;
             } else {
@@ -2436,42 +2544,17 @@ export default {
       this.editedItem.tripFares = this.parseTemplateFares(this.editedItem.tripFares);
       this.templateStopRows = [];
       this.templateFareRows = [];
-      this.data = {};
-      this.data.branch_id = this.branch_id;
-      try {
-        const result = await handleRequest({
-          endpoint: "get-routes-vehicle-workers",
-          method: "POST",
-          data: this.data,
-        });
+      this.editedItem.branch_id = this.editedItem.branch_id ?? this.branch_id;
+      await this.loadTripTemplateFormData(this.editedItem.branch_id, {
+        resetSelections: false,
+      });
 
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.routes = result.data?.triproutes || [];
-          this.vehicles = result.data?.tripvehicles || [];
-          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
-
-          const matchedRoute = this.getSelectedRouteRecord();
-          this.estimated = matchedRoute ? matchedRoute.estimated : null;
-          this.syncTemplateStopsFromRoute(false);
-          this.syncTemplateFareRows(false);
-        } else {
-          // Si no hay datos, asignamos un array vacÃ­o
-          this.routes = [];
-          this.vehicles = [];
-          this.workers = [];
-        }
-      } catch (error) {
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        //this.updateStimated();
-        this.filterWorkers();
-        this.dialog = true;
-      }
+      const matchedRoute = this.getSelectedRouteRecord();
+      this.estimated = matchedRoute ? matchedRoute.estimated : null;
+      this.syncTemplateStopsFromRoute(false);
+      this.syncTemplateFareRows(false);
+      this.filterWorkers();
+      this.dialog = true;
     },
     deleteItem(item) {
       this.tab = 1;
@@ -2708,6 +2791,51 @@ export default {
 .trip-fare-row-switch :deep(.v-switch__thumb) {
   transform: scale(0.7);
 }
+
+.trip-worker-assignment-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: max-content;
+  gap: 4px;
+  min-height: 44px;
+  margin: 0 auto;
+}
+
+.trip-worker-assignment-switch :deep(.v-selection-control) {
+  min-height: 0;
+  min-width: 0;
+  width: auto;
+}
+
+.trip-worker-assignment-switch :deep(.v-selection-control__input) {
+  color: inherit;
+}
+
+.trip-worker-assignment-switch :deep(.v-switch__track),
+.trip-worker-assignment-switch :deep(.v-selection-control--dirty .v-switch__track) {
+  transform: scale(0.62);
+  transform-origin: left center;
+  border-radius: 999px;
+  opacity: 0.92;
+}
+
+.trip-worker-assignment-switch :deep(.v-switch__thumb),
+.trip-worker-assignment-switch :deep(.v-selection-control--dirty .v-switch__thumb) {
+  transform: scale(0.68);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+}
+
+.trip-worker-assignment-switch :deep(.v-icon) {
+  font-size: 16px;
+}
+
+.trip-worker-assignment-label {
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;

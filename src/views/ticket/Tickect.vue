@@ -344,6 +344,26 @@
                 </div>
 
                 <v-row dense>
+                  <v-col v-if="mostrarFila" cols="12">
+                    <label class="ticket-sale-label">Sucursal</label>
+                    <v-autocomplete
+                      v-model="editedItem.branch_id"
+                      :items="branches"
+                      placeholder="Seleccione la sucursal"
+                      prepend-inner-icon="mdi-store"
+                      item-title="name"
+                      item-value="id"
+                      variant="outlined"
+                      density="comfortable"
+                      rounded="lg"
+                      clearable
+                      hide-details="auto"
+                      :no-data-text="'No hay sucursales disponibles'"
+                      :disabled="editedIndex !== -1"
+                      @update:model-value="onTicketBranchChange"
+                    />
+                  </v-col>
+
                   <v-col cols="12" md="6">
                     <label class="ticket-sale-label">Origen</label>
                     <v-autocomplete
@@ -1629,10 +1649,21 @@ export default {
         this.selectedDestinationLocationId = null;
       }
     },
-    async loadTripLocations() {
+    async loadTripLocations(branchId) {
       this.tripSearchLoading = true;
       this.data = {};
-      this.data.branch_id = Number(this.branch_id);
+      const normalizedBranchId = branchId ?? this.editedItem.branch_id ?? this.branch_id;
+      if (
+        normalizedBranchId === "null" ||
+        normalizedBranchId === null ||
+        normalizedBranchId === ""
+      ) {
+        this.locations = [];
+        this.promotions = [];
+        this.tripSearchLoading = false;
+        return;
+      }
+      this.data.branch_id = Number(normalizedBranchId);
       this.data.date = this.getChileDate();
 
       try {
@@ -1667,8 +1698,18 @@ export default {
       }
 
       this.tripSearchLoading = true;
+      const normalizedBranchId = this.editedItem.branch_id ?? this.branch_id;
+      if (
+        normalizedBranchId === "null" ||
+        normalizedBranchId === null ||
+        normalizedBranchId === ""
+      ) {
+        this.trips = [];
+        this.tripSearchLoading = false;
+        return;
+      }
       const requestData = {
-        branch_id: Number(this.branch_id),
+        branch_id: Number(normalizedBranchId),
         origin_id: Number(this.selectedOriginLocationId),
         destination_id: Number(this.selectedDestinationLocationId),
         date: this.getChileDate(),
@@ -1721,6 +1762,12 @@ export default {
       if (this.selectedOriginLocationId && this.selectedDestinationLocationId) {
         await this.loadTripsBySelectedLocations();
       }
+    },
+    async onTicketBranchChange(branchId) {
+      this.editedItem.branch_id = branchId;
+      this.tripSearchText = "";
+      this.resetTripSelectionState(false);
+      await this.loadTripLocations(branchId);
     },
     selectTripForSale(trip) {
       if (!trip) {
@@ -2845,11 +2892,12 @@ export default {
       await this.$nextTick();
       this.step = 1;
       this.editedItem.method = "Efectivo";
+      this.editedItem.branch_id = this.branch_id;
       this.normal = "";
       this.selectedPromotion = "";
       this.resetTripSelectionState(true);
       try {
-        await this.loadTripLocations();
+        await this.loadTripLocations(this.editedItem.branch_id);
         this.tickettypes = [];
       } catch (error) {
         this.showAlert(
@@ -3010,7 +3058,7 @@ export default {
         }
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.date = this.editedItem.date ? this.editedItem.date : new Date();
-          updatedFields.branch_id = this.branch_id;
+          updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
           updatedFields.method = this.editedItem.method || "Efectivo";
           updatedFields.price = this.getSelectedTripBasePrice();
           try {
@@ -3044,6 +3092,7 @@ export default {
                 //this.printTicket(result.data.ticket);
               }
               this.showAlert("success", result.message, 3000);
+              this.branch_id = this.editedItem.branch_id ?? this.branch_id;
               this.initialize();
               this.loading = false;
             } else {
@@ -3109,6 +3158,7 @@ export default {
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.id = this.editedItem.id;
           updatedFields.trip_id = this.editedItem.trip_id;
+          updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
           updatedFields.price = this.getSelectedTripBasePrice();
           try {
             const result = await handleRequest({
@@ -3548,7 +3598,8 @@ export default {
       this.selectedDestinationLocationId = null;
       this.selectedPromotion = null;
       try {
-        await this.loadTripLocations();
+        this.editedItem.branch_id = item.branch_id ?? this.branch_id;
+        await this.loadTripLocations(this.editedItem.branch_id);
         this.tickettypes = [];
 
         const originLabel = item.tripOrigin || item.origin || item.origin_label || "";

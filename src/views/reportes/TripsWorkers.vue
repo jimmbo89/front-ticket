@@ -368,6 +368,7 @@ export default {
         search: '',
         branch_id: '',
         worker_id: '',
+        user_id: '',
         selectedWorker: '',
         workers: [],
         role: '',
@@ -438,6 +439,7 @@ export default {
     mounted() {
         this.role = JSON.parse(LocalStorageService.getItem('role'));
         this.worker_id =  parseInt(LocalStorageService.getItem('worker_id'), 10);
+        this.user_id = parseInt(LocalStorageService.getItem('user_id'), 10);
         this.selectedWorker = this.worker_id;
         this.permissions = LocalStorageService.getItem('permissions');
         if (this.hasPermission('view_tripsworker_company'))  {
@@ -508,6 +510,8 @@ export default {
                     // Si la solicitud es exitosa, asignamos las sucursales
                     this.branches = result.data?.branches || [];
                     this.branch_id = this.branches[0].id;
+                    this.workers = this.branches[0]?.workers || [];
+                    this.selectedWorker = this.worker_id;
                 } else {
                     // Si no hay datos, asignamos un array vacío
                     this.branches = [];
@@ -533,7 +537,8 @@ export default {
             try {
                 this.data = {};
                 this.data.branch_id = this.branch_id;
-                this.data.worker_id = this.selectedWorker;
+                const selectedWorker = this.workers.find((worker) => worker.id === this.selectedWorker);
+                this.data.user_id = selectedWorker?.user_id ?? this.user_id ?? this.worker_id;
                 // Formatear las fechas
                /* const formattedDate = this.date ? format(new Date(this.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
                 const formattedEndDate = this.endDate ? format(new Date(this.endDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');*/

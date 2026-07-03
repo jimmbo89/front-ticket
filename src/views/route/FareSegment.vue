@@ -1069,6 +1069,12 @@ export default {
 
       return (Array.isArray(definitions) ? definitions : []).map((ticketType) => {
         const relation = relationsByTicketTypeId.get(Number(ticketType.id));
+        const ticketTypeActive =
+          ticketType.active ??
+          ticketType.ticketTypeActive ??
+          ticketType.ticketType?.active ??
+          true;
+
         return {
           id: relation?.id ?? "",
           ticket_type_id: ticketType.id,
@@ -1077,7 +1083,7 @@ export default {
             relation?.base_price !== undefined && relation?.base_price !== null
               ? Number(relation.base_price)
               : 0,
-          active: relation?.active ?? true,
+          active: relation?.active ?? ticketTypeActive,
         };
       });
     },
