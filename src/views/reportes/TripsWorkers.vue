@@ -554,7 +554,7 @@ export default {
                     this.data.endDate = formattedEndDate;
                 }
                 const result = await handleRequest({
-                    endpoint: 'trips-worker-date',
+                    endpoint: 'trips-worker-report',
                     method: 'POST',
                     data: this.data
                 });

@@ -253,12 +253,38 @@
                   <span class="text-truncate">{{ slotProps.item.schedule }}</span>
                 </div>
 
-                <div class="trip-col-start busgo-meta">
-                  <span class="text-truncate">{{ slotProps.item.start }}</span>
+                <div class="trip-col-start busgo-meta trip-datetime-cell">
+                  <div class="trip-datetime-value">
+                    <span >
+                      {{ formatTripDate(slotProps.item.start) }}
+                    </span>
+                    <span class="trip-datetime-time">
+                      {{ formatTripTime(slotProps.item.start) }}
+                    </span>
+                  </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      {{ formatTripDateTimeTooltip("Salida", slotProps.item.start) }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
-                <div class="trip-col-end busgo-meta">
-                  <span class="text-truncate">{{ slotProps.item.end }}</span>
+                <div class="trip-col-end busgo-meta trip-datetime-cell">
+                  <div class="trip-datetime-value">
+                    <span >
+                      {{ formatTripDate(slotProps.item.end) }}
+                    </span>
+                    <span class="trip-datetime-time">
+                      {{ formatTripTime(slotProps.item.end) }}
+                    </span>
+                  </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      {{ formatTripDateTimeTooltip("Llegada", slotProps.item.end) }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
                 <div class="trip-col-actions busgo-actions">
@@ -299,7 +325,7 @@
     :no-click-animation="true"
   >
     <v-card class="trip-dialog">
-      <v-card-text class="trip-dialog-body">
+      <v-card-text class="trip-dialog-body pa-0">
         <v-form
           v-model="valid"
           enctype="multipart/form-data"
@@ -314,7 +340,8 @@
             class="trip-stepper"
           >
             <template #item.1>
-              <div class="trip-step-content">
+              <div class="trip-step-pane trip-step-pane--summary">
+                <div class="trip-step-content">
                 <v-row style="margin-top: 5px">
                   <v-col v-if="mostrarFila" cols="12" md="6">
                     <v-autocomplete
@@ -543,7 +570,7 @@
                     />
                   </v-col>
                 </v-row>
-              </div>
+                </div>
 
               <v-divider />
 
@@ -569,10 +596,12 @@
                   </v-btn>
                 </v-row>
               </div>
+              </div>
             </template>
 
             <template #item.2>
-              <div class="trip-step-content">
+              <div class="trip-step-pane">
+                <div class="trip-step-content">
                 <v-sheet border>
                   <v-toolbar :color="paleteColors.primary">
                     <v-row align="center">
@@ -593,7 +622,7 @@
                     <v-data-table
                       :headers="tripStopsHeaders"
                       :items="tripStopRows"
-                      class="elevation-1"
+                      class="elevation-1 trip-step-table"
                       style="max-height: 68vh; overflow-y: auto"
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
@@ -838,7 +867,7 @@
                     </v-data-table>
                   </v-card-text>
                 </v-sheet>
-              </div>
+                </div>
 
               <v-divider />
 
@@ -860,10 +889,12 @@
                   </v-btn>
                 </v-row>
               </div>
+              </div>
             </template>
 
             <template #item.3>
-              <div class="trip-step-content">
+              <div class="trip-step-pane">
+                <div class="trip-step-content">
                 <v-sheet border>
                   <v-toolbar :color="paleteColors.primary">
                     <v-row align="center">
@@ -884,7 +915,7 @@
                     <v-data-table
                       :headers="tripFaresHeaders"
                       :items="tripFareRows"
-                      class="elevation-1"
+                      class="elevation-1 trip-step-table"
                       style="max-height: 68vh; overflow-y: auto"
                       :items-per-page-text="'Elementos por página'"
                       no-data-text="No hay datos disponibles"
@@ -1118,7 +1149,7 @@
                     </v-data-table>
                   </v-card-text>
                 </v-sheet>
-              </div>
+                </div>
 
               <v-divider />
 
@@ -1135,10 +1166,12 @@
                   </v-btn>
                 </v-row>
               </div>
+              </div>
             </template>
 
             <template #item.4>
-              <div class="trip-step-content">
+              <div class="trip-step-pane">
+                <div class="trip-step-content">
                 <v-sheet border>
                   <v-toolbar :color="paleteColors.primary">
                     <v-row align="center">
@@ -1154,7 +1187,7 @@
                     <v-data-table
                       :headers="headersWorkers"
                       :items="filteredWorkers"
-                      class="elevation-1"
+                      class="elevation-1 trip-step-table"
                       style="max-height: 68vh; overflow-y: auto"
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
@@ -1222,7 +1255,7 @@
                     </v-data-table>
                   </v-card-text>
                 </v-sheet>
-              </div>
+                </div>
 
               <v-divider />
 
@@ -1244,6 +1277,7 @@
                     Aceptar
                   </v-btn>
                 </v-row>
+              </div>
               </div>
             </template>
           </v-stepper>
@@ -2519,6 +2553,53 @@ export default {
         "No asignado"
       );
     },
+    splitTripDateTime(value) {
+      if (!value) {
+        return { date: "-", time: "-" };
+      }
+
+      const rawValue = String(value).trim();
+      if (!rawValue) {
+        return { date: "-", time: "-" };
+      }
+
+      if (/^\d{2}:\d{2}(:\d{2})?$/.test(rawValue)) {
+        return { date: "-", time: rawValue.slice(0, 5) };
+      }
+
+      const normalizedValue = rawValue.includes("T")
+        ? rawValue.replace("T", " ")
+        : rawValue;
+      const [datePart = "", timePart = ""] = normalizedValue.split(" ");
+
+      return {
+        date: datePart || "-",
+        time: timePart ? timePart.slice(0, 5) : "-",
+      };
+    },
+    formatTripDate(value) {
+      return this.splitTripDateTime(value).date;
+    },
+    formatTripTime(value) {
+      return this.splitTripDateTime(value).time;
+    },
+    formatTripDateTimeTooltip(label, value) {
+      const { date, time } = this.splitTripDateTime(value);
+
+      if (date === "-" && time === "-") {
+        return `${label}: -`;
+      }
+
+      if (date === "-") {
+        return `${label}: ${time}`;
+      }
+
+      if (time === "-") {
+        return `${label}: ${date}`;
+      }
+
+      return `${label}: ${date} ${time}`;
+    },
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type;
 
@@ -2787,6 +2868,31 @@ table.v-table>thead,
   min-width: 0;
 }
 
+.trip-datetime-cell {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+}
+
+.trip-datetime-value {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.trip-datetime-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.trip-datetime-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .trip-col-actions {
   width: 12%;
   min-width: 0;
@@ -2830,6 +2936,7 @@ table.v-table>thead,
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100vh;
 }
 
 .trip-dialog-body {
@@ -2837,29 +2944,85 @@ table.v-table>thead,
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  height: 100%;
 }
 
 .trip-form {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .trip-stepper {
-  max-height: 100vh;
-  min-height: 95vh;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.trip-stepper :deep(.v-stepper-window),
+.trip-stepper :deep(.v-window),
+.trip-stepper :deep(.v-window__container),
+.trip-stepper :deep(.v-stepper-window-item),
+.trip-stepper :deep(.v-stepper-window-item > .v-window-item) {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.trip-stepper :deep(.v-stepper-window) {
+  margin: 0;
+}
+
+.trip-stepper :deep(.v-window__container) {
+  height: 100%;
+}
+
+.trip-stepper :deep(.v-stepper-window-item),
+.trip-stepper :deep(.v-stepper-window-item > .v-window-item) {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-step-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  padding: 24px 24px 20px;
+  box-sizing: border-box;
 }
 
 .trip-step-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  height: 100%;
+  overflow: visible;
+}
+
+.trip-step-pane--summary .trip-step-content {
+  overflow: visible;
 }
 
 .trip-step-actions {
-  padding: 16px;
+  flex-shrink: 0;
+  padding: 16px 0 calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid #eeeeee;
+  margin-top: 16px;
+}
+
+.trip-step-table {
+  max-height: 52vh !important;
+  overflow-y: auto !important;
 }
 
 .busgo-submeta {

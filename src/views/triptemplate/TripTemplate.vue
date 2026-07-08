@@ -330,7 +330,7 @@
     :no-click-animation="true"
   >
     <v-card class="trip-template-dialog">
-      <v-card-text class="trip-template-dialog-body">
+      <v-card-text class="trip-template-dialog-body pa-0">
         <v-form
           v-model="valid"
           enctype="multipart/form-data"
@@ -344,7 +344,8 @@
             class="trip-template-stepper"
           >
             <template #item.1>
-              <div class="trip-template-step-content">
+              <div class="trip-template-step-pane trip-template-step-pane--summary">
+                <div class="trip-template-step-content">
                 <v-row style="margin-top: 5px">
                   <v-col v-if="mostrarFila" cols="12" md="6">
                     <v-autocomplete
@@ -611,6 +612,7 @@
                   </v-btn>
                 </v-row>
               </div>
+              </div>
             </template>
 
             <template #item.2>
@@ -635,8 +637,9 @@
                     <v-data-table
                       :headers="tripStopsHeaders"
                       :items="templateStopRows"
-                      class="elevation-1"
-                      style="max-height: 68vh; overflow-y: auto"
+                      class="elevation-1 trip-template-table"
+                      height="100%"
+                      fixed-header
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
@@ -890,7 +893,7 @@
                     Siguiente
                   </v-btn>
                 </v-row>
-              </div>
+                </div>
             </template>
 
             <template #item.3>
@@ -915,8 +918,9 @@
                     <v-data-table
                       :headers="tripFaresHeaders"
                       :items="templateFareRows"
-                      class="elevation-1"
-                      style="max-height: 68vh; overflow-y: auto"
+                      class="elevation-1 trip-template-table"
+                      height="100%"
+                      fixed-header
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
@@ -1161,8 +1165,9 @@
             </template>
 
             <template #item.4>
-              <div class="trip-template-step-content">
-                <v-sheet border>
+              <div class="trip-template-step-pane trip-template-step-pane--workers">
+                <div class="trip-template-step-content trip-template-step-content--workers">
+                  <v-sheet border class="trip-template-workers-sheet">
                   <v-toolbar :color="paleteColors.primary">
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
@@ -1186,12 +1191,13 @@
                     </v-row>
                   </v-toolbar>
 
-                  <v-card-text>
+                  <v-card-text class="trip-template-workers-card-text">
                     <v-data-table
                       :headers="headersWorkers"
                       :items="filteredWorkers"
-                      class="elevation-1"
-                      style="max-height: 68vh; overflow-y: auto"
+                      class="elevation-1 trip-template-table trip-template-workers-table"
+                      height="100%"
+                      fixed-header
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
@@ -1260,8 +1266,8 @@
                       </template>
                     </v-data-table>
                   </v-card-text>
-                </v-sheet>
-              </div>
+                  </v-sheet>
+                </div>
 
               <v-divider />
 
@@ -1283,6 +1289,7 @@
                     Aceptar
                   </v-btn>
                 </v-row>
+              </div>
               </div>
             </template>
           </v-stepper>
@@ -2975,6 +2982,7 @@ table.v-table > thead,
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100vh;
 }
 
 .trip-template-dialog-body {
@@ -2982,24 +2990,131 @@ table.v-table > thead,
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  height: 100%;
 }
 
 .trip-template-form {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .trip-template-stepper {
-  max-height: 100vh;
-  min-height: 95vh;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.trip-template-stepper :deep(.v-stepper-window),
+.trip-template-stepper :deep(.v-window),
+.trip-template-stepper :deep(.v-window__container),
+.trip-template-stepper :deep(.v-stepper-window-item),
+.trip-template-stepper :deep(.v-stepper-window-item > .v-window-item) {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.trip-template-stepper :deep(.v-stepper-window) {
+  margin: 0;
+}
+
+.trip-template-stepper :deep(.v-window__container) {
+  height: 100%;
+}
+
+.trip-template-stepper :deep(.v-stepper-window-item),
+.trip-template-stepper :deep(.v-stepper-window-item > .v-window-item) {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-template-step-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.trip-template-step-pane--workers {
+  height: 100%;
 }
 
 .trip-template-step-content {
-  flex: 1;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
   padding: 16px;
+  height: 100%;
+}
+
+.trip-template-step-pane--summary .trip-template-step-content {
+  overflow: visible;
+}
+
+.trip-template-step-content--workers {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.trip-template-workers-sheet {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.trip-template-workers-card-text {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.trip-template-table {
+  min-height: 0;
+  height: 100%;
+}
+
+.trip-template-table :deep(.v-table) {
+  height: 100%;
+}
+
+.trip-template-table :deep(.v-table__wrapper) {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.trip-template-workers-table {
+  flex: 1;
+  min-height: 0;
+}
+
+.trip-template-table {
+  max-height: 52vh !important;
+  overflow-y: auto !important;
+}
+
+.trip-template-workers-table :deep(.v-table__wrapper),
+.trip-template-workers-table :deep(.v-data-table__wrapper) {
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .trip-template-step-actions {

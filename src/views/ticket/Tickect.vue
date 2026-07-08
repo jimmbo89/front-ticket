@@ -1665,6 +1665,7 @@ export default {
       }
       this.data.branch_id = Number(normalizedBranchId);
       this.data.date = this.getChileDate();
+      this.data.trips = false;
 
       try {
         const result = await handleRequest({
