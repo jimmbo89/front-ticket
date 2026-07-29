@@ -103,7 +103,7 @@
 
       <v-data-table
         :headers="headers"
-        :items="templates"
+        :items="sortedTemplates"
         :search="search"
         :items-per-page-text="'Elementos por página'"
         no-data-text="No hay datos disponibles"
@@ -114,14 +114,54 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="trip-template-col-route">Ruta</div>
-            <div class="trip-template-col-vehicle">Vehículo</div>
-            <div class="trip-template-col-workers">Trabajadores</div>
-            <div class="trip-template-col-schedule">Horario</div>
-            <div class="trip-template-col-duration">Duración</div>
-            <div class="trip-template-col-frequency">Frecuencia</div>
-            <div class="trip-template-col-days">Días</div>
-            <div class="trip-template-col-status">Estado</div>
+            <div class="trip-template-col-route trip-template-sortable-header" @click="toggleTemplateSort('name')">
+              <span>Ruta</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('name') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-vehicle trip-template-sortable-header" @click="toggleTemplateSort('vehicleName')">
+              <span>Vehículo</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('vehicleName') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-workers trip-template-sortable-header" @click="toggleTemplateSort('workers')">
+              <span>Trabajadores</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('workers') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-schedule trip-template-sortable-header" @click="toggleTemplateSort('schedule')">
+              <span>Horario</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('schedule') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-duration trip-template-sortable-header" @click="toggleTemplateSort('duration')">
+              <span>Duración</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('duration') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-frequency trip-template-sortable-header" @click="toggleTemplateSort('recurrence_pattern')">
+              <span>Frecuencia</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('recurrence_pattern') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-days trip-template-sortable-header" @click="toggleTemplateSort('days_of_week')">
+              <span>Días</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('days_of_week') }}
+              </v-icon>
+            </div>
+            <div class="trip-template-col-status trip-template-sortable-header" @click="toggleTemplateSort('active')">
+              <span>Estado</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('active') }}
+              </v-icon>
+            </div>
             <div class="trip-template-col-actions">Acciones</div>
           </div>
         </template>
@@ -131,8 +171,19 @@
             <td class="pa-0 border-0">
               <div class="busgo-row trip-template-row">
                 <div class="trip-template-col-route">
-                  <div class="trip-template-route-title">
-                    {{ slotProps.item.name }}
+                  <div class="trip-template-route-title-row">
+                    <div class="trip-template-route-title">
+                      {{ slotProps.item.name }}
+                    </div>
+
+                    <v-chip
+                      v-if="slotProps.item.routeCode"
+                      size="x-small"
+                      variant="tonal"
+                      class="trip-template-route-code-chip flex-shrink-0"
+                    >
+                      {{ slotProps.item.routeCode }}
+                    </v-chip>
                   </div>
 
                   <div class="trip-template-route-meta">
@@ -387,8 +438,25 @@
                     >
                       <template #item="{ props, item }">
                         <v-card class="mx-1 my-2" elevation="2">
-                          <v-list-item v-bind="props">
+                          <v-list-item v-bind="{ ...props, title: undefined }">
                             <v-row align="center" no-gutters>
+                              <v-col cols="12" class="d-flex align-center mb-2">
+                                <div class="trip-template-route-title-row">
+                                  <div class="text-subtitle-2 font-weight-bold text-truncate">
+                                    {{ item.raw.name }}
+                                  </div>
+
+                                  <v-chip
+                                    v-if="item.raw.routeCode"
+                                    size="x-small"
+                                    variant="tonal"
+                                    class="trip-template-route-code-chip flex-shrink-0"
+                                  >
+                                    {{ item.raw.routeCode }}
+                                  </v-chip>
+                                </div>
+                              </v-col>
+
                               <v-col cols="12" md="4" class="d-flex align-center">
                                 <v-avatar>
                                   <v-img
@@ -1551,6 +1619,8 @@ export default {
     },
     editedIndex: -1,
     search: "",
+    templateSortBy: "name",
+    templateSortOrder: "asc",
     menu: false,
     menu2: false,
     input: null,
@@ -1568,6 +1638,11 @@ export default {
     ],
   }),
   computed: {
+    sortedTemplates() {
+      return this.sortRows(this.templates, this.templateSortBy, this.templateSortOrder, (row, field) =>
+        this.getTemplateSortValue(row, field)
+      );
+    },
     formTitle() {
       return this.editedIndex === -1
         ? "Agregar Plantilla de Viaje"
@@ -1624,6 +1699,74 @@ export default {
     },
   },
   methods: {
+    sortRows(rows = [], sortBy = "", sortOrder = "asc", valueGetter = () => null) {
+      const direction = sortOrder === "desc" ? -1 : 1;
+
+      return [...(Array.isArray(rows) ? rows : [])].sort((a, b) => {
+        const rawA = valueGetter(a, sortBy);
+        const rawB = valueGetter(b, sortBy);
+
+        const numA = Number(rawA);
+        const numB = Number(rawB);
+        const canCompareAsNumbers =
+          rawA !== null &&
+          rawA !== undefined &&
+          rawA !== "" &&
+          rawB !== null &&
+          rawB !== undefined &&
+          rawB !== "" &&
+          !Number.isNaN(numA) &&
+          !Number.isNaN(numB);
+
+        if (canCompareAsNumbers) {
+          return (numA - numB) * direction;
+        }
+
+        return String(rawA ?? "")
+          .localeCompare(String(rawB ?? ""), "es", {
+            numeric: true,
+            sensitivity: "base",
+          }) * direction;
+      });
+    },
+    templateSortIcon(field) {
+      if (this.templateSortBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.templateSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    toggleTemplateSort(field) {
+      if (this.templateSortBy === field) {
+        this.templateSortOrder = this.templateSortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.templateSortBy = field;
+      this.templateSortOrder = "asc";
+    },
+    getTemplateSortValue(row, field) {
+      switch (field) {
+        case "name":
+          return row?.name ?? "";
+        case "vehicleName":
+          return row?.vehicleName ?? "";
+        case "workers":
+          return Array.isArray(row?.workers) ? row.workers.length : 0;
+        case "schedule":
+          return row?.schedule ?? "";
+        case "duration":
+          return Number(row?.duration ?? 0);
+        case "recurrence_pattern":
+          return row?.recurrence_pattern ?? "";
+        case "days_of_week":
+          return row?.days_of_week ?? "";
+        case "active":
+          return row?.active ? 1 : 0;
+        default:
+          return row?.[field] ?? "";
+      }
+    },
     getSelectedRouteRecord() {
       return (
         (this.routes || []).find(
@@ -2891,6 +3034,18 @@ table.v-table > thead,
   min-width: 0;
 }
 
+.trip-template-sortable-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.trip-template-sortable-header:hover {
+  color: #0f172a;
+}
+
 .trip-template-col-vehicle {
   width: 12%;
   min-width: 0;
@@ -2935,6 +3090,13 @@ table.v-table > thead,
   min-height: 70px;
 }
 
+.trip-template-route-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .trip-template-route-title {
   font-size: 14px;
   font-weight: 700;
@@ -2942,6 +3104,12 @@ table.v-table > thead,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.trip-template-route-code-chip {
+  max-width: 100%;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .trip-template-route-meta {
@@ -3166,6 +3334,10 @@ table.v-table > thead,
   }
 
   .trip-template-route-meta {
+    flex-wrap: wrap;
+  }
+
+  .trip-template-route-title-row {
     flex-wrap: wrap;
   }
 }

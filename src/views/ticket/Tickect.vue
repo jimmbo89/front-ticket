@@ -136,7 +136,7 @@
 
       <v-data-table
         :headers="headers"
-        :items="tickets"
+        :items="sortedTickets"
         :search="search"
         :items-per-page-text="'Elementos por página'"
         no-data-text="No hay datos disponibles"
@@ -147,14 +147,42 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="ticket-col-route">Tramos</div>
-            <div class="ticket-col-date">Fecha</div>
-            <div class="ticket-col-schedule">Horario</div>
-            <div class="ticket-col-method">Método</div>
-            <div class="ticket-col-quantity">Pasajes</div>
-            <div class="ticket-col-seats">Asientos</div>
-            <div class="ticket-col-price">Precio</div>
-            <div class="ticket-col-total">Total</div>
+            <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')">
+              <span>Código</span>
+              <v-icon size="14">{{ ticketSortIcon('code') }}</v-icon>
+            </div>
+            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('tripName')">
+              <span>Tramos</span>
+              <v-icon size="14">{{ ticketSortIcon('tripName') }}</v-icon>
+            </div>
+            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('date')">
+              <span>Fecha</span>
+              <v-icon size="14">{{ ticketSortIcon('date') }}</v-icon>
+            </div>
+            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('schedule')">
+              <span>Horario</span>
+              <v-icon size="14">{{ ticketSortIcon('schedule') }}</v-icon>
+            </div>
+            <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')">
+              <span>Método</span>
+              <v-icon size="14">{{ ticketSortIcon('method') }}</v-icon>
+            </div>
+            <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')">
+              <span>Pasajes</span>
+              <v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon>
+            </div>
+            <div class="ticket-col-seats ticket-sortable-header" @click="toggleTicketSort('seats')">
+              <span>Asientos</span>
+              <v-icon size="14">{{ ticketSortIcon('seats') }}</v-icon>
+            </div>
+            <div class="ticket-col-price ticket-sortable-header" @click="toggleTicketSort('price')">
+              <span>Precio</span>
+              <v-icon size="14">{{ ticketSortIcon('price') }}</v-icon>
+            </div>
+            <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')">
+              <span>Total</span>
+              <v-icon size="14">{{ ticketSortIcon('total') }}</v-icon>
+            </div>
             <div class="ticket-col-actions"></div>
           </div>
         </template>
@@ -163,41 +191,56 @@
           <tr>
             <td class="pa-0 border-0">
               <div class="busgo-row ticket-row">
+                <div class="ticket-col-code busgo-meta ticket-code-cell">
+                  <span class="ticket-code-value text-truncate">
+                    {{ slotProps.item.code || "-" }}
+                  </span>
+                </div>
+
                 <div class="ticket-col-route">
-                  <div class="d-flex align-center min-width-0">
+                  <div class="ticket-route-title-row">
                     <div class="ticket-route-main text-truncate">
-                      <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
-
-                      <span class="text-truncate">
-                        {{ getTicketRouteOriginLabel(slotProps.item) }}
-                      </span>
-
-                      <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-
-                      <span class="text-truncate">
-                        {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                      </span>
+                      {{ slotProps.item.tripName }}
                     </div>
+
+                    <v-chip
+                      v-if="slotProps.item.routeCode"
+                      size="x-small"
+                      variant="tonal"
+                      class="ticket-route-code-chip flex-shrink-0"
+                    >
+                      {{ slotProps.item.routeCode }}
+                    </v-chip>
 
                     <v-chip
                       v-if="getTicketFareSegment(slotProps.item)"
                       size="x-small"
                       :color="paleteColors.primary"
                       variant="tonal"
-                      class="ml-2 flex-shrink-0"
+                      class="flex-shrink-0"
                     >
                       Tramo
                     </v-chip>
                   </div>
 
                   <div class="ticket-route-meta">
+                    <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
+
                     <span class="text-truncate">
-                      Ruta: {{ slotProps.item.tripName }}
+                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
+                    </span>
+
+                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+
+                    <span class="text-truncate">
+                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
                     </span>
                   </div>
 
                   <v-tooltip activator="parent" location="bottom" max-width="420px">
                     <span style="white-space: normal; word-break: break-word">
+                      Código viaje: {{ slotProps.item.code || "-" }}<br />
+                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
                       Ruta: {{ slotProps.item.tripName }}<br />
                       Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
                       Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
@@ -465,14 +508,36 @@
                   </div>
                 </div>
 
-                <div class="trip-sale-panel-pro">
+      <div class="trip-sale-panel-pro">
                   <div class="trip-sale-panel-pro__header">
-                    <div>Ruta</div>
-                    <div>Salida</div>
-                    <div>Llegada</div>
-                    <div>Vehículo</div>
-                    <div>Disponibles</div>
-                    <div>Precio</div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('code')">
+                      <span>Código</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('code') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('name')">
+                      <span>Ruta</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('name') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('schedule')">
+                      <span>Salida</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('schedule') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('arrival')">
+                      <span>Llegada</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('arrival') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('plate')">
+                      <span>Vehículo</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('plate') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('availableSeats')">
+                      <span>Disponibles</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('availableSeats') }}</v-icon>
+                    </div>
+                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('price')">
+                      <span>Precio</span>
+                      <v-icon size="14">{{ tripSaleSortIcon('price') }}</v-icon>
+                    </div>
                     <div></div>
                   </div>
 
@@ -486,11 +551,26 @@
                           Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
                           Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
                       }"
-                      @click="selectTripForSale(tripRow)"
+                    @click="selectTripForSale(tripRow)"
                     >
+                      <div class="trip-sale-code">
+                        {{ tripRow.code || "-" }}
+                      </div>
+
                       <div class="trip-sale-route">
-                        <div class="trip-sale-route__name">
-                          {{ tripRow.name }}
+                        <div class="trip-sale-route__title-row">
+                          <div class="trip-sale-route__name">
+                            {{ tripRow.name }}
+                          </div>
+
+                          <v-chip
+                            v-if="tripRow.routeCode"
+                            size="x-small"
+                            variant="tonal"
+                            class="trip-sale-route-code-chip flex-shrink-0"
+                          >
+                            {{ tripRow.routeCode }}
+                          </v-chip>
                         </div>
                         <div class="trip-sale-route__meta">
                           {{ tripRow.origin }} → {{ tripRow.destination }}
@@ -1142,6 +1222,7 @@ export default {
       { title: "Acciones", key: "actions", sortable: false, width: "120px" },
     ],
     headers: [
+      { title: "Código", key: "code" },
       { title: "Ruta", key: "tripName" },
       { title: "Origen", key: "tripOrigin" },
       { title: "Destino", key: "tripDestination" },
@@ -1250,6 +1331,10 @@ export default {
     itemsPerPage: 6, // Elementos por página
     quantityErrors: {},
     isRecalculatingTickettypes: false,
+    ticketSortBy: "date",
+    ticketSortOrder: "desc",
+    tripSaleSortBy: "schedule",
+    tripSaleSortOrder: "asc",
   }),
   computed: {
     formTitle() {
@@ -1377,13 +1462,16 @@ export default {
     tripSaleRows() {
       return this.buildTripSaleRows(this.trips);
     },
+    sortedTickets() {
+      return this.sortRows(this.tickets, this.ticketSortBy, this.ticketSortOrder, (row, field) =>
+        this.getTicketSortValue(row, field)
+      );
+    },
     filteredTripSaleRows() {
       const query = (this.tripSearchText || "").toString().trim().toLowerCase();
-      if (!query) {
-        return this.tripSaleRows;
-      }
-
-      return this.tripSaleRows.filter((row) =>
+      const filteredRows = !query
+        ? this.tripSaleRows
+        : this.tripSaleRows.filter((row) =>
         [
           row.name,
           row.origin,
@@ -1398,6 +1486,13 @@ export default {
             .toLowerCase()
             .includes(query)
         )
+        );
+
+      return this.sortRows(
+        filteredRows,
+        this.tripSaleSortBy,
+        this.tripSaleSortOrder,
+        (row, field) => this.getTripSaleSortValue(row, field)
       );
     },
   },
@@ -1451,6 +1546,112 @@ export default {
     getTableRowItem(item) {
       return item?.raw || item || {};
     },
+    sortRows(rows = [], sortBy = "", sortOrder = "asc", valueGetter = () => null) {
+      const direction = sortOrder === "desc" ? -1 : 1;
+
+      return [...(Array.isArray(rows) ? rows : [])].sort((a, b) => {
+        const rawA = valueGetter(a, sortBy);
+        const rawB = valueGetter(b, sortBy);
+
+        const numA = Number(rawA);
+        const numB = Number(rawB);
+        const canCompareAsNumbers =
+          rawA !== null &&
+          rawA !== undefined &&
+          rawA !== "" &&
+          rawB !== null &&
+          rawB !== undefined &&
+          rawB !== "" &&
+          !Number.isNaN(numA) &&
+          !Number.isNaN(numB);
+
+        if (canCompareAsNumbers) {
+          return (numA - numB) * direction;
+        }
+
+        return String(rawA ?? "")
+          .localeCompare(String(rawB ?? ""), "es", {
+            numeric: true,
+            sensitivity: "base",
+          }) * direction;
+      });
+    },
+    ticketSortIcon(field) {
+      if (this.ticketSortBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.ticketSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    tripSaleSortIcon(field) {
+      if (this.tripSaleSortBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.tripSaleSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    toggleTicketSort(field) {
+      if (this.ticketSortBy === field) {
+        this.ticketSortOrder = this.ticketSortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.ticketSortBy = field;
+      this.ticketSortOrder = "asc";
+    },
+    toggleTripSaleSort(field) {
+      if (this.tripSaleSortBy === field) {
+        this.tripSaleSortOrder = this.tripSaleSortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.tripSaleSortBy = field;
+      this.tripSaleSortOrder = "asc";
+    },
+    getTicketSortValue(row, field) {
+      switch (field) {
+        case "code":
+          return row?.code ?? "";
+        case "tripName":
+          return row?.tripName ?? "";
+        case "date":
+          return row?.date ?? "";
+        case "schedule":
+          return row?.schedule ?? "";
+        case "method":
+          return row?.method ?? "";
+        case "quantity":
+          return Number(row?.quantity ?? 0);
+        case "seats":
+          return Number(row?.seats ?? 0);
+        case "price":
+          return Number(row?.price ?? 0);
+        case "total":
+          return Number(row?.total ?? 0);
+        default:
+          return row?.[field] ?? "";
+      }
+    },
+    getTripSaleSortValue(row, field) {
+      switch (field) {
+        case "code":
+          return row?.code ?? "";
+        case "name":
+          return `${row?.name ?? ""} ${row?.routeCode ?? ""}`;
+        case "schedule":
+          return row?.schedule ?? "";
+        case "arrival":
+          return row?.arrival ?? "";
+        case "plate":
+          return `${row?.plate ?? ""} ${row?.internal_number ?? ""}`;
+        case "availableSeats":
+          return Number(row?.availableSeats ?? 0);
+        case "price":
+          return Number(row?.price ?? 0);
+        default:
+          return row?.[field] ?? "";
+      }
+    },
     buildTripSaleRows(trips = []) {
       const rows = [];
 
@@ -1470,6 +1671,13 @@ export default {
             trip_id: Number(trip.id),
             fare_segment_id: Number(fare.id),
             tripFareId: Number(fare.id),
+            code: trip.code || trip.tripCode || trip.trip_code || "-",
+            routeCode:
+              trip.routeCode ||
+              trip.route_code ||
+              trip.route?.code ||
+              trip.route?.routeCode ||
+              "-",
             name: trip.name || "No especificado",
             origin: this.getRouteStopLabel(range.originStop),
             destination: this.getRouteStopLabel(range.destinationStop),
@@ -3015,6 +3223,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      let shouldClose = false;
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
@@ -3095,12 +3304,9 @@ export default {
               this.showAlert("success", result.message, 3000);
               this.branch_id = this.editedItem.branch_id ?? this.branch_id;
               this.initialize();
-              this.loading = false;
+              shouldClose = true;
             } else {
               this.showAlert("warning", result.message, 3000);
-              this.loading = false;
-              this.valid = true;
-              this.editedIndex = -1;
             }
           } catch (error) {
             // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
@@ -3109,9 +3315,6 @@ export default {
               "Ocurrió un error inesperado al procesar la solicitud.",
               3000
             );
-            this.loading = false;
-            this.valid = true;
-            this.editedIndex = -1;
           }
         }
       } else {
@@ -3172,29 +3375,27 @@ export default {
             if (result.success) {
               this.showAlert("success", result.message, 3000);
               this.initialize();
-              this.loading = false;
+              shouldClose = true;
             } else {
-              this.editedIndex = -1;
               this.showAlert("warning", result.message, 3000);
-              this.loading = false;
             }
           } catch (error) {
-            this.editedIndex = -1;
             // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
             this.showAlert(
               "error",
               "Ocurrió un error inesperado al procesar la solicitud.",
               3000
             );
-            this.loading = false;
           }
         } else {
-          this.editedIndex = -1;
           this.showAlert("success", "No se realizaron cambios.", 3000);
-          this.loading = false;
+          shouldClose = true;
         }
       }
-      this.close();
+      this.loading = false;
+      if (shouldClose) {
+        this.close();
+      }
     },
 
     async generateQRCode() {
@@ -4534,8 +4735,25 @@ table.v-table > thead,
   min-width: 260px;
 }
 
+.ticket-col-code {
+  width: 16%;
+  min-width: 0;
+}
+
+.ticket-sortable-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ticket-sortable-header:hover {
+  color: #0f172a;
+}
+
 .ticket-col-route {
-  width: 34%;
+  width: 28%;
   min-width: 0;
 }
 
@@ -4583,10 +4801,41 @@ table.v-table > thead,
   min-height: 66px;
 }
 
+.ticket-code-cell {
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: center;
+  gap: 2px;
+  text-align: left;
+}
+
+.ticket-code-value {
+  display: block;
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.ticket-route-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .ticket-route-main {
   font-size: 14px;
   font-weight: 700;
   color: #111827;
+}
+
+.ticket-route-code-chip {
+  max-width: 100%;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .ticket-route-meta {
@@ -4852,7 +5101,7 @@ table.v-table > thead,
 
 .trip-sale-panel-pro__header {
   display: grid;
-  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
+  grid-template-columns: 0.95fr 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
   gap: 12px;
   padding: 13px 16px;
   background: #f1f5f9;
@@ -4863,9 +5112,21 @@ table.v-table > thead,
   letter-spacing: 0.03em;
 }
 
+.trip-sale-sortable-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.trip-sale-sortable-header:hover {
+  color: #0f172a;
+}
+
 .trip-sale-row-pro {
   display: grid;
-  grid-template-columns: 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
+  grid-template-columns: 0.95fr 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
   gap: 12px;
   align-items: center;
   padding: 15px 16px;
@@ -4887,6 +5148,22 @@ table.v-table > thead,
   min-width: 0;
 }
 
+.trip-sale-code {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-sale-route__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .trip-sale-route__name {
   font-size: 14px;
   font-weight: 800;
@@ -4894,6 +5171,12 @@ table.v-table > thead,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.trip-sale-route-code-chip {
+  max-width: 100%;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .trip-sale-route__meta,
@@ -5188,6 +5471,24 @@ table.v-table > thead,
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 16px;
+  }
+
+  .ticket-col-code,
+  .ticket-col-route,
+  .ticket-col-date,
+  .ticket-col-schedule,
+  .ticket-col-method,
+  .ticket-col-quantity,
+  .ticket-col-seats,
+  .ticket-col-price,
+  .ticket-col-total,
+  .ticket-col-actions {
+    width: 100%;
+  }
+
+  .ticket-route-title-row,
+  .trip-sale-route__title-row {
+    flex-wrap: wrap;
   }
 }
 

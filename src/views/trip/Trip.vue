@@ -133,7 +133,7 @@
 
       <v-data-table
         :headers="headers"
-        :items="trips"
+        :items="sortedTrips"
         :search="search"
         :items-per-page-text="'Elementos por página'"
         no-data-text="No hay datos disponibles"
@@ -144,13 +144,50 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="trip-col-route">Ruta</div>
-            <div class="trip-col-vehicle">Vehículo</div>
-            <div class="trip-col-workers">Trabajadores</div>
-            <div class="trip-col-date">Fecha</div>
-            <div class="trip-col-schedule">Horario</div>
-            <div class="trip-col-start">Salida</div>
-            <div class="trip-col-end">Llegada</div>
+            <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
+              <span>Código</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('code') }}</v-icon>
+            </div>
+            <div class="trip-col-route trip-sortable" @click="toggleTripSort('name')">
+              <span>Ruta</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('name') }}</v-icon>
+            </div>
+            <div
+              class="trip-col-vehicle trip-sortable"
+              @click="toggleTripSort('vehicleName')"
+            >
+              <span>Vehículo</span>
+              <v-icon size="16" class="ml-1">
+                {{ tripSortIcon('vehicleName') }}
+              </v-icon>
+            </div>
+            <div class="trip-col-workers trip-sortable" @click="toggleTripSort('workers')">
+              <span>Trabajadores</span>
+              <v-icon size="16" class="ml-1">
+                {{ tripSortIcon('workers') }}
+              </v-icon>
+            </div>
+            <div class="trip-col-date trip-sortable" @click="toggleTripSort('date')">
+              <span>Fecha</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('date') }}</v-icon>
+            </div>
+            <div
+              class="trip-col-schedule trip-sortable"
+              @click="toggleTripSort('schedule')"
+            >
+              <span>Horario</span>
+              <v-icon size="16" class="ml-1">
+                {{ tripSortIcon('schedule') }}
+              </v-icon>
+            </div>
+            <div class="trip-col-start trip-sortable" @click="toggleTripSort('start')">
+              <span>Salida</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('start') }}</v-icon>
+            </div>
+            <div class="trip-col-end trip-sortable" @click="toggleTripSort('end')">
+              <span>Llegada</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('end') }}</v-icon>
+            </div>
             <div class="trip-col-actions">Acciones</div>
           </div>
         </template>
@@ -159,9 +196,26 @@
           <tr>
             <td class="pa-0 border-0">
               <div class="busgo-row trip-row">
+                <div class="trip-col-code busgo-meta trip-code-cell">
+                  <span class="trip-code-value text-truncate">
+                    {{ slotProps.item.code || "-" }}
+                  </span>
+                </div>
+
                 <div class="trip-col-route">
-                  <div class="trip-route-title">
-                    {{ slotProps.item.name }}
+                  <div class="trip-route-title-row">
+                    <div class="trip-route-title">
+                      {{ slotProps.item.name }}
+                    </div>
+
+                    <v-chip
+                      v-if="slotProps.item.routeCode"
+                      size="x-small"
+                      variant="tonal"
+                      class="trip-route-code-chip flex-shrink-0"
+                    >
+                      {{ slotProps.item.routeCode }}
+                    </v-chip>
                   </div>
 
                   <div class="trip-route-meta">
@@ -180,6 +234,8 @@
 
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
+                      Código viaje: {{ slotProps.item.code || "-" }}<br />
+                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
                       Ruta: {{ slotProps.item.name }}<br />
                       Origen: {{ slotProps.item.origin }}<br />
                       Destino: {{ slotProps.item.destination }}
@@ -383,91 +439,106 @@
                     >
                       <template #item="{ props, item }">
                         <v-card class="mx-1 my-2" elevation="2">
-                          <v-list-item v-bind="props">
-                            <v-list-item>
-                              <v-row align="center" no-gutters>
-                                <v-col cols="12" md="4" class="d-flex align-center">
-                                  <v-avatar>
-                                    <v-img
-                                      :src="getImageUrl(item.raw.originImage)"
-                                      max-width="40"
-                                    />
-                                  </v-avatar>
-
-                                  <div class="ml-2">
-                                    <div class="text-caption text-grey">
-                                      <v-icon small class="mr-1">
-                                        mdi-map-marker
-                                      </v-icon>
-                                      Origen
-                                    </div>
-
-                                    <v-tooltip location="top">
-                                      <template #activator="{ props: tooltipProps }">
-                                        <div
-                                          v-bind="tooltipProps"
-                                          class="text-truncate"
-                                          style="max-width: 100%"
-                                        >
-                                          {{ item.raw.originAddress }}
-                                        </div>
-                                      </template>
-
-                                      <span>{{ item.raw.originAddress }}</span>
-                                    </v-tooltip>
-                                  </div>
-                                </v-col>
-
-                                <v-col cols="12" md="4" class="d-flex align-center">
-                                  <v-avatar>
-                                    <v-img
-                                      :src="getImageUrl(item.raw.destinationImage)"
-                                      max-width="40"
-                                    />
-                                  </v-avatar>
-
-                                  <div class="ml-2">
-                                    <div class="text-caption text-grey">
-                                      <v-icon small class="mr-1">
-                                        mdi-map-marker-check
-                                      </v-icon>
-                                      Destino
-                                    </div>
-
-                                    <v-tooltip location="top">
-                                      <template #activator="{ props: tooltipProps }">
-                                        <div
-                                          v-bind="tooltipProps"
-                                          class="text-truncate"
-                                          style="max-width: 100%"
-                                        >
-                                          {{ item.raw.destinationAddress }}
-                                        </div>
-                                      </template>
-
-                                      <span>{{ item.raw.destinationAddress }}</span>
-                                    </v-tooltip>
-                                  </div>
-                                </v-col>
-
-                                <v-col
-                                  cols="12"
-                                  md="4"
-                                  class="align-center justify-md-left justify-center text-left"
-                                >
-                                  <div class="text-caption text-grey ml-1">
-                                    Duración estimada
+                          <v-list-item v-bind="{ ...props, title: undefined }">
+                            <v-row align="center" no-gutters>
+                              <v-col cols="12" class="d-flex align-center mb-2">
+                                <div class="trip-route-title-row">
+                                  <div class="text-subtitle-2 font-weight-bold text-truncate">
+                                    {{ item.raw.name }}
                                   </div>
 
-                                  <div class="text-body-2 font-weight-medium">
-                                    <v-icon small class="mr-1" color="primary">
-                                      mdi-clock-time-four-outline
+                                  <v-chip
+                                    v-if="item.raw.routeCode"
+                                    size="x-small"
+                                    variant="tonal"
+                                    class="trip-route-code-chip flex-shrink-0"
+                                  >
+                                    {{ item.raw.routeCode }}
+                                  </v-chip>
+                                </div>
+                              </v-col>
+
+                              <v-col cols="12" md="4" class="d-flex align-center">
+                                <v-avatar>
+                                  <v-img
+                                    :src="getImageUrl(item.raw.originImage)"
+                                    max-width="40"
+                                  />
+                                </v-avatar>
+
+                                <div class="ml-2">
+                                  <div class="text-caption text-grey">
+                                    <v-icon small class="mr-1">
+                                      mdi-map-marker
                                     </v-icon>
-                                    {{ formatDuration(item.raw.estimated) }}
+                                    Origen
                                   </div>
-                                </v-col>
-                              </v-row>
-                            </v-list-item>
+
+                                  <v-tooltip location="top">
+                                    <template #activator="{ props: tooltipProps }">
+                                      <div
+                                        v-bind="tooltipProps"
+                                        class="text-truncate"
+                                        style="max-width: 100%"
+                                      >
+                                        {{ item.raw.originAddress }}
+                                      </div>
+                                    </template>
+
+                                    <span>{{ item.raw.originAddress }}</span>
+                                  </v-tooltip>
+                                </div>
+                              </v-col>
+
+                              <v-col cols="12" md="4" class="d-flex align-center">
+                                <v-avatar>
+                                  <v-img
+                                    :src="getImageUrl(item.raw.destinationImage)"
+                                    max-width="40"
+                                  />
+                                </v-avatar>
+
+                                <div class="ml-2">
+                                  <div class="text-caption text-grey">
+                                    <v-icon small class="mr-1">
+                                      mdi-map-marker-check
+                                    </v-icon>
+                                    Destino
+                                  </div>
+
+                                  <v-tooltip location="top">
+                                    <template #activator="{ props: tooltipProps }">
+                                      <div
+                                        v-bind="tooltipProps"
+                                        class="text-truncate"
+                                        style="max-width: 100%"
+                                      >
+                                        {{ item.raw.destinationAddress }}
+                                      </div>
+                                    </template>
+
+                                    <span>{{ item.raw.destinationAddress }}</span>
+                                  </v-tooltip>
+                                </div>
+                              </v-col>
+
+                              <v-col
+                                cols="12"
+                                md="4"
+                                class="align-center justify-md-left justify-center text-left"
+                              >
+                                <div class="text-caption text-grey ml-1">
+                                  Duración estimada
+                                </div>
+
+                                <div class="text-body-2 font-weight-medium">
+                                  <v-icon small class="mr-1" color="primary">
+                                    mdi-clock-time-four-outline
+                                  </v-icon>
+                                  {{ formatDuration(item.raw.estimated) }}
+                                </div>
+                              </v-col>
+                            </v-row>
                           </v-list-item>
                         </v-card>
                       </template>
@@ -1416,6 +1487,8 @@ export default {
     mostrarFila: false,
     permissions: "",
     trips: [],
+    tripSortBy: "date",
+    tripSortOrder: "desc",
     routes: [],
     vehicles: [],
     workers: [],
@@ -1437,6 +1510,7 @@ export default {
     ],
     dialogAssignedWorkers: false,
     headers: [
+      { title: "Código", value: "code" },
       { title: "Ruta", value: "name" },
       { title: "Origen", value: "origin" },
       { title: "Destino", value: "destination" },
@@ -1529,6 +1603,9 @@ export default {
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
   }),
   computed: {
+    sortedTrips() {
+      return [...(this.trips || [])].sort((a, b) => this.compareTrips(a, b));
+    },
     formTitle() {
       return this.editedIndex === -1 ? "Agregar Viaje" : "Editar Viaje";
     },
@@ -1605,6 +1682,70 @@ export default {
   methods: {
     getRoutesCollection() {
       return Array.isArray(this.routes) ? this.routes : Object.values(this.routes || {});
+    },
+    toggleTripSort(field) {
+      if (this.tripSortBy === field) {
+        this.tripSortOrder = this.tripSortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.tripSortBy = field;
+      this.tripSortOrder = "asc";
+    },
+    tripSortIcon(field) {
+      if (this.tripSortBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.tripSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    getTripSortValue(trip, field) {
+      if (!trip) {
+        return "";
+      }
+
+      if (field === "workers") {
+        return (trip.workers || []).map((worker) => worker?.name || "").join(" ");
+      }
+
+      if (field === "vehicleName") {
+        return trip.vehicleName || trip.plate || "";
+      }
+
+      return trip[field] ?? "";
+    },
+    compareTrips(a, b) {
+      const direction = this.tripSortOrder === "asc" ? 1 : -1;
+      const aValue = this.getTripSortValue(a, this.tripSortBy);
+      const bValue = this.getTripSortValue(b, this.tripSortBy);
+
+      const aEmpty = aValue === null || aValue === undefined || aValue === "";
+      const bEmpty = bValue === null || bValue === undefined || bValue === "";
+
+      if (aEmpty && bEmpty) {
+        return 0;
+      }
+
+      if (aEmpty) {
+        return 1;
+      }
+
+      if (bEmpty) {
+        return -1;
+      }
+
+      const aNumber = Number(aValue);
+      const bNumber = Number(bValue);
+
+      if (Number.isFinite(aNumber) && Number.isFinite(bNumber)) {
+        return (aNumber - bNumber) * direction;
+      }
+
+      return (
+        String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase(), "es", {
+          sensitivity: "base",
+        }) * direction
+      );
     },
     getRouteStopDisplayLabel(stop) {
       if (!stop) {
@@ -2833,8 +2974,13 @@ table.v-table>thead,
   min-width: 260px;
 }
 
+.trip-col-code {
+  width: 16%;
+  min-width: 0;
+}
+
 .trip-col-route {
-  width: 34%;
+  width: 28%;
   min-width: 0;
 }
 
@@ -2866,6 +3012,13 @@ table.v-table>thead,
 .trip-col-end {
   width: 6%;
   min-width: 0;
+}
+
+.trip-sortable {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
 }
 
 .trip-datetime-cell {
@@ -2902,6 +3055,31 @@ table.v-table>thead,
   min-height: 70px;
 }
 
+.trip-code-cell {
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: center;
+  gap: 2px;
+  text-align: left;
+}
+
+.trip-code-value {
+  display: block;
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.trip-route-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .trip-route-title {
   font-size: 14px;
   font-weight: 700;
@@ -2909,6 +3087,12 @@ table.v-table>thead,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.trip-route-code-chip {
+  max-width: 100%;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .trip-route-meta {
@@ -3057,6 +3241,7 @@ table.v-table>thead,
     min-width: 100%;
   }
 
+  .trip-col-code,
   .trip-col-route,
   .trip-col-vehicle,
   .trip-col-workers,
@@ -3069,6 +3254,10 @@ table.v-table>thead,
   }
 
   .trip-route-meta {
+    flex-wrap: wrap;
+  }
+
+  .trip-route-title-row {
     flex-wrap: wrap;
   }
 }

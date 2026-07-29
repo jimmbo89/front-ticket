@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <v-card class="busgo-page-header" elevation="0">
     <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
       <v-icon>mdi-finance</v-icon>
@@ -114,6 +114,19 @@
         </v-card>
 
         <v-card class="collection-kpi-card" elevation="0">
+          <v-avatar color="indigo-lighten-1" class="collection-kpi-icon">
+            <v-icon>mdi-seat</v-icon>
+          </v-avatar>
+
+          <div>
+            <div class="collection-kpi-label">Asientos vendidos</div>
+            <div class="collection-kpi-value">
+              {{ response.asientosComprados }}
+            </div>
+          </div>
+        </v-card>
+
+        <v-card class="collection-kpi-card" elevation="0">
           <v-avatar color="orange-lighten-1" class="collection-kpi-icon">
             <v-icon>mdi-printer</v-icon>
           </v-avatar>
@@ -142,22 +155,24 @@
 
       <div class="px-6 pb-4">
         <v-card class="collection-section-card" elevation="0">
-          <div class="collection-section-header">
-            <div class="d-flex align-center">
+          <div class="collection-section-header collection-methods-section-header">
+            <div class="d-flex align-center collection-methods-title">
               <v-icon start>mdi-credit-card-multiple</v-icon>
               <span>Totales por Método de Pago</span>
             </div>
+
+            <div class="collection-methods-header-cell">Asientos</div>
+            <div class="collection-methods-header-cell">Pasajes</div>
+            <div class="collection-methods-header-cell">Total</div>
           </div>
 
-          <v-data-table
-            :headers="headersMetodos"
-            :items="response.totalesPorMetodo || []"
-            :items-per-page="5"
-            density="comfortable"
-            class="collection-table"
-            no-data-text="No se encontraron registros de pagos"
-          >
-            <template #item.metodo="{ item }">
+          <div class="collection-methods-body">
+            <div
+              v-for="item in response.totalesPorMetodo || []"
+              :key="item.metodo"
+              class="collection-methods-row"
+            >
+              <div class="collection-methods-cell">
               <v-chip
                 :color="getMethodInfo(item.metodo).color"
                 size="small"
@@ -171,9 +186,20 @@
                 />
                 {{ item.metodo }}
               </v-chip>
-            </template>
+              </div>
 
-            <template #item.cantidad="{ item }">
+              <div class="collection-methods-cell collection-methods-cell--center">
+              <v-chip
+                variant="outlined"
+                size="small"
+                color="indigo"
+                class="font-weight-bold"
+              >
+                {{ item.asientosComprados || 0 }}
+              </v-chip>
+              </div>
+
+              <div class="collection-methods-cell collection-methods-cell--center">
               <v-chip
                 variant="outlined"
                 size="small"
@@ -182,24 +208,30 @@
               >
                 {{ item.cantidad }}
               </v-chip>
-            </template>
+              </div>
 
-            <template #item.total="{ item }">
+              <div class="collection-methods-cell collection-methods-cell--end">
               <span
                 class="font-weight-bold"
                 :class="'text-' + getMethodColor(item.metodo) + '-darken-3'"
               >
                 ${{ formatNumber(Number(item.total)) }}
               </span>
-            </template>
-
-            <template #bottom>
-              <div class="collection-table-total">
-                <span>Total general:</span>
-                <strong>${{ formatNumber(Number(response.totales)) }}</strong>
               </div>
-            </template>
-          </v-data-table>
+            </div>
+
+            <div
+              v-if="!response.totalesPorMetodo || response.totalesPorMetodo.length === 0"
+              class="collection-methods-empty"
+            >
+              No se encontraron registros de pagos
+            </div>
+
+            <div class="collection-table-total">
+              <span>Total general:</span>
+              <strong>${{ formatNumber(Number(response.totales)) }}</strong>
+            </div>
+          </div>
         </v-card>
       </div>
 
@@ -224,163 +256,200 @@
           </div>
 
           <v-card-text class="pa-0 collection-routes-container">
-            <v-expansion-panels variant="accordion" class="pa-3">
-              <v-expansion-panel
-                v-for="(tramo, index) in filteredTramos"
-                :key="index"
-                class="collection-route-panel"
-              >
-                <v-expansion-panel-title
-                  class="collection-route-title"
-                  :expand-icon="tramo.totalPasajes > 0 ? 'mdi-chevron-down' : undefined"
-                  :hide-actions="tramo.totalPasajes === 0"
-                >
-                  <v-row align="center" no-gutters>
-                    <v-col cols="12" md="8" class="d-flex align-center">
-                      <v-avatar
-                        :color="
-                          tramo.totalPasajes > 0
-                            ? 'green-lighten-4'
-                            : 'grey-lighten-3'
-                        "
-                        size="32"
-                        class="mr-3"
-                      >
-                        <v-icon
-                          :color="
-                            tramo.totalPasajes > 0
-                              ? 'green-darken-2'
-                              : 'grey'
-                          "
-                          size="20"
-                        >
-                          mdi-road
-                        </v-icon>
-                      </v-avatar>
+            <v-data-table
+              v-model:expanded="expandedTramoRows"
+              :headers="headersTramos"
+              :items="sortedTramos"
+              item-value="code"
+              show-expand
+              :items-per-page-text="'Elementos por página'"
+              :items-per-page="5"
+              no-data-text="No se encontraron rutas"
+              :hide-default-header="true"
+              class="busgo-table collection-route-table"
+            >
+              <template #top>
+                <div class="collection-route-table-head">
+                  <div
+                    class="collection-route-col-code collection-route-sortable"
+                    @click="toggleTramoSort('code')"
+                  >
+                    <span>Código viaje</span>
+                    <v-icon size="16" class="ml-1">
+                      {{ getTramoSortIcon("code") }}
+                    </v-icon>
+                  </div>
 
-                      <div class="collection-route-name">
-                        <span>{{ tramo.origin }}</span>
-                        <v-icon
-                          size="18"
-                          :color="
-                            tramo.totalPasajes > 0
-                              ? 'green-darken-2'
-                              : 'grey'
-                          "
-                          class="mx-2"
-                        >
-                          mdi-arrow-right
-                        </v-icon>
-                        <span>{{ tramo.destination }}</span>
-                      </div>
-                    </v-col>
+                  <div
+                    class="collection-route-col-route collection-route-sortable"
+                    @click="toggleTramoSort('routeName')"
+                  >
+                    <span>Ruta</span>
+                    <v-icon size="16" class="ml-1">
+                      {{ getTramoSortIcon("routeName") }}
+                    </v-icon>
+                  </div>
 
-                    <v-col cols="12" md="4" class="collection-route-summary">
-                      <v-tooltip location="top">
-                        <template #activator="{ props }">
-                          <v-chip
-                            v-bind="props"
-                            :color="
-                              tramo.totalPasajes > 0
-                                ? 'green-lighten-2'
-                                : 'grey-lighten-2'
-                            "
-                            variant="outlined"
-                            size="small"
-                            class="font-weight-bold"
-                          >
-                            <v-icon start size="16">mdi-ticket</v-icon>
-                            {{ tramo.totalPasajes }}
-                          </v-chip>
-                        </template>
-                        <span>Total pasajes vendidos</span>
-                      </v-tooltip>
+                  <div
+                    class="collection-route-col-total collection-route-sortable"
+                    @click="toggleTramoSort('totalTramo')"
+                  >
+                    <span>Total</span>
+                    <v-icon size="16" class="ml-1">
+                      {{ getTramoSortIcon("totalTramo") }}
+                    </v-icon>
+                  </div>
 
-                      <v-tooltip location="top">
-                        <template #activator="{ props }">
-                          <v-chip
-                            v-bind="props"
-                            :color="
-                              tramo.totalTramo > 0
-                                ? 'green-darken-2'
-                                : 'grey-lighten-3'
-                            "
-                            size="small"
-                            class="font-weight-bold"
-                          >
-                            <v-icon start size="16">mdi-cash</v-icon>
-                            ${{ formatNumber(Number(tramo.totalTramo)) }}
-                          </v-chip>
-                        </template>
-                        <span>Total recaudado</span>
-                      </v-tooltip>
-                    </v-col>
-                  </v-row>
-                </v-expansion-panel-title>
+                  <div class="collection-route-col-actions"></div>
+                </div>
+              </template>
 
-                <v-expansion-panel-text
-                  v-if="tramo.totalPasajes > 0"
-                  class="collection-route-detail"
-                >
-                  <v-card variant="flat" class="collection-inner-card">
-                    <v-data-table
-                      :headers="headersTramoMetodos"
-                      :items="tramo.totalesPorMetodo || []"
-                      :items-per-page="3"
-                      density="compact"
-                      class="collection-table"
-                    >
-                      <template #item.metodo="{ item }">
-                        <v-chip
-                          :color="getMethodInfo(item.metodo).color"
-                          size="small"
-                          label
-                          class="font-weight-bold text-body-2"
-                        >
-                          <v-icon
-                            start
-                            :icon="getMethodInfo(item.metodo).icon"
-                            size="small"
-                          />
-                          {{ item.metodo }}
-                        </v-chip>
-                      </template>
-
-                      <template #item.cantidad="{ item }">
-                        <v-chip
-                          variant="outlined"
-                          size="small"
-                          :color="getMethodColor(item.metodo)"
-                          class="font-weight-bold"
-                        >
-                          {{ item.cantidad }}
-                        </v-chip>
-                      </template>
-
-                      <template #item.total="{ item }">
-                        <span
-                          class="font-weight-bold"
-                          :class="
-                            'text-' + getMethodColor(item.metodo) + '-darken-3'
-                          "
-                        >
-                          ${{ formatNumber(Number(item.total)) }}
+              <template #item="{ item }">
+                <tr>
+                  <td class="pa-0 border-0">
+                    <div class="collection-route-row">
+                      <div class="collection-route-col-code busgo-meta">
+                        <span class="collection-route-code-value text-truncate">
+                          {{ item.code || item.tripCode || "-" }}
                         </span>
-                      </template>
+                      </div>
 
-                      <template #bottom>
-                        <div class="collection-table-total">
-                          <span>Subtotal:</span>
-                          <strong>
-                            ${{ formatNumber(Number(tramo.totalTramo)) }}
-                          </strong>
+                      <div class="collection-route-col-route">
+                        <div class="collection-route-name-row">
+                          <div class="collection-route-name">
+                            {{ item.routeName || item.nombre || item.origin }}
+                          </div>
+
+                          <v-chip
+                            v-if="item.routeCode"
+                            size="x-small"
+                            variant="tonal"
+                            class="collection-route-code-chip flex-shrink-0"
+                          >
+                            {{ item.routeCode }}
+                          </v-chip>
                         </div>
-                      </template>
-                    </v-data-table>
-                  </v-card>
-                </v-expansion-panel-text>
-              </v-expansion-panel>
-            </v-expansion-panels>
+
+                        <div class="collection-route-meta text-truncate">
+                          {{ item.origin }} → {{ item.destination }}
+                        </div>
+                      </div>
+
+                      <div class="collection-route-col-total collection-route-total">
+                        ${{ formatNumber(Number(item.totalTramo || 0)) }}
+                      </div>
+
+                      <div class="collection-route-col-actions collection-route-actions">
+                        <v-btn
+                          v-if="Number(item.totalPasajes || 0) > 0"
+                          size="small"
+                          variant="tonal"
+                          :color="isTramoExpanded(item) ? 'primary' : 'grey'"
+                          @click.stop="toggleTramoExpand(item)"
+                        >
+                          <v-icon size="18">
+                            {{
+                              isTramoExpanded(item)
+                                ? "mdi-chevron-up"
+                                : "mdi-chevron-down"
+                            }}
+                          </v-icon>
+                        </v-btn>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+
+              <template #expanded-row="{ item }">
+                <tr v-if="Number(item.totalPasajes || 0) > 0">
+                  <td :colspan="headersTramos.length">
+                    <div class="collection-route-detail">
+                      <v-card variant="flat" class="collection-inner-card">
+                        <div class="collection-tramo-methods-header-grid">
+                          <div class="collection-tramo-methods-header-cell">
+                            Método de pago
+                          </div>
+                          <div class="collection-tramo-methods-header-cell">
+                            Asientos
+                          </div>
+                          <div class="collection-tramo-methods-header-cell">
+                            Pasajes
+                          </div>
+                          <div class="collection-tramo-methods-header-cell">
+                            Total
+                          </div>
+                        </div>
+
+                        <div class="collection-tramo-methods-body">
+                          <div
+                            v-for="metodo in item.totalesPorMetodo || []"
+                            :key="metodo.metodo"
+                            class="collection-tramo-methods-row"
+                          >
+                            <div class="collection-tramo-methods-cell">
+                            <v-chip
+                              :color="getMethodInfo(metodo.metodo).color"
+                              size="small"
+                              label
+                              class="font-weight-bold text-body-2"
+                            >
+                              <v-icon
+                                start
+                                :icon="getMethodInfo(metodo.metodo).icon"
+                                size="small"
+                              />
+                              {{ metodo.metodo }}
+                            </v-chip>
+                            </div>
+
+                            <div class="collection-tramo-methods-cell collection-tramo-methods-cell--center">
+                            <v-chip
+                              variant="outlined"
+                              size="small"
+                              color="indigo"
+                              class="font-weight-bold"
+                            >
+                              {{ metodo.asientosComprados || 0 }}
+                            </v-chip>
+                            </div>
+
+                            <div class="collection-tramo-methods-cell collection-tramo-methods-cell--center">
+                            <v-chip
+                              variant="outlined"
+                              size="small"
+                              :color="getMethodColor(metodo.metodo)"
+                              class="font-weight-bold"
+                            >
+                              {{ metodo.cantidad }}
+                            </v-chip>
+                            </div>
+
+                            <div class="collection-tramo-methods-cell collection-tramo-methods-cell--end">
+                            <span
+                              class="font-weight-bold"
+                              :class="
+                                'text-' + getMethodColor(metodo.metodo) + '-darken-3'
+                              "
+                            >
+                              ${{ formatNumber(Number(metodo.total)) }}
+                            </span>
+                            </div>
+                          </div>
+
+                          <div class="collection-table-total">
+                            <span>Subtotal:</span>
+                            <strong>
+                              ${{ formatNumber(Number(item.totalTramo || 0)) }}
+                            </strong>
+                          </div>
+                        </div>
+                      </v-card>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
           </v-card-text>
 
           <v-divider v-if="filteredTramos.length > 0" />
@@ -443,14 +512,22 @@ export default {
       { title: "Reimpresiones", key: "reimpresiones", align: "end" },
     ],
     headersMetodos: [
-      { title: "MÉTODO DE PAGO", key: "metodo", align: "start" },
-      { title: "CANTIDAD", key: "cantidad", align: "end" },
-      { title: "TOTAL", key: "total", align: "end", class: "font-weight-bold" },
+      { title: "MÉTODO DE PAGO", key: "metodo", align: "start", width: "40%" },
+      { title: "ASIENTOS VENDIDOS", key: "asientosComprados", align: "end", width: "20%" },
+      { title: "PASAJES", key: "cantidad", align: "end", width: "20%" },
+      { title: "TOTAL", key: "total", align: "end", width: "20%", class: "font-weight-bold" },
     ],
     headersTramoMetodos: [
-      { title: "MÃ‰TODO", key: "metodo", align: "start" },
-      { title: "CANTIDAD", key: "cantidad", align: "end" },
+      { title: "MÉTODO", key: "metodo", align: "start" },
+      { title: "ASIENTOS", key: "asientosComprados", align: "end" },
+      { title: "PASAJES", key: "cantidad", align: "end" },
       { title: "TOTAL", key: "total", align: "end", class: "font-weight-bold" },
+    ],
+    headersTramos: [
+      { title: "CÓDIGO", key: "code", align: "start" },
+      { title: "RUTA", key: "routeName", align: "start" },
+      { title: "TOTAL", key: "totalTramo", align: "end" },
+      { title: "ACCIONES", key: "data-table-expand", align: "end" },
     ],
     snackbar: false,
     sb_type: "",
@@ -479,6 +556,9 @@ export default {
     date: null,
     endDate: null,
     searchTramos: "",
+    sortTramosBy: "code",
+    sortTramosOrder: "asc",
+    expandedTramoRows: [],
     options: [
       { title: "Empresa", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
       { title: "Sucursal", value: "Sucursal", icon: "mdi-store" }, // Opción Sucursal con ícono
@@ -506,7 +586,6 @@ export default {
         : [];
 
       const query = this.searchTramos?.trim().toLowerCase();
-
       if (!query) {
         return tramos;
       }
@@ -518,10 +597,15 @@ export default {
           .toLowerCase();
 
         const texto = [
+          tramo.code,
+          tramo.tripCode,
+          tramo.routeCode,
+          tramo.routeName,
           tramo.nombre,
           tramo.origin,
           tramo.destination,
           tramo.totalPasajes,
+          tramo.totalAsientosComprados,
           tramo.totalTramo,
           metodoTexto,
         ]
@@ -530,6 +614,36 @@ export default {
           .toLowerCase();
 
         return texto.includes(query);
+      });
+    },
+    sortedTramos() {
+      const tramos = [...this.filteredTramos];
+
+      const getValue = (tramo) => {
+        switch (this.sortTramosBy) {
+          case "routeName":
+            return (tramo.routeName || tramo.nombre || tramo.origin || "").toString();
+          case "totalTramo":
+            return Number(tramo.totalTramo || 0);
+          case "code":
+          default:
+            return (tramo.code || tramo.tripCode || "").toString();
+        }
+      };
+
+      return tramos.sort((a, b) => {
+        const valueA = getValue(a);
+        const valueB = getValue(b);
+
+        if (typeof valueA === "number" && typeof valueB === "number") {
+          return this.sortTramosOrder === "asc"
+            ? valueA - valueB
+            : valueB - valueA;
+        }
+
+        return this.sortTramosOrder === "asc"
+          ? valueA.localeCompare(valueB, "es", { sensitivity: "base" })
+          : valueB.localeCompare(valueA, "es", { sensitivity: "base" });
       });
     },
   },
@@ -602,6 +716,33 @@ export default {
       };
 
       return methodData[normalized] || { color: "grey", icon: "mdi-help-circle" };
+    },
+    toggleTramoSort(field) {
+      if (this.sortTramosBy === field) {
+        this.sortTramosOrder = this.sortTramosOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.sortTramosBy = field;
+      this.sortTramosOrder = "asc";
+    },
+    getTramoSortIcon(field) {
+      if (this.sortTramosBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.sortTramosOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    toggleTramoExpand(tramo) {
+      const rowId = tramo.code || tramo.tripCode;
+      if (!rowId) return;
+      this.expandedTramoRows =
+        this.expandedTramoRows[0] === rowId ? [] : [rowId];
+    },
+    isTramoExpanded(tramo) {
+      const rowId = tramo.code || tramo.tripCode;
+      if (!rowId) return false;
+      return this.expandedTramoRows.includes(rowId);
     },
     formatNumber(value) {
       const numberValue = parseFloat(value);
@@ -726,7 +867,7 @@ export default {
       rows.push([]);
       rows.push(["FECHA:", this.response.fecha]);
       rows.push([]);
-      rows.push(["ENISIÓN DE PASAJES"]);
+      rows.push(["EMISIÓN DE PASAJES"]);
       rows.push([]);
       rows.push(["Pasajes emitidos:", this.response.pasajesEmitidos]);
       rows.push(["Reimpresiones:", this.response.reimpresiones]);
@@ -886,7 +1027,7 @@ export default {
 
 .collection-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -938,8 +1079,61 @@ export default {
   color: #111827;
 }
 
+.collection-methods-section-header,
+.collection-methods-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.collection-methods-title,
+.collection-methods-cell {
+  min-width: 0;
+}
+
+.collection-methods-header-cell {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.collection-methods-header-cell:last-child {
+  text-align: right;
+}
+
 .collection-table {
   background: transparent;
+}
+
+.collection-methods-body {
+  background: #ffffff;
+}
+
+.collection-methods-row {
+  min-height: 52px;
+  padding: 10px 18px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.collection-methods-cell--center {
+  display: flex;
+  justify-content: center;
+}
+
+.collection-methods-cell--end {
+  text-align: right;
+}
+
+.collection-methods-empty {
+  padding: 16px 18px;
+  color: #64748b;
+  font-size: 14px;
+  border-bottom: 1px solid #eef2f7;
 }
 
 .collection-table-total {
@@ -963,42 +1157,165 @@ export default {
   overflow-y: auto;
 }
 
-.collection-route-panel {
-  margin-bottom: 8px;
-  border: 1px solid #eef2f7;
-  border-radius: 14px !important;
-  overflow: hidden;
-  background: #ffffff;
-}
-
-.collection-route-title {
-  min-height: 58px;
-  padding: 10px 16px;
-}
-
-.collection-route-name {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.collection-route-summary {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .collection-route-detail {
-  padding-top: 8px;
+  padding: 10px 18px 16px;
 }
 
 .collection-inner-card {
   border: 1px solid #eef2f7;
   border-radius: 14px;
   overflow: hidden;
+}
+
+.collection-tramo-methods-header-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(120px, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px 18px 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.collection-tramo-methods-header-cell {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.collection-tramo-methods-header-cell:nth-child(2),
+.collection-tramo-methods-header-cell:nth-child(3) {
+  text-align: center;
+}
+
+.collection-tramo-methods-header-cell:nth-child(4) {
+  text-align: right;
+}
+
+.collection-tramo-methods-body {
+  background: #ffffff;
+}
+
+.collection-tramo-methods-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(120px, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 18px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.collection-tramo-methods-cell {
+  min-width: 0;
+}
+
+.collection-tramo-methods-cell--center {
+  display: flex;
+  justify-content: center;
+}
+
+.collection-tramo-methods-cell--end {
+  text-align: right;
+}
+
+.collection-route-table {
+  background: transparent;
+}
+
+.collection-route-table-head {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(120px, 0.8fr) 64px;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.collection-route-sortable {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.collection-route-col-total {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.collection-route-col-actions {
+  justify-self: end;
+}
+
+.collection-route-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(120px, 0.8fr) 64px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.collection-route-col-code,
+.collection-route-col-route,
+.collection-route-col-total,
+.collection-route-col-actions {
+  min-width: 0;
+}
+
+.collection-route-code-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.collection-route-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.collection-route-name {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.collection-route-code-chip {
+  flex-shrink: 0;
+}
+
+.collection-route-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.collection-route-total {
+  justify-self: end;
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.collection-route-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .collection-route-footer {
@@ -1032,17 +1349,29 @@ export default {
     align-items: stretch;
   }
 
+  .collection-methods-section-header,
+  .collection-methods-row {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(110px, 0.9fr);
+    gap: 8px;
+  }
+
   .collection-route-search {
     max-width: 100%;
   }
 
-  .collection-route-summary {
-    justify-content: flex-start;
-    margin-top: 10px;
+  .collection-route-table-head,
+  .collection-route-row {
+    grid-template-columns: minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(100px, 0.75fr) 56px;
+    gap: 8px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
-  .collection-route-name {
+  .collection-route-name-row {
     flex-wrap: wrap;
   }
 }
 </style>
+
+
+

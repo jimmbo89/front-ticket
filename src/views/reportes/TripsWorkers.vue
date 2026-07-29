@@ -167,11 +167,25 @@
       >
         <template #top>
           <div class="busgo-table-head">
+            <div class="worker-collection-col-code worker-collection-sortable" @click="toggleSort('code')">
+              <span>Código</span>
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "code"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
+            </div>
+
             <div
               class="worker-collection-col-route worker-collection-sortable"
               @click="toggleSort('name')"
             >
-              Ruta
+              <span>Ruta</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -188,7 +202,7 @@
               class="worker-collection-col-date worker-collection-sortable"
               @click="toggleSort('date')"
             >
-              Fecha
+              <span>Fecha</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -201,24 +215,60 @@
               </v-icon>
             </div>
 
-            <div class="worker-collection-col-vehicle">
-              Vehículo
+            <div class="worker-collection-col-vehicle worker-collection-sortable" @click="toggleSort('vehicleName')">
+              <span>Vehículo</span>
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "vehicleName"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
             </div>
 
-            <div class="worker-collection-col-start">
-              Salida
+            <div class="worker-collection-col-seats worker-collection-sortable" @click="toggleSort('asientosComprados')">
+              <span>Asientos</span>
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "asientosComprados"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
             </div>
 
-            <div class="worker-collection-col-end">
-              Llegada
+            <div class="worker-collection-col-passengers worker-collection-sortable" @click="toggleSort('passenger')">
+              <span>Pasajes</span>
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "passenger"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
             </div>
 
-            <div class="worker-collection-col-passengers">
-              Pasajeros
-            </div>
+            <div class="worker-collection-col-amount worker-collection-sortable" @click="toggleSort('totalAmount')">
+              <span>Monto</span>
 
-            <div class="worker-collection-col-amount">
-              Monto
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "totalAmount"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
             </div>
           </div>
         </template>
@@ -227,9 +277,29 @@
           <tr>
             <td class="pa-0 border-0">
               <div class="busgo-row worker-collection-row">
+                <div class="worker-collection-col-code busgo-meta worker-collection-code-cell">
+                  <span class="worker-collection-code-value text-truncate">
+                    {{ slotProps.item.code || "-" }}
+                  </span>
+                </div>
+
                 <div class="worker-collection-col-route">
-                  <div class="worker-collection-route-title">
-                    {{ slotProps.item.name }}
+                  <div class="worker-collection-route-title-row">
+                    <div class="worker-collection-route-title">
+                      {{ slotProps.item.name }}
+                    </div>
+
+                    <v-chip
+                      v-if="slotProps.item.routeCode || slotProps.item.code"
+                      size="x-small"
+                      variant="tonal"
+                      class="worker-collection-route-code-chip flex-shrink-0"
+                    >
+                      {{
+                        slotProps.item.routeCode ||
+                        (slotProps.item.code ? slotProps.item.code.split('-')[0] : '')
+                      }}
+                    </v-chip>
                   </div>
 
                   <div class="worker-collection-route-meta">
@@ -291,23 +361,13 @@
                   </div>
                 </div>
 
-                <div class="worker-collection-col-start busgo-meta">
+                <div class="worker-collection-col-seats busgo-meta">
                   <v-icon size="16" color="primary">
-                    mdi-clock-start
+                    mdi-seat-passenger
                   </v-icon>
 
                   <span class="text-truncate">
-                    {{ slotProps.item.start }}
-                  </span>
-                </div>
-
-                <div class="worker-collection-col-end busgo-meta">
-                  <v-icon size="16" color="primary">
-                    mdi-clock-end
-                  </v-icon>
-
-                  <span class="text-truncate">
-                    {{ slotProps.item.end }}
+                    {{ slotProps.item.asientosComprados || 0 }}
                   </span>
                 </div>
 
@@ -355,13 +415,13 @@ export default {
         valid: true,
         loading: false,
         headers: [
+            { title: 'Código', value: 'code', },
             { title: 'Ruta', value: 'name', },
             { title: 'Fecha', value: 'date', },
             { title: 'Origen', value: 'origin', },
             { title: 'Destino', value: 'destination', },
             { title: 'Vehículo', value: 'vehicleName', },
-            { title: 'Salida', value: 'start', },
-            { title: 'LLegada', value: 'end', },
+            { title: 'Asientos', value: 'asientosComprados', },
             { title: 'Pasajes', value: 'passenger', },
             { title: 'Monto generado', value: 'totalAmount', },
         ],
@@ -395,14 +455,19 @@ export default {
         const direction = this.sortOrder === 'asc' ? 1 : -1;
 
         return items.sort((a, b) => {
-          const aValue = a?.[key];
-          const bValue = b?.[key];
+          const aValue = this.getSortValue(a, key);
+          const bValue = this.getSortValue(b, key);
 
-          if (key === 'date') {
+          if (this.isDateSortKey(key)) {
             return direction * this.compareDates(aValue, bValue);
           }
 
+          if (this.isNumericSortKey(key)) {
+            return direction * (Number(aValue || 0) - Number(bValue || 0));
+          }
+
           return direction * String(aValue ?? '').localeCompare(String(bValue ?? ''), 'es', {
+            numeric: true,
             sensitivity: 'base',
           });
         });
@@ -468,6 +533,36 @@ export default {
         const aTime = new Date(a || 0).getTime();
         const bTime = new Date(b || 0).getTime();
         return aTime - bTime;
+      },
+      isDateSortKey(key) {
+        return ['date'].includes(key);
+      },
+      isNumericSortKey(key) {
+        return ['asientosComprados', 'passenger', 'totalAmount'].includes(key);
+      },
+      getSortValue(item, key) {
+        switch (key) {
+          case 'code':
+            return item?.code ?? '';
+          case 'name':
+            return item?.name ?? '';
+          case 'date':
+            return item?.date ?? '';
+          case 'origin':
+            return item?.origin ?? '';
+          case 'destination':
+            return item?.destination ?? '';
+          case 'vehicleName':
+            return item?.vehicleName ?? '';
+          case 'asientosComprados':
+            return item?.asientosComprados ?? 0;
+          case 'passenger':
+            return item?.passenger ?? 0;
+          case 'totalAmount':
+            return item?.totalAmount ?? 0;
+          default:
+            return item?.[key] ?? '';
+        }
       },
       getImageUrl(imagePath) {
       return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
@@ -637,8 +732,7 @@ export default {
                 origin: '',
                 destination: '',
                 plate: '',
-                start: '',
-                end: '',
+                asientosComprados: '',
                 passenger: '',
                 totalAmount: '',
             };
@@ -734,8 +828,13 @@ table.v-table > thead,
   font-weight: 700;
 }
 
+.worker-collection-col-code {
+  width: 13%;
+  min-width: 0;
+}
+
 .worker-collection-col-route {
-  width: 44%;
+  width: 33%;
   min-width: 0;
 }
 
@@ -745,17 +844,12 @@ table.v-table > thead,
 }
 
 .worker-collection-col-vehicle {
-  width: 13%;
+  width: 14%;
   min-width: 0;
 }
 
-.worker-collection-col-start {
-  width: 6%;
-  min-width: 0;
-}
-
-.worker-collection-col-end {
-  width: 6%;
+.worker-collection-col-seats {
+  width: 7%;
   min-width: 0;
 }
 
@@ -778,6 +872,31 @@ table.v-table > thead,
 
 .worker-collection-row {
   min-height: 66px;
+}
+
+.worker-collection-code-cell {
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: center;
+  gap: 2px;
+  text-align: left;
+}
+
+.worker-collection-code-value {
+  display: block;
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.worker-collection-route-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .worker-collection-route-title {
@@ -814,6 +933,12 @@ table.v-table > thead,
   margin-top: 2px;
 }
 
+.worker-collection-route-code-chip {
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .min-width-0 {
   min-width: 0;
 }
@@ -831,10 +956,10 @@ table.v-table > thead,
   }
 
   .worker-collection-col-route,
+  .worker-collection-col-code,
   .worker-collection-col-date,
   .worker-collection-col-vehicle,
-  .worker-collection-col-start,
-  .worker-collection-col-end,
+  .worker-collection-col-seats,
   .worker-collection-col-passengers,
   .worker-collection-col-amount {
     width: 100%;

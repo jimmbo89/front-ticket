@@ -198,11 +198,25 @@
                               mdi-road
                             </v-icon>
                           </v-avatar>
-                          <div class="d-flex align-center">
-                            <span class="font-weight-medium text-body-1">{{ tramo.origin }}</span>
-                            <v-icon size="20" :color="tramo.totalPasajes > 0 ? 'green-darken-2' : 'grey'"
-                              class="mx-2">mdi-arrow-right</v-icon>
-                            <span class="font-weight-medium text-body-1">{{ tramo.destination }}</span>
+                          <div class="d-flex flex-column min-width-0">
+                            <div class="d-flex align-center min-width-0">
+                              <span class="font-weight-medium text-body-1 text-truncate">
+                                {{ tramo.routeName || tramo.nombre || tramo.origin }}
+                              </span>
+
+                              <v-chip
+                                v-if="tramo.routeCode"
+                                size="x-small"
+                                variant="tonal"
+                                class="ml-2 flex-shrink-0"
+                              >
+                                {{ tramo.routeCode }}
+                              </v-chip>
+                            </div>
+
+                            <div class="text-caption text-grey-darken-1 text-truncate">
+                              Código viaje: {{ tramo.code || tramo.tripCode || "-" }}
+                            </div>
                           </div>
                         </v-col>
                         <v-col cols="5" md="4" class="text-right">
@@ -606,7 +620,11 @@ export default {
 
       // 11. Datos de cada tramo
       this.response.tramos.forEach((tramo) => {
-        rows.push([tramo.nombre]); // Nombre del tramo
+        rows.push([
+          `Ruta: ${tramo.routeName || tramo.nombre || "-"}`,
+          tramo.routeCode ? `Código ruta: ${tramo.routeCode}` : "",
+          `Código viaje: ${tramo.code || tramo.tripCode || "-"}`,
+        ]); // Ruta + códigos
         rows.push([]); // Fila vacía para separar
 
         // Total de pasajes del tramo
@@ -692,7 +710,11 @@ export default {
       rows.push([]);
 
       this.response.tramos.forEach((tramo) => {
-        rows.push([tramo.nombre]);
+        rows.push([
+          `Ruta: ${tramo.routeName || tramo.nombre || "-"}`,
+          tramo.routeCode ? `Código ruta: ${tramo.routeCode}` : "",
+          `Código viaje: ${tramo.code || tramo.tripCode || "-"}`,
+        ]);
         rows.push(["Total Pasajes:", tramo.totalPasajes]);
         rows.push(["Total Tramo:", `$${tramo.totalTramo}`]);
 

@@ -287,15 +287,37 @@
               </div>
 
               <div class="incident-worker text-truncate">
-                <v-icon size="16" class="mr-1">mdi-account-outline</v-icon>
-                {{ incident.workerName || "Trabajador sin nombre" }}
+                <v-tooltip
+                  location="top"
+                  :text="incident.workerName || 'Trabajador sin nombre'"
+                >
+                  <template #activator="{ props }">
+                    <span v-bind="props" class="text-truncate">
+                      <v-icon size="16" class="mr-1">mdi-account-outline</v-icon>
+                      {{ incident.workerName || "Trabajador sin nombre" }}
+                    </span>
+                  </template>
+                </v-tooltip>
               </div>
 
               <div class="incident-title text-truncate">
-                <v-icon size="17" color="warning" class="mr-2">
-                  mdi-alert-circle-outline
-                </v-icon>
-                {{ incident.title || "Incidencia sin título" }}
+                <v-tooltip
+                  location="top"
+                  :text="incident.title || 'Incidencia sin título'"
+                >
+                  <template #activator="{ props }">
+                    <span v-bind="props" class="text-truncate">
+                      <v-icon
+                        size="17"
+                        :color="incident.iconColor || 'warning'"
+                        class="mr-2"
+                      >
+                        {{ incident.icon || "mdi-alert-circle-outline" }}
+                      </v-icon>
+                      {{ incident.title || "Incidencia sin título" }}
+                    </span>
+                  </template>
+                </v-tooltip>
               </div>
 
               <div class="incident-date">
@@ -303,7 +325,17 @@
               </div>
 
               <div class="incident-description text-truncate">
-                {{ incident.description || "--" }}
+                <v-tooltip
+                  location="top"
+                  max-width="420"
+                  :text="incident.description || '--'"
+                >
+                  <template #activator="{ props }">
+                    <span v-bind="props" class="text-truncate">
+                      {{ incident.description || "--" }}
+                    </span>
+                  </template>
+                </v-tooltip>
               </div>
             </div>
 
@@ -510,6 +542,34 @@ export default {
         "Sucursal sin nombre"
       );
     },
+    getIncidentDetails(incident) {
+      if (!incident?.details) return {};
+      if (typeof incident.details === "object") return incident.details;
+
+      try {
+        return JSON.parse(incident.details);
+      } catch (error) {
+        return {};
+      }
+    },
+    prepareIncident(incident) {
+      const details = this.getIncidentDetails(incident);
+      const type = details?.type || "";
+
+      if (type.includes("TRIP_VEHICLE_CHANGE")) {
+        return {
+          ...incident,
+          icon: "mdi-bus-alert",
+          iconColor: "primary",
+        };
+      }
+
+      return {
+        ...incident,
+        icon: "mdi-alert-circle-outline",
+        iconColor: "warning",
+      };
+    },
     month() {
       const now = new Date();
       const year = now.getFullYear();
@@ -536,7 +596,7 @@ export default {
           this.sales = result.data?.sales || [];
           this.earlyYear = result.data?.salesYear || [];
           this.trips = result.data?.trips || [];
-          this.incidents = result.data?.incidents || [];
+          this.incidents = (result.data?.incidents || []).map(this.prepareIncident);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.sales = [];

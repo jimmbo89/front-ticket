@@ -122,7 +122,7 @@
 
       <v-data-table
         :headers="headers"
-        :items="incidents"
+        :items="sortedIncidents"
         v-model:expanded="expandedItems"
         item-value="id"
         :items-per-page-text="'Elementos por página'"
@@ -135,11 +135,34 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="incident-col-branch">Sucursal</div>
-            <div class="incident-col-worker">Trabajador</div>
-            <div class="incident-col-title">Título</div>
-            <div class="incident-col-date">Fecha</div>
-            <div class="incident-col-description">Descripción</div>
+            <div
+              class="incident-col-branch incident-sortable"
+              @click="toggleIncidentSort('nameBranch')"
+            >
+              Sucursal
+              <v-icon size="16" class="ml-1">{{ incidentSortIcon('nameBranch') }}</v-icon>
+            </div>
+            <div
+              class="incident-col-worker incident-sortable"
+              @click="toggleIncidentSort('workerName')"
+            >
+              Trabajador
+              <v-icon size="16" class="ml-1">{{ incidentSortIcon('workerName') }}</v-icon>
+            </div>
+            <div
+              class="incident-col-title incident-sortable"
+              @click="toggleIncidentSort('title')"
+            >
+              Título
+              <v-icon size="16" class="ml-1">{{ incidentSortIcon('title') }}</v-icon>
+            </div>
+            <div
+              class="incident-col-date incident-sortable"
+              @click="toggleIncidentSort('date')"
+            >
+              Fecha
+              <v-icon size="16" class="ml-1">{{ incidentSortIcon('date') }}</v-icon>
+            </div>
             <div class="incident-col-actions"></div>
           </div>
         </template>
@@ -226,12 +249,6 @@
                   </span>
                 </div>
 
-                <div class="incident-col-description busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.description }}
-                  </span>
-                </div>
-
                 <div class="incident-col-actions busgo-actions">
                   <v-btn
                     size="small"
@@ -283,6 +300,16 @@
                   </v-icon>
 
                   <strong>{{ item.title }}</strong>
+                </div>
+
+                <div v-if="item.description" class="incident-expanded-description">
+                  <div class="incident-detail-key pa-0 mb-1">
+                    Descripción:
+                  </div>
+
+                  <div class="incident-detail-value pa-0">
+                    {{ item.description }}
+                  </div>
                 </div>
 
                 <table class="incident-detail-table">
@@ -340,6 +367,8 @@ export default {
     mostrarFila: false,
     permissions: "",
     incidents: [],
+    incidentSortBy: "date",
+    incidentSortOrder: "desc",
     branches: [],
     data: {},
     company_id: "",
@@ -353,7 +382,6 @@ export default {
       { title: "Trabajador", key: "workerName" },
       { title: "Titulo", key: "title" },
       { title: "Fecha", key: "date" },
-      { title: "Descripcion", key: "description" },
       { title: "Acciones", key: "data-table-expand" },
     ],
     editedItem: {
@@ -390,7 +418,11 @@ export default {
       (v) => v > 0 || "El precio debe ser un número positivo", // El precio debe ser positivo
     ],
   }),
-  computed: {},
+  computed: {
+    sortedIncidents() {
+      return [...(this.incidents || [])].sort((a, b) => this.compareIncidents(a, b));
+    },
+  },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
@@ -407,6 +439,66 @@ export default {
   },
 
   methods: {
+    toggleIncidentSort(field) {
+      if (this.incidentSortBy === field) {
+        this.incidentSortOrder = this.incidentSortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+
+      this.incidentSortBy = field;
+      this.incidentSortOrder = "asc";
+    },
+    incidentSortIcon(field) {
+      if (this.incidentSortBy !== field) {
+        return "mdi-swap-vertical";
+      }
+
+      return this.incidentSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    getIncidentSortValue(incident, field) {
+      if (!incident) {
+        return "";
+      }
+
+      if (field === "nameBranch") {
+        return incident.nameBranch || incident.branchName || "";
+      }
+
+      return incident[field] ?? "";
+    },
+    compareIncidents(a, b) {
+      const direction = this.incidentSortOrder === "asc" ? 1 : -1;
+      const aValue = this.getIncidentSortValue(a, this.incidentSortBy);
+      const bValue = this.getIncidentSortValue(b, this.incidentSortBy);
+
+      const aEmpty = aValue === null || aValue === undefined || aValue === "";
+      const bEmpty = bValue === null || bValue === undefined || bValue === "";
+
+      if (aEmpty && bEmpty) {
+        return 0;
+      }
+
+      if (aEmpty) {
+        return 1;
+      }
+
+      if (bEmpty) {
+        return -1;
+      }
+
+      const aNumber = Number(aValue);
+      const bNumber = Number(bValue);
+
+      if (Number.isFinite(aNumber) && Number.isFinite(bNumber)) {
+        return (aNumber - bNumber) * direction;
+      }
+
+      return (
+        String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase(), "es", {
+          sensitivity: "base",
+        }) * direction
+      );
+    },
     getDetailsObject(details) {
       if (!details) return {};
 
@@ -438,12 +530,7 @@ export default {
       return perms.some((p) => this.permissions.includes(p));
     },
     toggleExpand(item) {
-      const index = this.expandedItems.findIndex((id) => id === item.id);
-      if (index > -1) {
-        this.expandedItems = this.expandedItems.filter((id) => id !== item.id);
-      } else {
-        this.expandedItems = [...this.expandedItems, item.id];
-      }
+      this.expandedItems = this.isExpanded(item) ? [] : [item.id];
     },
 
     isExpanded(item) {
@@ -708,6 +795,18 @@ export default {
         return { error: `Tipo no soportado: ${typeof parsed}` };
       }
 
+      if (
+        typeof parsed.type === "string" &&
+        parsed.type.includes("TRIP_VEHICLE_CHANGE")
+      ) {
+        return {
+          trip_code: parsed.trip_code || "-",
+          old_vehicle: parsed.old_vehicle || "-",
+          new_vehicle: parsed.new_vehicle || "-",
+          reassignedSeats: parsed.reassignedSeats ?? "-",
+        };
+      }
+
       // === FILTRAR: Excluir campos que NO queremos mostrar ===
       const { ticket_id, trip_id, sequenceNumber, branchName, ...cleanDetails } = parsed;
 
@@ -761,6 +860,10 @@ export default {
         action: "Acción",
         ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
         trip_id: "ID Viaje", // Ya no se mostrará, pero se mantiene por compatibilidad
+        trip_code: "Código del Viaje",
+        old_vehicle: "Vehículo Anterior",
+        new_vehicle: "Vehículo Nuevo",
+        reassignedSeats: "Asientos Reasignados",
         new_status: "Nuevo Estado",
         previous_status: "Estado Anterior",
         arrival: "Llegada Programada",
@@ -795,6 +898,10 @@ export default {
     // Actualiza formatDetailValue para formatear horas cuando existan
     formatDetailValue(key, value) {
       if (key === "qr") return "";
+
+      if (key === "reassignedSeats") {
+        return this.formatReassignedSeats(value);
+      }
 
       // === FORMATEO DE HORAS ===
       if (["departureTime", "arrivalTime"].includes(key) && value) {
@@ -833,6 +940,39 @@ export default {
         }).format(value);
       }
       return value;
+    },
+    formatReassignedSeats(value) {
+      if (!value) {
+        return "-";
+      }
+
+      let seatsData = value;
+      if (typeof value === "string") {
+        try {
+          seatsData = JSON.parse(value);
+        } catch (error) {
+          return value;
+        }
+      }
+
+      if (!Array.isArray(seatsData)) {
+        return String(seatsData);
+      }
+
+      const formatted = seatsData
+        .map((item) => {
+          const seats = Array.isArray(item?.seats) ? item.seats : [];
+          const seatsText = seats.length ? seats.join(", ") : "-";
+
+          if (item?.sequenceNumber) {
+            return `Ticket ${item.sequenceNumber}: asientos ${seatsText}`;
+          }
+
+          return `Asientos ${seatsText}`;
+        })
+        .filter(Boolean);
+
+      return formatted.length ? formatted.join(" | ") : "-";
     },
   },
 };
@@ -924,7 +1064,7 @@ table.v-table > thead,
 }
 
 .incident-col-title {
-  width: 18%;
+  width: 38%;
   min-width: 0;
 }
 
@@ -933,14 +1073,16 @@ table.v-table > thead,
   min-width: 0;
 }
 
-.incident-col-description {
-  width: 20%;
-  min-width: 0;
-}
-
 .incident-col-actions {
   width: 10%;
   min-width: 0;
+}
+
+.incident-sortable {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
 }
 
 .incident-expanded {
@@ -969,6 +1111,10 @@ table.v-table > thead,
   color: #475569;
 }
 
+.incident-expanded-description {
+  margin-bottom: 12px;
+}
+
 @media (max-width: 960px) {
   .incident-toolbar {
     width: 100%;
@@ -986,7 +1132,6 @@ table.v-table > thead,
   .incident-col-worker,
   .incident-col-title,
   .incident-col-date,
-  .incident-col-description,
   .incident-col-actions {
     width: 100%;
   }

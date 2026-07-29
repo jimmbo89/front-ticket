@@ -105,13 +105,21 @@
                     </v-icon>
                   </v-avatar>
 
-                  <div class="busgo-name">
-                    {{ slotProps.item.name }}
+                  <div class="route-list-name-wrap">
+                    <div class="busgo-name">
+                      {{ slotProps.item.name }}
+                    </div>
+
+                    <div v-if="slotProps.item.code" class="route-list-code-subtitle text-truncate">
+                      {{ slotProps.item.code }}
+                    </div>
                   </div>
 
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
                       Nombre de la ruta: {{ slotProps.item.name }}
+                      <br v-if="slotProps.item.code" />
+                      <span v-if="slotProps.item.code">Código: {{ slotProps.item.code }}</span>
                     </span>
                   </v-tooltip>
                 </div>
@@ -268,6 +276,17 @@
               </v-col>
 
               <v-col cols="12" md="12">
+                <v-text-field
+                  v-model="editedItem.code"
+                  label="Código"
+                  prepend-icon="mdi-pound"
+                  variant="underlined"
+                  maxlength="20"
+                  :hint="!editedItem.code ? 'Ingresa un código corto y único para identificar la ruta. Ejemplo: AER-TPM.' : ''"
+                />
+              </v-col>
+
+              <v-col cols="12" md="12">
                 <v-autocomplete
                   :no-data-text="'No hay datos disponibles'"
                   v-model="editedItem.origin_id"
@@ -350,7 +369,7 @@
             :color="paleteColors.primary"
             variant="flat"
             @click="save"
-            :disabled="!valid"
+            :disabled="loading"
             :loading="loading"
           >
             Aceptar
@@ -490,6 +509,7 @@ export default {
     editedItem: {
       id: "",
       name: "",
+      code: "",
       origin_id: "",
       destination_id: "",
       distance: "",
@@ -501,6 +521,7 @@ export default {
     originalItem: {
       id: "",
       name: "",
+      code: "",
       origin_id: "",
       destination_id: "",
       distance: "",
@@ -512,6 +533,7 @@ export default {
     defaultItem: {
       id: "",
       name: "",
+      code: "",
       origin_id: "",
       destination_id: "",
       distance: "",
@@ -526,6 +548,19 @@ export default {
       (v) => !!v || "El campo es requerido",
       (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
       (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
+    ],
+    codeRules: [
+      (v) => !!String(v || "").trim() || "El c\u00f3digo es requerido",
+      (v) =>
+        this.normalizeRouteCodeValue(v).length <= 20 ||
+        "El c\u00f3digo debe tener como m\u00e1ximo 20 caracteres",
+      (v) =>
+        !/\s/.test(String(v || "")) || "No permite espacios",
+      (v) =>
+        /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(this.normalizeRouteCodeValue(v)) ||
+        "Solo permite letras, n\u00fameros y guiones",
+      (v) =>
+        !v || this.isUniqueRouteCode(v) || "El c\u00f3digo ya existe en esta empresa",
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     distanceRules: [
@@ -600,6 +635,7 @@ export default {
         ...route,
         id: route.id ?? route.route_id ?? "",
         route_id: route.route_id ?? route.id ?? "",
+        code: route.code ?? route.routeCode ?? "",
         origin_id: route.origin_id ?? route.originId ?? "",
         destination_id: route.destination_id ?? route.destinationId ?? "",
         originAddress: route.originAddress ?? route.originName ?? "",
@@ -610,10 +646,32 @@ export default {
         destinationImage: route.destinationImage ?? "locations/default.jpg",
       };
     },
+    normalizeRouteCodeValue(value = "") {
+      return String(value).trim().toUpperCase();
+    },
+    normalizeRouteCodeInput() {
+      this.editedItem.code = this.normalizeRouteCodeValue(this.editedItem.code);
+    },
+    isUniqueRouteCode(value) {
+      const normalizedCode = this.normalizeRouteCodeValue(value);
+
+      if (!normalizedCode) {
+        return true;
+      }
+
+      return !this.branchRoutes.some((route) => {
+        const routeId = String(route.id ?? route.route_id ?? "");
+        const currentId = String(this.editedItem.id ?? "");
+        const routeCode = this.normalizeRouteCodeValue(route.code);
+
+        return routeCode === normalizedCode && routeId !== currentId;
+      });
+    },
     async showAdd() {
       //this.close();
       this.data = {};
       this.editedIndex = -1;
+      this.valid = true;
       try {
         const result = await handleRequest({
           endpoint: "location-route",
@@ -645,6 +703,7 @@ export default {
     },
     close() {
       this.dialog = false;
+      this.valid = true;
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
@@ -684,118 +743,102 @@ export default {
     },
     async save() {
       this.loading = true;
-      if (this.editedIndex === -1) {
-        this.valid = false;
-        const fieldsToUpdate = [
-          "name",
-          "origin_id",
-          "destination_id",
-          "distance",
-          "estimated",
-          "status",
-          "branch_id",
-          "route_id",
-        ];
 
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
-            return obj;
-          }, {});
-        if (Object.keys(updatedFields).length > 0) {
-          //updatedFields.branch_id = this.branch_id;
-          try {
-            const result = await handleRequest({
-              endpoint: "route",
-              method: "POST",
-              data: updatedFields,
-            });
+      try {
+        this.editedItem.code = this.normalizeRouteCodeValue(this.editedItem.code);
 
-            // Manejo de la respuesta según el resultado
-            if (result.success) {
-              this.showAlert("success", result.message, 3000);
-              this.branch_id = this.editedItem.branch_id;
-              this.initialize();
-              this.loading = false;
-            } else {
-              this.showAlert("warning", result.message, 3000);
-              this.loading = false;
-            }
-          } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-            this.loading = false;
-          }
+        if (!this.editedItem.code) {
+          this.showAlert("warning", "El código es requerido.", 3000);
+          return;
         }
-      } else {
-        this.valid = false;
+
+        const validation = await this.$refs.form?.validate?.();
+        if (validation?.valid === false || validation === false) {
+          return;
+        }
+
+        if (!this.isUniqueRouteCode(this.editedItem.code)) {
+          this.showAlert(
+            "warning",
+            "Ya existe una ruta con ese código en esta empresa.",
+            3000
+          );
+          return;
+        }
+
         const fieldsToUpdate = [
           "name",
+          "code",
           "origin_id",
           "destination_id",
           "distance",
           "estimated",
           "status",
-          "branch_id",
           "route_id",
         ];
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
+
+        let updatedFields = {};
+
+        if (this.editedIndex === -1) {
+          updatedFields = fieldsToUpdate.reduce((obj, key) => {
+            const value = this.editedItem[key];
+
+            if (value !== "" && value !== null && value !== undefined) {
+              obj[key] = value;
+            }
+
             return obj;
           }, {});
-        if (Object.keys(updatedFields).length > 0) {
-          updatedFields.id = this.editedItem.id;
-          try {
-            const result = await handleRequest({
-              endpoint: "route",
-              method: "PUT",
-              data: updatedFields,
-            });
-
-            // Manejo de la respuesta según el resultado
-            if (result.success) {
-              this.showAlert("success", result.message, 3000);
-              this.initialize();
-              this.loading = false;
-            } else {
-              this.showAlert("warning", result.message, 3000);
-              this.loading = false;
-            }
-          } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-            this.loading = false;
-          }
         } else {
-          this.showAlert("success", "No se realizaron cambios.", 3000);
-          this.loading = false;
+          updatedFields = Object.keys(this.editedItem)
+            .filter(
+              (key) =>
+                fieldsToUpdate.includes(key) &&
+                this.editedItem[key] !== this.originalItem[key]
+            )
+            .reduce((obj, key) => {
+              obj[key] = this.editedItem[key];
+              return obj;
+            }, {});
+
+          if (Object.keys(updatedFields).length > 0) {
+            updatedFields.id = this.editedItem.id;
+          }
         }
+
+        if (Object.keys(updatedFields).length === 0) {
+          this.showAlert("success", "No se realizaron cambios.", 3000);
+          return;
+        }
+
+        const result = await handleRequest({
+          endpoint: "route",
+          method: this.editedIndex === -1 ? "POST" : "PUT",
+          data: updatedFields,
+        });
+
+        if (result.success) {
+          this.showAlert("success", result.message, 3000);
+          this.initialize();
+          this.close();
+        } else {
+          this.showAlert("warning", result.message, 3000);
+        }
+      } catch (error) {
+        this.showAlert(
+          "error",
+          "Ocurrió un error inesperado al procesar la solicitud.",
+          3000,
+        );
+      } finally {
+        this.loading = false;
       }
-      this.close();
     },
     async editItem(item) {
       this.editedIndex = 1;
       this.originalItem = Object.assign({}, this.normalizeRouteRecord(item));
       this.editedItem = Object.assign({}, this.normalizeRouteRecord(item));
+      this.valid = true;
       this.data = {};
       try {
         const result = await handleRequest({
@@ -1273,6 +1316,20 @@ white-space:nowrap;
 
 text-overflow:ellipsis;
 
+}
+
+.route-list-name-wrap{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+.route-list-code-subtitle{
+  font-size:12px;
+  font-weight:700;
+  color:#64748b;
+  margin-top:2px;
+  line-height:1.1;
 }
 
 .busgo-meta{
