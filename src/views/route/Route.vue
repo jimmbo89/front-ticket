@@ -80,7 +80,7 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="route-list-col-name">Ruta</div>
+            <div class="route-list-col-name">Codigo</div>
             <div class="route-list-col-origin">Origen</div>
             <div class="route-list-col-destination">Destino</div>
             <div class="route-list-col-distance">Distancia</div>
@@ -107,19 +107,13 @@
 
                   <div class="route-list-name-wrap">
                     <div class="busgo-name">
-                      {{ slotProps.item.name }}
-                    </div>
-
-                    <div v-if="slotProps.item.code" class="route-list-code-subtitle text-truncate">
-                      {{ slotProps.item.code }}
+                      {{ slotProps.item.code || "-" }}
                     </div>
                   </div>
 
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Nombre de la ruta: {{ slotProps.item.name }}
-                      <br v-if="slotProps.item.code" />
-                      <span v-if="slotProps.item.code">Código: {{ slotProps.item.code }}</span>
+                      Codigo: {{ slotProps.item.code || "-" }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -265,16 +259,6 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="12" md="12">
-                <v-text-field
-                  v-model="editedItem.name"
-                  label="Nombre"
-                  prepend-icon="mdi-store"
-                  variant="underlined"
-                  :rules="nameRules"
-                />
-              </v-col>
-
               <v-col cols="12" md="12">
                 <v-text-field
                   v-model="editedItem.code"
@@ -498,7 +482,7 @@ export default {
     dialogRouteStop: false,
     dialogFareSegment: false,
     headers: [
-      { title: "Nombre", value: "name", width: "15%" },
+      { title: "Codigo", value: "code", width: "15%" },
       { title: "Origen", value: "originAddress", width: "30%" },
       { title: "Destino", value: "destinationAddress", width: "30%" },
       { title: "Distancia (Km)", value: "distance", width: "5%" },
@@ -508,7 +492,6 @@ export default {
 
     editedItem: {
       id: "",
-      name: "",
       code: "",
       origin_id: "",
       destination_id: "",
@@ -520,7 +503,6 @@ export default {
     },
     originalItem: {
       id: "",
-      name: "",
       code: "",
       origin_id: "",
       destination_id: "",
@@ -532,7 +514,6 @@ export default {
     },
     defaultItem: {
       id: "",
-      name: "",
       code: "",
       origin_id: "",
       destination_id: "",
@@ -544,24 +525,6 @@ export default {
     },
     editedIndex: -1,
     search: "",
-    nameRules: [
-      (v) => !!v || "El campo es requerido",
-      (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
-      (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
-    ],
-    codeRules: [
-      (v) => !!String(v || "").trim() || "El c\u00f3digo es requerido",
-      (v) =>
-        this.normalizeRouteCodeValue(v).length <= 20 ||
-        "El c\u00f3digo debe tener como m\u00e1ximo 20 caracteres",
-      (v) =>
-        !/\s/.test(String(v || "")) || "No permite espacios",
-      (v) =>
-        /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(this.normalizeRouteCodeValue(v)) ||
-        "Solo permite letras, n\u00fameros y guiones",
-      (v) =>
-        !v || this.isUniqueRouteCode(v) || "El c\u00f3digo ya existe en esta empresa",
-    ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
     distanceRules: [
       (v) => !isNaN(v) || "La distancia debe ser un número",
@@ -767,7 +730,6 @@ export default {
         }
 
         const fieldsToUpdate = [
-          "name",
           "code",
           "origin_id",
           "destination_id",
@@ -877,6 +839,7 @@ export default {
         ...item,
         id: item.route_id ?? item.id,
         route_id: item.route_id ?? item.id,
+        name: item.code || item.name,
       };
       this.dialogRouteStop = true;
     },
@@ -885,6 +848,7 @@ export default {
         ...item,
         id: item.route_id ?? item.id,
         route_id: item.route_id ?? item.id,
+        name: item.code || item.name,
       };
       this.dialogFareSegment = true;
     },

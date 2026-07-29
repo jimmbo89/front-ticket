@@ -861,6 +861,9 @@ export default {
         ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
         trip_id: "ID Viaje", // Ya no se mostrará, pero se mantiene por compatibilidad
         trip_code: "Código del Viaje",
+        scan_count: "Cantidad de Escaneos",
+        scanCount: "Cantidad de Escaneos",
+        timestamp: "Fecha y Hora",
         old_vehicle: "Vehículo Anterior",
         new_vehicle: "Vehículo Nuevo",
         reassignedSeats: "Asientos Reasignados",
@@ -904,7 +907,7 @@ export default {
       }
 
       // === FORMATEO DE HORAS ===
-      if (["departureTime", "arrivalTime"].includes(key) && value) {
+      if (["departureTime", "arrivalTime", "timestamp"].includes(key) && value) {
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
           return date.toLocaleTimeString("es-ES", {

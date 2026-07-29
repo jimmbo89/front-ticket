@@ -114,10 +114,10 @@
       >
         <template #top>
           <div class="busgo-table-head">
-            <div class="trip-template-col-route trip-template-sortable-header" @click="toggleTemplateSort('name')">
+            <div class="trip-template-col-route trip-template-sortable-header" @click="toggleTemplateSort('routeCode')">
               <span>Ruta</span>
               <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('name') }}
+                {{ templateSortIcon('routeCode') }}
               </v-icon>
             </div>
             <div class="trip-template-col-vehicle trip-template-sortable-header" @click="toggleTemplateSort('vehicleName')">
@@ -173,17 +173,8 @@
                 <div class="trip-template-col-route">
                   <div class="trip-template-route-title-row">
                     <div class="trip-template-route-title">
-                      {{ slotProps.item.name }}
+                      {{ slotProps.item.routeCode || "-" }}
                     </div>
-
-                    <v-chip
-                      v-if="slotProps.item.routeCode"
-                      size="x-small"
-                      variant="tonal"
-                      class="trip-template-route-code-chip flex-shrink-0"
-                    >
-                      {{ slotProps.item.routeCode }}
-                    </v-chip>
                   </div>
 
                   <div class="trip-template-route-meta">
@@ -443,17 +434,8 @@
                               <v-col cols="12" class="d-flex align-center mb-2">
                                 <div class="trip-template-route-title-row">
                                   <div class="text-subtitle-2 font-weight-bold text-truncate">
-                                    {{ item.raw.name }}
+                                    {{ item.raw.routeCode || "-" }}
                                   </div>
-
-                                  <v-chip
-                                    v-if="item.raw.routeCode"
-                                    size="x-small"
-                                    variant="tonal"
-                                    class="trip-template-route-code-chip flex-shrink-0"
-                                  >
-                                    {{ item.raw.routeCode }}
-                                  </v-chip>
                                 </div>
                               </v-col>
 
@@ -1537,7 +1519,7 @@ export default {
       { text: "Inactivo", value: false },
     ],
     headers: [
-      { title: "Ruta", value: "name" },
+      { title: "Ruta", value: "routeCode" },
       { title: "Origen", value: "origin" },
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },

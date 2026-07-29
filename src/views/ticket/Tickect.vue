@@ -135,13 +135,8 @@
                 <div class="ticket-col-route">
                   <div class="ticket-route-title-row">
                     <div class="ticket-route-main text-truncate">
-                      {{ slotProps.item.tripName }}
+                      {{ slotProps.item.routeCode || "-" }}
                     </div>
-
-                    <v-chip v-if="slotProps.item.routeCode" size="x-small" variant="tonal"
-                      class="ticket-route-code-chip flex-shrink-0">
-                      {{ slotProps.item.routeCode }}
-                    </v-chip>
 
                     <v-chip v-if="getTicketFareSegment(slotProps.item)" size="x-small" :color="paleteColors.primary"
                       variant="tonal" class="flex-shrink-0">
@@ -167,7 +162,6 @@
                     <span style="white-space: normal; word-break: break-word">
                       Código viaje: {{ slotProps.item.code || "-" }}<br />
                       Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
-                      Ruta: {{ slotProps.item.tripName }}<br />
                       Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
                       Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
                     </span>
@@ -367,9 +361,9 @@
                         <span>Código</span>
                         <v-icon size="14">{{ tripSaleSortIcon('code') }}</v-icon>
                       </div>
-                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('name')">
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('routeCode')">
                         <span>Ruta</span>
-                        <v-icon size="14">{{ tripSaleSortIcon('name') }}</v-icon>
+                        <v-icon size="14">{{ tripSaleSortIcon('routeCode') }}</v-icon>
                       </div>
                       <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('schedule')">
                         <span>Salida</span>
@@ -407,13 +401,8 @@
                         <div class="trip-sale-route">
                           <div class="trip-sale-route__title-row">
                             <div class="trip-sale-route__name">
-                              {{ tripRow.name }}
+                              {{ tripRow.routeCode || "-" }}
                             </div>
-
-                            <v-chip v-if="tripRow.routeCode" size="x-small" variant="tonal"
-                              class="trip-sale-route-code-chip flex-shrink-0">
-                              {{ tripRow.routeCode }}
-                            </v-chip>
                           </div>
                           <div class="trip-sale-route__meta">
                             {{ tripRow.origin }} → {{ tripRow.destination }}
@@ -520,7 +509,7 @@
 
                     <div>
                       <span>Ruta del viaje</span>
-                      <strong>{{ selectedTripRecord?.name || "No seleccionado" }}</strong>
+                      <strong>{{ selectedTripRecord?.routeCode || "No seleccionado" }}</strong>
                     </div>
 
 
@@ -958,7 +947,7 @@ export default {
     step: 1,
     items: ["Trayecto", "Venta"],
     tripSearchHeaders: [
-      { title: "Ruta", key: "name" },
+      { title: "Ruta", key: "routeCode" },
       { title: "Salida", key: "schedule" },
       { title: "Llegada", key: "arrival" },
       { title: "Vehículo", key: "plate" },
@@ -967,7 +956,7 @@ export default {
     ],
     headers: [
       { title: "Código", key: "code" },
-      { title: "Ruta", key: "tripName" },
+      { title: "Ruta", key: "routeCode" },
       { title: "Origen", key: "tripOrigin" },
       { title: "Destino", key: "tripDestination" },
       { title: "Fecha", key: "date" },
@@ -1378,8 +1367,8 @@ export default {
       switch (field) {
         case "code":
           return row?.code ?? "";
-        case "name":
-          return `${row?.name ?? ""} ${row?.routeCode ?? ""}`;
+        case "routeCode":
+          return row?.routeCode ?? "";
         case "schedule":
           return row?.schedule ?? "";
         case "arrival":

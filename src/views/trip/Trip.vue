@@ -148,9 +148,9 @@
               <span>Código</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('code') }}</v-icon>
             </div>
-            <div class="trip-col-route trip-sortable" @click="toggleTripSort('name')">
+            <div class="trip-col-route trip-sortable" @click="toggleTripSort('routeCode')">
               <span>Ruta</span>
-              <v-icon size="16" class="ml-1">{{ tripSortIcon('name') }}</v-icon>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('routeCode') }}</v-icon>
             </div>
             <div
               class="trip-col-vehicle trip-sortable"
@@ -205,17 +205,8 @@
                 <div class="trip-col-route">
                   <div class="trip-route-title-row">
                     <div class="trip-route-title">
-                      {{ slotProps.item.name }}
+                      {{ slotProps.item.routeCode || "-" }}
                     </div>
-
-                    <v-chip
-                      v-if="slotProps.item.routeCode"
-                      size="x-small"
-                      variant="tonal"
-                      class="trip-route-code-chip flex-shrink-0"
-                    >
-                      {{ slotProps.item.routeCode }}
-                    </v-chip>
                   </div>
 
                   <div class="trip-route-meta">
@@ -236,7 +227,6 @@
                     <span style="white-space: normal; word-break: break-word">
                       Código viaje: {{ slotProps.item.code || "-" }}<br />
                       Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
-                      Ruta: {{ slotProps.item.name }}<br />
                       Origen: {{ slotProps.item.origin }}<br />
                       Destino: {{ slotProps.item.destination }}
                     </span>
@@ -434,17 +424,8 @@
                               <v-col cols="12" class="d-flex align-center mb-2">
                                 <div class="trip-route-title-row">
                                   <div class="text-subtitle-2 font-weight-bold text-truncate">
-                                    {{ item.raw.name }}
+                                    {{ item.raw.routeCode || "-" }}
                                   </div>
-
-                                  <v-chip
-                                    v-if="item.raw.routeCode"
-                                    size="x-small"
-                                    variant="tonal"
-                                    class="trip-route-code-chip flex-shrink-0"
-                                  >
-                                    {{ item.raw.routeCode }}
-                                  </v-chip>
                                 </div>
                               </v-col>
 
@@ -1501,7 +1482,7 @@ export default {
     dialogAssignedWorkers: false,
     headers: [
       { title: "Código", value: "code" },
-      { title: "Ruta", value: "name" },
+      { title: "Ruta", value: "routeCode" },
       { title: "Origen", value: "origin" },
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },
