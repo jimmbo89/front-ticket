@@ -1,14 +1,6 @@
 ﻿<template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
+  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
+    :multi-line="true" vertical v-model="snackbar">
     <v-row>
       <v-col md="2">
         <v-avatar :icon="sb_icon" color="sb_type" size="40" />
@@ -33,14 +25,8 @@
 
     <v-spacer />
 
-    <v-btn
-      :color="paleteColors.primary"
-      variant="flat"
-      elevation="0"
-      prepend-icon="mdi-plus"
-      class="busgo-add-btn"
-      @click="showAdd()"
-    >
+    <v-btn :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
+      @click="showAdd()">
       Vender ticket
     </v-btn>
   </v-card>
@@ -60,91 +46,40 @@
       </div>
 
       <div class="ticket-toolbar px-6 pb-4">
-        <v-autocomplete
-          v-if="mostrarFila"
-          :no-data-text="'No hay datos disponibles'"
-          v-model="branch_id"
-          :items="branches"
-          placeholder="Seleccione una sucursal"
-          prepend-inner-icon="mdi-store"
-          item-title="name"
-          item-value="id"
-          variant="outlined"
-          hide-details
-          single-line
-          density="compact"
-          class="ticket-filter"
-          :rules="selectRules"
-          @update:modelValue="initialize"
-        >
+        <v-autocomplete v-if="mostrarFila" :no-data-text="'No hay datos disponibles'" v-model="branch_id"
+          :items="branches" placeholder="Seleccione una sucursal" prepend-inner-icon="mdi-store" item-title="name"
+          item-value="id" variant="outlined" hide-details single-line density="compact" class="ticket-filter"
+          :rules="selectRules" @update:modelValue="initialize">
           <template #item="{ props, item }">
-            <v-list-item
-              v-bind="props"
-              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`"
-            />
+            <v-list-item v-bind="props"
+              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`" />
           </template>
         </v-autocomplete>
 
-        <v-menu
-          v-model="menu2"
-          :close-on-content-click="false"
-          :nudge-right="40"
-          transition="scale-transition"
-          offset-y
-          min-width="290px"
-        >
+        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y
+          min-width="290px">
           <template #activator="{ props }">
-            <v-text-field
-              v-bind="props"
-              :modelValue="dateFormattedSearch"
-              prepend-inner-icon="mdi-calendar"
-              placeholder="Fecha"
-              density="compact"
-              variant="outlined"
-              hide-details
-              single-line
-              class="ticket-date-filter"
-            />
+            <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar"
+              placeholder="Fecha" density="compact" variant="outlined" hide-details single-line
+              class="ticket-date-filter" />
           </template>
 
           <v-locale-provider locale="es">
-            <v-date-picker
-              header="Calendario"
-              title="Seleccione la fecha"
-              :color="paleteColors.primary"
-              :modelValue="input2"
-              @update:model-value="updateDateSearch"
-              format="yyyy-MM-dd"
-              :min="new Date().toISOString().split('T')[0]"
-            />
+            <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
+              :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
+              :min="new Date().toISOString().split('T')[0]" />
           </v-locale-provider>
         </v-menu>
 
         <v-spacer />
 
-        <v-text-field
-          v-model="search"
-          density="compact"
-          placeholder="Buscar ticket..."
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          single-line
-          class="ticket-search"
-        />
+        <v-text-field v-model="search" density="compact" placeholder="Buscar ticket..." prepend-inner-icon="mdi-magnify"
+          variant="outlined" hide-details single-line class="ticket-search" />
       </div>
 
-      <v-data-table
-        :headers="headers"
-        :items="sortedTickets"
-        :search="search"
-        :items-per-page-text="'Elementos por página'"
-        no-data-text="No hay datos disponibles"
-        :loading="loading"
-        loading-text="Cargando datos..."
-        :hide-default-header="true"
-        class="busgo-table"
-      >
+      <v-data-table :headers="headers" :items="sortedTickets" :search="search"
+        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
+        loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table">
         <template #top>
           <div class="busgo-table-head">
             <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')">
@@ -203,22 +138,13 @@
                       {{ slotProps.item.tripName }}
                     </div>
 
-                    <v-chip
-                      v-if="slotProps.item.routeCode"
-                      size="x-small"
-                      variant="tonal"
-                      class="ticket-route-code-chip flex-shrink-0"
-                    >
+                    <v-chip v-if="slotProps.item.routeCode" size="x-small" variant="tonal"
+                      class="ticket-route-code-chip flex-shrink-0">
                       {{ slotProps.item.routeCode }}
                     </v-chip>
 
-                    <v-chip
-                      v-if="getTicketFareSegment(slotProps.item)"
-                      size="x-small"
-                      :color="paleteColors.primary"
-                      variant="tonal"
-                      class="flex-shrink-0"
-                    >
+                    <v-chip v-if="getTicketFareSegment(slotProps.item)" size="x-small" :color="paleteColors.primary"
+                      variant="tonal" class="flex-shrink-0">
                       Tramo
                     </v-chip>
                   </div>
@@ -282,25 +208,13 @@
                 </div>
 
                 <div class="ticket-col-actions busgo-actions">
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.green"
-                    @click="printerItem(slotProps.item)"
-                    title="Reimprimir Ticket"
-                  >
+                  <v-btn size="30" icon variant="tonal" :color="paleteColors.green" @click="printerItem(slotProps.item)"
+                    title="Reimprimir Ticket">
                     <v-icon size="17">mdi-printer</v-icon>
                   </v-btn>
 
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.error"
-                    @click="deleteItem(slotProps.item)"
-                    title="Eliminar Ticket"
-                  >
+                  <v-btn size="30" icon variant="tonal" :color="paleteColors.error" @click="deleteItem(slotProps.item)"
+                    title="Eliminar Ticket">
                     <v-icon size="17">mdi-delete</v-icon>
                   </v-btn>
                 </div>
@@ -311,643 +225,498 @@
       </v-data-table>
     </v-card>
   </v-container>
-<v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
-  <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-    <v-card class="ticket-sale-dialog-pro">
+  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
+    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
+      <v-card class="ticket-sale-dialog-pro">
 
-      <!-- HEADER -->
-      <div class="ticket-sale-topbar">
-        <div class="ticket-sale-topbar__left">
-          <div class="ticket-sale-topbar__icon">
-            <v-icon size="28">mdi-ticket-confirmation-outline</v-icon>
+        <!-- HEADER -->
+        <div class="ticket-sale-topbar">
+          <div class="ticket-sale-topbar__left">
+            <div class="ticket-sale-topbar__icon">
+              <v-icon size="28">mdi-ticket-confirmation-outline</v-icon>
+            </div>
+
+            <div>
+              <div class="ticket-sale-topbar__title">
+                {{ formTitle }}
+              </div>
+              <div class="ticket-sale-topbar__subtitle">
+                Venta guiada de pasajes por tramo, asiento y medio de pago
+              </div>
+            </div>
           </div>
 
-          <div>
-            <div class="ticket-sale-topbar__title">
-              {{ formTitle }}
-            </div>
-            <div class="ticket-sale-topbar__subtitle">
-              Venta guiada de pasajes por tramo, asiento y medio de pago
-            </div>
-          </div>
+          <v-spacer />
+
+          <v-chip v-if="step === 1" size="small" variant="flat" class="ticket-sale-step-chip">
+            Paso 1 · Viaje
+          </v-chip>
+
+          <v-chip v-if="step === 2" size="small" variant="flat" class="ticket-sale-step-chip">
+            Paso 2 · Pasajes y pago
+          </v-chip>
+
+          <v-btn icon="mdi-close" variant="text" size="small" class="ticket-sale-close" @click="close" />
         </div>
 
-        <v-spacer />
+        <!-- BODY -->
+        <v-card-text class="ticket-sale-body">
+          <v-stepper v-model="step" :items="items" hide-actions class="ticket-sale-stepper-pro">
 
-        <v-chip
-          v-if="step === 1"
-          size="small"
-          variant="flat"
-          class="ticket-sale-step-chip"
-        >
-          Paso 1 · Viaje
-        </v-chip>
+            <!-- STEP 1 -->
+            <template #item.1>
+              <div class="ticket-sale-layout">
 
-        <v-chip
-          v-if="step === 2"
-          size="small"
-          variant="flat"
-          class="ticket-sale-step-chip"
-        >
-          Paso 2 · Pasajes y pago
-        </v-chip>
-
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          size="small"
-          class="ticket-sale-close"
-          @click="close"
-        />
-      </div>
-
-      <!-- BODY -->
-      <v-card-text class="ticket-sale-body">
-        <v-stepper
-          v-model="step"
-          :items="items"
-          hide-actions
-          class="ticket-sale-stepper-pro"
-        >
-
-          <!-- STEP 1 -->
-          <template #item.1>
-            <div class="ticket-sale-layout">
-
-              <div class="ticket-sale-section-card">
-                <div class="ticket-sale-section-header">
-                  <div>
-                    <div class="ticket-sale-section-title">
-                      Selección del tramo
-                    </div>
-                    <div class="ticket-sale-section-subtitle">
-                      Elige origen, destino y luego selecciona el viaje disponible.
-                    </div>
-                  </div>
-                </div>
-
-                <v-row dense>
-                  <v-col v-if="mostrarFila" cols="12">
-                    <label class="ticket-sale-label">Sucursal</label>
-                    <v-autocomplete
-                      v-model="editedItem.branch_id"
-                      :items="branches"
-                      placeholder="Seleccione la sucursal"
-                      prepend-inner-icon="mdi-store"
-                      item-title="name"
-                      item-value="id"
-                      variant="outlined"
-                      density="comfortable"
-                      rounded="lg"
-                      clearable
-                      hide-details="auto"
-                      :no-data-text="'No hay sucursales disponibles'"
-                      :disabled="editedIndex !== -1"
-                      @update:model-value="onTicketBranchChange"
-                    />
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <label class="ticket-sale-label">Origen</label>
-                    <v-autocomplete
-                      v-model="selectedOriginLocationId"
-                      :items="originLocationOptions"
-                      placeholder="Seleccione el origen"
-                      prepend-inner-icon="mdi-map-marker-outline"
-                      item-title="address"
-                      item-value="id"
-                      variant="outlined"
-                      density="comfortable"
-                      rounded="lg"
-                      clearable
-                      hide-details="auto"
-                      :no-data-text="'No hay ubicaciones disponibles'"
-                      @update:model-value="handleLocationSelectionChange"
-                      :menu-props="{ maxHeight: 360, maxWidth: 520 }"
-                    >
-                      <template #item="{ props, item }">
-                        <v-list-item v-bind="props" title="" class="ticket-location-option">
-                          <div class="ticket-location-option__title">
-                            {{ getTableRowItem(item).address }}
-                          </div>
-                          <div class="ticket-location-option__subtitle">
-                            {{ getLocationSubtitle(getTableRowItem(item)) }}
-                          </div>
-                        </v-list-item>
-                      </template>
-                    </v-autocomplete>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <label class="ticket-sale-label">Destino</label>
-                    <v-autocomplete
-                      v-model="selectedDestinationLocationId"
-                      :items="destinationLocationOptions"
-                      placeholder="Seleccione el destino"
-                      prepend-inner-icon="mdi-map-marker-check-outline"
-                      item-title="address"
-                      item-value="id"
-                      variant="outlined"
-                      density="comfortable"
-                      rounded="lg"
-                      clearable
-                      hide-details="auto"
-                      :no-data-text="'No hay ubicaciones disponibles'"
-                      @update:model-value="handleLocationSelectionChange"
-                      :menu-props="{ maxHeight: 360, maxWidth: 520 }"
-                    >
-                      <template #item="{ props, item }">
-                        <v-list-item v-bind="props" title="" class="ticket-location-option">
-                          <div class="ticket-location-option__title">
-                            {{ getTableRowItem(item).address }}
-                          </div>
-                          <div class="ticket-location-option__subtitle">
-                            {{ getLocationSubtitle(getTableRowItem(item)) }}
-                          </div>
-                        </v-list-item>
-                      </template>
-                    </v-autocomplete>
-                  </v-col>
-
-                  <v-col cols="12">
-                    <label class="ticket-sale-label">Buscar viaje</label>
-                    <v-text-field
-                      v-model="tripSearchText"
-                      placeholder="Filtrar por ruta, patente, horario o tramo..."
-                      prepend-inner-icon="mdi-magnify"
-                      variant="outlined"
-                      density="comfortable"
-                      rounded="lg"
-                      clearable
-                      hide-details="auto"
-                      :disabled="
-                        !selectedOriginLocationId ||
-                        !selectedDestinationLocationId ||
-                        tripSearchLoading
-                      "
-                    />
-                  </v-col>
-                </v-row>
-              </div>
-
-              <div class="ticket-sale-section-card mt-4">
-                <div class="ticket-sale-section-header">
-                  <div class="d-flex align-center">
-                    <div class="ticket-sale-mini-icon">
-                      <v-icon size="22">mdi-bus-clock</v-icon>
-                    </div>
-
+                <div class="ticket-sale-section-card">
+                  <div class="ticket-sale-section-header">
                     <div>
                       <div class="ticket-sale-section-title">
-                        Viajes y tramos disponibles
+                        Selección del tramo
                       </div>
                       <div class="ticket-sale-section-subtitle">
-                        Selecciona una fila para continuar con la venta.
+                        Elige origen, destino y luego selecciona el viaje disponible.
                       </div>
                     </div>
                   </div>
+
+                  <v-row dense>
+                    <v-col v-if="mostrarFila" cols="12">
+                      <label class="ticket-sale-label">Sucursal</label>
+                      <v-autocomplete v-model="editedItem.branch_id" :items="branches"
+                        placeholder="Seleccione la sucursal" prepend-inner-icon="mdi-store" item-title="name"
+                        item-value="id" variant="outlined" density="comfortable" rounded="lg" clearable
+                        hide-details="auto" :no-data-text="'No hay sucursales disponibles'"
+                        :disabled="editedIndex !== -1" @update:model-value="onTicketBranchChange" />
+                    </v-col>
+
+                    <v-col cols="12" md="6">
+                      <label class="ticket-sale-label">Origen</label>
+                      <v-autocomplete v-model="selectedOriginLocationId" :items="originLocationOptions"
+                        placeholder="Seleccione el origen" prepend-inner-icon="mdi-map-marker-outline"
+                        item-title="address" item-value="id" variant="outlined" density="comfortable" rounded="lg"
+                        clearable hide-details="auto" :no-data-text="'No hay ubicaciones disponibles'"
+                        @update:model-value="handleLocationSelectionChange"
+                        :menu-props="{ maxHeight: 360, maxWidth: 520 }">
+                        <template #item="{ props, item }">
+                          <v-list-item v-bind="props" title="" class="ticket-location-option">
+                            <div class="ticket-location-option__title">
+                              {{ getTableRowItem(item).address }}
+                            </div>
+                            <div class="ticket-location-option__subtitle">
+                              {{ getLocationSubtitle(getTableRowItem(item)) }}
+                            </div>
+                          </v-list-item>
+                        </template>
+                      </v-autocomplete>
+                    </v-col>
+
+                    <v-col cols="12" md="6">
+                      <label class="ticket-sale-label">Destino</label>
+                      <v-autocomplete v-model="selectedDestinationLocationId" :items="destinationLocationOptions"
+                        placeholder="Seleccione el destino" prepend-inner-icon="mdi-map-marker-check-outline"
+                        item-title="address" item-value="id" variant="outlined" density="comfortable" rounded="lg"
+                        clearable hide-details="auto" :no-data-text="'No hay ubicaciones disponibles'"
+                        @update:model-value="handleLocationSelectionChange"
+                        :menu-props="{ maxHeight: 360, maxWidth: 520 }">
+                        <template #item="{ props, item }">
+                          <v-list-item v-bind="props" title="" class="ticket-location-option">
+                            <div class="ticket-location-option__title">
+                              {{ getTableRowItem(item).address }}
+                            </div>
+                            <div class="ticket-location-option__subtitle">
+                              {{ getLocationSubtitle(getTableRowItem(item)) }}
+                            </div>
+                          </v-list-item>
+                        </template>
+                      </v-autocomplete>
+                    </v-col>
+
+                    <v-col cols="12">
+                      <label class="ticket-sale-label">Buscar viaje</label>
+                      <v-text-field v-model="tripSearchText" placeholder="Filtrar por ruta, patente, horario o tramo..."
+                        prepend-inner-icon="mdi-magnify" variant="outlined" density="comfortable" rounded="lg" clearable
+                        hide-details="auto" :disabled="!selectedOriginLocationId ||
+                          !selectedDestinationLocationId ||
+                          tripSearchLoading
+                          " />
+                    </v-col>
+                  </v-row>
                 </div>
 
-      <div class="trip-sale-panel-pro">
-                  <div class="trip-sale-panel-pro__header">
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('code')">
-                      <span>Código</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('code') }}</v-icon>
+                <div class="ticket-sale-section-card mt-4">
+                  <div class="ticket-sale-section-header">
+                    <div class="d-flex align-center">
+                      <div class="ticket-sale-mini-icon">
+                        <v-icon size="22">mdi-bus-clock</v-icon>
+                      </div>
+
+                      <div>
+                        <div class="ticket-sale-section-title">
+                          Viajes y tramos disponibles
+                        </div>
+                        <div class="ticket-sale-section-subtitle">
+                          Selecciona una fila para continuar con la venta.
+                        </div>
+                      </div>
                     </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('name')">
-                      <span>Ruta</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('name') }}</v-icon>
-                    </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('schedule')">
-                      <span>Salida</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('schedule') }}</v-icon>
-                    </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('arrival')">
-                      <span>Llegada</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('arrival') }}</v-icon>
-                    </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('plate')">
-                      <span>Vehículo</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('plate') }}</v-icon>
-                    </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('availableSeats')">
-                      <span>Disponibles</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('availableSeats') }}</v-icon>
-                    </div>
-                    <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('price')">
-                      <span>Precio</span>
-                      <v-icon size="14">{{ tripSaleSortIcon('price') }}</v-icon>
-                    </div>
-                    <div></div>
                   </div>
 
-                  <div v-if="filteredTripSaleRows.length">
-                    <div
-                      v-for="tripRow in filteredTripSaleRows"
-                      :key="tripRow.id"
-                      class="trip-sale-row-pro"
-                      :class="{
+                  <div class="trip-sale-panel-pro">
+                    <div class="trip-sale-panel-pro__header">
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('code')">
+                        <span>Código</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('code') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('name')">
+                        <span>Ruta</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('name') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('schedule')">
+                        <span>Salida</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('schedule') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('arrival')">
+                        <span>Llegada</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('arrival') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('plate')">
+                        <span>Vehículo</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('plate') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('availableSeats')">
+                        <span>Disponibles</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('availableSeats') }}</v-icon>
+                      </div>
+                      <div class="trip-sale-sortable-header" @click="toggleTripSaleSort('price')">
+                        <span>Precio</span>
+                        <v-icon size="14">{{ tripSaleSortIcon('price') }}</v-icon>
+                      </div>
+                      <div></div>
+                    </div>
+
+                    <div v-if="filteredTripSaleRows.length">
+                      <div v-for="tripRow in filteredTripSaleRows" :key="tripRow.id" class="trip-sale-row-pro" :class="{
                         'trip-sale-row-pro--selected':
                           Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
                           Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
-                      }"
-                    @click="selectTripForSale(tripRow)"
-                    >
-                      <div class="trip-sale-code">
-                        {{ tripRow.code || "-" }}
-                      </div>
+                      }" @click="selectTripForSale(tripRow)">
+                        <div class="trip-sale-code">
+                          {{ tripRow.code || "-" }}
+                        </div>
 
-                      <div class="trip-sale-route">
-                        <div class="trip-sale-route__title-row">
-                          <div class="trip-sale-route__name">
-                            {{ tripRow.name }}
+                        <div class="trip-sale-route">
+                          <div class="trip-sale-route__title-row">
+                            <div class="trip-sale-route__name">
+                              {{ tripRow.name }}
+                            </div>
+
+                            <v-chip v-if="tripRow.routeCode" size="x-small" variant="tonal"
+                              class="trip-sale-route-code-chip flex-shrink-0">
+                              {{ tripRow.routeCode }}
+                            </v-chip>
                           </div>
-
-                          <v-chip
-                            v-if="tripRow.routeCode"
-                            size="x-small"
-                            variant="tonal"
-                            class="trip-sale-route-code-chip flex-shrink-0"
-                          >
-                            {{ tripRow.routeCode }}
-                          </v-chip>
+                          <div class="trip-sale-route__meta">
+                            {{ tripRow.origin }} → {{ tripRow.destination }}
+                          </div>
                         </div>
-                        <div class="trip-sale-route__meta">
-                          {{ tripRow.origin }} → {{ tripRow.destination }}
+
+                        <div>
+                          <div class="trip-sale-strong">{{ tripRow.schedule || "-" }}</div>
+                          
                         </div>
-                      </div>
 
-                      <div>
-                        <div class="trip-sale-strong">{{ tripRow.schedule || "-" }}</div>
-                        <div class="trip-sale-muted">Salida</div>
-                      </div>
+                        <div>
+                          <div class="trip-sale-strong">{{ tripRow.arrival || "-" }}</div>
+                         
+                        </div>
 
-                      <div>
-                        <div class="trip-sale-strong">{{ tripRow.arrival || "-" }}</div>
-                        <div class="trip-sale-muted">Llegada</div>
-                      </div>
+                        <div>
+                          <div class="trip-sale-strong">{{ tripRow.internal_number }}</div>
+                          <div class="trip-sale-muted">{{ tripRow.plate }}</div>
+                        </div>
 
-                      <div>
-                        <div class="trip-sale-strong">{{ tripRow.plate }}</div>
-                        <div class="trip-sale-muted">{{ tripRow.internal_number }}</div>
-                      </div>
+                        <div class="trip-sale-price">
+                          {{ Number(tripRow.availableSeats) }}
+                        </div>
 
-                      <div class="trip-sale-price">
-                        {{ Number(tripRow.availableSeats) }}
-                      </div>
+                        <div class="trip-sale-price">
+                          {{ formatNumber(Number(tripRow.price)) }} CLP
+                        </div>
 
-                      <div class="trip-sale-price">
-                        {{ formatNumber(Number(tripRow.price)) }} CLP
-                      </div>
-
-                      <div class="d-flex justify-end">
-                        <v-chip
-                          size="small"
-                          :color="
-                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
-                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                        <div class="d-flex justify-end">
+                          <v-chip size="small" :color="Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                              Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
                               ? paleteColors.active
                               : paleteColors.primary
-                          "
-                          :variant="
-                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
-                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                            " :variant="Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                              Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
                               ? 'flat'
                               : 'tonal'
-                          "
-                        >
-                          {{
-                            Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
-                            Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
-                              ? "Seleccionado"
-                              : "Seleccionar"
-                          }}
-                        </v-chip>
+                            ">
+                            {{
+                              Number(tripRow.trip_id) === Number(editedItem.trip_id) &&
+                                Number(tripRow.fare_segment_id) === Number(editedItem.fare_segment_id)
+                                ? "Seleccionado"
+                                : "Seleccionar"
+                            }}
+                          </v-chip>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-else class="ticket-sale-empty">
+                      <v-icon size="42">mdi-bus-alert</v-icon>
+                      <div class="ticket-sale-empty__title">
+                        No hay viajes disponibles
+                      </div>
+                      <div class="ticket-sale-empty__text">
+                        Cambia el origen, destino o búsqueda para encontrar viajes.
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div v-else class="ticket-sale-empty">
-                    <v-icon size="42">mdi-bus-alert</v-icon>
-                    <div class="ticket-sale-empty__title">
-                      No hay viajes disponibles
+                <div class="ticket-sale-footer-actions">
+                  <v-btn class="ticket-sale-btn-secondary" variant="flat" prepend-icon="mdi-close" @click="close">
+                    Cancelar
+                  </v-btn>
+
+                  <v-spacer />
+
+                  <v-btn class="ticket-sale-btn-primary" variant="flat" append-icon="mdi-arrow-right"
+                    :disabled="!editedItem.trip_id || !editedItem.fare_segment_id" @click="nextStep">
+                    Continuar
+                  </v-btn>
+                </div>
+              </div>
+            </template>
+
+            <!-- STEP 2 -->
+            <template #item.2>
+              <div v-if="step === 2" class="ticket-sale-layout">
+
+                <div class="ticket-sale-summary-pro">
+                  <div>
+                    <div class="ticket-sale-section-title">
+                      Resumen de venta
                     </div>
-                    <div class="ticket-sale-empty__text">
-                      Cambia el origen, destino o búsqueda para encontrar viajes.
+                    <div class="ticket-sale-section-subtitle">
+                      Revisa el viaje y el tramo antes de guardar.
+                    </div>
+                  </div>
+
+                  <div class="ticket-sale-summary-grid">
+
+                    <div>
+                      <span>Recorrido</span>
+                      <strong>
+                        {{
+                          selectedFareSegmentRecord?.label ||
+                          selectedFareSegmentRecord?.name ||
+                          "No seleccionado"
+                        }}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Ruta del viaje</span>
+                      <strong>{{ selectedTripRecord?.name || "No seleccionado" }}</strong>
+                    </div>
+
+
+
+                    <div>
+                      <span>Precio tramo</span>
+                      <strong>
+                        {{ formatNumber(Number(selectedFareSegmentRecord?.base_price || 0)) }} CLP
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Total</span>
+                      <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="ticket-sale-footer-actions">
-                <v-btn
-                  class="ticket-sale-btn-secondary"
-                  variant="flat"
-                  prepend-icon="mdi-close"
-                  @click="close"
-                >
-                  Cancelar
-                </v-btn>
-
-                <v-spacer />
-
-                <v-btn
-                  class="ticket-sale-btn-primary"
-                  variant="flat"
-                  append-icon="mdi-arrow-right"
-                  :disabled="!editedItem.trip_id || !editedItem.fare_segment_id"
-                  @click="nextStep"
-                >
-                  Continuar
-                </v-btn>
-              </div>
-            </div>
-          </template>
-
-          <!-- STEP 2 -->
-          <template #item.2>
-            <div v-if="step === 2" class="ticket-sale-layout">
-
-              <div class="ticket-sale-summary-pro">
-                <div>
-                  <div class="ticket-sale-section-title">
-                    Resumen de venta
-                  </div>
-                  <div class="ticket-sale-section-subtitle">
-                    Revisa el viaje y el tramo antes de guardar.
-                  </div>
-                </div>
-
-                <div class="ticket-sale-summary-grid">
-                  
+                <v-row dense class="mt-4">
+                  <v-col cols="12" md="4">
+                    <div class="ticket-sale-section-card ticket-sale-fill">
+                      <div class="ticket-sale-section-header">
                         <div>
-                    <span>Recorrido</span>
-                    <strong>
-                      {{
-                        selectedFareSegmentRecord?.label ||
-                        selectedFareSegmentRecord?.name ||
-                        "No seleccionado"
-                      }}
-                    </strong>
-                  </div>
-                  
-                  <div>
-                    <span>Ruta del viaje</span>
-                    <strong>{{ selectedTripRecord?.name || "No seleccionado" }}</strong>
-                  </div>
+                          <div class="ticket-sale-section-title">
+                            Tipos de pasajero
+                          </div>
+                          <div class="ticket-sale-section-subtitle">
+                            Ingresa la cantidad por tipo de pasaje.
+                          </div>
+                        </div>
+                      </div>
 
-            
+                      <div class="ticket-type-list">
+                        <div v-if="mergedTicketTypes.length > 0">
+                          <div v-for="ticket in mergedTicketTypes" :key="ticket.trip_fare_id || ticket.id"
+                            class="ticket-type-card">
+                            <div class="ticket-type-card__main">
+                              <div>
+                                <div class="ticket-type-card__title">
+                                  {{ ticket.ticketTypeName || ticket.name }}
+                                </div>
 
-                  <div>
-                    <span>Precio tramo</span>
-                    <strong>
-                      {{ formatNumber(Number(selectedFareSegmentRecord?.base_price || 0)) }} CLP
-                    </strong>
-                  </div>
+                                <div class="ticket-type-card__price">
+                                  {{ formatNumber(Number(ticket.base_price)) }} CLP
+                                </div>
+                              </div>
 
-                  <div>
-                    <span>Total</span>
-                    <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
-                  </div>
+                              <v-text-field v-model.number="ticket.cant"
+                                @update:model-value="handleQuantityChange(ticket, $event)"
+                                @blur="validateQuantity(ticket)" variant="outlined" density="compact" rounded="lg"
+                                type="number" min="0" hide-details="auto" class="ticket-type-card__input"
+                                :error-messages="(currentlyEditing === ticket.trip_fare_id && seatError) ||
+                                  quantityErrors[ticket.trip_fare_id]
+                                  " />
+                            </div>
+
+                            <div v-if="Number(ticket.cant) > 0" class="ticket-type-card__total">
+                              Total:
+                              <strong>
+                                {{ formatNumber(getTicketTypePayableAmount(ticket)) }} CLP
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div v-else class="ticket-sale-empty">
+                          <v-icon size="42">mdi-ticket-confirmation-outline</v-icon>
+                          <div class="ticket-sale-empty__title">
+                            No hay tipos de pasaje
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <div class="ticket-sale-section-card ticket-sale-fill">
+                      <div class="ticket-sale-section-header">
+                        <div>
+                          <div class="ticket-sale-section-title">
+                            Selección de asientos
+                          </div>
+                          <div class="ticket-sale-section-subtitle">
+                            Seleccionados {{ selectedSeats.length }} de {{ editedItem.quantity || 0 }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="seat-map-shell">
+                        <div class="seat-map-scroll">
+                          <div class="seat-map-preview">
+                            <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
+                              <template v-for="(seat, seatIndex) in row" :key="seatIndex">
+                                <div v-if="seat.type" :class="[
+                                  'seat-container',
+                                  {
+                                    'seat-available': isSeatAvailable(seat),
+                                    'seat-selected': selectedSeats.includes(Number(seat.label)),
+                                    'seat-reserved': isSeatReserved(seat.label),
+                                    'seat-disabled':
+                                      seat.type === 'seat' &&
+                                      seat.label &&
+                                      !isSeatAvailable(seat) &&
+                                      !isSeatReserved(seat.label) &&
+                                      !selectedSeats.includes(Number(seat.label)),
+                                    'seat-aisle': seat.type === 'aisle'
+                                  }
+                                ]" @click="toggleSeat(seat)">
+                                  <v-icon v-if="seat.type === 'seat'" class="seat-icon" size="44">
+                                    mdi-seat
+                                  </v-icon>
+
+                                  <v-icon v-else-if="seat.type === 'aisle'" class="aisle-icon" size="44">
+                                    mdi-minus
+                                  </v-icon>
+
+                                  <span v-if="seat.type === 'seat'" class="seat-number">
+                                    {{ seat.label }}
+                                  </span>
+
+                                  <span v-if="seat.type === 'aisle'" class="aisle-indicator"></span>
+                                </div>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <v-alert v-if="selectedSeats.length != editedItem.quantity" type="error" variant="tonal"
+                        density="compact" class="mt-4">
+                        Debe seleccionar {{ editedItem.quantity }} asiento(s).
+                      </v-alert>
+                    </div>
+                  </v-col>
+
+                  <v-col cols="12" md="2">
+                    <div class="ticket-sale-section-card ticket-sale-fill ticket-payment-panel">
+                      <div class="ticket-sale-section-header ticket-payment-header">
+                        <div>
+                          <div class="ticket-sale-section-title">
+                            Pago
+                          </div>
+                          <div class="ticket-sale-section-subtitle">
+                            Medio de pago
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="payment-methods-grid-pro">
+                        <v-card v-for="method in paymentMethods" :key="method.value" class="payment-method-card-pro"
+                          :class="[
+                            getCardClass(method),
+                            { 'payment-method-disabled': method.disabled }
+                          ]" @click="!method.disabled && (editedItem.method = method.value)">
+                          <v-card-text class="payment-method-content-pro">
+                            <v-icon size="24" :color="getMethodColor(method.value)">
+                              {{ method.icon }}
+                            </v-icon>
+
+                            <div class="payment-method-label">
+                              {{ method.text }}
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </div>
+
+                      <div class="ticket-total-box ticket-total-box-compact">
+                        <span>Total</span>
+                        <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
+                      </div>
+                    </div>
+                  </v-col>
+                </v-row>
+
+                <div class="ticket-sale-footer-actions">
+                  <v-btn class="ticket-sale-btn-secondary" variant="flat" prepend-icon="mdi-arrow-left"
+                    @click="prevStep">
+                    Volver
+                  </v-btn>
+
+                  <v-spacer />
+
+                  <v-btn class="ticket-sale-btn-primary" variant="flat" prepend-icon="mdi-content-save-outline"
+                    @click="save" :disabled="!valid ||
+                      Number(selectedSeats.length) !== Number(editedItem.quantity) ||
+                      !editedItem.method
+                      " :loading="loading">
+                    Guardar venta
+                  </v-btn>
                 </div>
               </div>
-
-              <v-row dense class="mt-4">
-                <v-col cols="12" md="4">
-                  <div class="ticket-sale-section-card ticket-sale-fill">
-                    <div class="ticket-sale-section-header">
-                      <div>
-                        <div class="ticket-sale-section-title">
-                          Tipos de pasajero
-                        </div>
-                        <div class="ticket-sale-section-subtitle">
-                          Ingresa la cantidad por tipo de pasaje.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="ticket-type-list">
-                      <div v-if="mergedTicketTypes.length > 0">
-                        <div
-                          v-for="ticket in mergedTicketTypes"
-                          :key="ticket.trip_fare_id || ticket.id"
-                          class="ticket-type-card"
-                        >
-                          <div class="ticket-type-card__main">
-                            <div>
-                              <div class="ticket-type-card__title">
-                                {{ ticket.ticketTypeName || ticket.name }}
-                              </div>
-
-                              <div class="ticket-type-card__price">
-                                {{ formatNumber(Number(ticket.base_price)) }} CLP
-                              </div>
-                            </div>
-
-                            <v-text-field
-                              v-model.number="ticket.cant"
-                              @update:model-value="handleQuantityChange(ticket, $event)"
-                              @blur="validateQuantity(ticket)"
-                              variant="outlined"
-                              density="compact"
-                              rounded="lg"
-                              type="number"
-                              min="0"
-                              hide-details="auto"
-                              class="ticket-type-card__input"
-                              :error-messages="
-                                (currentlyEditing === ticket.trip_fare_id && seatError) ||
-                                quantityErrors[ticket.trip_fare_id]
-                              "
-                            />
-                          </div>
-
-                          <div
-                            v-if="Number(ticket.cant) > 0"
-                            class="ticket-type-card__total"
-                          >
-                            Total:
-                            <strong>
-                              {{ formatNumber(getTicketTypePayableAmount(ticket)) }} CLP
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div v-else class="ticket-sale-empty">
-                        <v-icon size="42">mdi-ticket-confirmation-outline</v-icon>
-                        <div class="ticket-sale-empty__title">
-                          No hay tipos de pasaje
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </v-col>
-
-                <v-col cols="12" md="6">
-                  <div class="ticket-sale-section-card ticket-sale-fill">
-                    <div class="ticket-sale-section-header">
-                      <div>
-                        <div class="ticket-sale-section-title">
-                          Selección de asientos
-                        </div>
-                        <div class="ticket-sale-section-subtitle">
-                          Seleccionados {{ selectedSeats.length }} de {{ editedItem.quantity || 0 }}
-                        </div>
-                      </div>
-                    </div>
-
-                <div class="seat-map-shell">
-  <div class="seat-map-scroll">
-    <div class="seat-map-preview">
-                        <div
-                          v-for="(row, rowIndex) in seatMap"
-                          :key="rowIndex"
-                          class="seat-row"
-                        >
-                          <template
-                            v-for="(seat, seatIndex) in row"
-                            :key="seatIndex"
-                          >
-                            <div
-                              v-if="seat.type"
-                              :class="[
-                                'seat-container',
-                                {
-                                  'seat-available': isSeatAvailable(seat),
-                                  'seat-selected': selectedSeats.includes(Number(seat.label)),
-                                  'seat-reserved': isSeatReserved(seat.label),
-                                  'seat-disabled':
-                                    seat.type === 'seat' &&
-                                    seat.label &&
-                                    !isSeatAvailable(seat) &&
-                                    !isSeatReserved(seat.label) &&
-                                    !selectedSeats.includes(Number(seat.label)),
-                                  'seat-aisle': seat.type === 'aisle'
-                                }
-                              ]"
-                              @click="toggleSeat(seat)"
-                            >
-                              <v-icon
-                                v-if="seat.type === 'seat'"
-                                class="seat-icon"
-                                size="44"
-                              >
-                                mdi-seat
-                              </v-icon>
-
-                              <v-icon
-                                v-else-if="seat.type === 'aisle'"
-                                class="aisle-icon"
-                                size="44"
-                              >
-                                mdi-minus
-                              </v-icon>
-
-                              <span v-if="seat.type === 'seat'" class="seat-number">
-                                {{ seat.label }}
-                              </span>
-
-                              <span v-if="seat.type === 'aisle'" class="aisle-indicator"></span>
-                            </div>
-                          </template>
-                        </div>
-                      </div>
-                    </div>
-  </div>
-                    <v-alert
-                      v-if="selectedSeats.length != editedItem.quantity"
-                      type="error"
-                      variant="tonal"
-                      density="compact"
-                      class="mt-4"
-                    >
-                      Debe seleccionar {{ editedItem.quantity }} asiento(s).
-                    </v-alert>
-                  </div>
-                </v-col>
-
-          <v-col cols="12" md="2">
-  <div class="ticket-sale-section-card ticket-sale-fill ticket-payment-panel">
-    <div class="ticket-sale-section-header ticket-payment-header">
-      <div>
-        <div class="ticket-sale-section-title">
-          Pago
-        </div>
-        <div class="ticket-sale-section-subtitle">
-          Medio de pago
-        </div>
-      </div>
-    </div>
-
-    <div class="payment-methods-grid-pro">
-      <v-card
-        v-for="method in paymentMethods"
-        :key="method.value"
-        class="payment-method-card-pro"
-        :class="[
-          getCardClass(method),
-          { 'payment-method-disabled': method.disabled }
-        ]"
-        @click="!method.disabled && (editedItem.method = method.value)"
-      >
-        <v-card-text class="payment-method-content-pro">
-          <v-icon
-            size="24"
-            :color="getMethodColor(method.value)"
-          >
-            {{ method.icon }}
-          </v-icon>
-
-          <div class="payment-method-label">
-            {{ method.text }} 
-          </div>
+            </template>
+          </v-stepper>
         </v-card-text>
       </v-card>
-    </div>
-
-    <div class="ticket-total-box ticket-total-box-compact">
-      <span>Total</span>
-      <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
-    </div>
-  </div>
-</v-col>
-              </v-row>
-
-              <div class="ticket-sale-footer-actions">
-                <v-btn
-                  class="ticket-sale-btn-secondary"
-                  variant="flat"
-                  prepend-icon="mdi-arrow-left"
-                  @click="prevStep"
-                >
-                  Volver
-                </v-btn>
-
-                <v-spacer />
-
-                <v-btn
-                  class="ticket-sale-btn-primary"
-                  variant="flat"
-                  prepend-icon="mdi-content-save-outline"
-                  @click="save"
-                  :disabled="
-                    !valid ||
-                    Number(selectedSeats.length) !== Number(editedItem.quantity) ||
-                    !editedItem.method
-                  "
-                  :loading="loading"
-                >
-                  Guardar venta
-                </v-btn>
-              </div>
-            </div>
-          </template>
-        </v-stepper>
-      </v-card-text>
-    </v-card>
-  </v-form>
-</v-dialog>
+    </v-form>
+  </v-dialog>
 
   <v-dialog v-model="dialogDelete" max-width="500px">
     <v-card class="busgo-dialog-card">
@@ -966,20 +735,11 @@
       <v-card-actions class="busgo-dialog-actions">
         <v-spacer />
 
-        <v-btn
-          :color="paleteColors.gris"
-          variant="flat"
-          @click="closeDelete"
-        >
+        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
           Cancelar
         </v-btn>
 
-        <v-btn
-          :color="paleteColors.error"
-          variant="flat"
-          @click="deleteItemConfirm"
-          :loading="loading"
-        >
+        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm" :loading="loading">
           Aceptar
         </v-btn>
       </v-card-actions>
@@ -991,11 +751,8 @@
       <v-card-title class="ticket-print-header">
         <div class="d-flex flex-column align-center" style="width: 100%">
           <v-avatar v-if="selectedBranch?.image" size="80" class="mb-3">
-            <img
-              :src="`${this.$axios.defaults.baseURL}images/${selectedBranch.image}`"
-              :alt="selectedBranch.name"
-              style="object-fit: contain"
-            />
+            <img :src="`${this.$axios.defaults.baseURL}images/${selectedBranch.image}`" :alt="selectedBranch.name"
+              style="object-fit: contain" />
           </v-avatar>
 
           <div class="text-center">
@@ -1021,12 +778,7 @@
           </div>
         </div>
 
-        <v-btn
-          icon
-          @click="printTicket"
-          class="ticket-print-button"
-          title="Imprimir"
-        >
+        <v-btn icon @click="printTicket" class="ticket-print-button" title="Imprimir">
           <v-icon>mdi-printer</v-icon>
         </v-btn>
       </v-card-title>
@@ -1133,10 +885,7 @@
 
           <v-divider class="my-2" />
 
-          <div
-            v-if="currentTicket.print > 1"
-            class="text-center caption mt-2 uppercase-text"
-          >
+          <div v-if="currentTicket.print > 1" class="text-center caption mt-2 uppercase-text">
             (COPIA REIMPRESA POR EL OPERADOR {{ nameUser }})
           </div>
         </div>
@@ -1145,12 +894,7 @@
       <v-card-actions class="busgo-dialog-actions">
         <v-spacer />
 
-        <v-btn
-          color="primary"
-          variant="flat"
-          prepend-icon="mdi-close"
-          @click="showTicketDialog = false"
-        >
+        <v-btn color="primary" variant="flat" prepend-icon="mdi-close" @click="showTicketDialog = false">
           Cerrar
         </v-btn>
       </v-card-actions>
@@ -1412,12 +1156,10 @@ export default {
         return {
           ...ticket,
           ...mergedTicket,
-          adjustment_label: `${
-            mergedTicket.adjustment_type === "recargo" ? "Recargo" : "Descuento"
-          } · ${mergedTicket.value_type === "porcentaje" ? "Porcentaje" : "Monto"}`,
-          adjustmentTypeLabel: `${
-            mergedTicket.adjustmentType === "recargo" ? "Recargo" : "Descuento"
-          } · ${mergedTicket.valueType === "porcentaje" ? "Porcentaje" : "Monto"}`,
+          adjustment_label: `${mergedTicket.adjustment_type === "recargo" ? "Recargo" : "Descuento"
+            } · ${mergedTicket.value_type === "porcentaje" ? "Porcentaje" : "Monto"}`,
+          adjustmentTypeLabel: `${mergedTicket.adjustmentType === "recargo" ? "Recargo" : "Descuento"
+            } · ${mergedTicket.valueType === "porcentaje" ? "Porcentaje" : "Monto"}`,
         };
       });
 
@@ -1472,20 +1214,20 @@ export default {
       const filteredRows = !query
         ? this.tripSaleRows
         : this.tripSaleRows.filter((row) =>
-        [
-          row.name,
-          row.origin,
-          row.destination,
-          row.schedule,
-          row.arrival,
-          row.plate,
-          row.internal_number,
-          row.price,
-        ].some((value) =>
-          String(value ?? "")
-            .toLowerCase()
-            .includes(query)
-        )
+          [
+            row.name,
+            row.origin,
+            row.destination,
+            row.schedule,
+            row.arrival,
+            row.plate,
+            row.internal_number,
+            row.price,
+          ].some((value) =>
+            String(value ?? "")
+              .toLowerCase()
+              .includes(query)
+          )
         );
 
       return this.sortRows(
@@ -1738,9 +1480,9 @@ export default {
       if (fareSegment) {
         return this.getFareSegmentRouteStopLabel(
           fareSegment.originRouteStop ??
-            fareSegment.origin_route_stop ??
-            fareSegment.originStop ??
-            fareSegment.origin
+          fareSegment.origin_route_stop ??
+          fareSegment.originStop ??
+          fareSegment.origin
         );
       }
 
@@ -1751,9 +1493,9 @@ export default {
       if (fareSegment) {
         return this.getFareSegmentRouteStopLabel(
           fareSegment.destinationRouteStop ??
-            fareSegment.destination_route_stop ??
-            fareSegment.destinationStop ??
-            fareSegment.destination
+          fareSegment.destination_route_stop ??
+          fareSegment.destinationStop ??
+          fareSegment.destination
         );
       }
 
@@ -2066,65 +1808,65 @@ export default {
       const fromFareSegments = Array.isArray(trip?.fareSegments) ? trip.fareSegments : [];
       const fromTripFares = Array.isArray(trip?.tripFares)
         ? trip.tripFares
-            .map((fare) => {
-              const fareSegmentTicketType = fare?.fareSegmentTicketType || {};
-              const fareSegment =
-                fareSegmentTicketType.fareSegment || fare?.fareSegment || {};
+          .map((fare) => {
+            const fareSegmentTicketType = fare?.fareSegmentTicketType || {};
+            const fareSegment =
+              fareSegmentTicketType.fareSegment || fare?.fareSegment || {};
 
-              const normalizedId = Number(
-                fareSegment?.id ??
-                  fare?.fare_segment_id ??
-                  fare?.fareSegmentTicketType?.fare_segment_id ??
-                  fareSegmentTicketType?.fareSegment?.id ??
+            const normalizedId = Number(
+              fareSegment?.id ??
+              fare?.fare_segment_id ??
+              fare?.fareSegmentTicketType?.fare_segment_id ??
+              fareSegmentTicketType?.fareSegment?.id ??
+              0
+            );
+
+            if (!normalizedId) {
+              return null;
+            }
+
+            return {
+              ...fareSegment,
+              id: normalizedId,
+              fare_segment_id: normalizedId,
+              origin_route_stop_id:
+                fareSegment.origin_route_stop_id ??
+                fareSegment.originRouteStop?.id ??
+                fareSegmentTicketType.fareSegment?.origin_route_stop_id ??
+                null,
+              destination_route_stop_id:
+                fareSegment.destination_route_stop_id ??
+                fareSegment.destinationRouteStop?.id ??
+                fareSegmentTicketType.fareSegment?.destination_route_stop_id ??
+                null,
+              originRouteStop:
+                fareSegment.originRouteStop || fareSegment.origin_route_stop || null,
+              destinationRouteStop:
+                fareSegment.destinationRouteStop ||
+                fareSegment.destination_route_stop ||
+                null,
+              base_price:
+                Number(
+                  fare.price ??
+                  fare.base_price ??
+                  fareSegment.base_price ??
+                  fareSegmentTicketType.base_price ??
                   0
-              );
-
-              if (!normalizedId) {
-                return null;
-              }
-
-              return {
-                ...fareSegment,
-                id: normalizedId,
-                fare_segment_id: normalizedId,
-                origin_route_stop_id:
-                  fareSegment.origin_route_stop_id ??
-                  fareSegment.originRouteStop?.id ??
-                  fareSegmentTicketType.fareSegment?.origin_route_stop_id ??
-                  null,
-                destination_route_stop_id:
-                  fareSegment.destination_route_stop_id ??
-                  fareSegment.destinationRouteStop?.id ??
-                  fareSegmentTicketType.fareSegment?.destination_route_stop_id ??
-                  null,
-                originRouteStop:
-                  fareSegment.originRouteStop || fareSegment.origin_route_stop || null,
-                destinationRouteStop:
-                  fareSegment.destinationRouteStop ||
-                  fareSegment.destination_route_stop ||
-                  null,
-                base_price:
-                  Number(
-                    fare.price ??
-                      fare.base_price ??
-                      fareSegment.base_price ??
-                      fareSegmentTicketType.base_price ??
-                      0
-                  ) || 0,
-                price:
-                  Number(
-                    fare.price ??
-                      fare.base_price ??
-                      fareSegment.base_price ??
-                      fareSegmentTicketType.base_price ??
-                      0
-                  ) || 0,
-                active: fare.active ?? true,
-                fareSegmentTicketType,
-                fareSegment,
-              };
-            })
-            .filter(Boolean)
+                ) || 0,
+              price:
+                Number(
+                  fare.price ??
+                  fare.base_price ??
+                  fareSegment.base_price ??
+                  fareSegmentTicketType.base_price ??
+                  0
+                ) || 0,
+              active: fare.active ?? true,
+              fareSegmentTicketType,
+              fareSegment,
+            };
+          })
+          .filter(Boolean)
         : [];
 
       const uniqueSegments = new Map();
@@ -2153,9 +1895,9 @@ export default {
       );
       const availableSeats = Number(
         fare.availableSeats ??
-          fare.available_seats ??
-          availableSeatNumbers.length ??
-          0
+        fare.available_seats ??
+        availableSeatNumbers.length ??
+        0
       );
 
       return {
@@ -2188,10 +1930,10 @@ export default {
     getTripFareRecordForSegment(trip = this.selectedTripRecord, segment = null) {
       const segmentId = Number(
         segment?.id ??
-          segment?.fare_segment_id ??
-          segment?.fareSegmentTicketType?.fare_segment_id ??
-          this.editedItem.fare_segment_id ??
-          0
+        segment?.fare_segment_id ??
+        segment?.fareSegmentTicketType?.fare_segment_id ??
+        this.editedItem.fare_segment_id ??
+        0
       );
 
       if (!segmentId) {
@@ -2202,10 +1944,10 @@ export default {
         this.getTripFareRecords(trip).find((fare) => {
           const fareSegmentId = Number(
             fare.fare_segment_id ??
-              fare.fareSegmentTicketType?.fare_segment_id ??
-              fare.fareSegment?.id ??
-              fare.fareSegmentTicketType?.fareSegment?.id ??
-              0
+            fare.fareSegmentTicketType?.fare_segment_id ??
+            fare.fareSegment?.id ??
+            fare.fareSegmentTicketType?.fareSegment?.id ??
+            0
           );
 
           return fareSegmentId === segmentId;
@@ -2393,9 +2135,9 @@ export default {
       const serviceClass = segment.service_class ?? segment.serviceClass ?? "";
       const serviceClassLabel = serviceClass
         ? serviceClass
-            .split("_")
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" ")
+          .split("_")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ")
         : "Tramo";
 
       return {
@@ -2748,9 +2490,9 @@ export default {
       const unitPrice =
         Number(
           ticket.unit_price ??
-            ticket.unitPrice ??
-            basePrice ??
-            this.getSelectedTripBasePrice()
+          ticket.unitPrice ??
+          basePrice ??
+          this.getSelectedTripBasePrice()
         ) || 0;
       const cant = Math.max(0, Number(ticket.cant) || 0);
       const discountType = this.getPromotionDiscountType(promotion);
@@ -2815,7 +2557,7 @@ export default {
       return Math.max(
         0,
         Number(ticket.line_total ?? ticket.lineTotal ?? ticket.base_price * cant ?? 0) ||
-          0
+        0
       );
     },
     async showBranches() {
@@ -3603,55 +3345,48 @@ export default {
                 <div class="ticket-container">
                 <!-- Encabezado con logo e informaciÃ³n de sucursal -->
                 <div class="header">
-                    ${
-                      this.selectedBranch?.image
-                        ? `
+                    ${this.selectedBranch?.image
+            ? `
                     <img src="${this.$axios.defaults.baseURL}images/${this.selectedBranch.image}" 
                         class="branch-logo" 
                         alt="${this.selectedBranch.name}">
                     `
-                        : ""
-                    }
+            : ""
+          }
                     
-                    <div class="branch-name">${
-                      this.selectedBranch?.name || "Nombre Sucursal"
-                    }</div>
+                    <div class="branch-name">${this.selectedBranch?.name || "Nombre Sucursal"
+          }</div>
                     
-                    ${
-                      this.selectedBranch?.rut
-                        ? `
+                    ${this.selectedBranch?.rut
+            ? `
                     <div class="branch-info">RUT: ${this.selectedBranch.rut}</div>
                     `
-                        : ""
-                    }
+            : ""
+          }
                     
-                    ${
-                      this.selectedBranch?.address
-                        ? `
+                    ${this.selectedBranch?.address
+            ? `
                     <div class="branch-info">Dirección: ${this.selectedBranch.address}</div>
                     `
-                        : ""
-                    }
+            : ""
+          }
                     
-                    ${
-                      this.selectedBranch?.phone
-                        ? `
+                    ${this.selectedBranch?.phone
+            ? `
                     <div class="branch-info">Teléfono: ${this.selectedBranch.phone}</div>
                     `
-                        : ""
-                    }
+            : ""
+          }
                     
                     <div class="branch-info">Folio N° ${this.currentTicket.id}</div>
                 </div>
                 
                 <!-- Ticket original -->
                 <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${
-                      this.currentTicket.date
-                    }</div>
-                    <div class="font-weight-medium">Hora: ${
-                      this.currentTicket.schedule || "--:--"
-                    }</div>
+                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
+          }</div>
+                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
+          }</div>
                 </div>
                 
                 <div class="mb-3">
@@ -3662,9 +3397,8 @@ export default {
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Destino:</span>
-                    <span>${
-                      this.currentTicket.tripDestination || "No especificado"
-                    }</span>
+                    <span>${this.currentTicket.tripDestination || "No especificado"
+          }</span>
                     </div>
                 </div>
                 
@@ -3681,15 +3415,14 @@ export default {
                 
                 <br>
                 
-                ${
-                  qrImageOriginal
-                    ? `
+                ${qrImageOriginal
+            ? `
                     <div class="text-center">
                     <img src="${qrImageOriginal}" style="width: 150px; height: 150px;">
                     </div>
                 `
-                    : ""
-                }
+            : ""
+          }
                 
                 <br>
                 
@@ -3703,12 +3436,10 @@ export default {
                 </div>
                 
                 <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${
-                      this.currentTicket.date
-                    }</div>
-                    <div class="font-weight-medium">Hora: ${
-                      this.currentTicket.schedule || "--:--"
-                    }</div>
+                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
+          }</div>
+                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
+          }</div>
                 </div>
                 
                 <div class="mb-3">
@@ -3719,9 +3450,8 @@ export default {
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Destino:</span>
-                    <span>${
-                      this.currentTicket.tripDestination || "No especificado"
-                    }</span>
+                    <span>${this.currentTicket.tripDestination || "No especificado"
+          }</span>
                     </div>
                 </div>
                 
@@ -3738,30 +3468,28 @@ export default {
                 
                 <br>
                 
-                ${
-                  qrImageControl
-                    ? `
+                ${qrImageControl
+            ? `
                     <div class="text-center">
                     <img src="${qrImageControl}" style="width: 150px; height: 150px;">
                     </div>
                 `
-                    : ""
-                }
+            : ""
+          }
                 
                 <br>
                 
                 <!-- Nota de impresiÃ³n -->
                 
                 
-                ${
-                  this.currentTicket.print >= 1
-                    ? `
+                ${this.currentTicket.print >= 1
+            ? `
                     <div class="text-center caption mt-2 uppercase-text">
                     (COPIA REIMPRESA POR EL OPERADOR ${this.nameUser})
                     </div>
                 `
-                    : ""
-                }
+            : ""
+          }
                 </div>
                 
                 <script>
@@ -3923,10 +3651,10 @@ export default {
         .filter((fare) => {
           const fareSegmentId = Number(
             fare?.fareSegment?.id ??
-              fare?.fareSegmentTicketType?.fare_segment_id ??
-              fare?.fare_segment_id ??
-              fare?.fareSegmentTicketType?.fareSegment?.id ??
-              0
+            fare?.fareSegmentTicketType?.fare_segment_id ??
+            fare?.fare_segment_id ??
+            fare?.fareSegmentTicketType?.fareSegment?.id ??
+            0
           );
 
           return fareSegmentId === selectedFareSegmentId;
@@ -4335,9 +4063,6 @@ export default {
 };
 </script>
 <style>
-
-
-
 .payment-method-disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -4538,6 +4263,7 @@ export default {
 .v-icon {
   transition: all 0.3s ease;
 }
+
 .seat-container {
   position: relative;
   display: inline-flex;
@@ -4552,30 +4278,30 @@ export default {
 
 
 
-.seat-number{
-    position:absolute;
+.seat-number {
+  position: absolute;
 
-    top:30%;
-    left:50%;
+  top: 30%;
+  left: 50%;
 
-    transform:translate(-50%,-50%);
+  transform: translate(-50%, -50%);
 
-    min-width:18px;
+  min-width: 18px;
 
-    text-align:center;
+  text-align: center;
 
-    font-size:14px;
-    font-weight:900;
+  font-size: 14px;
+  font-weight: 900;
 
-    color:#000;
+  color: #000;
 
-    -webkit-text-stroke:0.8px #fff;
+  -webkit-text-stroke: 0.8px #fff;
 
-    line-height:1;
+  line-height: 1;
 
-    font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
 
-    pointer-events:none;
+  pointer-events: none;
 }
 
 
@@ -4607,10 +4333,10 @@ export default {
 .seat-available .seat-number,
 .seat-available .aisle-indicator,
 .seat-aisle .aisle-indicator {
-    color: #fefefe;
+  color: #fefefe;
   font-weight: bold;
   padding-top: 8px;
-   border: #fbfbfb;
+  border: #fbfbfb;
 }
 
 /* NÃºmeros claros en asientos oscuros */
@@ -4619,8 +4345,9 @@ export default {
   color: #ffffff;
   font-weight: bold;
   padding-top: 8px;
-   border: #ffffff;
+  border: #ffffff;
 }
+
 @media (max-width: 768px) {
   .payment-methods-grid {
     gap: 6px;
@@ -4660,9 +4387,11 @@ export default {
 
   /* Ajuste fino para mÃ³viles */
   .seat-number {
-    top: 28%; /* Puedes ajustar este valor segÃºn necesidad */
+    top: 28%;
+    /* Puedes ajustar este valor segÃºn necesidad */
   }
 }
+
 .icono-concavo {
   width: 45px;
   height: 45px;
@@ -4687,19 +4416,21 @@ export default {
   border-radius: 8px;
   background: transparent;
 }
+
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 /* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
 /* MÃ¡xima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
+.v-data-table>.v-data-table__wrapper>table>thead,
+.v-data-table>.v-data-table__wrapper>.v-table>table>thead,
+.v-data-table__content>table>thead,
+.v-data-table__content>thead,
+table.v-table>thead,
+.v-table>.v-table__wrapper>table>thead {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -4709,7 +4440,8 @@ table.v-table > thead,
   border-spacing: 0 !important;
   border-collapse: collapse !important;
 }
-.hidden-header .v-data-table__content > table > thead {
+
+.hidden-header .v-data-table__content>table>thead {
   display: none !important;
 }
 
@@ -4937,7 +4669,7 @@ table.v-table > thead,
   .ticket-col-schedule,
   .ticket-col-method,
   .ticket-col-quantity,
-  .ticket-col-seats ,
+  .ticket-col-seats,
   .ticket-col-price,
   .ticket-col-total,
   .ticket-col-actions {
@@ -5101,7 +4833,7 @@ table.v-table > thead,
 
 .trip-sale-panel-pro__header {
   display: grid;
-  grid-template-columns: 0.95fr 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
+  grid-template-columns: 1.2fr 2.4fr 0.75fr 0.75fr 0.75fr 0.7fr 0.75fr 0.75fr;
   gap: 12px;
   padding: 13px 16px;
   background: #f1f5f9;
@@ -5126,7 +4858,7 @@ table.v-table > thead,
 
 .trip-sale-row-pro {
   display: grid;
-  grid-template-columns: 0.95fr 2fr 0.75fr 0.75fr 0.9fr 0.7fr 0.9fr 0.8fr;
+  grid-template-columns: 1.2fr 2.4fr 0.75fr 0.75fr 0.75fr 0.7fr 0.75fr 0.75fr;
   gap: 12px;
   align-items: center;
   padding: 15px 16px;
@@ -5165,7 +4897,7 @@ table.v-table > thead,
 }
 
 .trip-sale-route__name {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   color: #0f172a;
   white-space: nowrap;
@@ -5175,7 +4907,7 @@ table.v-table > thead,
 
 .trip-sale-route-code-chip {
   max-width: 100%;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.02em;
 }
 
@@ -5187,7 +4919,7 @@ table.v-table > thead,
 }
 
 .trip-sale-strong {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -5526,6 +5258,7 @@ table.v-table > thead,
     min-width: 0;
   }
 }
+
 .seat-map-shell {
   width: 100%;
   display: flex;
@@ -5566,5 +5299,4 @@ table.v-table > thead,
     max-height: 360px;
   }
 }
-
 </style>

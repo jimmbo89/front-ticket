@@ -222,13 +222,13 @@
                     <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
 
                     <span class="text-truncate">
-                      Origen: {{ slotProps.item.origin }}
+                       {{ slotProps.item.origin }}
                     </span>
 
                     <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
 
                     <span class="text-truncate">
-                      Destino: {{ slotProps.item.destination }}
+                      {{ slotProps.item.destination }}
                     </span>
                   </div>
 
@@ -244,17 +244,7 @@
                 </div>
 
                 <div class="trip-col-vehicle busgo-name-cell">
-                  <v-avatar
-                    size="36"
-                    rounded="lg"
-                    color="grey-lighten-4"
-                    class="busgo-avatar"
-                  >
-                    <v-img
-                      :src="getImageUrl(slotProps.item.vehicleImage)"
-                      cover
-                    />
-                  </v-avatar>
+                  
 
                   <div class="min-width-0">
                     <div class="busgo-name">
@@ -3081,7 +3071,7 @@ table.v-table>thead,
 }
 
 .trip-route-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   white-space: nowrap;
