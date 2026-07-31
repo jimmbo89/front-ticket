@@ -95,7 +95,7 @@
         <template #top>
           <div class="busgo-table-head">
             <div class="branch-route-col-name">
-              Nombre de la ruta
+              Código de la ruta
             </div>
 
             <div class="branch-route-col-origin">
@@ -131,12 +131,12 @@
                   </v-avatar>
 
                   <div class="busgo-name">
-                    {{ slotProps.item.name }}
+                    {{ getRouteCode(slotProps.item) }}
                   </div>
 
                   <v-tooltip activator="parent" location="top" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      Nombre de la ruta: {{ slotProps.item.name }}
+                      Código de la ruta: {{ getRouteCode(slotProps.item) }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -276,7 +276,7 @@
           :items="routes"
           placeholder="Buscar ruta..."
           prepend-inner-icon="mdi-map-search-outline"
-          item-title="name"
+          :item-title="getRouteCode"
           item-value="id"
           variant="outlined"
           density="comfortable"
@@ -286,8 +286,16 @@
           hide-details="auto"
           clearable
         >
+          <template #selection="{ item }">
+            {{ getRouteCode(item.raw) }}
+          </template>
+
           <template #item="{ props, item }">
             <v-list-item v-bind="props" class="busgo-route-option">
+              <template #title>
+                {{ getRouteCode(item.raw) }}
+              </template>
+
               <div class="busgo-route-option-grid">
 
                 <div class="busgo-route-point">
@@ -449,7 +457,7 @@ export default {
     branch_id: "",
     data: {},
     headers: [
-      { title: "Ruta", key: "name", width: "15%" },
+      { title: "Código", key: "code", width: "15%" },
       { title: "Origen", key: "originName", width: "30%" },
       { title: "Destino", key: "destinationName", width: "30%" },
       { title: "Acciones", key: "actions", sortable: false, width: "25%" },
@@ -525,6 +533,15 @@ export default {
 
       return `${hours} h ${mins} min`;
     },
+    getRouteCode(route) {
+      return route?.code || route?.routeCode || route?.name || "-";
+    },
+    normalizeRoute(route) {
+      return {
+        ...route,
+        code: this.getRouteCode(route),
+      };
+    },
     async showAdd() {
       this.data = {};
       const firstBranchRoute = this.branchroutes[0];
@@ -544,7 +561,7 @@ export default {
 
           // Filtramos las rutas
           this.routes =
-            result.data?.routes.filter(
+            (result.data?.routes || []).map(this.normalizeRoute).filter(
               (route) =>
                 !this.branchroutes.some(
                   (branchroute) => branchroute.route_id === route.id
@@ -580,7 +597,7 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.branchroutes = result.data?.branchRoutes || [];
+          this.branchroutes = (result.data?.branchRoutes || []).map(this.normalizeRoute);
           this.loading = false;
         } else {
           // Si no hay datos, asignamos un array vacío
@@ -693,7 +710,7 @@ export default {
         });
 
         if (result.success) {
-          this.routes = result.data?.routes || [];
+          this.routes = (result.data?.routes || []).map(this.normalizeRoute);
         } else {
           // Si no hay datos, asignamos un array vacío
           this.routes = [];
