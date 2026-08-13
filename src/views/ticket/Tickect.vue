@@ -25,10 +25,17 @@
 
     <v-spacer />
 
-    <v-btn :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
-      @click="showAdd()">
-      Vender ticket
-    </v-btn>
+    <div class="ticket-header-actions">
+      <v-btn :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
+        @click="showAdd()">
+        Vender ticket
+      </v-btn>
+
+      <v-btn :color="paleteColors.primary" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
+        class="busgo-add-btn mr-1" @click="dialogExpressSale = true">
+        Venta Express
+      </v-btn>
+    </div>
   </v-card>
 
   <v-container fluid class="busgo-container">
@@ -142,6 +149,15 @@
                       variant="tonal" class="flex-shrink-0">
                       Tramo
                     </v-chip>
+
+                    <v-chip
+                      size="x-small"
+                      :color="getSaleModeColor(slotProps.item)"
+                      variant="tonal"
+                      class="flex-shrink-0"
+                    >
+                      {{ getSaleModeLabel(slotProps.item) }}
+                    </v-chip>
                   </div>
 
                   <div class="ticket-route-meta">
@@ -219,6 +235,15 @@
       </v-data-table>
     </v-card>
   </v-container>
+  <ExpressTicketSale
+    v-model="dialogExpressSale"
+    :branches="branches"
+    :branch-id="branch_id"
+    :mostrar-fila="mostrarFila"
+    @alert="showAlert"
+    @saved="handleExpressSaleSaved"
+  />
+
   <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
       <v-card class="ticket-sale-dialog-pro">
@@ -785,7 +810,13 @@
           </div>
 
           <div class="mb-3">
-            <div class="font-weight-bold mb-1">Recorrido:</div>
+            <div class="d-flex align-center justify-space-between mb-1">
+              <div class="font-weight-bold">Recorrido:</div>
+
+              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
+                {{ getSaleModeLabel(currentTicket) }}
+              </v-chip>
+            </div>
 
             <div>
               <span class="font-weight-medium mr-1">Origen:</span>
@@ -839,7 +870,13 @@
           </div>
 
           <div class="mb-3">
-            <div class="font-weight-bold mb-1">Recorrido:</div>
+            <div class="d-flex align-center justify-space-between mb-1">
+              <div class="font-weight-bold">Recorrido:</div>
+
+              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
+                {{ getSaleModeLabel(currentTicket) }}
+              </v-chip>
+            </div>
 
             <div>
               <span class="font-weight-medium mr-1">Origen:</span>
@@ -892,12 +929,16 @@
 </template>
 
 <script>
+import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import { paleteColors } from "@/assets/colors";
 import QRCode from "qrcode";
 export default {
+  components: {
+    ExpressTicketSale,
+  },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -912,6 +953,7 @@ export default {
     mostrarFila: false,
     permissions: "",
     dialog: false,
+    dialogExpressSale: false,
     dialogDelete: false,
     branch_id: "",
     seatError: null,
@@ -1489,6 +1531,14 @@ export default {
       }
 
       return ticket?.tripDestination ?? ticket?.destination ?? "No especificado";
+    },
+    getSaleModeLabel(ticket = {}) {
+      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
+      return saleMode === "express" ? "Express" : "Normal";
+    },
+    getSaleModeColor(ticket = {}) {
+      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
+      return saleMode === "express" ? "secondary" : "primary";
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -3206,6 +3256,23 @@ export default {
         await this.generateQRCode();
       }
     },
+    async handleExpressSaleSaved(ticket = null) {
+      await this.initialize();
+
+      if (!ticket) {
+        return;
+      }
+
+      this.currentTicket = ticket;
+      this.showTicketDialog = true;
+
+      const branchIdBuscado = this.currentTicket.branch_id ?? this.currentTicket.branchId;
+      this.selectedBranch =
+        this.branches.find((branch) => Number(branch.id) === Number(branchIdBuscado)) || null;
+
+      await this.$nextTick();
+      await this.generateQRCode();
+    },
     async printTicket() {
       try {
         const printWindow = window.open("", "_blank");
@@ -3379,7 +3446,10 @@ export default {
                 </div>
                 
                 <div class="mb-3">
-                    <div class="font-weight-bold mb-1">Recorrido:</div>
+                    <div class="detail-row">
+                    <div class="font-weight-bold">Recorrido:</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
                     <span>${this.currentTicket.tripOrigin || "No especificado"}</span>
@@ -3432,7 +3502,10 @@ export default {
                 </div>
                 
                 <div class="mb-3">
-                    <div class="font-weight-bold mb-1">Recorrido:</div>
+                    <div class="detail-row">
+                    <div class="font-weight-bold">Recorrido:</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
                     <span>${this.currentTicket.tripOrigin || "No especificado"}</span>
@@ -4441,6 +4514,14 @@ table.v-table>thead,
   flex-wrap: wrap;
 }
 
+.ticket-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .ticket-filter {
   width: 260px;
   min-width: 260px;
@@ -4624,6 +4705,28 @@ table.v-table>thead,
   position: absolute;
   right: 16px;
   top: 16px;
+}
+
+.ticket-sale-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ticket-sale-mode--express {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.ticket-sale-mode--normal {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .busgo-dialog-card {

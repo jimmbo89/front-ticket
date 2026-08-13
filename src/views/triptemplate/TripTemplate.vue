@@ -156,6 +156,12 @@
                 {{ templateSortIcon('days_of_week') }}
               </v-icon>
             </div>
+            <div class="trip-template-col-sale-mode trip-template-sortable-header" @click="toggleTemplateSort('saleMode')">
+              <span>Modo</span>
+              <v-icon size="16" class="ml-1">
+                {{ templateSortIcon('saleMode') }}
+              </v-icon>
+            </div>
             <div class="trip-template-col-status trip-template-sortable-header" @click="toggleTemplateSort('active')">
               <span>Estado</span>
               <v-icon size="16" class="ml-1">
@@ -318,6 +324,24 @@
                   </div>
 
                   <span v-else>-</span>
+                </div>
+
+                <div class="trip-template-col-sale-mode">
+                  <v-tooltip location="bottom">
+                    <template #activator="{ props }">
+                      <v-chip
+                        v-bind="props"
+                        :color="getSaleModeColor(slotProps.item)"
+                        size="small"
+                        variant="tonal"
+                        class="trip-template-sale-mode-chip"
+                      >
+                        {{ getSaleModeShortName(slotProps.item) }}
+                      </v-chip>
+                    </template>
+
+                    <span>{{ getSaleModeName(slotProps.item) }}</span>
+                  </v-tooltip>
                 </div>
 
                 <div class="trip-template-col-status">
@@ -608,6 +632,21 @@
                       prepend-icon="mdi-timer"
                       variant="underlined"
                       :rules="durationRules"
+                      density="compact"
+                    />
+                  </v-col>
+
+                  <v-col cols="12" md="3">
+                    <v-select
+                      v-model="editedItem.saleMode"
+                      :items="saleModes"
+                      label="Modo de venta"
+                      prepend-icon="mdi-ticket-confirmation"
+                      item-title="name"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
                     />
                   </v-col>
 
@@ -1482,6 +1521,7 @@ export default {
     vehicles: [],
     workers: [],
     branches: [],
+    saleModes: [{ id: "normal", name: "Venta Normal" }],
     filteredWorkers: [],
     templateStopRows: [],
     templateFareRows: [],
@@ -1528,6 +1568,7 @@ export default {
       { title: "Duración (minutos)", value: "duration" },
       { title: "Frecuencia", value: "recurrence_pattern" },
       { title: "Dias de la Semana", value: "days_of_week" },
+      { title: "Modo", value: "saleMode" },
       { title: "Estado", value: "active" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
@@ -1566,6 +1607,7 @@ export default {
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1580,6 +1622,7 @@ export default {
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1595,6 +1638,7 @@ export default {
       recurrence_pattern: "",
       days_of_week: "",
       active: true,
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1743,6 +1787,8 @@ export default {
           return row?.recurrence_pattern ?? "";
         case "days_of_week":
           return row?.days_of_week ?? "";
+        case "saleMode":
+          return this.normalizeTemplateSaleMode(row);
         case "active":
           return row?.active ? 1 : 0;
         default:
@@ -1774,6 +1820,31 @@ export default {
     },
     normalizeTemplateWorkersList(workers = []) {
       return workers.map((worker) => this.normalizeTemplateWorkerRecord(worker));
+    },
+    getDefaultSaleMode() {
+      return this.saleModes[0]?.id || "normal";
+    },
+    normalizeTemplateSaleMode(template = {}) {
+      return template.saleMode || template.sale_mode || this.getDefaultSaleMode();
+    },
+    getSaleModeName(template = {}) {
+      const saleMode = this.normalizeTemplateSaleMode(template);
+      const fallbackNames = {
+        normal: "Venta Normal",
+        express: "Venta Express",
+      };
+      return this.saleModes.find((mode) => mode.id === saleMode)?.name || fallbackNames[saleMode] || saleMode;
+    },
+    getSaleModeShortName(template = {}) {
+      return this.getSaleModeName(template).replace(/^Venta\s+/i, "");
+    },
+    getSaleModeColor(template = {}) {
+      return this.normalizeTemplateSaleMode(template) === "express" ? "primary" : "grey";
+    },
+    ensureTemplateSaleMode({ useDefault = false } = {}) {
+      if (useDefault || !this.editedItem.saleMode) {
+        this.editedItem.saleMode = this.getDefaultSaleMode();
+      }
     },
     parseTemplateStops(value) {
       if (Array.isArray(value)) return value;
@@ -2414,6 +2485,7 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.templates = (result.data?.templates || []).map((template) => ({
             ...template,
+            saleMode: this.normalizeTemplateSaleMode(template),
             workers: this.normalizeTemplateWorkersList(template.workers || []),
           }));
         } else {
@@ -2473,6 +2545,10 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
+          this.saleModes = result.data?.saleModes?.length
+            ? result.data.saleModes
+            : [{ id: "normal", name: "Venta Normal" }];
+          this.ensureTemplateSaleMode({ useDefault: resetSelections });
 
           if (resetSelections) {
             this.editedItem.route_id = "";
@@ -2491,6 +2567,8 @@ export default {
           this.vehicles = [];
           this.workers = [];
           this.filteredWorkers = [];
+          this.saleModes = [{ id: "normal", name: "Venta Normal" }];
+          this.ensureTemplateSaleMode();
         }
       } catch (error) {
         this.showAlert(
@@ -2519,6 +2597,7 @@ export default {
           "recurrence_pattern",
           "days_of_week",
           "active",
+          "saleMode",
           "workers",
           "tripStops",
           "tripFares",
@@ -2587,6 +2666,7 @@ export default {
           "recurrence_pattern",
           "days_of_week",
           "active",
+          "saleMode",
           "workers",
           "tripStops",
           "tripFares",
@@ -2670,6 +2750,8 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.originalItem.saleMode = this.normalizeTemplateSaleMode(this.originalItem);
+      this.editedItem.saleMode = this.normalizeTemplateSaleMode(this.editedItem);
       this.originalItem.tripStops = this.parseTemplateStops(this.originalItem.tripStops);
       this.editedItem.tripStops = this.parseTemplateStops(this.editedItem.tripStops);
       this.originalItem.tripFares = this.parseTemplateFares(this.originalItem.tripFares);
@@ -3012,7 +3094,7 @@ table.v-table > thead,
 }
 
 .trip-template-col-route {
-  width: 30%;
+  width: 25%;
   min-width: 0;
 }
 
@@ -3034,38 +3116,47 @@ table.v-table > thead,
 }
 
 .trip-template-col-workers {
-  width: 12%;
-  min-width: 0;
-}
-
-.trip-template-col-schedule {
-  width: 8%;
-  min-width: 0;
-}
-
-.trip-template-col-duration {
-  width: 8%;
-  min-width: 0;
-}
-
-.trip-template-col-frequency {
   width: 10%;
   min-width: 0;
 }
 
-.trip-template-col-days {
+.trip-template-col-schedule {
+  width: 7%;
+  min-width: 0;
+}
+
+.trip-template-col-duration {
+  width: 7%;
+  min-width: 0;
+}
+
+.trip-template-col-frequency {
   width: 9%;
   min-width: 0;
 }
 
+.trip-template-col-days {
+  width: 8%;
+  min-width: 0;
+}
+
+.trip-template-col-sale-mode {
+  width: 8%;
+  min-width: 0;
+}
+
 .trip-template-col-status {
-  width: 6%;
+  width: 7%;
   min-width: 0;
 }
 
 .trip-template-col-actions {
-  width: 5%;
+  width: 7%;
   min-width: 0;
+}
+
+.trip-template-sale-mode-chip {
+  max-width: 100%;
 }
 
 .trip-template-row {
@@ -3310,6 +3401,7 @@ table.v-table > thead,
   .trip-template-col-duration,
   .trip-template-col-frequency,
   .trip-template-col-days,
+  .trip-template-col-sale-mode,
   .trip-template-col-status,
   .trip-template-col-actions {
     width: 100%;

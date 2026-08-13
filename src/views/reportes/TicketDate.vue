@@ -486,7 +486,7 @@
 import { paleteColors } from "@/assets/colors";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
-import { format } from "date-fns";
+import { formatLocalDate } from "@/utils/date";
 import * as XLSX from "xlsx";
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 export default {
@@ -556,8 +556,8 @@ export default {
     date: null,
     endDate: null,
     searchTramos: "",
-    sortTramosBy: "code",
-    sortTramosOrder: "asc",
+    sortTramosBy: "totalTramo",
+    sortTramosOrder: "desc",
     expandedTramoRows: [],
     options: [
       { title: "Empresa", value: "Company", icon: "mdi-office-building" }, // Opción Negocio con ícono
@@ -567,15 +567,13 @@ export default {
   }),
   computed: {
     dateFormatted() {
-      const date = this.input ? new Date(this.input) : new Date();
-      return date.toISOString().split("T")[0];
+      return formatLocalDate(this.input || new Date());
     },
     getDate() {
       return this.input ? new Date(this.input) : new Date();
     },
     dateFormatted1() {
-      const date = this.input2 ? new Date(this.input2) : new Date();
-      return date.toISOString().split("T")[0];
+      return formatLocalDate(this.input2 || new Date());
     },
     getDate1() {
       return this.input2 ? new Date(this.input2) : new Date();
@@ -814,8 +812,8 @@ export default {
         const formattedEndDate = this.endDate
           ? format(new Date(this.endDate), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd");*/
-        const formattedDate = this.date ?? new Date().toISOString().split("T")[0];
-        const formattedEndDate = this.endDate ?? new Date().toISOString().split("T")[0];
+        const formattedDate = this.date ?? formatLocalDate();
+        const formattedEndDate = this.endDate ?? formatLocalDate();
 
         // Comparar las fechas
         if (formattedDate === formattedEndDate) {

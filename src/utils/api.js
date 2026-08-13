@@ -23,15 +23,16 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
     if (error.response) {
       const getMessage = (d) => d?.message || d?.msg || 'Error desconocido';
       const status = error.response.status;
+      const responseData = error.response.data || {};
       switch (status) {
         case 400:
-          if (error.response.data.msg) {
-            return { success: false, message: error.response.data.msg };
-          } else if (error.response.data.errors) {
-            const validationErrors = Object.values(error.response.data.errors).flat();
-            return { success: false, message: `Errores de validación: ${validationErrors.join(', ')}` };
+          if (responseData.msg) {
+            return { success: false, message: responseData.msg, data: responseData };
+          } else if (responseData.errors) {
+            const validationErrors = Object.values(responseData.errors).flat();
+            return { success: false, message: `Errores de validación: ${validationErrors.join(', ')}`, data: responseData };
           } else {
-            return { success: false, message: `Error: ${error.response.data.error || 'Ocurrió un error de validación'}` };
+            return { success: false, message: `Error: ${responseData.error || 'Ocurrió un error de validación'}`, data: responseData };
           }
         case 401:
           return { success: false, message: `Acceso no autorizado: Revocado o no válido.:${error.response}` };

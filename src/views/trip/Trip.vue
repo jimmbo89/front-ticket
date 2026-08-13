@@ -180,6 +180,10 @@
                 {{ tripSortIcon('schedule') }}
               </v-icon>
             </div>
+            <div class="trip-col-sale-mode trip-sortable" @click="toggleTripSort('saleMode')">
+              <span>Modo</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('saleMode') }}</v-icon>
+            </div>
             <div class="trip-col-start trip-sortable" @click="toggleTripSort('start')">
               <span>Salida</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('start') }}</v-icon>
@@ -287,6 +291,24 @@
                 <div class="trip-col-schedule busgo-meta">
                   <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
                   <span class="text-truncate">{{ slotProps.item.schedule }}</span>
+                </div>
+
+                <div class="trip-col-sale-mode">
+                  <v-tooltip location="bottom">
+                    <template #activator="{ props }">
+                      <v-chip
+                        v-bind="props"
+                        :color="getSaleModeColor(slotProps.item)"
+                        size="small"
+                        variant="tonal"
+                        class="trip-sale-mode-chip"
+                      >
+                        {{ getSaleModeShortName(slotProps.item) }}
+                      </v-chip>
+                    </template>
+
+                    <span>{{ getSaleModeName(slotProps.item) }}</span>
+                  </v-tooltip>
                 </div>
 
                 <div class="trip-col-start busgo-meta trip-datetime-cell">
@@ -582,7 +604,7 @@
                 </v-row>
 
                 <v-row>
-                  <v-col cols="12" md="6">
+                  <v-col cols="12" md="4">
                     <v-select
                       v-model="editedItem.schedule"
                       :items="filteredTimeSlots"
@@ -601,7 +623,7 @@
                     />
                   </v-col>
 
-                  <v-col cols="12" md="6">
+                  <v-col cols="12" md="4">
                     <v-text-field
                       v-model="editedItem.arrival"
                       label="Hora de llegada"
@@ -609,6 +631,20 @@
                       variant="underlined"
                       density="compact"
                       prepend-icon="mdi-calendar-clock"
+                    />
+                  </v-col>
+
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="editedItem.saleMode"
+                      :items="saleModes"
+                      label="Modo de venta"
+                      prepend-icon="mdi-ticket-confirmation"
+                      item-title="name"
+                      item-value="id"
+                      variant="underlined"
+                      :rules="selectRules"
+                      density="compact"
                     />
                   </v-col>
                 </v-row>
@@ -1464,6 +1500,7 @@ export default {
     vehicles: [],
     workers: [],
     branches: [],
+    saleModes: [{ id: "normal", name: "Venta Normal" }],
     filteredWorkers: [],
     tripStopRows: [],
     tripFareRows: [],
@@ -1488,6 +1525,7 @@ export default {
       { title: "Vehículo", value: "vehicleName" },
       { title: "Fecha", value: "date" },
       { title: "Horario", value: "schedule" },
+      { title: "Modo", value: "saleMode" },
       { title: "Salida", value: "start" },
       { title: "Llegada", value: "end" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
@@ -1527,6 +1565,7 @@ export default {
       arrival: "",
       start: "",
       end: "",
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1541,6 +1580,7 @@ export default {
       arrival: "",
       start: "",
       end: "",
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1555,6 +1595,7 @@ export default {
       arrival: "",
       start: "",
       end: "",
+      saleMode: "normal",
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1683,7 +1724,36 @@ export default {
         return trip.vehicleName || trip.plate || "";
       }
 
+      if (field === "saleMode") {
+        return this.normalizeTripSaleMode(trip);
+      }
+
       return trip[field] ?? "";
+    },
+    getDefaultSaleMode() {
+      return this.saleModes[0]?.id || "normal";
+    },
+    normalizeTripSaleMode(trip = {}) {
+      return trip.saleMode || trip.sale_mode || this.getDefaultSaleMode();
+    },
+    getSaleModeName(trip = {}) {
+      const saleMode = this.normalizeTripSaleMode(trip);
+      const fallbackNames = {
+        normal: "Venta Normal",
+        express: "Venta Express",
+      };
+      return this.saleModes.find((mode) => mode.id === saleMode)?.name || fallbackNames[saleMode] || saleMode;
+    },
+    getSaleModeShortName(trip = {}) {
+      return this.getSaleModeName(trip).replace(/^Venta\s+/i, "");
+    },
+    getSaleModeColor(trip = {}) {
+      return this.normalizeTripSaleMode(trip) === "express" ? "primary" : "grey";
+    },
+    ensureTripSaleMode({ useDefault = false } = {}) {
+      if (useDefault || !this.editedItem.saleMode) {
+        this.editedItem.saleMode = this.getDefaultSaleMode();
+      }
     },
     compareTrips(a, b) {
       const direction = this.tripSortOrder === "asc" ? 1 : -1;
@@ -2255,6 +2325,10 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data?.tripworkers || [];
+          this.saleModes = result.data?.saleModes?.length
+            ? result.data.saleModes
+            : [{ id: "normal", name: "Venta Normal" }];
+          this.ensureTripSaleMode({ useDefault: resetSelections });
           this.filterWorkers();
 
           if (resetSelections) {
@@ -2272,6 +2346,8 @@ export default {
           this.vehicles = [];
           this.workers = [];
           this.filteredWorkers = [];
+          this.saleModes = [{ id: "normal", name: "Venta Normal" }];
+          this.ensureTripSaleMode();
         }
       } catch (error) {
         this.showAlert(
@@ -2431,7 +2507,10 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.trips = result.data?.trips || [];
+          this.trips = (result.data?.trips || []).map((trip) => ({
+            ...trip,
+            saleMode: this.normalizeTripSaleMode(trip),
+          }));
         } else {
           // Si no hay datos, asignamos un array vacÃ­o
           this.trips = [];
@@ -2461,6 +2540,7 @@ export default {
           "arrival",
           "start",
           "end",
+          "saleMode",
           "workers",
           "tripStops",
           "tripFares",
@@ -2527,6 +2607,7 @@ export default {
           "arrival",
           "start",
           "end",
+          "saleMode",
           "workers",
           "tripStops",
           "tripFares",
@@ -2598,6 +2679,8 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.originalItem.saleMode = this.normalizeTripSaleMode(this.originalItem);
+      this.editedItem.saleMode = this.normalizeTripSaleMode(this.editedItem);
       this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)
         ? this.originalItem.tripFares
         : [];
@@ -2946,12 +3029,12 @@ table.v-table>thead,
 }
 
 .trip-col-code {
-  width: 16%;
+  width: 13%;
   min-width: 0;
 }
 
 .trip-col-route {
-  width: 28%;
+  width: 24%;
   min-width: 0;
 }
 
@@ -2971,7 +3054,12 @@ table.v-table>thead,
 }
 
 .trip-col-schedule {
-  width: 9%;
+  width: 8%;
+  min-width: 0;
+}
+
+.trip-col-sale-mode {
+  width: 8%;
   min-width: 0;
 }
 
@@ -3018,8 +3106,12 @@ table.v-table>thead,
 }
 
 .trip-col-actions {
-  width: 12%;
+  width: 11%;
   min-width: 0;
+}
+
+.trip-sale-mode-chip {
+  max-width: 100%;
 }
 
 .trip-row {
@@ -3218,6 +3310,7 @@ table.v-table>thead,
   .trip-col-workers,
   .trip-col-date,
   .trip-col-schedule,
+  .trip-col-sale-mode,
   .trip-col-start,
   .trip-col-end,
   .trip-col-actions {
