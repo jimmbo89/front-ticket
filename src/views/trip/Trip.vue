@@ -175,7 +175,7 @@
               class="trip-col-schedule trip-sortable"
               @click="toggleTripSort('schedule')"
             >
-              <span>Horario</span>
+              <span>Horario Programado</span>
               <v-icon size="16" class="ml-1">
                 {{ tripSortIcon('schedule') }}
               </v-icon>
@@ -1524,7 +1524,7 @@ export default {
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },
       { title: "Fecha", value: "date" },
-      { title: "Horario", value: "schedule" },
+      { title: "Horario Programado", value: "schedule" },
       { title: "Modo", value: "saleMode" },
       { title: "Salida", value: "start" },
       { title: "Llegada", value: "end" },

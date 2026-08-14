@@ -215,6 +215,23 @@
               </v-icon>
             </div>
 
+            <div
+              class="worker-collection-col-departure worker-collection-sortable"
+              @click="toggleSort('scheduled_departure')"
+            >
+              <span>Horario Programado</span>
+
+              <v-icon size="16" class="ml-1">
+                {{
+                  sortBy === "scheduled_departure"
+                    ? sortOrder === "asc"
+                      ? "mdi-arrow-up"
+                      : "mdi-arrow-down"
+                    : "mdi-swap-vertical"
+                }}
+              </v-icon>
+            </div>
+
             <div class="worker-collection-col-vehicle worker-collection-sortable" @click="toggleSort('vehicleName')">
               <span>Vehículo</span>
 
@@ -331,6 +348,16 @@
                   </span>
                 </div>
 
+                <div class="worker-collection-col-departure busgo-meta">
+                  <v-icon size="16" color="primary">
+                    mdi-clock-outline
+                  </v-icon>
+
+                  <span class="text-truncate">
+                    {{ formatScheduledDeparture(slotProps.item.scheduled_departure) }}
+                  </span>
+                </div>
+
                 <div class="worker-collection-col-vehicle busgo-name-cell">
                   <v-avatar
                     size="36"
@@ -418,6 +445,7 @@ export default {
             { title: 'Código', value: 'code', },
             { title: 'Ruta', value: 'name', },
             { title: 'Fecha', value: 'date', },
+            { title: 'Horario Programado', value: 'scheduled_departure', },
             { title: 'Origen', value: 'origin', },
             { title: 'Destino', value: 'destination', },
             { title: 'Vehículo', value: 'vehicleName', },
@@ -546,6 +574,8 @@ export default {
             return item?.name ?? '';
           case 'date':
             return item?.date ?? '';
+          case 'scheduled_departure':
+            return item?.scheduled_departure ?? '';
           case 'origin':
             return item?.origin ?? '';
           case 'destination':
@@ -565,6 +595,24 @@ export default {
       getImageUrl(imagePath) {
       return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
     },
+      formatScheduledDeparture(value) {
+        if (!value) {
+          return '--:--';
+        }
+
+        const text = String(value).trim();
+        const timeMatch = text.match(/(?:T|\s)(\d{2}:\d{2})(?::\d{2})?/);
+        if (timeMatch) {
+          return timeMatch[1];
+        }
+
+        const shortTimeMatch = text.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
+        if (shortTimeMatch) {
+          return shortTimeMatch[1].padStart(5, '0');
+        }
+
+        return text;
+      },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del día actual
       const now = new Date();
@@ -725,6 +773,7 @@ export default {
                 // eslint-disable-next-line vue/no-use-computed-property-like-method
                 name: 'Recaudación por Trabajador', // Título coherente con el reporte
                 date: '',
+                scheduled_departure: '',
                 origin: '',
                 destination: '',
                 plate: '',
@@ -835,12 +884,17 @@ table.v-table > thead,
 }
 
 .worker-collection-col-date {
-  width: 10%;
+  width: 9%;
+  min-width: 0;
+}
+
+.worker-collection-col-departure {
+  width: 8%;
   min-width: 0;
 }
 
 .worker-collection-col-vehicle {
-  width: 14%;
+  width: 12%;
   min-width: 0;
 }
 
@@ -954,6 +1008,7 @@ table.v-table > thead,
   .worker-collection-col-route,
   .worker-collection-col-code,
   .worker-collection-col-date,
+  .worker-collection-col-departure,
   .worker-collection-col-vehicle,
   .worker-collection-col-seats,
   .worker-collection-col-passengers,

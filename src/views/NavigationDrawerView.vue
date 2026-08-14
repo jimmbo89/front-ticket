@@ -198,6 +198,12 @@ export default {
         permission: ["view_tripsworker", "view_tripsworker_company"],
       },
       {
+        title: "Recaudación por Tipo de Pasaje",
+        icon: "mdi-ticket-percent-outline",
+        to: "ticket-passenger-type-report",
+        permission: "report_ticket_passenger_type",
+      },
+      {
         title: "Incidentes",
         icon: "mdi-alert-outline",
         to: "incident",

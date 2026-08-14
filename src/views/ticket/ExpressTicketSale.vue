@@ -115,7 +115,7 @@
                     hide-details="auto"
                     :no-data-text="'No hay ubicaciones disponibles'"
                     :menu-props="{ maxHeight: 360, maxWidth: 520 }"
-                    @update:model-value="handleLocationSelectionChange"
+                    @update:model-value="handleOriginSelectionChange"
                   >
                     <template #item="{ props, item }">
                       <v-list-item v-bind="props" title="" class="ticket-location-option">
@@ -144,7 +144,9 @@
                     rounded="lg"
                     clearable
                     hide-details="auto"
-                    :no-data-text="'No hay ubicaciones disponibles'"
+                    :disabled="!selectedOriginLocationId"
+                    :loading="loadingDestinations"
+                    :no-data-text="loadingDestinations ? 'Cargando destinos...' : 'No hay ubicaciones disponibles'"
                     :menu-props="{ maxHeight: 360, maxWidth: 520 }"
                     @update:model-value="handleLocationSelectionChange"
                   >
@@ -483,6 +485,7 @@ export default {
     paleteColors,
     valid: true,
     loading: false,
+    loadingDestinations: false,
     menuDate: false,
     selectedDate: null,
     selectedBranchId: "",
@@ -493,6 +496,7 @@ export default {
     selectedMethod: "Efectivo",
     tripSearchText: "",
     locations: [],
+    allowedDestinations: [],
     trips: [],
     ticketTypes: [],
     quantityErrors: {},
@@ -544,8 +548,18 @@ export default {
       );
     },
     destinationLocationOptions() {
-      return (Array.isArray(this.locations) ? this.locations : []).filter(
-        (location) => Number(location.id) !== Number(this.selectedOriginLocationId)
+      const allowedDestinationIds = new Set(
+        (Array.isArray(this.allowedDestinations) ? this.allowedDestinations : [])
+          .map((destination) => Number(destination.destination_id ?? destination.destinationId))
+          .filter((destinationId) => Number.isFinite(destinationId))
+      );
+
+      if (!this.selectedOriginLocationId || !allowedDestinationIds.size) {
+        return [];
+      }
+
+      return (Array.isArray(this.locations) ? this.locations : []).filter((location) =>
+        allowedDestinationIds.has(Number(location.id))
       );
     },
     tripRows() {
@@ -628,6 +642,7 @@ export default {
       this.selectedMethod = "Efectivo";
       this.tripSearchText = "";
       this.trips = [];
+      this.allowedDestinations = [];
       this.ticketTypes = [];
       this.quantityErrors = {};
       this.step = 1;
@@ -645,12 +660,15 @@ export default {
     updateDate(value) {
       this.selectedDate = value instanceof Date ? value : this.todayDate;
       this.menuDate = false;
+      this.selectedDestinationLocationId = null;
+      this.allowedDestinations = [];
       this.resetTrips();
-      this.loadTripsBySelectedLocations();
+      this.loadAllowedDestinationsByOrigin();
     },
     async onBranchChange() {
       this.selectedOriginLocationId = null;
       this.selectedDestinationLocationId = null;
+      this.allowedDestinations = [];
       this.resetTrips();
       await this.loadLocations();
     },
@@ -669,7 +687,7 @@ export default {
         return;
       }
 
-      this.loading = true;
+      this.loadingDestinations = true;
       try {
         const result = await handleRequest({
           endpoint: "get-trip-date",
@@ -686,7 +704,7 @@ export default {
         this.locations = [];
         this.$emit("alert", "error", "Ocurrio un error inesperado al procesar la solicitud.", 3000);
       } finally {
-        this.loading = false;
+        this.loadingDestinations = false;
       }
     },
     async handleLocationSelectionChange() {
@@ -704,6 +722,62 @@ export default {
       if (this.selectedOriginLocationId && this.selectedDestinationLocationId) {
         await this.loadTripsBySelectedLocations();
       }
+    },
+    async handleOriginSelectionChange() {
+      this.selectedDestinationLocationId = null;
+      this.allowedDestinations = [];
+      this.resetTrips();
+      await this.loadAllowedDestinationsByOrigin();
+    },
+    async loadAllowedDestinationsByOrigin() {
+      if (!this.selectedOriginLocationId) {
+        this.allowedDestinations = [];
+        return;
+      }
+
+      const branchId = this.selectedBranchId ?? this.branchId;
+
+      if (branchId === "null" || branchId === null || branchId === "") {
+        this.allowedDestinations = [];
+        return;
+      }
+
+      this.loading = true;
+      try {
+        const result = await handleRequest({
+          endpoint: "express-sales-destinations",
+          method: "POST",
+          data: {
+            branch_id: Number(branchId),
+            date: this.dateFormatted,
+            origin_id: Number(this.selectedOriginLocationId),
+          },
+        });
+
+        this.allowedDestinations = result.success
+          ? this.extractAllowedDestinations(result.data)
+          : [];
+      } catch (error) {
+        this.allowedDestinations = [];
+        this.$emit("alert", "error", "Ocurrio un error inesperado al buscar los destinos disponibles.", 3000);
+      } finally {
+        this.loading = false;
+      }
+    },
+    extractAllowedDestinations(data) {
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (Array.isArray(data?.destinations)) {
+        return data.destinations;
+      }
+
+      if (Array.isArray(data?.allowedDestinations)) {
+        return data.allowedDestinations;
+      }
+
+      return [];
     },
     async loadTripsBySelectedLocations() {
       if (!this.selectedOriginLocationId || !this.selectedDestinationLocationId) {

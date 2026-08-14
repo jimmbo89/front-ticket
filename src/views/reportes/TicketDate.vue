@@ -291,6 +291,16 @@
                   </div>
 
                   <div
+                    class="collection-route-col-departure collection-route-sortable"
+                    @click="toggleTramoSort('scheduled_departure')"
+                  >
+                    <span>Horario Programado</span>
+                    <v-icon size="16" class="ml-1">
+                      {{ getTramoSortIcon("scheduled_departure") }}
+                    </v-icon>
+                  </div>
+
+                  <div
                     class="collection-route-col-total collection-route-sortable"
                     @click="toggleTramoSort('totalTramo')"
                   >
@@ -333,6 +343,13 @@
                         <div class="collection-route-meta text-truncate">
                           {{ item.origin }} → {{ item.destination }}
                         </div>
+                      </div>
+
+                      <div class="collection-route-col-departure busgo-meta">
+                        <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
+                        <span class="text-truncate">
+                          {{ formatScheduledDeparture(item.scheduled_departure) }}
+                        </span>
                       </div>
 
                       <div class="collection-route-col-total collection-route-total">
@@ -526,6 +543,7 @@ export default {
     headersTramos: [
       { title: "CÓDIGO", key: "code", align: "start" },
       { title: "RUTA", key: "routeName", align: "start" },
+      { title: "HORARIO PROGRAMADO", key: "scheduled_departure", align: "start" },
       { title: "TOTAL", key: "totalTramo", align: "end" },
       { title: "ACCIONES", key: "data-table-expand", align: "end" },
     ],
@@ -602,6 +620,7 @@ export default {
           tramo.nombre,
           tramo.origin,
           tramo.destination,
+          tramo.scheduled_departure,
           tramo.totalPasajes,
           tramo.totalAsientosComprados,
           tramo.totalTramo,
@@ -621,6 +640,8 @@ export default {
         switch (this.sortTramosBy) {
           case "routeName":
             return (tramo.routeName || tramo.nombre || tramo.origin || "").toString();
+          case "scheduled_departure":
+            return (tramo.scheduled_departure || "").toString();
           case "totalTramo":
             return Number(tramo.totalTramo || 0);
           case "code":
@@ -730,6 +751,9 @@ export default {
       }
 
       return this.sortTramosOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    formatScheduledDeparture(value) {
+      return value || "--:--";
     },
     toggleTramoExpand(tramo) {
       const rowId = tramo.code || tramo.tripCode;
@@ -1226,7 +1250,7 @@ export default {
 
 .collection-route-table-head {
   display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(120px, 0.8fr) 64px;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(150px, 0.9fr) minmax(120px, 0.8fr) 64px;
   gap: 12px;
   align-items: center;
   min-height: 56px;
@@ -1258,7 +1282,7 @@ export default {
 
 .collection-route-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(120px, 0.8fr) 64px;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(150px, 0.9fr) minmax(120px, 0.8fr) 64px;
   gap: 12px;
   align-items: center;
   padding: 14px 18px;
@@ -1268,6 +1292,7 @@ export default {
 
 .collection-route-col-code,
 .collection-route-col-route,
+.collection-route-col-departure,
 .collection-route-col-total,
 .collection-route-col-actions {
   min-width: 0;
@@ -1359,7 +1384,7 @@ export default {
 
   .collection-route-table-head,
   .collection-route-row {
-    grid-template-columns: minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(100px, 0.75fr) 56px;
+    grid-template-columns: minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(120px, 0.9fr) minmax(100px, 0.75fr) 56px;
     gap: 8px;
     padding-left: 14px;
     padding-right: 14px;

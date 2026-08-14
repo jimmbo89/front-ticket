@@ -192,8 +192,26 @@
 
                   <!-- RUTA -->
                   <div class="col col-route">
-                    <div class="font-weight-medium text-truncate">
-                      {{ slotProps.item.route }}
+                    <div class="trip-route-title">
+                      <v-tooltip location="top" :text="getTripRouteTooltip(slotProps.item)">
+                        <template #activator="{ props }">
+                          <span
+                            v-bind="props"
+                            class="font-weight-medium text-truncate"
+                          >
+                            {{ slotProps.item.route }}
+                          </span>
+                        </template>
+                      </v-tooltip>
+
+                      <v-chip
+                        size="x-small"
+                        :color="getTripSaleModeColor(slotProps.item)"
+                        variant="tonal"
+                        class="trip-sale-mode-chip flex-shrink-0"
+                      >
+                        {{ getTripSaleModeLabel(slotProps.item) }}
+                      </v-chip>
                     </div>
                     <div class="route-meta">
                       <v-icon size="x-small">mdi-clock-outline</v-icon>
@@ -542,6 +560,17 @@ export default {
         "Sucursal sin nombre"
       );
     },
+    getTripSaleModeLabel(trip = {}) {
+      const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
+      return saleMode === "express" ? "Express" : "Normal";
+    },
+    getTripSaleModeColor(trip = {}) {
+      const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
+      return saleMode === "express" ? "secondary" : "primary";
+    },
+    getTripRouteTooltip(trip = {}) {
+      return trip?.route || "Ruta sin información";
+    },
     getIncidentDetails(incident) {
       if (!incident?.details) return {};
       if (typeof incident.details === "object") return incident.details;
@@ -883,6 +912,24 @@ table.v-table > thead,
 
 .col-route {
   width: 50%;
+}
+
+.trip-route-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.trip-route-title > span {
+  min-width: 0;
+}
+
+.trip-sale-mode-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .col-date {

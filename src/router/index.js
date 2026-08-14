@@ -146,6 +146,14 @@ const routes = [
           ),
       },
       {
+        path: "/ticket-passenger-type-report",
+        name: "TicketPassengerTypeReport",
+        component: () =>
+          import(
+            /* webpackChunkName: "home" */ "@/views/reportes/TicketPassengerTypeReport.vue"
+          ),
+      },
+      {
         path: "/promotion",
         name: "Promotion",
         component: () =>

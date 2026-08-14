@@ -133,7 +133,7 @@
               </v-icon>
             </div>
             <div class="trip-template-col-schedule trip-template-sortable-header" @click="toggleTemplateSort('schedule')">
-              <span>Horario</span>
+              <span>Horario Programado</span>
               <v-icon size="16" class="ml-1">
                 {{ templateSortIcon('schedule') }}
               </v-icon>
@@ -1564,7 +1564,7 @@ export default {
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },
       { title: "Trabajadores", value: "workers" },
-      { title: "Horario", value: "schedule" },
+      { title: "Horario Programado", value: "schedule" },
       { title: "Duración (minutos)", value: "duration" },
       { title: "Frecuencia", value: "recurrence_pattern" },
       { title: "Dias de la Semana", value: "days_of_week" },
