@@ -232,6 +232,10 @@
               </v-icon>
             </div>
 
+            <div class="worker-collection-col-sale-mode">
+              <span>Modo venta</span>
+            </div>
+
             <div class="worker-collection-col-vehicle worker-collection-sortable" @click="toggleSort('vehicleName')">
               <span>Vehículo</span>
 
@@ -247,7 +251,7 @@
             </div>
 
             <div class="worker-collection-col-seats worker-collection-sortable" @click="toggleSort('asientosComprados')">
-              <span>Asientos</span>
+              <span>Pasajeros</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -358,6 +362,17 @@
                   </span>
                 </div>
 
+                <div class="worker-collection-col-sale-mode">
+                  <v-chip
+                    size="x-small"
+                    :color="getSaleModeColor(slotProps.item)"
+                    variant="tonal"
+                    class="worker-collection-sale-mode-chip"
+                  >
+                    {{ getSaleModeLabel(slotProps.item) }}
+                  </v-chip>
+                </div>
+
                 <div class="worker-collection-col-vehicle busgo-name-cell">
                   <v-avatar
                     size="36"
@@ -446,6 +461,7 @@ export default {
             { title: 'Ruta', value: 'name', },
             { title: 'Fecha', value: 'date', },
             { title: 'Horario Programado', value: 'scheduled_departure', },
+            { title: 'Modo venta', value: 'sale_mode_label', },
             { title: 'Origen', value: 'origin', },
             { title: 'Destino', value: 'destination', },
             { title: 'Vehículo', value: 'vehicleName', },
@@ -576,6 +592,8 @@ export default {
             return item?.date ?? '';
           case 'scheduled_departure':
             return item?.scheduled_departure ?? '';
+          case 'sale_mode_label':
+            return this.getSaleModeLabel(item);
           case 'origin':
             return item?.origin ?? '';
           case 'destination':
@@ -595,6 +613,20 @@ export default {
       getImageUrl(imagePath) {
       return `${this.$axios.defaults.baseURL}images/${imagePath}?t=${this.getCacheTimestamp()}`;
     },
+      getSaleModeLabel(trip = {}) {
+        const saleMode = String(trip?.sale_mode || trip?.saleMode || 'normal')
+          .toLowerCase()
+          .trim();
+
+        return saleMode === 'express' ? 'Express' : 'Normal';
+      },
+      getSaleModeColor(trip = {}) {
+        const saleMode = String(trip?.sale_mode || trip?.saleMode || 'normal')
+          .toLowerCase()
+          .trim();
+
+        return saleMode === 'express' ? 'secondary' : 'primary';
+      },
       formatScheduledDeparture(value) {
         if (!value) {
           return '--:--';
@@ -703,6 +735,7 @@ export default {
                     this.response = (result.data?.trips || []).map((trip) => ({
                         ...trip,
                         vehicleName: trip.vehicleName || trip.plate || '',
+                        sale_mode_label: this.getSaleModeLabel(trip),
                     }));
                     this.totalGeneral = Number(result.data?.totalGeneral || 0);
                 } else {
@@ -774,6 +807,7 @@ export default {
                 name: 'Recaudación por Trabajador', // Título coherente con el reporte
                 date: '',
                 scheduled_departure: '',
+                sale_mode_label: '',
                 origin: '',
                 destination: '',
                 plate: '',
@@ -874,21 +908,29 @@ table.v-table > thead,
 }
 
 .worker-collection-col-code {
-  width: 13%;
+  width: 11%;
   min-width: 0;
 }
 
 .worker-collection-col-route {
-  width: 33%;
+  width: 27%;
   min-width: 0;
 }
 
 .worker-collection-col-date {
-  width: 9%;
+  width: 8%;
   min-width: 0;
 }
 
 .worker-collection-col-departure {
+  width: 11%;
+  min-width: 0;
+}
+
+.worker-collection-col-sale-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 8%;
   min-width: 0;
 }
@@ -899,17 +941,17 @@ table.v-table > thead,
 }
 
 .worker-collection-col-seats {
-  width: 7%;
+  width: 6%;
   min-width: 0;
 }
 
 .worker-collection-col-passengers {
-  width: 8%;
+  width: 7%;
   min-width: 0;
 }
 
 .worker-collection-col-amount {
-  width: 13%;
+  width: 10%;
   min-width: 0;
 }
 
@@ -989,6 +1031,13 @@ table.v-table > thead,
   font-weight: 600;
 }
 
+.worker-collection-sale-mode-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .min-width-0 {
   min-width: 0;
 }
@@ -1009,6 +1058,7 @@ table.v-table > thead,
   .worker-collection-col-code,
   .worker-collection-col-date,
   .worker-collection-col-departure,
+  .worker-collection-col-sale-mode,
   .worker-collection-col-vehicle,
   .worker-collection-col-seats,
   .worker-collection-col-passengers,

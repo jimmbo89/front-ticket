@@ -208,7 +208,7 @@
           </v-avatar>
 
           <div>
-            <div class="ticket-type-report-kpi-label">Tickets vendidos</div>
+            <div class="ticket-type-report-kpi-label">Pasajes emitidos</div>
             <div class="ticket-type-report-kpi-value">
               {{ resumen.cantidadTickets || 0 }}
             </div>
@@ -221,7 +221,7 @@
           </v-avatar>
 
           <div>
-            <div class="ticket-type-report-kpi-label">Pasajes emitidos</div>
+            <div class="ticket-type-report-kpi-label">Pasajeros</div>
             <div class="ticket-type-report-kpi-value">
               {{ resumen.pasajesEmitidos || 0 }}
             </div>
@@ -342,6 +342,10 @@
                   <v-icon size="16" class="ml-1">{{ getSortIcon("date") }}</v-icon>
                 </div>
 
+                <div class="ticket-type-report-col-sale-mode">
+                  <span>Modo venta</span>
+                </div>
+
                 <div class="ticket-type-report-col-type ticket-type-report-sortable" @click="toggleSort('ticketTypeName')">
                   <span>Tipo</span>
                   <v-icon size="16" class="ml-1">{{ getSortIcon("ticketTypeName") }}</v-icon>
@@ -398,6 +402,17 @@
                     <div class="ticket-type-report-col-date busgo-meta">
                       <v-icon size="16" color="primary">mdi-calendar</v-icon>
                       <span class="text-truncate">{{ item.date || "-" }}</span>
+                    </div>
+
+                    <div class="ticket-type-report-col-sale-mode">
+                      <v-chip
+                        size="x-small"
+                        :color="getSaleModeColor(item)"
+                        variant="tonal"
+                        class="ticket-type-report-sale-mode-chip"
+                      >
+                        {{ getSaleModeLabel(item) }}
+                      </v-chip>
                     </div>
 
                     <div class="ticket-type-report-col-type">
@@ -477,6 +492,7 @@ export default {
       { title: "Pago", value: "method" },
       { title: "Ruta", value: "routeName" },
       { title: "Fecha", value: "date" },
+      { title: "Modo venta", value: "sale_mode_label" },
       { title: "Tipo", value: "ticketTypeName" },
       { title: "Cantidad", value: "quantity" },
       { title: "Base unitaria", value: "tarifaBaseUnitaria" },
@@ -742,7 +758,10 @@ export default {
             resumen: result.data?.resumen || {},
             totalesPorCategoria:
               result.data?.totalesPorCategoria || result.data?.totalPorCategoria || [],
-            detalles: result.data?.detalles || [],
+            detalles: (result.data?.detalles || []).map((item) => ({
+              ...item,
+              sale_mode_label: this.getSaleModeLabel(item),
+            })),
           };
         } else {
           this.response = { filters: {}, resumen: {}, totalesPorCategoria: [], detalles: [] };
@@ -779,6 +798,10 @@ export default {
         return this.getBaseUnit(item);
       }
 
+      if (key === "sale_mode_label") {
+        return this.getSaleModeLabel(item);
+      }
+
       return item?.[key] ?? "";
     },
     isNumericSortKey(key) {
@@ -806,6 +829,20 @@ export default {
       const quantity = Number(item.pasajesEmitidos ?? item.asientosVendidos ?? 0);
       return quantity > 0 ? this.getBaseTotal(item) / quantity : 0;
     },
+    getSaleModeLabel(item = {}) {
+      const saleMode = String(item?.sale_mode || item?.saleMode || "normal")
+        .toLowerCase()
+        .trim();
+
+      return saleMode === "express" ? "Express" : "Normal";
+    },
+    getSaleModeColor(item = {}) {
+      const saleMode = String(item?.sale_mode || item?.saleMode || "normal")
+        .toLowerCase()
+        .trim();
+
+      return saleMode === "express" ? "secondary" : "primary";
+    },
     formatNumber(value) {
       const numberValue = Number(value);
 
@@ -828,8 +865,8 @@ export default {
       rows.push(["Fecha final", filters.endDate || this.endDate || filters.date || this.date || ""]);
       rows.push([]);
       rows.push(["Resumen"]);
-      rows.push(["Pasajes emitidos", this.resumen.pasajesEmitidos || 0]);
-      rows.push(["Asientos vendidos", this.resumen.asientosVendidos || 0]);
+      rows.push(["Pasajes emitidos", this.resumen.cantidadTickets || 0]);
+      rows.push(["Pasajeros", this.resumen.pasajesEmitidos || 0]);
       rows.push(["Monto recaudado", Number(this.resumen.montoRecaudado || 0)]);
       rows.push(["Tickets únicos", this.resumen.cantidadTickets || 0]);
       rows.push([]);
@@ -849,7 +886,7 @@ export default {
 
       rows.push([]);
       rows.push(["Detalle"]);
-      rows.push(["Fecha", "Método", "Sucursal", "Ruta", "Origen", "Destino", "Tipo", "Cantidad", "Base unitaria", "Base total", "Recaudado"]);
+      rows.push(["Fecha", "Método", "Sucursal", "Ruta", "Origen", "Destino", "Modo venta", "Tipo", "Cantidad", "Base unitaria", "Base total", "Recaudado"]);
 
       this.details.forEach((item) => {
         rows.push([
@@ -859,6 +896,7 @@ export default {
           item.routeName || "",
           item.origin || "",
           item.destination || "",
+          item.sale_mode_label || this.getSaleModeLabel(item),
           item.ticketTypeName || "",
           item.quantity || item.asientosVendidos || 0,
           this.getBaseUnit(item),
@@ -1054,7 +1092,7 @@ export default {
 .ticket-type-report-table-head,
 .ticket-type-report-row {
   display: grid;
-  grid-template-columns: minmax(100px, 0.8fr) minmax(230px, 1.8fr) minmax(100px, 0.8fr) minmax(140px, 1fr) minmax(90px, 0.7fr) minmax(120px, 0.9fr) minmax(130px, 1fr);
+  grid-template-columns: minmax(90px, 0.7fr) minmax(260px, 2.1fr) minmax(100px, 0.75fr) 104px minmax(130px, 1fr) minmax(82px, 0.6fr) minmax(118px, 0.85fr) minmax(118px, 0.9fr);
   gap: 12px;
   align-items: center;
 }
@@ -1087,11 +1125,29 @@ export default {
 .ticket-type-report-col-method,
 .ticket-type-report-col-route,
 .ticket-type-report-col-date,
+.ticket-type-report-col-sale-mode,
 .ticket-type-report-col-type,
 .ticket-type-report-col-quantity,
 .ticket-type-report-col-base,
 .ticket-type-report-col-total {
   min-width: 0;
+}
+
+.ticket-type-report-col-sale-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.ticket-type-report-sale-mode-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .ticket-type-report-ticket-method {

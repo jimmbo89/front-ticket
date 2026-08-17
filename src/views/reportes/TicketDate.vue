@@ -119,7 +119,7 @@
           </v-avatar>
 
           <div>
-            <div class="collection-kpi-label">Asientos vendidos</div>
+            <div class="collection-kpi-label">Pasajeros</div>
             <div class="collection-kpi-value">
               {{ response.asientosComprados }}
             </div>
@@ -161,7 +161,7 @@
               <span>Totales por Método de Pago</span>
             </div>
 
-            <div class="collection-methods-header-cell">Asientos</div>
+            <div class="collection-methods-header-cell">Pasajeros</div>
             <div class="collection-methods-header-cell">Pasajes</div>
             <div class="collection-methods-header-cell">Total</div>
           </div>
@@ -300,6 +300,10 @@
                     </v-icon>
                   </div>
 
+                  <div class="collection-route-col-sale-mode">
+                    <span>Modo venta</span>
+                  </div>
+
                   <div
                     class="collection-route-col-total collection-route-sortable"
                     @click="toggleTramoSort('totalTramo')"
@@ -350,6 +354,17 @@
                         <span class="text-truncate">
                           {{ formatScheduledDeparture(item.scheduled_departure) }}
                         </span>
+                      </div>
+
+                      <div class="collection-route-col-sale-mode">
+                        <v-chip
+                          size="x-small"
+                          :color="getSaleModeColor(item)"
+                          variant="tonal"
+                          class="collection-route-sale-mode-chip"
+                        >
+                          {{ getSaleModeLabel(item) }}
+                        </v-chip>
                       </div>
 
                       <div class="collection-route-col-total collection-route-total">
@@ -544,6 +559,7 @@ export default {
       { title: "CÓDIGO", key: "code", align: "start" },
       { title: "RUTA", key: "routeName", align: "start" },
       { title: "HORARIO PROGRAMADO", key: "scheduled_departure", align: "start" },
+      { title: "MODO VENTA", key: "sale_mode", align: "start" },
       { title: "TOTAL", key: "totalTramo", align: "end" },
       { title: "ACCIONES", key: "data-table-expand", align: "end" },
     ],
@@ -615,6 +631,9 @@ export default {
         const texto = [
           tramo.code,
           tramo.tripCode,
+          this.getSaleModeLabel(tramo),
+          tramo.sale_mode,
+          tramo.saleMode,
           tramo.routeCode,
           tramo.routeName,
           tramo.nombre,
@@ -751,6 +770,20 @@ export default {
       }
 
       return this.sortTramosOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    getSaleModeLabel(tramo = {}) {
+      const saleMode = String(tramo?.sale_mode || tramo?.saleMode || "normal")
+        .toLowerCase()
+        .trim();
+
+      return saleMode === "express" ? "Express" : "Normal";
+    },
+    getSaleModeColor(tramo = {}) {
+      const saleMode = String(tramo?.sale_mode || tramo?.saleMode || "normal")
+        .toLowerCase()
+        .trim();
+
+      return saleMode === "express" ? "secondary" : "primary";
     },
     formatScheduledDeparture(value) {
       return value || "--:--";
@@ -1177,6 +1210,7 @@ export default {
 .collection-routes-container {
   max-height: 58vh;
   overflow-y: auto;
+  overflow-x: auto;
 }
 
 .collection-route-detail {
@@ -1250,7 +1284,7 @@ export default {
 
 .collection-route-table-head {
   display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(150px, 0.9fr) minmax(120px, 0.8fr) 64px;
+  grid-template-columns: minmax(140px, 0.85fr) minmax(360px, 2.4fr) minmax(190px, 1fr) 104px minmax(100px, 0.65fr) 64px;
   gap: 12px;
   align-items: center;
   min-height: 56px;
@@ -1276,13 +1310,25 @@ export default {
   text-align: right;
 }
 
+.collection-route-col-sale-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .collection-route-col-actions {
   justify-self: end;
 }
 
 .collection-route-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) minmax(220px, 1.8fr) minmax(150px, 0.9fr) minmax(120px, 0.8fr) 64px;
+  grid-template-columns: minmax(140px, 0.85fr) minmax(360px, 2.4fr) minmax(190px, 1fr) 104px minmax(100px, 0.65fr) 64px;
   gap: 12px;
   align-items: center;
   padding: 14px 18px;
@@ -1291,6 +1337,7 @@ export default {
 }
 
 .collection-route-col-code,
+.collection-route-col-sale-mode,
 .collection-route-col-route,
 .collection-route-col-departure,
 .collection-route-col-total,
@@ -1320,6 +1367,13 @@ export default {
 
 .collection-route-code-chip {
   flex-shrink: 0;
+}
+
+.collection-route-sale-mode-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .collection-route-meta {
@@ -1384,10 +1438,11 @@ export default {
 
   .collection-route-table-head,
   .collection-route-row {
-    grid-template-columns: minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(120px, 0.9fr) minmax(100px, 0.75fr) 56px;
+    grid-template-columns: 120px minmax(260px, 1fr) 160px 96px 96px 56px;
     gap: 8px;
     padding-left: 14px;
     padding-right: 14px;
+    min-width: 820px;
   }
 
   .collection-route-name-row {
