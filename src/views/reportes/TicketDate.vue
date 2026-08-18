@@ -282,11 +282,11 @@
 
                   <div
                     class="collection-route-col-route collection-route-sortable"
-                    @click="toggleTramoSort('routeName')"
+                    @click="toggleTramoSort('routeCode')"
                   >
                     <span>Ruta</span>
                     <v-icon size="16" class="ml-1">
-                      {{ getTramoSortIcon("routeName") }}
+                      {{ getTramoSortIcon("routeCode") }}
                     </v-icon>
                   </div>
 
@@ -294,7 +294,7 @@
                     class="collection-route-col-departure collection-route-sortable"
                     @click="toggleTramoSort('scheduled_departure')"
                   >
-                    <span>Horario Programado</span>
+                    <span>Hora Programada</span>
                     <v-icon size="16" class="ml-1">
                       {{ getTramoSortIcon("scheduled_departure") }}
                     </v-icon>
@@ -331,22 +331,32 @@
                       <div class="collection-route-col-route">
                         <div class="collection-route-name-row">
                           <div class="collection-route-name">
-                            {{ item.routeName || item.nombre || item.origin }}
+                            {{ item.routeCode || "-" }}
                           </div>
-
-                          <v-chip
-                            v-if="item.routeCode"
-                            size="x-small"
-                            variant="tonal"
-                            class="collection-route-code-chip flex-shrink-0"
-                          >
-                            {{ item.routeCode }}
-                          </v-chip>
                         </div>
 
-                        <div class="collection-route-meta text-truncate">
-                          {{ item.origin }} → {{ item.destination }}
+                        <div class="collection-route-meta">
+                          <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+
+                          <span class="text-truncate">
+                            {{ item.origin || "-" }}
+                          </span>
+
+                          <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+
+                          <span class="text-truncate">
+                            {{ item.destination || "-" }}
+                          </span>
                         </div>
+
+                        <v-tooltip activator="parent" location="bottom" max-width="350px">
+                          <span style="white-space: normal; word-break: break-word">
+                            Código viaje: {{ item.code || item.tripCode || "-" }}<br />
+                            Código ruta: {{ item.routeCode || "-" }}<br />
+                            Origen: {{ item.origin || "-" }}<br />
+                            Destino: {{ item.destination || "-" }}
+                          </span>
+                        </v-tooltip>
                       </div>
 
                       <div class="collection-route-col-departure busgo-meta">
@@ -557,8 +567,8 @@ export default {
     ],
     headersTramos: [
       { title: "CÓDIGO", key: "code", align: "start" },
-      { title: "RUTA", key: "routeName", align: "start" },
-      { title: "HORARIO PROGRAMADO", key: "scheduled_departure", align: "start" },
+      { title: "RUTA", key: "routeCode", align: "start" },
+      { title: "HORA PROGRAMADA", key: "scheduled_departure", align: "start" },
       { title: "MODO VENTA", key: "sale_mode", align: "start" },
       { title: "TOTAL", key: "totalTramo", align: "end" },
       { title: "ACCIONES", key: "data-table-expand", align: "end" },
@@ -635,8 +645,6 @@ export default {
           tramo.sale_mode,
           tramo.saleMode,
           tramo.routeCode,
-          tramo.routeName,
-          tramo.nombre,
           tramo.origin,
           tramo.destination,
           tramo.scheduled_departure,
@@ -657,8 +665,8 @@ export default {
 
       const getValue = (tramo) => {
         switch (this.sortTramosBy) {
-          case "routeName":
-            return (tramo.routeName || tramo.nombre || tramo.origin || "").toString();
+          case "routeCode":
+            return (tramo.routeCode || "").toString();
           case "scheduled_departure":
             return (tramo.scheduled_departure || "").toString();
           case "totalTramo":
@@ -951,7 +959,7 @@ export default {
       rows.push([]);
 
       (this.response.tramos || []).forEach((tramo) => {
-        rows.push([tramo.nombre]);
+        rows.push([tramo.routeCode || ""]);
         rows.push([]);
         rows.push(["Total Pasajes:", tramo.totalPasajes]);
 
@@ -1360,9 +1368,12 @@ export default {
 
 .collection-route-name {
   min-width: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collection-route-code-chip {
@@ -1377,10 +1388,14 @@ export default {
 }
 
 .collection-route-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   margin-top: 4px;
   font-size: 12px;
   font-weight: 600;
   color: #64748b;
+  min-width: 0;
 }
 
 .collection-route-total {

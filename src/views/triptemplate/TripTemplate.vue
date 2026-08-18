@@ -133,7 +133,7 @@
               </v-icon>
             </div>
             <div class="trip-template-col-schedule trip-template-sortable-header" @click="toggleTemplateSort('schedule')">
-              <span>Horario Programado</span>
+              <span>Hora Programada</span>
               <v-icon size="16" class="ml-1">
                 {{ templateSortIcon('schedule') }}
               </v-icon>
@@ -187,30 +187,26 @@
                     <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
 
                     <span class="text-truncate">
-                      Origen: {{ slotProps.item.origin }}
+                      {{ slotProps.item.origin }}
                     </span>
 
                     <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
 
                     <span class="text-truncate">
-                      Destino: {{ slotProps.item.destination }}
+                      {{ slotProps.item.destination }}
                     </span>
                   </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
+                      Origen: {{ slotProps.item.origin }}<br />
+                      Destino: {{ slotProps.item.destination }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
                 <div class="trip-template-col-vehicle busgo-name-cell">
-                  <v-avatar
-                    size="36"
-                    rounded="lg"
-                    color="grey-lighten-4"
-                    class="busgo-avatar"
-                  >
-                    <v-img
-                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.vehicleImage}?t=${getCacheTimestamp()}`"
-                      cover
-                    />
-                  </v-avatar>
-
                   <div class="min-width-0">
                     <div class="busgo-name">
                       {{ slotProps.item.vehicleName }}
@@ -220,10 +216,17 @@
                       {{ getVehicleInternalNumber(slotProps.item) }}
                     </div>
                   </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Vehículo: {{ slotProps.item.vehicleName }}<br />
+                      Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
                 <div class="trip-template-col-workers">
-                  <div class="avatar-row">
+                  <div class="trip-worker-row">
                     <v-tooltip
                       v-for="person in slotProps.item.workers || []"
                       :key="person.id"
@@ -231,7 +234,7 @@
                     >
                       <template #activator="{ props }">
                         <v-avatar
-                          class="avatar-item hover-expand"
+                          class="trip-worker-avatar"
                           size="32"
                           elevation="3"
                           v-bind="props"
@@ -1564,7 +1567,7 @@ export default {
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },
       { title: "Trabajadores", value: "workers" },
-      { title: "Horario Programado", value: "schedule" },
+      { title: "Hora Programada", value: "schedule" },
       { title: "Duración (minutos)", value: "duration" },
       { title: "Frecuencia", value: "recurrence_pattern" },
       { title: "Dias de la Semana", value: "days_of_week" },
@@ -3111,12 +3114,12 @@ table.v-table > thead,
 }
 
 .trip-template-col-vehicle {
-  width: 12%;
+  width: 10%;
   min-width: 0;
 }
 
 .trip-template-col-workers {
-  width: 10%;
+  width: 12%;
   min-width: 0;
 }
 
@@ -3171,7 +3174,7 @@ table.v-table > thead,
 }
 
 .trip-template-route-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   white-space: nowrap;
@@ -3193,6 +3196,22 @@ table.v-table > thead,
   font-size: 12px;
   color: #64748b;
   min-width: 0;
+}
+
+.trip-worker-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.trip-worker-avatar {
+  border: 2px solid #ffffff;
+  transition: transform 0.15s ease;
+}
+
+.trip-worker-avatar:hover {
+  transform: translateY(-1px) scale(1.05);
 }
 
 .avatar-row {

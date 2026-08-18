@@ -183,13 +183,13 @@
 
             <div
               class="worker-collection-col-route worker-collection-sortable"
-              @click="toggleSort('name')"
+              @click="toggleSort('routeCode')"
             >
               <span>Ruta</span>
 
               <v-icon size="16" class="ml-1">
                 {{
-                  sortBy === "name"
+                  sortBy === "routeCode"
                     ? sortOrder === "asc"
                       ? "mdi-arrow-up"
                       : "mdi-arrow-down"
@@ -219,7 +219,7 @@
               class="worker-collection-col-departure worker-collection-sortable"
               @click="toggleSort('scheduled_departure')"
             >
-              <span>Horario Programado</span>
+              <span>Hora Programada</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -265,7 +265,7 @@
             </div>
 
             <div class="worker-collection-col-passengers worker-collection-sortable" @click="toggleSort('passenger')">
-              <span>Pasajes</span>
+              <span>Pasajes Emitidos</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -279,7 +279,7 @@
             </div>
 
             <div class="worker-collection-col-amount worker-collection-sortable" @click="toggleSort('totalAmount')">
-              <span>Monto</span>
+              <span>Total</span>
 
               <v-icon size="16" class="ml-1">
                 {{
@@ -307,20 +307,8 @@
                 <div class="worker-collection-col-route">
                   <div class="worker-collection-route-title-row">
                     <div class="worker-collection-route-title">
-                      {{ slotProps.item.name }}
+                      {{ slotProps.item.routeCode || "-" }}
                     </div>
-
-                    <v-chip
-                      v-if="slotProps.item.routeCode || slotProps.item.code"
-                      size="x-small"
-                      variant="tonal"
-                      class="worker-collection-route-code-chip flex-shrink-0"
-                    >
-                      {{
-                        slotProps.item.routeCode ||
-                        (slotProps.item.code ? slotProps.item.code.split('-')[0] : '')
-                      }}
-                    </v-chip>
                   </div>
 
                   <div class="worker-collection-route-meta">
@@ -329,7 +317,7 @@
                     </v-icon>
 
                     <span class="text-truncate">
-                      Origen: {{ slotProps.item.origin }}
+                      {{ slotProps.item.origin }}
                     </span>
 
                     <v-icon size="14" class="mx-2">
@@ -337,9 +325,18 @@
                     </v-icon>
 
                     <span class="text-truncate">
-                      Destino: {{ slotProps.item.destination }}
+                      {{ slotProps.item.destination }}
                     </span>
                   </div>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Código viaje: {{ slotProps.item.code || "-" }}<br />
+                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
+                      Origen: {{ slotProps.item.origin || "-" }}<br />
+                      Destino: {{ slotProps.item.destination || "-" }}
+                    </span>
+                  </v-tooltip>
                 </div>
 
                 <div class="worker-collection-col-date busgo-meta">
@@ -458,9 +455,9 @@ export default {
         loading: false,
         headers: [
             { title: 'Código', value: 'code', },
-            { title: 'Ruta', value: 'name', },
+            { title: 'Ruta', value: 'routeCode', },
             { title: 'Fecha', value: 'date', },
-            { title: 'Horario Programado', value: 'scheduled_departure', },
+            { title: 'Hora Programada', value: 'scheduled_departure', },
             { title: 'Modo venta', value: 'sale_mode_label', },
             { title: 'Origen', value: 'origin', },
             { title: 'Destino', value: 'destination', },
@@ -586,8 +583,8 @@ export default {
         switch (key) {
           case 'code':
             return item?.code ?? '';
-          case 'name':
-            return item?.name ?? '';
+          case 'routeCode':
+            return item?.routeCode ?? '';
           case 'date':
             return item?.date ?? '';
           case 'scheduled_departure':
@@ -992,7 +989,7 @@ table.v-table > thead,
 }
 
 .worker-collection-route-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   white-space: nowrap;

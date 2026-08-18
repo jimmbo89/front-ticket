@@ -223,7 +223,7 @@
           <div>
             <div class="ticket-type-report-kpi-label">Pasajeros</div>
             <div class="ticket-type-report-kpi-value">
-              {{ resumen.pasajesEmitidos || 0 }}
+              {{ resumen.asientosVendidos || 0 }}
             </div>
           </div>
         </v-card>
@@ -247,7 +247,7 @@
           </v-avatar>
 
           <div>
-            <div class="ticket-type-report-kpi-label">Monto recaudado</div>
+            <div class="ticket-type-report-kpi-label">Total general</div>
             <div class="ticket-type-report-kpi-value">
               ${{ formatNumber(Number(resumen.montoRecaudado || 0)) }}
             </div>
@@ -262,9 +262,10 @@
               <v-icon start>mdi-format-list-bulleted-type</v-icon>
               <span>Totales por tipo de pasaje</span>
             </div>
-            <div class="ticket-type-report-header-cell">Pasajes</div>
+            <div class="ticket-type-report-header-cell">Pasajes emitidos</div>
+            <div class="ticket-type-report-header-cell">Pasajeros</div>
             <div class="ticket-type-report-header-cell">Base unitaria</div>
-            <div class="ticket-type-report-header-cell">Recaudado</div>
+            <div class="ticket-type-report-header-cell">Total</div>
           </div>
 
           <div class="ticket-type-report-category-body">
@@ -283,8 +284,14 @@
               </div>
 
               <div class="ticket-type-report-category-cell ticket-type-report-cell-center">
+                <v-chip variant="outlined" size="small" color="green" class="font-weight-bold">
+                  {{ getCategoryTicketCount(item) }}
+                </v-chip>
+              </div>
+
+              <div class="ticket-type-report-category-cell ticket-type-report-cell-center">
                 <v-chip variant="outlined" size="small" color="indigo" class="font-weight-bold">
-                  {{ item.pasajesEmitidos || 0 }}
+                  {{ getCategoryPassengerCount(item) }}
                 </v-chip>
               </div>
 
@@ -327,14 +334,14 @@
           >
             <template #top>
               <div class="ticket-type-report-table-head">
-                <div class="ticket-type-report-col-method ticket-type-report-sortable" @click="toggleSort('method')">
-                  <span>Pago</span>
-                  <v-icon size="16" class="ml-1">{{ getSortIcon("method") }}</v-icon>
+                <div class="ticket-type-report-col-method ticket-type-report-sortable" @click="toggleSort('tripCode')">
+                  <span>Código viaje</span>
+                  <v-icon size="16" class="ml-1">{{ getSortIcon("tripCode") }}</v-icon>
                 </div>
 
-                <div class="ticket-type-report-col-route ticket-type-report-sortable" @click="toggleSort('routeName')">
+                <div class="ticket-type-report-col-route ticket-type-report-sortable" @click="toggleSort('routeCode')">
                   <span>Ruta</span>
-                  <v-icon size="16" class="ml-1">{{ getSortIcon("routeName") }}</v-icon>
+                  <v-icon size="16" class="ml-1">{{ getSortIcon("routeCode") }}</v-icon>
                 </div>
 
                 <div class="ticket-type-report-col-date ticket-type-report-sortable" @click="toggleSort('date')">
@@ -352,7 +359,7 @@
                 </div>
 
                 <div class="ticket-type-report-col-quantity ticket-type-report-sortable" @click="toggleSort('quantity')">
-                  <span>Cantidad</span>
+                  <span>Pasajeros</span>
                   <v-icon size="16" class="ml-1">{{ getSortIcon("quantity") }}</v-icon>
                 </div>
 
@@ -362,7 +369,7 @@
                 </div>
 
                 <div class="ticket-type-report-col-total ticket-type-report-sortable" @click="toggleSort('montoRecaudado')">
-                  <span>Recaudado</span>
+                  <span>Total</span>
                   <v-icon size="16" class="ml-1">{{ getSortIcon("montoRecaudado") }}</v-icon>
                 </div>
               </div>
@@ -374,29 +381,39 @@
                   <div class="busgo-row ticket-type-report-row">
                     <div class="ticket-type-report-col-method busgo-meta">
                       <span class="ticket-type-report-ticket-method text-truncate">
-                        {{ item.method || "-" }}
+                        {{ item.tripCode || "-" }}
                       </span>
                     </div>
 
                     <div class="ticket-type-report-col-route">
                       <div class="ticket-type-report-route-title-row">
                         <div class="ticket-type-report-route-title">
-                          {{ item.routeName || "-" }}
+                          {{ item.routeCode || "-" }}
                         </div>
-
-                        <v-chip
-                          v-if="item.routeCode || item.tripCode"
-                          size="x-small"
-                          variant="tonal"
-                          class="ticket-type-report-route-code-chip"
-                        >
-                          {{ item.routeCode || item.tripCode }}
-                        </v-chip>
                       </div>
 
                       <div class="ticket-type-report-route-meta">
-                        {{ item.origin || "-" }} → {{ item.destination || "-" }}
+                        <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
+
+                        <span class="text-truncate">
+                          {{ item.origin || "-" }}
+                        </span>
+
+                        <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
+
+                        <span class="text-truncate">
+                          {{ item.destination || "-" }}
+                        </span>
                       </div>
+
+                      <v-tooltip activator="parent" location="bottom" max-width="350px">
+                        <span style="white-space: normal; word-break: break-word">
+                          Código viaje: {{ item.tripCode || "-" }}<br />
+                          Código ruta: {{ item.routeCode || "-" }}<br />
+                          Origen: {{ item.origin || "-" }}<br />
+                          Destino: {{ item.destination || "-" }}
+                        </span>
+                      </v-tooltip>
                     </div>
 
                     <div class="ticket-type-report-col-date busgo-meta">
@@ -423,7 +440,7 @@
 
                     <div class="ticket-type-report-col-quantity busgo-meta">
                       <v-icon size="16" color="primary">mdi-account-multiple</v-icon>
-                      <span>{{ item.quantity || item.asientosVendidos || 0 }}</span>
+                      <span>{{ getDetailPassengerCount(item) }}</span>
                     </div>
 
                     <div class="ticket-type-report-col-base ticket-type-report-money">
@@ -489,12 +506,12 @@ export default {
     sortBy: "date",
     sortOrder: "desc",
     headers: [
-      { title: "Pago", value: "method" },
-      { title: "Ruta", value: "routeName" },
+      { title: "Código viaje", value: "tripCode" },
+      { title: "Ruta", value: "routeCode" },
       { title: "Fecha", value: "date" },
       { title: "Modo venta", value: "sale_mode_label" },
       { title: "Tipo", value: "ticketTypeName" },
-      { title: "Cantidad", value: "quantity" },
+      { title: "Pasajeros", value: "quantity" },
       { title: "Base unitaria", value: "tarifaBaseUnitaria" },
       { title: "Recaudado", value: "montoRecaudado" },
     ],
@@ -791,7 +808,7 @@ export default {
     },
     getSortValue(item, key) {
       if (key === "quantity") {
-        return item.quantity ?? item.asientosVendidos ?? 0;
+        return this.getDetailPassengerCount(item);
       }
 
       if (key === "tarifaBaseUnitaria") {
@@ -815,6 +832,15 @@ export default {
     getBaseTotal(item = {}) {
       return Number(item.tarifaBaseTotal ?? item.tarifaBase ?? 0);
     },
+    getCategoryTicketCount(item = {}) {
+      return Number(item.pasajesEmitidos ?? item.cantidadTickets ?? 0);
+    },
+    getCategoryPassengerCount(item = {}) {
+      return Number(item.asientosVendidos ?? item.quantity ?? 0);
+    },
+    getDetailPassengerCount(item = {}) {
+      return Number(item.quantity ?? item.asientosVendidos ?? item.pasajesEmitidos ?? 0);
+    },
     getCategoryBaseUnit(item = {}) {
       const directValue = Number(
         item.tarifaBasePromedio ??
@@ -826,7 +852,7 @@ export default {
         return directValue;
       }
 
-      const quantity = Number(item.pasajesEmitidos ?? item.asientosVendidos ?? 0);
+      const quantity = this.getCategoryPassengerCount(item);
       return quantity > 0 ? this.getBaseTotal(item) / quantity : 0;
     },
     getSaleModeLabel(item = {}) {
@@ -866,19 +892,18 @@ export default {
       rows.push([]);
       rows.push(["Resumen"]);
       rows.push(["Pasajes emitidos", this.resumen.cantidadTickets || 0]);
-      rows.push(["Pasajeros", this.resumen.pasajesEmitidos || 0]);
+      rows.push(["Pasajeros", this.resumen.asientosVendidos || 0]);
       rows.push(["Monto recaudado", Number(this.resumen.montoRecaudado || 0)]);
-      rows.push(["Tickets únicos", this.resumen.cantidadTickets || 0]);
       rows.push([]);
       rows.push(["Totales por tipo"]);
-      rows.push(["Tipo", "Descripción", "Pasajes", "Asientos", "Base unitaria", "Recaudado"]);
+      rows.push(["Tipo", "Descripción", "Pasajes emitidos", "Pasajeros", "Base unitaria", "Total"]);
 
       this.totalsByCategory.forEach((item) => {
         rows.push([
           item.ticketTypeName || item.categoria || "",
           item.description || "",
-          item.pasajesEmitidos || 0,
-          item.asientosVendidos || 0,
+          this.getCategoryTicketCount(item),
+          this.getCategoryPassengerCount(item),
           this.getCategoryBaseUnit(item),
           Number(item.montoRecaudado || 0),
         ]);
@@ -886,19 +911,19 @@ export default {
 
       rows.push([]);
       rows.push(["Detalle"]);
-      rows.push(["Fecha", "Método", "Sucursal", "Ruta", "Origen", "Destino", "Modo venta", "Tipo", "Cantidad", "Base unitaria", "Base total", "Recaudado"]);
+      rows.push(["Fecha", "Código viaje", "Sucursal", "Código ruta", "Origen", "Destino", "Modo venta", "Tipo", "Pasajeros", "Base unitaria", "Base total", "Total"]);
 
       this.details.forEach((item) => {
         rows.push([
           item.date || "",
-          item.method || "",
+          item.tripCode || "",
           item.branchName || "",
-          item.routeName || "",
+          item.routeCode || "",
           item.origin || "",
           item.destination || "",
           item.sale_mode_label || this.getSaleModeLabel(item),
           item.ticketTypeName || "",
-          item.quantity || item.asientosVendidos || 0,
+          this.getDetailPassengerCount(item),
           this.getBaseUnit(item),
           this.getBaseTotal(item),
           Number(item.montoRecaudado || 0),
@@ -1018,7 +1043,7 @@ export default {
 .ticket-type-report-category-header,
 .ticket-type-report-category-row {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 110px 150px 150px;
+  grid-template-columns: minmax(220px, 1fr) 130px 110px 150px 150px;
   gap: 12px;
   align-items: center;
 }
@@ -1167,7 +1192,7 @@ export default {
 }
 
 .ticket-type-report-route-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   white-space: nowrap;
@@ -1176,10 +1201,14 @@ export default {
 }
 
 .ticket-type-report-route-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   margin-top: 4px;
   font-size: 12px;
   font-weight: 600;
   color: #64748b;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1187,6 +1216,26 @@ export default {
 
 .ticket-type-report-money-total {
   justify-self: end;
+}
+
+.ticket-type-report-col-quantity,
+.ticket-type-report-col-base,
+.ticket-type-report-col-total {
+  justify-self: end;
+  text-align: right;
+}
+
+.ticket-type-report-col-quantity.ticket-type-report-sortable,
+.ticket-type-report-col-base.ticket-type-report-sortable,
+.ticket-type-report-col-total.ticket-type-report-sortable {
+  justify-content: flex-end;
+}
+
+.ticket-type-report-col-quantity.busgo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 @media (max-width: 960px) {

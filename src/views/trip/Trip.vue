@@ -175,7 +175,7 @@
               class="trip-col-schedule trip-sortable"
               @click="toggleTripSort('schedule')"
             >
-              <span>Horario Programado</span>
+              <span>Hora Programada</span>
               <v-icon size="16" class="ml-1">
                 {{ tripSortIcon('schedule') }}
               </v-icon>
@@ -1524,7 +1524,7 @@ export default {
       { title: "Destino", value: "destination" },
       { title: "Vehículo", value: "vehicleName" },
       { title: "Fecha", value: "date" },
-      { title: "Horario Programado", value: "schedule" },
+      { title: "Hora Programada", value: "schedule" },
       { title: "Modo", value: "saleMode" },
       { title: "Salida", value: "start" },
       { title: "Llegada", value: "end" },
@@ -3029,17 +3029,17 @@ table.v-table>thead,
 }
 
 .trip-col-code {
-  width: 13%;
+  width: 11%;
   min-width: 0;
 }
 
 .trip-col-route {
-  width: 24%;
+  width: 22%;
   min-width: 0;
 }
 
 .trip-col-vehicle {
-  width: 12%;
+  width: 10%;
   min-width: 0;
 }
 
@@ -3049,27 +3049,28 @@ table.v-table>thead,
 }
 
 .trip-col-date {
+  width: 10%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.trip-col-schedule {
   width: 9%;
   min-width: 0;
 }
 
-.trip-col-schedule {
-  width: 8%;
-  min-width: 0;
-}
-
 .trip-col-sale-mode {
-  width: 8%;
+  width: 7%;
   min-width: 0;
 }
 
 .trip-col-start {
-  width: 6%;
+  width: 5%;
   min-width: 0;
 }
 
 .trip-col-end {
-  width: 6%;
+  width: 5%;
   min-width: 0;
 }
 
@@ -3106,7 +3107,7 @@ table.v-table>thead,
 }
 
 .trip-col-actions {
-  width: 11%;
+  width: 9%;
   min-width: 0;
 }
 
