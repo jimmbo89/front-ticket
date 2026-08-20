@@ -74,15 +74,15 @@
             <template #activator="{ props }">
               <v-avatar
                 v-bind="props"
-                size="42"
                 rounded="lg"
                 color="grey-lighten-4"
-                class="busgo-avatar"
+                class="busgo-avatar company-logo-avatar"
                 style="cursor: pointer"
               >
                 <v-img
                   :src="`${$axios.defaults.baseURL}images/${company.image}?t=${getCacheTimestamp()}`"
-                  cover
+                  contain
+                  class="company-logo-img"
                 />
               </v-avatar>
             </template>
@@ -223,8 +223,7 @@
                   <img
                     v-if="imagenDisponible()"
                     :src="imgedit"
-                    height="120"
-                    width="210"
+                    class="company-image-preview"
                   />
                 </v-card>
               </v-col>
@@ -691,36 +690,39 @@ export default {
     },
     async onFileSelected(event) {
       let file = event.target.files[0];
-      // Validar el tamaño del archivo (500 KB máximo)
-      const maxSize = 500 * 1024; // 500 KB en bytes
-      if (file && file.size > maxSize) {
-        this.showAlert("warning", "El archivo de imagen debe ser de máximo 500 KB", 3000);
-        return; // Detener el proceso si el archivo es demasiado grande
+
+      if (!file) {
+        return;
       }
-      // 3. Validar dimensiones (160x160 máximo)
-  try {
+
+      const maxSize = 500 * 1024;
+      const maxLogoDimension = 320;
+
+      try {
         const dimensions = await this.getImageDimensions(file);
-        if (dimensions.width > 160 || dimensions.height > 160) {
-          this.showAlert(
-            "warning",
-            `La imagen debe tener un tamaño máximo de 160x160 píxeles. La imagen seleccionada mide ${dimensions.width}x${dimensions.height}.`,
-            4000
-          );
+        const shouldResize =
+          dimensions.width > maxLogoDimension ||
+          dimensions.height > maxLogoDimension ||
+          file.size > maxSize;
+        const imageFile = shouldResize
+          ? await this.resizeImageFile(file, maxLogoDimension, maxLogoDimension)
+          : file;
+
+        if (imageFile.size > maxSize) {
+          this.showAlert("warning", "No se pudo optimizar la imagen por debajo de 500 KB.", 3000);
           this.clearFileInput();
           return;
         }
 
-        // Si todo está bien, asignar la imagen
-        this.editedItem.image = file;
-        this.cargarImage(file);
+        this.file = imageFile;
+        this.editedItem.image = imageFile;
+        this.cargarImage(imageFile);
+
       } catch (error) {
         console.error("Error al leer la imagen:", error);
         this.showAlert("error", "No se pudo cargar la imagen. Formato inválido.", 3000);
         this.clearFileInput();
       }
-      this.editedItem.image = file;
-      //console.log(this.editedItem.image_cardgift);
-      this.cargarImage(file);
     },
     async getImageDimensions(file) {
       return new Promise((resolve, reject) => {
@@ -738,6 +740,49 @@ export default {
         };
 
         img.src = objectUrl;
+      });
+    },
+    async resizeImageFile(file, maxWidth, maxHeight) {
+      const imageData = await new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("No se pudo cargar la imagen."));
+        };
+
+        img.src = objectUrl;
+      });
+
+      const scale = Math.min(
+        maxWidth / imageData.width,
+        maxHeight / imageData.height,
+        1
+      );
+      const width = Math.max(1, Math.round(imageData.width * scale));
+      const height = Math.max(1, Math.round(imageData.height * scale));
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = width;
+      canvas.height = height;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(imageData, 0, 0, width, height);
+
+      const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, mimeType, 0.9);
+      });
+
+      return new File([blob], file.name, {
+        type: mimeType,
+        lastModified: Date.now(),
       });
     },
     clearFileInput() {
@@ -915,6 +960,21 @@ table.v-table > thead,
 
 .company-row-modern {
   min-height: 68px;
+}
+
+.company-logo-avatar {
+  width: 56px !important;
+  height: 42px !important;
+  border: 1px solid #e2e8f0;
+  background: #ffffff !important;
+  padding: 4px;
+}
+
+.company-logo-img,
+.company-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .busgo-submeta {

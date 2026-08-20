@@ -349,8 +349,9 @@
                   <v-icon size="16" class="ml-1">{{ getSortIcon("date") }}</v-icon>
                 </div>
 
-                <div class="ticket-type-report-col-sale-mode">
+                <div class="ticket-type-report-col-sale-mode ticket-type-report-sortable" @click="toggleSort('sale_mode_label')">
                   <span>Modo venta</span>
+                  <v-icon size="16" class="ml-1">{{ getSortIcon("sale_mode_label") }}</v-icon>
                 </div>
 
                 <div class="ticket-type-report-col-type ticket-type-report-sortable" @click="toggleSort('ticketTypeName')">

@@ -244,7 +244,7 @@
                 <div class="incident-col-date busgo-meta">
                   <v-icon size="16" color="primary">mdi-calendar</v-icon>
 
-                  <span class="text-truncate">
+                  <span class="incident-date-text">
                     {{ slotProps.item.date }}
                   </span>
                 </div>
@@ -861,6 +861,17 @@ export default {
         ticket_id: "ID Ticket", // Ya no se mostrará, pero se mantiene por compatibilidad
         trip_id: "ID Viaje", // Ya no se mostrará, pero se mantiene por compatibilidad
         trip_code: "Código del Viaje",
+        routeCode: "Código de Ruta",
+        route_code: "Código de Ruta",
+        "Route Code": "Código de Ruta",
+        date: "Fecha",
+        Date: "Fecha",
+        schedule: "Hora Programada",
+        Schedule: "Hora Programada",
+        origin: "Origen",
+        Origin: "Origen",
+        destination: "Destino",
+        Destination: "Destino",
         scan_count: "Cantidad de Escaneos",
         scanCount: "Cantidad de Escaneos",
         timestamp: "Fecha y Hora",
@@ -1057,28 +1068,34 @@ table.v-table > thead,
 }
 
 .incident-col-branch {
-  width: 24%;
+  width: 23%;
   min-width: 0;
 }
 
 .incident-col-worker {
-  width: 18%;
+  width: 17%;
   min-width: 0;
 }
 
 .incident-col-title {
-  width: 38%;
+  width: 34%;
   min-width: 0;
 }
 
 .incident-col-date {
-  width: 10%;
-  min-width: 0;
+  width: 16%;
+  min-width: 150px;
 }
 
 .incident-col-actions {
   width: 10%;
   min-width: 0;
+}
+
+.incident-date-text {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .incident-sortable {

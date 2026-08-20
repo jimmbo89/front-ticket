@@ -576,13 +576,29 @@
                       variant="underlined"
                       :rules="selectRules"
                       density="compact"
+                      class="trip-template-frequency-select"
                     >
                       <template #item="{ props, item }">
                         <v-list-item
                           v-bind="props"
                           :prepend-icon="getRecurrenceIcon(item.raw.value)"
                           :color="getRecurrenceColor(item.raw.value)"
-                        />
+                          :class="{
+                            'trip-template-frequency-item--selected':
+                              editedItem.recurrence_pattern === item.raw.value,
+                          }"
+                        >
+                          <template
+                            v-if="editedItem.recurrence_pattern === item.raw.value"
+                            #append
+                          >
+                            <v-icon
+                              :color="getRecurrenceColor(item.raw.value)"
+                              icon="mdi-check-circle"
+                              size="small"
+                            />
+                          </template>
+                        </v-list-item>
                       </template>
 
                       <template #selection="{ item }">
@@ -604,8 +620,9 @@
                       <v-chip
                         v-for="day in daysOfWeekOptions"
                         :key="day.value"
-                        class="ma-1"
+                        class="ma-1 trip-template-day-chip"
                         :color="getDayColor(day.value)"
+                        :variant="isDaySelected(day.value) ? 'flat' : 'outlined'"
                         @click="handleDayClick(day.value)"
                         :disabled="isDaySelectionDisabled"
                       >
@@ -1545,7 +1562,7 @@ export default {
       { text: "Diario", value: "daily" },
       { text: "Días laborables (L-V)", value: "weekdays" },
       { text: "Fin de semana (S-D)", value: "weekends" }, // ¡Nueva opción!
-      { text: "Semanal", value: "weekly" },
+      { text: "Personalizado", value: "weekly" },
       // Eliminamos 'custom' que no existe en el backend
     ],
     daysOfWeekOptions: [
@@ -2229,7 +2246,7 @@ export default {
         daily: "Diario",
         weekdays: "Días laborables (L-V)",
         weekends: "Fin de semana (S-D)",
-        weekly: "Semanal",
+        weekly: "Personalizado",
       };
       return translations[pattern] || pattern;
     },
@@ -3160,6 +3177,36 @@ table.v-table > thead,
 
 .trip-template-sale-mode-chip {
   max-width: 100%;
+}
+
+.trip-template-frequency-select :deep(.v-field__input) {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.trip-template-frequency-item--selected {
+  background: #fff3e0;
+  border-left: 4px solid #fb8c00;
+  color: #e65100;
+  font-weight: 700;
+}
+
+.trip-template-day-chip {
+  min-width: 34px;
+  justify-content: center;
+  border-color: #b6c5d8;
+  color: #334155;
+  font-weight: 700;
+}
+
+.trip-template-day-chip.v-chip--variant-flat {
+  border: 1px solid #1976d2;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.24);
+}
+
+.trip-template-day-chip.v-chip--disabled {
+  opacity: 0.62;
 }
 
 .trip-template-row {

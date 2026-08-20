@@ -764,10 +764,10 @@
     <v-card class="ticket-print-card">
       <v-card-title class="ticket-print-header">
         <div class="d-flex flex-column align-center" style="width: 100%">
-          <v-avatar v-if="selectedBranch?.image" size="80" class="mb-3">
-            <img :src="`${this.$axios.defaults.baseURL}images/${selectedBranch.image}`" :alt="selectedBranch.name"
-              style="object-fit: contain" />
-          </v-avatar>
+          <div v-if="ticketCompanyImage" class="ticket-branch-logo-preview mb-3">
+            <img :src="`${this.$axios.defaults.baseURL}images/${ticketCompanyImage}`" :alt="ticketCompanyName"
+              class="ticket-branch-logo-preview__img" />
+          </div>
 
           <div class="text-center">
             <div class="text-subtitle-1 font-weight-bold">
@@ -1115,6 +1115,25 @@ export default {
     formTitle() {
       return this.editedIndex === -1 ? "Venta de Ticket" : "Editar Ticket";
     },
+    ticketCompanyImage() {
+      return (
+        this.getLocalStorageValue("imageBusiness") ||
+        this.selectedBranch?.company?.image ||
+        this.selectedBranch?.companyImage ||
+        this.currentTicket?.companyImage ||
+        this.selectedBranch?.image ||
+        ""
+      );
+    },
+    ticketCompanyName() {
+      return (
+        this.getLocalStorageValue("nameBusiness") ||
+        this.selectedBranch?.company?.name ||
+        this.selectedBranch?.companyName ||
+        this.selectedBranch?.name ||
+        "Empresa"
+      );
+    },
     dateFormatted() {
       const date = this.input ? new Date(this.input) : new Date();
       const day = date.getDate().toString().padStart(2, "0");
@@ -1298,6 +1317,19 @@ export default {
     }
   },
   methods: {
+    getLocalStorageValue(key) {
+      const value = LocalStorageService.getItem(key);
+
+      if (value === null || value === undefined || value === "") {
+        return "";
+      }
+
+      try {
+        return JSON.parse(value) || "";
+      } catch (error) {
+        return value;
+      }
+    },
     hasPermission(requiredPermissions) {
       // Si es un string, lo convertimos a array
       const perms = Array.isArray(requiredPermissions)
@@ -3294,6 +3326,8 @@ export default {
           qrImageControl = qrImageOriginal; // Usamos el mismo QR para ambas secciones
         }
 
+        const ticketCompanyImage = this.ticketCompanyImage;
+        const ticketCompanyName = this.ticketCompanyName;
         const printContent = `
             <!DOCTYPE html>
             <html>
@@ -3315,7 +3349,7 @@ export default {
                     margin-bottom: 15px;
                 }
                 .branch-logo {
-                        width: 80px;
+                        width: 150px;
                         height: 80px;
                         margin: 0 auto 10px;
                         display: block;
@@ -3327,8 +3361,8 @@ export default {
                             padding: 5px;
                         }
                         .branch-logo {
-                            width: 40px !important;
-                            height: 40px !important;
+                            width: 150px !important;
+                            height: 80px !important;
                             margin: 0 auto 8px !important;
                         }
                     }
@@ -3401,11 +3435,11 @@ export default {
                 <div class="ticket-container">
                 <!-- Encabezado con logo e informaciÃ³n de sucursal -->
                 <div class="header">
-                    ${this.selectedBranch?.image
+                    ${ticketCompanyImage
             ? `
-                    <img src="${this.$axios.defaults.baseURL}images/${this.selectedBranch.image}" 
+                    <img src="${this.$axios.defaults.baseURL}images/${ticketCompanyImage}" 
                         class="branch-logo" 
-                        alt="${this.selectedBranch.name}">
+                        alt="${ticketCompanyName}">
                     `
             : ""
           }
@@ -4705,6 +4739,21 @@ table.v-table>thead,
   position: absolute;
   right: 16px;
   top: 16px;
+}
+
+.ticket-branch-logo-preview {
+  width: 150px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.ticket-branch-logo-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .ticket-sale-mode {

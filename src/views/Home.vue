@@ -60,7 +60,7 @@
         <v-row>
           <v-col cols="12" sm="3" md="3" v-for="(stat, index) in sales" :key="index">
             <v-card
-              class="kpi-card-stat pl-5 pt-3"
+              class="kpi-card-stat"
               elevation="1"
               rounded="lg"
               @click="$router.push(stat.to)"
@@ -970,8 +970,8 @@ table.v-table > thead,
 
 .kpi-card-stat {
   position: relative;
-  height: 128px;
-  padding: 24px 26px;
+  height: 136px;
+  padding: 20px 24px;
   background: #ffffff;
   border: 1px solid #edf1f5;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
@@ -985,31 +985,44 @@ table.v-table > thead,
 }
 
 .kpi-info {
-  width: calc(100% - 72px);
+  width: calc(100% - 86px);
 }
 
 .kpi-label {
   font-size: 14px;
   font-weight: 700;
   color: #64748b;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  max-width: 100%;
+  line-height: 1.25;
 }
 
 .kpi-number {
-  font-size: 32px;
+  font-size: 29px;
   line-height: 1;
   font-weight: 900;
   color: #0f172a;
-  letter-spacing: -0.04em;
-  margin-bottom: 18px;
+  letter-spacing: 0;
+  margin-bottom: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .kpi-trend {
+  position: absolute;
+  left: 24px;
+  right: 18px;
+  bottom: 20px;
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 13px;
+  min-height: 22px;
+  font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .kpi-trend-value {
@@ -1022,8 +1035,8 @@ table.v-table > thead,
 
 .kpi-icon-circle {
   position: absolute;
-  top: 24px;
-  right: 26px;
+  top: 28px;
+  right: 24px;
   width: 58px;
   height: 58px;
   border-radius: 999px;

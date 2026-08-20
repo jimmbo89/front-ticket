@@ -854,23 +854,120 @@ export default {
       }
       return false; // Si la URL de la imagen no está definida o está vacía, devuelve false
     },
-    onFileSelected(event) {
+    async onFileSelected(event) {
       let file = event.target.files[0];
-      // Validar el tamaño del archivo (500 KB máximo)
-      const maxSize = 500 * 1024; // 500 KB en bytes
-      if (file && file.size > maxSize) {
+
+      if (!file) {
+        return;
+      }
+
+      const maxSize = 500 * 1024;
+      const maxLogoDimension = 320;
+
+      try {
+        const dimensions = await this.getImageDimensions(file);
+        const shouldResize =
+          dimensions.width > maxLogoDimension ||
+          dimensions.height > maxLogoDimension ||
+          file.size > maxSize;
+        const imageFile = shouldResize
+          ? await this.resizeImageFile(file, maxLogoDimension, maxLogoDimension)
+          : file;
+
+        if (imageFile.size > maxSize) {
+          this.valid = false;
+          this.showAlert(
+            "warning",
+            "No se pudo optimizar la imagen por debajo de 500 KB.",
+            3000
+          );
+          this.clearFileInput();
+          return;
+        }
+
+        this.valid = true;
+        this.file = imageFile;
+        this.editedItem.image = imageFile;
+        this.cargarImage(imageFile);
+      } catch (error) {
+        console.error("Error al leer la imagen:", error);
         this.valid = false;
         this.showAlert(
-          "warning",
-          "El archivo de imagen debe ser de un máximo 500 KB",
+          "error",
+          "No se pudo cargar la imagen. Formato inválido.",
           3000
         );
-        return; // Detener el proceso si el archivo es demasiado grande
+        this.clearFileInput();
       }
-      this.valid = true;
-      this.editedItem.image = file;
-      //console.log(this.editedItem.image_cardgift);
-      this.cargarImage(file);
+    },
+    async getImageDimensions(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve({ width: img.width, height: img.height });
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("No se pudo cargar la imagen."));
+        };
+
+        img.src = objectUrl;
+      });
+    },
+    async resizeImageFile(file, maxWidth, maxHeight) {
+      const imageData = await new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("No se pudo cargar la imagen."));
+        };
+
+        img.src = objectUrl;
+      });
+
+      const scale = Math.min(
+        maxWidth / imageData.width,
+        maxHeight / imageData.height,
+        1
+      );
+      const width = Math.max(1, Math.round(imageData.width * scale));
+      const height = Math.max(1, Math.round(imageData.height * scale));
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = width;
+      canvas.height = height;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(imageData, 0, 0, width, height);
+
+      const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, mimeType, 0.9);
+      });
+
+      return new File([blob], file.name, {
+        type: mimeType,
+        lastModified: Date.now(),
+      });
+    },
+    clearFileInput() {
+      this.file = null;
+      this.editedItem.image = null;
+      this.imgMiniatura = "";
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.reset();
+      }
     },
     cargarImage(file) {
       let reader = new FileReader();
@@ -1207,7 +1304,7 @@ export default {
 .busgo-image-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .busgo-image-empty {
