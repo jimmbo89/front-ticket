@@ -861,7 +861,7 @@ export default {
         .toLowerCase()
         .trim();
 
-      return saleMode === "express" ? "Express" : "Normal";
+      return saleMode === "express" ? "Express" : "Full";
     },
     getSaleModeColor(item = {}) {
       const saleMode = String(item?.sale_mode || item?.saleMode || "normal")

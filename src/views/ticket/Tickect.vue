@@ -26,12 +26,12 @@
     <v-spacer />
 
     <div class="ticket-header-actions">
-      <v-btn :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
+      <v-btn v-if="hasPermission('view_traditional_sales_web')" :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
         @click="showAdd()">
-        Vender ticket
+        Venta Full
       </v-btn>
 
-      <v-btn :color="paleteColors.primary" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
+      <v-btn v-if="hasPermission('view_express_sales_web')" :color="paleteColors.primary" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
         class="busgo-add-btn mr-1" @click="dialogExpressSale = true">
         Venta Express
       </v-btn>
@@ -1566,7 +1566,7 @@ export default {
     },
     getSaleModeLabel(ticket = {}) {
       const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "Express" : "Normal";
+      return saleMode === "express" ? "Express" : "Full";
     },
     getSaleModeColor(ticket = {}) {
       const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();

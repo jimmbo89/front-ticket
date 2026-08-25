@@ -1500,7 +1500,7 @@ export default {
     vehicles: [],
     workers: [],
     branches: [],
-    saleModes: [{ id: "normal", name: "Venta Normal" }],
+    saleModes: [{ id: "normal", name: "Venta Full" }],
     filteredWorkers: [],
     tripStopRows: [],
     tripFareRows: [],
@@ -1736,12 +1736,29 @@ export default {
     normalizeTripSaleMode(trip = {}) {
       return trip.saleMode || trip.sale_mode || this.getDefaultSaleMode();
     },
+    normalizeSaleModeOption(mode = {}) {
+      const id = mode.id || mode.value || "normal";
+      return {
+        ...mode,
+        id,
+        name: String(id).toLowerCase() === "normal" ? "Venta Full" : mode.name,
+      };
+    },
+    normalizeSaleModeOptions(modes = []) {
+      const source = Array.isArray(modes) && modes.length
+        ? modes
+        : [{ id: "normal", name: "Venta Full" }];
+      return source.map((mode) => this.normalizeSaleModeOption(mode));
+    },
     getSaleModeName(trip = {}) {
       const saleMode = this.normalizeTripSaleMode(trip);
       const fallbackNames = {
-        normal: "Venta Normal",
+        normal: "Venta Full",
         express: "Venta Express",
       };
+      if (saleMode === "normal") {
+        return fallbackNames.normal;
+      }
       return this.saleModes.find((mode) => mode.id === saleMode)?.name || fallbackNames[saleMode] || saleMode;
     },
     getSaleModeShortName(trip = {}) {
@@ -2325,9 +2342,7 @@ export default {
           this.routes = result.data?.triproutes || [];
           this.vehicles = result.data?.tripvehicles || [];
           this.workers = result.data?.tripworkers || [];
-          this.saleModes = result.data?.saleModes?.length
-            ? result.data.saleModes
-            : [{ id: "normal", name: "Venta Normal" }];
+          this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTripSaleMode({ useDefault: resetSelections });
           this.filterWorkers();
 
@@ -2346,7 +2361,7 @@ export default {
           this.vehicles = [];
           this.workers = [];
           this.filteredWorkers = [];
-          this.saleModes = [{ id: "normal", name: "Venta Normal" }];
+          this.saleModes = this.normalizeSaleModeOptions();
           this.ensureTripSaleMode();
         }
       } catch (error) {

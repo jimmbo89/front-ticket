@@ -615,7 +615,7 @@ export default {
           .toLowerCase()
           .trim();
 
-        return saleMode === 'express' ? 'Express' : 'Normal';
+        return saleMode === 'express' ? 'Express' : 'Full';
       },
       getSaleModeColor(trip = {}) {
         const saleMode = String(trip?.sale_mode || trip?.saleMode || 'normal')
@@ -665,6 +665,22 @@ export default {
 
             return formattedValue;
         },
+        buildReportRequestData() {
+            const selectedWorker = this.workers.find((worker) => worker.id === this.selectedWorker);
+            const formattedDate = this.date || formatLocalDate();
+            const formattedEndDate = this.endDate || formattedDate;
+            const data = {
+                branch_id: this.branch_id,
+                user_id: selectedWorker?.user_id ?? this.user_id ?? this.worker_id,
+                date: formattedDate,
+            };
+
+            if (formattedEndDate !== formattedDate) {
+                data.endDate = formattedEndDate;
+            }
+
+            return data;
+        },
         async showBranches() {
             try {
                 this.data = {};
@@ -705,22 +721,8 @@ export default {
               return;
             }
             try {
-                this.data = {};
-                this.data.branch_id = this.branch_id;
-                const selectedWorker = this.workers.find((worker) => worker.id === this.selectedWorker);
-                this.data.user_id = selectedWorker?.user_id ?? this.user_id ?? this.worker_id;
-                // Formatear las fechas
-               /* const formattedDate = this.date ? format(new Date(this.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
-                const formattedEndDate = this.endDate ? format(new Date(this.endDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');*/
-                const formattedDate = this.date ?? formatLocalDate();
-              const formattedEndDate = this.endDate ?? formatLocalDate();
-                // Comparar las fechas
-                if (formattedDate === formattedEndDate) {
-                    this.data.date = formattedDate; // Solo enviar una fecha si son iguales
-                } else {
-                    this.data.date = formattedDate;
-                    this.data.endDate = formattedEndDate;
-                }
+                this.loading = true;
+                this.data = this.buildReportRequestData();
                 const result = await handleRequest({
                     endpoint: 'trips-worker-report',
                     method: 'POST',

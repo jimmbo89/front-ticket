@@ -562,7 +562,7 @@ export default {
     },
     getTripSaleModeLabel(trip = {}) {
       const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "Express" : "Normal";
+      return saleMode === "express" ? "Express" : "Full";
     },
     getTripSaleModeColor(trip = {}) {
       const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();

@@ -341,6 +341,7 @@
 import { paleteColors } from "@/assets/colors";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { formatLocalDate } from "@/utils/date";
 import _ from "lodash";
 import QRCode from "qrcode";
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
@@ -551,6 +552,26 @@ export default {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
     },
+    buildIncidentRequestData() {
+      const data = {};
+
+      if (this.type === "Company") {
+        data.company_id = Number(this.company_id);
+      } else {
+        data.branch_id = Number(this.branch_id);
+      }
+
+      const startDate = this.editedItem.startDate || formatLocalDate();
+      const endDate = this.editedItem.endDate || "";
+
+      data.startDate = startDate;
+
+      if (endDate && endDate !== startDate) {
+        data.endDate = endDate;
+      }
+
+      return data;
+    },
     async showBranches() {
       try {
         const result = await handleRequest({
@@ -588,12 +609,7 @@ export default {
         this.loading = false;
         return;
       }
-      this.data = {};
-      if (this.type === "Company") {
-        this.data.company_id = Number(this.company_id);
-      } else {
-        this.data.branch_id = Number(this.branch_id);
-      }
+      this.data = this.buildIncidentRequestData();
       try {
         this.loading = true;
         const result = await handleRequest({
@@ -622,16 +638,7 @@ export default {
       }
     },
     async getIncidents() {
-      this.data = {};
-      if (this.type === "Company") {
-        this.data.company_id = Number(this.company_id);
-      } else {
-        this.data.branch_id = Number(this.branch_id);
-      }
-      this.data.startDate =
-        this.editedItem.startDate ?? new Date().toISOString().split("T")[0];
-      this.data.endDate =
-        this.editedItem.endDate ?? new Date().toISOString().split("T")[0];
+      this.data = this.buildIncidentRequestData();
       try {
         this.loading = true;
         const result = await handleRequest({

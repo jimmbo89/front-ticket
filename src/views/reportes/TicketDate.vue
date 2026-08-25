@@ -701,6 +701,7 @@ export default {
       this.showBranches();
       this.type = "Company";
       this.mostrarFila = true;
+      return;
     } else {
       this.type = "Sucursal";
       this.branch_id = LocalStorageService.getItem("branch_id");
@@ -784,7 +785,7 @@ export default {
         .toLowerCase()
         .trim();
 
-      return saleMode === "express" ? "Express" : "Normal";
+      return saleMode === "express" ? "Express" : "Full";
     },
     getSaleModeColor(tramo = {}) {
       const saleMode = String(tramo?.sale_mode || tramo?.saleMode || "normal")
@@ -833,6 +834,21 @@ export default {
 
       return formattedValue;
     },
+    buildReportRequestData() {
+      const formattedDate = this.date || formatLocalDate();
+      const formattedEndDate = this.endDate || formattedDate;
+      const data = {
+        id: this.type === "Company" ? Number(this.company_id) : Number(this.branch_id),
+        type: this.type,
+        date: formattedDate,
+      };
+
+      if (formattedEndDate !== formattedDate) {
+        data.endDate = formattedEndDate;
+      }
+
+      return data;
+    },
     async showBranches() {
       try {
         const result = await handleRequest({
@@ -865,28 +881,7 @@ export default {
       }
       try {
         this.loading = true;
-        this.data = {};
-        this.data.id =
-          this.type === "Company" ? Number(this.company_id) : Number(this.branch_id);
-        this.data.type = this.type;
-        // Formatear las fechas
-
-        /*const formattedDate = this.date
-          ? format(new Date(this.date), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd");
-        const formattedEndDate = this.endDate
-          ? format(new Date(this.endDate), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd");*/
-        const formattedDate = this.date ?? formatLocalDate();
-        const formattedEndDate = this.endDate ?? formatLocalDate();
-
-        // Comparar las fechas
-        if (formattedDate === formattedEndDate) {
-          this.data.date = formattedDate; // Solo enviar una fecha si son iguales
-        } else {
-          this.data.date = formattedDate;
-          this.data.endDate = formattedEndDate;
-        }
+        this.data = this.buildReportRequestData();
         const result = await handleRequest({
           endpoint: "ticket-sold-date",
           method: "POST",
