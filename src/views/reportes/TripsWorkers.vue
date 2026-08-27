@@ -622,7 +622,7 @@ export default {
           .toLowerCase()
           .trim();
 
-        return saleMode === 'express' ? 'secondary' : 'primary';
+        return saleMode === 'express' ? 'success' : 'primary';
       },
       formatScheduledDeparture(value) {
         if (!value) {

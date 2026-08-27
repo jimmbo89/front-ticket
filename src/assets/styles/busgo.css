@@ -207,6 +207,20 @@ color:var(--busgo-text-soft);
 
 }
 
+.busgo-table-head > *{
+
+min-width:0;
+
+overflow:hidden;
+
+}
+
+.busgo-table-head .v-icon{
+
+flex-shrink:0;
+
+}
+
 .busgo-row{
 
 display:flex;

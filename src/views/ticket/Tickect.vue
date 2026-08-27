@@ -31,7 +31,7 @@
         Venta Full
       </v-btn>
 
-      <v-btn v-if="hasPermission('view_express_sales_web')" :color="paleteColors.primary" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
+      <v-btn v-if="hasPermission('view_express_sales_web')" color="success" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
         class="busgo-add-btn mr-1" @click="dialogExpressSale = true">
         Venta Express
       </v-btn>
@@ -1570,7 +1570,7 @@ export default {
     },
     getSaleModeColor(ticket = {}) {
       const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "secondary" : "primary";
+      return saleMode === "express" ? "success" : "primary";
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -4769,13 +4769,13 @@ table.v-table>thead,
 }
 
 .ticket-sale-mode--express {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .ticket-sale-mode--normal {
-  background: #dcfce7;
-  color: #166534;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .busgo-dialog-card {

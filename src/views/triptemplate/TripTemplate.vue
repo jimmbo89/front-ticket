@@ -1876,7 +1876,7 @@ export default {
       return this.getSaleModeName(template).replace(/^Venta\s+/i, "");
     },
     getSaleModeColor(template = {}) {
-      return this.normalizeTemplateSaleMode(template) === "express" ? "primary" : "grey";
+      return this.normalizeTemplateSaleMode(template) === "express" ? "success" : "primary";
     },
     ensureTemplateSaleMode({ useDefault = false } = {}) {
       if (useDefault || !this.editedItem.saleMode) {
@@ -3129,7 +3129,7 @@ table.v-table > thead,
 }
 
 .trip-template-col-route {
-  width: 25%;
+  width: 22%;
   min-width: 0;
 }
 
@@ -3146,37 +3146,37 @@ table.v-table > thead,
 }
 
 .trip-template-col-vehicle {
-  width: 10%;
-  min-width: 0;
-}
-
-.trip-template-col-workers {
-  width: 12%;
-  min-width: 0;
-}
-
-.trip-template-col-schedule {
-  width: 7%;
-  min-width: 0;
-}
-
-.trip-template-col-duration {
-  width: 7%;
-  min-width: 0;
-}
-
-.trip-template-col-frequency {
   width: 9%;
   min-width: 0;
 }
 
-.trip-template-col-days {
+.trip-template-col-workers {
+  width: 11%;
+  min-width: 0;
+}
+
+.trip-template-col-schedule {
+  width: 9%;
+  min-width: 0;
+}
+
+.trip-template-col-duration {
   width: 8%;
   min-width: 0;
 }
 
+.trip-template-col-frequency {
+  width: 10%;
+  min-width: 0;
+}
+
+.trip-template-col-days {
+  width: 6%;
+  min-width: 0;
+}
+
 .trip-template-col-sale-mode {
-  width: 8%;
+  width: 7%;
   min-width: 0;
 }
 
@@ -3186,7 +3186,7 @@ table.v-table > thead,
 }
 
 .trip-template-col-actions {
-  width: 7%;
+  width: 11%;
   min-width: 0;
 }
 

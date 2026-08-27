@@ -566,7 +566,7 @@ export default {
     },
     getTripSaleModeColor(trip = {}) {
       const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "secondary" : "primary";
+      return saleMode === "express" ? "success" : "primary";
     },
     getTripRouteTooltip(trip = {}) {
       return trip?.route || "Ruta sin información";
@@ -970,13 +970,14 @@ table.v-table > thead,
 
 .kpi-card-stat {
   position: relative;
-  height: 136px;
+  min-height: 150px;
   padding: 20px 24px;
   background: #ffffff;
   border: 1px solid #edf1f5;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
   cursor: pointer;
   overflow: hidden;
+  display: flex;
 }
 
 .kpi-card-stat:hover {
@@ -985,15 +986,18 @@ table.v-table > thead,
 }
 
 .kpi-info {
-  width: calc(100% - 86px);
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .kpi-label {
   font-size: 14px;
   font-weight: 700;
   color: #64748b;
-  margin-bottom: 18px;
-  max-width: 100%;
+  margin-bottom: 16px;
+  max-width: calc(100% - 86px);
   line-height: 1.25;
 }
 
@@ -1004,33 +1008,34 @@ table.v-table > thead,
   color: #0f172a;
   letter-spacing: 0;
   margin-bottom: 0;
-  max-width: 100%;
+  max-width: calc(100% - 86px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: clip;
 }
 
 .kpi-trend {
-  position: absolute;
-  left: 24px;
-  right: 18px;
-  bottom: 20px;
   display: flex;
   align-items: center;
   gap: 5px;
   min-height: 22px;
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.2;
+  margin-top: auto;
+  padding-top: 18px;
+  flex-wrap: nowrap;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .kpi-trend-value {
   color: #22c55e;
+  flex-shrink: 0;
 }
 
 .kpi-trend-text {
   color: #94a3b8;
+  flex-shrink: 0;
 }
 
 .kpi-icon-circle {

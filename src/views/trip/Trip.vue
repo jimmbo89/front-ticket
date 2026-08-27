@@ -1765,7 +1765,7 @@ export default {
       return this.getSaleModeName(trip).replace(/^Venta\s+/i, "");
     },
     getSaleModeColor(trip = {}) {
-      return this.normalizeTripSaleMode(trip) === "express" ? "primary" : "grey";
+      return this.normalizeTripSaleMode(trip) === "express" ? "success" : "primary";
     },
     ensureTripSaleMode({ useDefault = false } = {}) {
       if (useDefault || !this.editedItem.saleMode) {
@@ -3044,12 +3044,12 @@ table.v-table>thead,
 }
 
 .trip-col-code {
-  width: 11%;
+  width: 10%;
   min-width: 0;
 }
 
 .trip-col-route {
-  width: 22%;
+  width: 20%;
   min-width: 0;
 }
 
@@ -3059,7 +3059,7 @@ table.v-table>thead,
 }
 
 .trip-col-workers {
-  width: 12%;
+  width: 11%;
   min-width: 0;
 }
 
@@ -3080,12 +3080,12 @@ table.v-table>thead,
 }
 
 .trip-col-start {
-  width: 5%;
+  width: 7%;
   min-width: 0;
 }
 
 .trip-col-end {
-  width: 5%;
+  width: 7%;
   min-width: 0;
 }
 
