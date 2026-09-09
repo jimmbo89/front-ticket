@@ -1,9 +1,13 @@
 <template>
   <v-card flat class="busgo-drawer">
-    <!-- HEADER -->
+   
 
-    <v-list nav density="comfortable" class="drawer-menu">
-      <!-- DASHBOARD -->
+    <div class="brand-divider" />
+
+    <!-- MENÚ -->
+    <v-list nav class="drawer-menu">
+      
+
       <v-list-item
         prepend-icon="mdi-view-dashboard-outline"
         title="Dashboard"
@@ -12,7 +16,9 @@
       />
 
       <!-- OPERACIÓN -->
-      <div class="drawer-section">Operación</div>
+      <div class="drawer-section">
+        Operación
+      </div>
 
       <v-list-item
         v-if="
@@ -23,7 +29,7 @@
             'view_triptemplates',
           ])
         "
-        prepend-icon="mdi-bus"
+        prepend-icon="mdi-bus-clock"
         title="Viajes"
         to="trip"
         class="drawer-item"
@@ -32,21 +38,29 @@
       <v-list-item
         v-if="hasPermission(['view_tickets', 'view_tickets_company'])"
         prepend-icon="mdi-ticket-confirmation-outline"
-        title="Venta de Tickets"
-        to="ticket"
+        title="Ventas"
+        to="sales"
         class="drawer-item"
       />
 
-          <v-list-item
+      <v-list-item
         v-if="hasPermission(['view_tickets', 'view_tickets_company'])"
-        prepend-icon="mdi-ticket-confirmation-outline"
-        title="Plantillas de Viaje"
+        prepend-icon="mdi-calendar-sync-outline"
+        title="Plantillas de viaje"
         to="trip-template"
         class="drawer-item"
       />
 
       <!-- CONFIGURACIÓN -->
-      <div class="drawer-section">Configuración</div>
+      <div
+        v-if="
+          hasPermission('view_business') ||
+          filteredMenuConfiguration.length
+        "
+        class="drawer-section"
+      >
+        Configuración
+      </div>
 
       <v-list-item
         v-if="hasPermission('view_business')"
@@ -66,7 +80,12 @@
       />
 
       <!-- COMERCIAL -->
-      <div class="drawer-section">Comercial</div>
+      <div
+        v-if="filteredMenuTickets.length"
+        class="drawer-section"
+      >
+        Comercial
+      </div>
 
       <v-list-item
         v-for="item in filteredMenuTickets"
@@ -78,7 +97,12 @@
       />
 
       <!-- SEGURIDAD -->
-      <div class="drawer-section">Seguridad</div>
+      <div
+        v-if="filteredMenuSecurity.length"
+        class="drawer-section"
+      >
+        Seguridad
+      </div>
 
       <v-list-item
         v-for="item in filteredMenuSecurity"
@@ -90,7 +114,12 @@
       />
 
       <!-- REPORTES -->
-      <div class="drawer-section">Reportes</div>
+      <div
+        v-if="filteredMenuReports.length"
+        class="drawer-section"
+      >
+        Reportes
+      </div>
 
       <v-list-item
         v-for="item in filteredMenuReports"
@@ -101,6 +130,8 @@
         class="drawer-item"
       />
     </v-list>
+
+   
   </v-card>
 </template>
 
@@ -186,6 +217,12 @@ export default {
 
     reports: [
       {
+        title: "Reporte de Ventas",
+        icon: "mdi-ticket-confirmation-outline",
+        to: "ticket",
+        permission: ["view_tickets", "view_tickets_company"],
+      },
+      {
         title: "Recaudación",
         icon: "mdi-cash-multiple",
         to: "ticketdate",
@@ -209,6 +246,8 @@ export default {
         to: "incident",
         permission: ["view_incidents", "view_incidents_company"],
       },
+
+     
     ],
   }),
 
@@ -267,123 +306,544 @@ export default {
   },
 };
 </script>
-
 <style scoped>
+/* ========================================
+   VARIABLES Y CONTENEDOR PRINCIPAL
+======================================== */
+
 .busgo-drawer {
-  height: 100%;
-  background: #ffffff;
-  border-right: 1px solid #eef2f7;
-  color: #334155;
-  overflow-y: auto;
-}
+  --busgo-blue: #2454d6;
+  --busgo-blue-light: #3266e4;
+  --busgo-blue-dark: #132d6b;
+  --busgo-blue-deep: #0e1f46;
+  --busgo-cyan: #35b8e8;
 
-/* HEADER */
-.drawer-brand {
+  --drawer-text: #1e293b;
+  --drawer-muted: #334155;
+  --drawer-section: #64748b;
+  --drawer-icon: #334155;
+  --drawer-border: #e8edf5;
+  --drawer-hover: #f2f5fb;
+
+  position: relative;
   display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
+  color: var(--drawer-text);
+  background: #ffffff;
+  border-right: 1px solid var(--drawer-border);
+}
+
+/* ========================================
+   CABECERA
+======================================== */
+
+.drawer-brand {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 12px;
-  padding: 22px 20px 18px;
+  gap: 10px;
+  min-height: 60px;
+  padding: 9px 12px;
+  overflow: hidden;
+
+  color: #ffffff;
+  background:
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(53, 184, 232, 0.24),
+      transparent 85px
+    ),
+    linear-gradient(
+      135deg,
+      var(--busgo-blue-deep),
+      var(--busgo-blue-dark)
+    );
 }
 
-.drawer-avatar {
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+.drawer-brand::after {
+  position: absolute;
+  right: -32px;
+  bottom: -48px;
+  width: 110px;
+  height: 110px;
+
+  content: "";
+  pointer-events: none;
+  border: 17px solid rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
 }
 
-.drawer-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.1;
-}
+/* Logo o imagen de empresa */
 
-.drawer-subtitle {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-top: 3px;
-}
+.brand-avatar {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  overflow: hidden;
 
-/* MENU */
-.drawer-menu {
-  padding: 6px 14px 24px;
-}
-
-/* SECCIONES */
-.drawer-section {
-  margin: 8px 0 10px;
-  padding-left: 8px;
-  font-size: 11px;
-  font-weight: 900;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-/* ITEMS */
-.drawer-item {
-  min-height: 30px;
-  margin-bottom: 4px;
-  padding-inline: 12px !important;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 10px;
-  color: #4b5563;
-  font-size: 14px;
-  font-weight: 700;
-  transition: all 0.18s ease;
+  box-shadow: none;
+  backdrop-filter: blur(8px);
 }
 
-.drawer-item :deep(.v-list-item-title) {
-  font-size: 14px;
-  font-weight: 700;
-  color: #4b5563;
+.brand-avatar :deep(.v-icon) {
+  color: #ffffff !important;
+  opacity: 1 !important;
 }
 
-.drawer-item :deep(.v-icon) {
-  color: #6b7280;
-  font-size: 21px;
+.brand-image {
+  width: 100%;
+  height: 100%;
 }
 
-.drawer-item:hover {
-  background: #f5f7fb;
-  color: #2563eb;
+/* Información de empresa */
+
+.brand-information {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
 }
 
-.drawer-item:hover :deep(.v-list-item-title),
-.drawer-item:hover :deep(.v-icon) {
-  color: #2563eb;
-}
-
-/* ACTIVO */
-.drawer-item.router-link-active,
-.drawer-item.v-list-item--active {
-  background: #eef5ff;
-  color: #2563eb;
-}
-
-.drawer-item.router-link-active :deep(.v-list-item-title),
-.drawer-item.router-link-active :deep(.v-icon),
-.drawer-item.v-list-item--active :deep(.v-list-item-title),
-.drawer-item.v-list-item--active :deep(.v-icon) {
-  color: #2563eb;
+.brand-context {
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 8px;
   font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-/* QUITAR COLOR DEFAULT VUETIFY */
+.brand-title {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botón de cambio de empresa */
+
+.brand-action {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.82) !important;
+  opacity: 1 !important;
+}
+
+.brand-action :deep(.v-icon) {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+.brand-action:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* La cabecera ya separa el menú */
+
+.brand-divider {
+  display: none;
+}
+
+/* ========================================
+   CONTENEDOR DEL MENÚ
+======================================== */
+
+.drawer-menu {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 5px 8px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  color: var(--drawer-text);
+  overscroll-behavior: contain;
+  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: thin;
+}
+
+.drawer-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.drawer-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drawer-menu::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+.drawer-menu::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ========================================
+   SECCIONES
+======================================== */
+
+.drawer-section {
+  position: relative;
+  min-height: 10px;
+  margin: 10px 8px 3px;
+  padding-left: 8px;
+
+  color: var(--drawer-section);
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.drawer-section::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 9px;
+
+  content: "";
+  background: var(--busgo-cyan);
+  border-radius: 5px;
+  transform: translateY(-50%);
+}
+
+.drawer-section--first {
+  margin-top: 4px;
+}
+
+/* ========================================
+   ÍTEMS DEL MENÚ
+======================================== */
+
+.drawer-item {
+  position: relative;
+  height: auto !important;
+  min-height: 32px !important;
+  margin: 0;
+  padding: 2px 8px !important;
+  overflow: hidden;
+
+  color: var(--drawer-muted) !important;
+  border: none;
+  border-radius: 8px !important;
+  box-shadow: none;
+
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* Elimina el indicador anterior */
+
+.drawer-item::before {
+  display: none;
+}
+
+/* Elimina el overlay automático de Vuetify */
+
 .drawer-item :deep(.v-list-item__overlay) {
   display: none;
 }
 
-.drawer-item {
-  min-height: 30px !important;
-  padding-inline: 8px !important;
+/* Contenido interno */
+
+.drawer-item :deep(.v-list-item__content) {
+  align-self: center;
+  padding: 0;
+  color: inherit !important;
+  opacity: 1 !important;
 }
+
+/* Contenedor del icono */
 
 .drawer-item :deep(.v-list-item__prepend) {
-  margin-inline-end: -20px !important;
+  align-self: center;
+  margin-right: 7px;
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
+/* Vuetify agrega este espacio automáticamente */
+
+.drawer-item :deep(.v-list-item__spacer) {
+  width: 0 !important;
+}
+
+/* Iconos */
+
+.drawer-item :deep(.v-list-item__prepend > .v-icon) {
+  display: grid;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  margin: 0 !important;
+  place-items: center;
+
+  color: var(--drawer-icon) !important;
+  font-size: 16.5px;
+  opacity: 1 !important;
+  background: transparent;
+  border-radius: 6px;
+  box-shadow: none;
+
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+/* Texto */
+
 .drawer-item :deep(.v-list-item-title) {
-  font-size: 13px;
+  overflow: visible;
+  color: inherit !important;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-overflow: initial;
+  white-space: normal;
+  opacity: 1 !important;
+}
+
+/* ========================================
+   HOVER
+======================================== */
+
+.drawer-item:hover {
+  color: var(--busgo-blue) !important;
+  background: var(--drawer-hover);
+  transform: translateX(1px);
+}
+
+.drawer-item:hover :deep(.v-list-item-title) {
+  color: var(--busgo-blue) !important;
+}
+
+.drawer-item:hover :deep(.v-list-item__prepend > .v-icon) {
+  color: var(--busgo-blue) !important;
+  transform: translateX(1px);
+}
+
+/* ========================================
+   ÍTEM ACTIVO
+======================================== */
+
+.drawer-item.router-link-active,
+.drawer-item.router-link-exact-active,
+.drawer-item.v-list-item--active {
+  color: #ffffff !important;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(53, 184, 232, 0.3),
+      transparent 75px
+    ),
+    linear-gradient(
+      100deg,
+      var(--busgo-blue),
+      var(--busgo-blue-light)
+    );
+
+  box-shadow: 0 3px 8px rgba(36, 84, 214, 0.18);
+}
+
+.drawer-item.router-link-active :deep(.v-list-item-title),
+.drawer-item.router-link-exact-active :deep(.v-list-item-title),
+.drawer-item.v-list-item--active :deep(.v-list-item-title) {
+  color: #ffffff !important;
+  font-weight: 800;
+  opacity: 1 !important;
+}
+
+.drawer-item.router-link-active
+  :deep(.v-list-item__prepend > .v-icon),
+.drawer-item.router-link-exact-active
+  :deep(.v-list-item__prepend > .v-icon),
+.drawer-item.v-list-item--active
+  :deep(.v-list-item__prepend > .v-icon) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+}
+
+/* Corrige la opacidad que Vuetify aplica al elemento activo */
+
+.drawer-item.v-list-item--active
+  :deep(.v-list-item__prepend),
+.drawer-item.v-list-item--active
+  :deep(.v-list-item__content) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* ========================================
+   PIE Y ESTADO DEL SISTEMA
+======================================== */
+
+.drawer-footer {
+  flex: 0 0 auto;
+  padding: 5px 8px 7px;
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1px solid var(--drawer-border);
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 9px;
+
+  background: #f8fafc;
+  border: 1px solid #edf1f5;
+  border-radius: 8px;
+}
+
+.status-dot {
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+
+  background: #20a66a;
+  border: 1px solid #d7f5e7;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(32, 166, 106, 0.1);
+}
+
+.status-title {
+  color: #334155;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.status-description {
+  margin-top: 0;
+  color: #64748b;
+  font-size: 8.5px;
   font-weight: 600;
+  line-height: 1.15;
+}
+
+/* ========================================
+   NOTEBOOKS Y PANTALLAS MEDIANAS
+======================================== */
+
+@media (max-height: 850px) {
+  .drawer-footer {
+    display: none;
+  }
+}
+
+/* ========================================
+   PANTALLAS DE POCA ALTURA
+======================================== */
+
+@media (max-height: 720px) {
+  .drawer-brand {
+    min-height: 54px;
+    padding-block: 7px;
+  }
+
+  .brand-avatar {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .drawer-menu {
+    padding-top: 3px;
+    padding-bottom: 8px;
+  }
+
+  .drawer-section {
+    margin-top: 7px;
+    margin-bottom: 2px;
+  }
+
+  .drawer-section--first {
+    margin-top: 3px;
+  }
+
+  .drawer-item {
+    min-height: 30px !important;
+    padding-block: 1px !important;
+  }
+
+  .drawer-item :deep(.v-list-item__prepend) {
+    margin-right: 6px;
+  }
+
+  .drawer-item :deep(.v-list-item__prepend > .v-icon) {
+    flex-basis: 21px;
+    width: 21px;
+    height: 21px;
+    font-size: 15.5px;
+  }
+
+  .drawer-item :deep(.v-list-item-title) {
+    font-size: 11.5px;
+  }
+}
+
+/* ========================================
+   MÓVIL
+======================================== */
+
+@media (max-width: 600px) {
+  .drawer-brand {
+    min-height: 58px;
+  }
+
+  .drawer-item {
+    min-height: 36px !important;
+  }
+
+  .drawer-item :deep(.v-list-item-title) {
+    font-size: 12.5px;
+  }
+}
+
+/* Móvil con poca altura */
+
+@media (max-width: 600px) and (max-height: 720px) {
+  .drawer-brand {
+    min-height: 54px;
+  }
+
+  .drawer-item {
+    min-height: 32px !important;
+  }
+
+  .drawer-item :deep(.v-list-item-title) {
+    font-size: 12px;
+  }
 }
 </style>

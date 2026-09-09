@@ -56,60 +56,98 @@
     </v-row>
     <v-row v-else align="stretch">
       <!-- Información general de viajes -->
-      <v-col cols="12" md="12">
-        <v-row>
-          <v-col cols="12" sm="3" md="3" v-for="(stat, index) in sales" :key="index">
-            <v-card
-              class="kpi-card-stat"
-              elevation="1"
-              rounded="lg"
-              @click="$router.push(stat.to)"
-            >
-              <div class="kpi-info">
-                <div class="kpi-label">
-                  {{ stat.title }}
-                </div>
+   <!-- INDICADORES SUPERIORES -->
+<v-col
+  v-for="(stat, index) in sales"
+  :key="index"
+  cols="12"
+  sm="6"
+  md="3"
+  class="kpi-column"
+>
+  <v-card
+    class="kpi-card-stat"
+    elevation="0"
+    :style="{ '--stat-color': stat.color }"
+    @click="$router.push(stat.to)"
+  >
+    <div
+      class="kpi-accent"
+      :style="{ background: stat.color }"
+    ></div>
 
-                <div class="kpi-number">
-                  <span
-                    v-if="
-                      stat.title !== 'Boletos Vendidos' && stat.title !== 'Incidentes'
-                    "
-                  >
-                    {{ formatNumber(stat.value) }}
-                  </span>
-                  <span v-else>
-                    {{ stat.value }}
-                  </span>
-                </div>
+    <div class="kpi-header">
+      <div class="kpi-heading">
+        <span class="kpi-label">
+          {{ stat.title }}
+        </span>
 
-                <div class="kpi-trend">
-                  <v-icon size="20" :style="{ color: getTrendHexColor(stat) }">
-                    {{ getTrendIcon(stat.comparison) }}
-                  </v-icon>
-                  <span
-                    class="kpi-trend-value"
-                    :style="{ color: getTrendHexColor(stat) }"
-                  >
-                    {{ formatTrendPercent(stat.comparison?.changePercent) }}
-                  </span>
-                  <span class="kpi-trend-text">vs. periodo anterior</span>
-                </div>
-              </div>
+        <span class="kpi-period">
+          Periodo actual
+        </span>
+      </div>
 
-              <div class="kpi-icon-circle" :style="{ background: `${stat.color}18` }">
-                <v-icon :color="stat.color" size="28">
-                  {{ stat.icon }}
-                </v-icon>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-col>
+      <div
+        class="kpi-icon-box"
+        :style="{
+          color: stat.color,
+          backgroundColor: `${stat.color}12`,
+          borderColor: `${stat.color}22`
+        }"
+      >
+        <v-icon size="22">
+          {{ stat.icon }}
+        </v-icon>
+      </div>
+    </div>
+
+    <div class="kpi-number">
+      <span
+        v-if="
+          stat.title !== 'Boletos Vendidos' &&
+          stat.title !== 'Incidentes'
+        "
+      >
+        {{ formatNumber(stat.value) }}
+      </span>
+
+      <span v-else>
+        {{ stat.value }}
+      </span>
+    </div>
+
+    <div class="kpi-footer">
+      <div
+        class="kpi-trend"
+        :style="{
+          color: getTrendHexColor(stat),
+          backgroundColor: `${getTrendHexColor(stat)}12`
+        }"
+      >
+        <v-icon size="15">
+          {{ getTrendIcon(stat.comparison) }}
+        </v-icon>
+
+        <span class="kpi-trend-value">
+          {{ formatTrendPercent(stat.comparison?.changePercent) }}
+        </span>
+      </div>
+
+      <span class="kpi-trend-text">
+        vs. periodo anterior
+      </span>
+    </div>
+
+    <div
+      class="kpi-decoration"
+      :style="{ borderColor: `${stat.color}0D` }"
+    ></div>
+  </v-card>
+</v-col>
 
       <!-- Gráfica -->
       <v-col cols="12" md="6" class="d-flex">
-        <v-card class="chart-card dashboard-panel pa-2" rounded="lg" elevation="3">
+        <v-card class="chart-card dashboard-panel pa-2" rounded="lg" >
           <!-- HEADER -->
           <div class="chart-header">
             <div class="kpi-label">
@@ -128,7 +166,7 @@
       <v-col cols="12" md="6" class="d-flex">
         <v-card
           flat
-          elevation="2"
+        
           rounded="lg"
           class="trip-card panel-card dashboard-panel"
         >
@@ -152,100 +190,129 @@
           <v-card-text class="trip-card-body"
             ><!-- TABLE -->
             <v-data-table
-              class="mt-0 pt-0"
-              :headers="headers"
-              :items="trips"
-              :loading="loading"
-              loading-text="Cargando datos..."
-              hide-default-header
-              hide-default-footer
-              :items-per-page="-1"
-              :items-per-page-options="[]"
-              no-data-text="Sin próximos viajes recientes"
-            >
-              <template #bottom></template>
+  :headers="tripHeaders"
+  :items="trips"
+  :loading="loading"
+  loading-text="Cargando..."
+  no-data-text="Sin próximos viajes"
+  hide-default-header
+  hide-default-footer
+  :items-per-page="-1"
+  density="compact"
+  class="bg-transparent"
+>
+  <template #bottom />
 
-              <!-- ROW -->
-              <template v-slot:item="slotProps">
-                <div class="busgo-row">
-                  <!-- MARCA -->
-                  <div class="col col-brand text-truncate">
-                    <v-tooltip location="top" :text="getTripBranchName(slotProps.item)">
-                      <template #activator="{ props }">
-                        <v-chip
-                          v-bind="props"
-                          color="primary"
-                          variant="tonal"
-                          size="small"
-                          rounded="lg"
-                          class="font-weight-bold px-2"
-                        >
-                          {{ getTripBranchName(slotProps.item) }}
-                        </v-chip>
-                      </template>
-                    </v-tooltip>
-                  </div>
-                  <!-- VEHÍCULO -->
-                  <div class="col col-vehicle d-flex align-center">
-                    <span class="text-truncate">{{ slotProps.item.vehiclePlate }} </span>
-                  </div>
+  <template #item="{ item }">
+    <tr>
+      <td class="px-3 py-3">
+        <div class="d-flex align-center ga-3">
+          <!-- HORA -->
+          <div class="flex-shrink-0 text-center">
+            <div class="text-subtitle-1 font-weight-bold text-primary">
+              {{ getDepartureTime(item.horario) }}
+            </div>
 
-                  <!-- RUTA -->
-                  <div class="col col-route">
-                    <div class="trip-route-title">
-                      <v-tooltip location="top" :text="getTripRouteTooltip(slotProps.item)">
-                        <template #activator="{ props }">
-                          <span
-                            v-bind="props"
-                            class="font-weight-medium text-truncate"
-                          >
-                            {{ slotProps.item.route }}
-                          </span>
-                        </template>
-                      </v-tooltip>
+            <div class="text-caption text-medium-emphasis">
+              {{ item.estimated }} min
+            </div>
+          </div>
 
-                      <v-chip
-                        size="x-small"
-                        :color="getTripSaleModeColor(slotProps.item)"
-                        variant="tonal"
-                        class="trip-sale-mode-chip flex-shrink-0"
-                      >
-                        {{ getTripSaleModeLabel(slotProps.item) }}
-                      </v-chip>
-                    </div>
-                    <div class="route-meta">
-                      <v-icon size="x-small">mdi-clock-outline</v-icon>
-                      <span>{{ slotProps.item.estimated }} min</span>
-                      <span>{{ formatTimeRange(slotProps.item.horario) }}</span>
-                    </div>
-                  </div>
+          <v-divider vertical />
 
-                  <!-- OCUPACIÓN -->
-                  <div class="col col-occupancy">
-                    <div class="occupancy-main">
-                      {{ slotProps.item.asientosVendidos }}
-                      <span class="occupancy-separator">/</span>
-                      {{ slotProps.item.capacidad }}
-                    </div>
-
-                    <div class="occupancy-percent">
-                      {{
-                        Math.round(
-                          (slotProps.item.asientosVendidos * 100) /
-                            slotProps.item.capacidad
-                        )
-                      }}%
-                    </div>
-                  </div>
-                  <!-- MONTO -->
-                  <div class="col col-money">
-                    <span class="">
-                      $ {{ formatNumber(slotProps.item.dineroGenerado) }}
-                    </span>
-                  </div>
+          <!-- INFORMACIÓN -->
+          <div class="flex-grow-1 overflow-hidden">
+            <v-tooltip location="top" :text="item.route">
+              <template #activator="{ props }">
+                <div
+                  v-bind="props"
+                  class="text-body-2 font-weight-medium text-truncate"
+                >
+                  {{ item.route }}
                 </div>
               </template>
-            </v-data-table>
+            </v-tooltip>
+
+            <div class="d-flex align-center flex-wrap ga-1 mt-1">
+              <v-icon size="14" color="medium-emphasis">
+                mdi-bus
+              </v-icon>
+
+              <span class="text-caption text-medium-emphasis">
+                {{ item.vehiclePlate }}
+              </span>
+
+              <v-chip
+                    
+size="small"
+label                color="primary"
+              >
+                N.º {{ item.internalNumber }}
+              </v-chip>
+
+              <v-chip
+                size="small"
+                label
+                :color="
+                  item.saleMode === 'express'
+                    ? 'info'
+                    : 'primary'
+                "
+              >
+                {{ item.saleMode }}
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- OCUPACIÓN -->
+          <div class="flex-shrink-0 text-center">
+            <div class="text-body-2 font-weight-bold">
+              {{ item.asientosVendidos }}/{{ item.capacidad }}
+            </div>
+
+            <div class="text-caption text-medium-emphasis">
+              {{ getOccupancyPercentage(item) }}%
+            </div>
+          </div>
+
+          <!-- MONTO -->
+          <div class="flex-shrink-0 text-right">
+            <div class="text-body-2 font-weight-bold">
+              ${{ formatNumber(item.dineroGenerado) }}
+            </div>
+
+            <div class="text-caption text-medium-emphasis">
+              Ingresos
+            </div>
+          </div>
+        </div>
+
+        <v-progress-linear
+          :model-value="getOccupancyPercentage(item)"
+          :color="getOccupancyColor(item)"
+          bg-color="grey-lighten-3"
+          height="4"
+          rounded
+          class="mt-2"
+        />
+      </td>
+    </tr>
+  </template>
+
+  <template #no-data>
+    <div
+      class="d-flex flex-column align-center justify-center ga-2 py-10"
+    >
+      <v-icon color="primary" size="28">
+        mdi-calendar-blank-outline
+      </v-icon>
+
+      <span class="text-body-2 font-weight-medium">
+        Sin próximos viajes
+      </span>
+    </div>
+  </template>
+</v-data-table>
           </v-card-text>
         </v-card>
       </v-col>
@@ -253,7 +320,7 @@
     <!-- Tabla de viajes -->
     <v-row align="stretch" v-if="!showWelcomeMessage">
       <v-col cols="12">
-        <v-card flat elevation="2" rounded="lg" class="">
+        <v-card flat  rounded="lg" class="">
           <!-- HEADER -->
           <v-card-title class="d-flex align-center px-5 py-4">
             <div>
@@ -378,6 +445,38 @@ export default {
   components: { Bar, Doughnut },
   data() {
     return {
+    tripHeaders: [
+      {
+        title: "Hora",
+        key: "horario",
+        sortable: false,
+        width: 110,
+      },
+      {
+        title: "Ruta y vehículo",
+        key: "route",
+        sortable: false,
+      },
+      {
+        title: "Modalidad",
+        key: "saleMode",
+        sortable: false,
+        width: 130,
+      },
+      {
+        title: "Ocupación",
+        key: "occupancy",
+        sortable: false,
+        width: 160,
+      },
+      {
+        title: "Ingresos",
+        key: "dineroGenerado",
+        sortable: false,
+        align: "end",
+        width: 130,
+      },
+    ],
       incidents: [],
       currentDateTime: "",
       snackbar: false,
@@ -434,6 +533,36 @@ export default {
     }
   },
   methods: {
+ getDepartureTime(schedule) {
+    if (!schedule) return "--:--";
+
+    const start = schedule.split(" - ")[0];
+
+    return start.split(" ")[1]?.substring(0, 5) || "--:--";
+  },
+
+  getOccupancyPercentage(trip) {
+    const sold = Number(trip.asientosVendidos) || 0;
+    const capacity = Number(trip.capacidad) || 0;
+
+    if (capacity <= 0) return 0;
+
+    return Math.min(
+      100,
+      Math.round((sold * 100) / capacity)
+    );
+  },
+
+  getOccupancyColor(trip) {
+    const percentage = this.getOccupancyPercentage(trip);
+
+    if (percentage >= 90) return "error";
+    if (percentage >= 70) return "warning";
+    if (percentage >= 40) return "primary";
+
+    return "success";
+  },
+
     updateDateTime() {
       this.currentDateTime = new Date().toLocaleString("es-CL", {
         weekday: "short",
@@ -714,27 +843,7 @@ export default {
   text-overflow: ellipsis;
 }
 
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
 
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}
 
 .kpi-card {
   border-radius: 14px;
@@ -911,7 +1020,7 @@ table.v-table > thead,
 }
 
 .col-route {
-  width: 50%;
+  width: 100%;
 }
 
 .trip-route-title {
@@ -968,81 +1077,262 @@ table.v-table > thead,
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
 }
 
+/* ========================================
+   CUADRÍCULA DE INDICADORES
+======================================== */
+
+.kpi-grid {
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+.kpi-column {
+  display: flex;
+}
+
 .kpi-card-stat {
   position: relative;
-  height: 136px;
-  padding: 20px 24px;
-  background: #ffffff;
-  border: 1px solid #edf1f5;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 148px;
+  padding: 17px 18px 15px;
   overflow: hidden;
+
+  color: #0f172a;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #e8edf5;
+  border-radius: 13px !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.045) !important;
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .kpi-card-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
+  border-color: #dce4ef;
+  box-shadow: 0 12px 27px rgba(15, 23, 42, 0.09) !important;
+  transform: translateY(-3px);
 }
 
-.kpi-info {
-  width: calc(100% - 86px);
+.kpi-card-stat:active {
+  transform: translateY(-1px);
+}
+
+/* Línea superior */
+
+.kpi-accent {
+  position: absolute;
+  top: 0;
+  left: 18px;
+  width: 34px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  transition: width 180ms ease;
+}
+
+.kpi-card-stat:hover .kpi-accent {
+  width: 50px;
+}
+
+/* ========================================
+   CABECERA
+======================================== */
+
+.kpi-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kpi-heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .kpi-label {
+  margin: 0;
+  overflow: hidden;
+  color: #475569;
   font-size: 14px;
-  font-weight: 700;
-  color: #64748b;
-  margin-bottom: 18px;
-  max-width: 100%;
+  font-weight: 800;
   line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.kpi-number {
-  font-size: 29px;
+.kpi-period {
+  margin-top: 3px;
+  color: #a0aaba;
+  font-size: 11px;
+  font-weight: 650;
   line-height: 1;
-  font-weight: 900;
-  color: #0f172a;
-  letter-spacing: 0;
-  margin-bottom: 0;
-  max-width: 100%;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* ========================================
+   ICONO
+======================================== */
+
+.kpi-icon-box {
+  display: grid;
+  flex: 0 0 39px;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+
+  border: 1px solid;
+  border-radius: 10px;
+
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.kpi-icon-box :deep(.v-icon) {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+.kpi-card-stat:hover .kpi-icon-box {
+  box-shadow: 0 5px 13px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   VALOR PRINCIPAL
+======================================== */
+
+.kpi-number {
+  position: relative;
+  z-index: 2;
+  margin-top: 7px;
   overflow: hidden;
-  text-overflow: clip;
+
+  color: #0f172a;
+  font-size: clamp(24px, 2vw, 29px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================
+   TENDENCIA
+======================================== */
+
+.kpi-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: 11px;
 }
 
 .kpi-trend {
-  position: absolute;
-  left: 24px;
-  right: 18px;
-  bottom: 20px;
-  display: flex;
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 5px;
+  gap: 2px;
   min-height: 22px;
+  padding: 3px 7px;
+
   font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
+  font-weight: 850;
+  line-height: 1;
+  border-radius: 7px;
+}
+
+.kpi-trend :deep(.v-icon) {
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 .kpi-trend-value {
-  color: #22c55e;
+  color: inherit;
 }
 
 .kpi-trend-text {
+  overflow: hidden;
   color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.kpi-icon-circle {
+/* ========================================
+   DECORACIÓN
+======================================== */
+
+.kpi-decoration {
   position: absolute;
-  top: 28px;
-  right: 24px;
-  width: 58px;
-  height: 58px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  right: -28px;
+  bottom: -43px;
+  width: 95px;
+  height: 95px;
+
+  pointer-events: none;
+  border: 15px solid;
+  border-radius: 50%;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 1279px) {
+  .kpi-card-stat {
+    min-height: 145px;
+  }
+
+  .kpi-number {
+    font-size: 27px;
+  }
+}
+
+@media (max-width: 959px) {
+  .kpi-card-stat {
+    min-height: 142px;
+  }
+
+  .kpi-label {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpi-card-stat {
+    min-height: 138px;
+    padding: 15px 16px 14px;
+  }
+
+  .kpi-accent {
+    left: 16px;
+  }
+
+  .kpi-number {
+    margin-top: 6px;
+    font-size: 26px;
+  }
+
+  .kpi-icon-box {
+    flex-basis: 37px;
+    width: 37px;
+    height: 37px;
+  }
 }
 
 .col-occupancy {

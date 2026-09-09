@@ -1,24 +1,7 @@
 ﻿<template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
-      </v-col>
-
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-      </v-col>
-    </v-row>
+<div class="trip-templates-view">
+  <v-snackbar class="busgo-snackbar" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="10" v-model="snackbar">
+    <div class="template-alert"><v-icon :icon="sb_icon" size="22" /><div><strong>{{ sb_title }}</strong><div>{{ sb_message }}</div></div></div>
   </v-snackbar>
 
   <v-card class="busgo-page-header" elevation="0">
@@ -43,7 +26,7 @@
       class="busgo-add-btn"
       @click="showAdd()"
     >
-      Agregar Plantilla de Viaje
+      Nueva plantilla
     </v-btn>
   </v-card>
 
@@ -109,282 +92,69 @@
         no-data-text="No hay datos disponibles"
         :loading="loading"
         loading-text="Cargando datos..."
-        :hide-default-header="true"
-        class="busgo-table"
+       
+        class="busgo-table template-list-table"
       >
-        <template #top>
-          <div class="busgo-table-head">
-            <div class="trip-template-col-route trip-template-sortable-header" @click="toggleTemplateSort('routeCode')">
-              <span>Ruta</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('routeCode') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-vehicle trip-template-sortable-header" @click="toggleTemplateSort('vehicleName')">
-              <span>Vehículo</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('vehicleName') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-workers trip-template-sortable-header" @click="toggleTemplateSort('workers')">
-              <span>Trabajadores</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('workers') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-schedule trip-template-sortable-header" @click="toggleTemplateSort('schedule')">
-              <span>Hora Programada</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('schedule') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-duration trip-template-sortable-header" @click="toggleTemplateSort('duration')">
-              <span>Duración</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('duration') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-frequency trip-template-sortable-header" @click="toggleTemplateSort('recurrence_pattern')">
-              <span>Frecuencia</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('recurrence_pattern') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-days trip-template-sortable-header" @click="toggleTemplateSort('days_of_week')">
-              <span>Días</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('days_of_week') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-sale-mode trip-template-sortable-header" @click="toggleTemplateSort('saleMode')">
-              <span>Modo</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('saleMode') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-status trip-template-sortable-header" @click="toggleTemplateSort('active')">
-              <span>Estado</span>
-              <v-icon size="16" class="ml-1">
-                {{ templateSortIcon('active') }}
-              </v-icon>
-            </div>
-            <div class="trip-template-col-actions">Acciones</div>
-          </div>
-        </template>
-
-        <template #item="slotProps">
-          <tr>
-            <td class="pa-0 border-0">
-              <div class="busgo-row trip-template-row">
-                <div class="trip-template-col-route">
-                  <div class="trip-template-route-title-row">
-                    <div class="trip-template-route-title">
-                      {{ slotProps.item.routeCode || "-" }}
-                    </div>
-                  </div>
-
-                  <div class="trip-template-route-meta">
-                    <v-icon size="14" class="mr-1">mdi-map-marker</v-icon>
-
-                    <span class="text-truncate">
-                      {{ slotProps.item.origin }}
-                    </span>
-
-                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-
-                    <span class="text-truncate">
-                      {{ slotProps.item.destination }}
-                    </span>
-                  </div>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
-                      Origen: {{ slotProps.item.origin }}<br />
-                      Destino: {{ slotProps.item.destination }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="trip-template-col-vehicle busgo-name-cell">
-                  <div class="min-width-0">
-                    <div class="busgo-name">
-                      {{ slotProps.item.vehicleName }}
-                    </div>
-
-                    <div class="busgo-submeta text-truncate">
-                      {{ getVehicleInternalNumber(slotProps.item) }}
-                    </div>
-                  </div>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Vehículo: {{ slotProps.item.vehicleName }}<br />
-                      Número interno: {{ getVehicleInternalNumber(slotProps.item) }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="trip-template-col-workers">
-                  <div class="trip-worker-row">
-                    <v-tooltip
-                      v-for="person in slotProps.item.workers || []"
-                      :key="person.id"
-                      location="bottom"
-                    >
-                      <template #activator="{ props }">
-                        <v-avatar
-                          class="trip-worker-avatar"
-                          size="32"
-                          elevation="3"
-                          v-bind="props"
-                        >
-                          <v-img
-                            :src="`${this.$axios.defaults.baseURL}images/${
-                              person.workerImage || person.image
-                            }?t=${getCacheTimestamp()}`"
-                            alt="image"
-                          />
-                        </v-avatar>
-                      </template>
-
-                      <span>{{ person.workerName || person.name }}</span>
-                      <v-spacer />
-                      <span class="text-secondary">{{ person.roleName }}</span>
-                    </v-tooltip>
-                  </div>
-                </div>
-
-                <div class="trip-template-col-schedule busgo-meta">
-                  <v-icon size="16" color="primary">
-                    mdi-clock-outline
-                  </v-icon>
-
-                  <span class="text-truncate">
-                    {{ slotProps.item.schedule }}
-                  </span>
-                </div>
-
-                <div class="trip-template-col-duration busgo-meta">
-                  <v-icon size="16" color="primary">
-                    mdi-timer-outline
-                  </v-icon>
-
-                  <span class="text-truncate">
-                    {{ slotProps.item.duration }}
-                  </span>
-                </div>
-
-                <div class="trip-template-col-frequency busgo-meta">
-                  <div
-                    v-if="slotProps.item.recurrence_pattern"
-                    class="d-flex align-center min-width-0"
-                  >
-                    <v-icon
-                      size="16"
-                      class="me-1"
-                      :color="getRecurrenceColor(slotProps.item.recurrence_pattern)"
-                    >
-                      {{ getRecurrenceIcon(slotProps.item.recurrence_pattern) }}
-                    </v-icon>
-
-                    <span class="text-truncate">
-                      {{ translateRecurrence(slotProps.item.recurrence_pattern) }}
-                    </span>
-                  </div>
-
-                  <span v-else>-</span>
-                </div>
-
-                <div class="trip-template-col-days">
-                  <div v-if="slotProps.item.days_of_week" class="d-flex justify-center">
-                    <v-tooltip location="bottom">
-                      <template #activator="{ props: activatorProps }">
-                        <div
-                          v-bind="activatorProps"
-                          class="d-flex flex-wrap gap-1 justify-center"
-                        >
-                          <v-avatar
-                            v-for="day in 7"
-                            :key="day"
-                            size="24"
-                            :color="
-                              getDaysArray(slotProps.item.days_of_week).includes(day - 1)
-                                ? 'primary'
-                                : 'grey-lighten-4'
-                            "
-                            class="text-caption"
-                          >
-                            {{ ["D", "L", "M", "X", "J", "V", "S"][day - 1] }}
-                          </v-avatar>
-                        </div>
-                      </template>
-
-                      <span>
-                        {{ formatFullDayNames(getDaysArray(slotProps.item.days_of_week)) }}
-                      </span>
-                    </v-tooltip>
-                  </div>
-
-                  <span v-else>-</span>
-                </div>
-
-                <div class="trip-template-col-sale-mode">
-                  <v-tooltip location="bottom">
-                    <template #activator="{ props }">
-                      <v-chip
-                        v-bind="props"
-                        :color="getSaleModeColor(slotProps.item)"
-                        size="small"
-                        variant="tonal"
-                        class="trip-template-sale-mode-chip"
-                      >
-                        {{ getSaleModeShortName(slotProps.item) }}
-                      </v-chip>
-                    </template>
-
-                    <span>{{ getSaleModeName(slotProps.item) }}</span>
-                  </v-tooltip>
-                </div>
-
-                <div class="trip-template-col-status">
-                  <v-chip
-                    :color="
-                      slotProps.item.active
-                        ? paleteColors.active
-                        : paleteColors.inactive
-                    "
-                    :text-color="paleteColors.white"
-                    size="small"
-                  >
-                    {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                  </v-chip>
-                </div>
-
-                <div class="trip-template-col-actions busgo-actions">
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.primary"
-                    @click="editItem(slotProps.item)"
-                    title="Editar plantilla de viaje"
-                  >
-                    <v-icon size="17">mdi-pencil</v-icon>
-                  </v-btn>
-
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.error"
-                    @click="deleteItem(slotProps.item)"
-                    title="Eliminar plantilla de viaje"
-                  >
-                    <v-icon size="17">mdi-delete</v-icon>
-                  </v-btn>
-                </div>
+<template #headers><tr><th colspan="100" class="template-header-cell"><div class="template-readable-head"><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">Ruta<v-icon size="14">{{ templateSortIcon('routeCode') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('vehicleName')">Vehículo<v-icon size="14">{{ templateSortIcon('vehicleName') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('workers')">Miembros<v-icon size="12">{{ templateSortIcon('workers') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('schedule')">Horario<v-icon size="14">{{ templateSortIcon('schedule') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('duration')">Duración<v-icon size="12">{{ templateSortIcon('duration') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('recurrence_pattern')">Programación<v-icon size="14">{{ templateSortIcon('recurrence_pattern') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('days_of_week')">Días<v-icon size="12">{{ templateSortIcon('days_of_week') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('saleMode')">Modalidad<v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('active')">Estado<v-icon size="12">{{ templateSortIcon('active') }}</v-icon></button></div><div>Acciones</div></div></th></tr></template>
+        <template #item="{ item }">
+          <tr><td colspan="100" class="pa-0 border-0">
+            <div class="template-readable-row">
+              <div class="template-route-cell">
+                <strong class="template-cell-title">{{ item.routeCode || 'Sin código' }}</strong>
+                <div class="template-endpoint"><v-icon size="14">mdi-map-marker-outline</v-icon><span><small>Origen</small>{{ item.origin || '—' }}</span></div>
+                <div class="template-endpoint"><v-icon size="14">mdi-map-marker-check-outline</v-icon><span><small>Destino</small>{{ item.destination || '—' }}</span></div>
               </div>
+              <div>
+                <strong class="template-cell-title">{{ item.vehicleName || 'Sin vehículo' }}</strong>
+                <v-chip size="x-small" variant="tonal" color="#2454d6" class="template-uniform-chip mt-2">Interno {{ getVehicleInternalNumber(item) }}</v-chip>
+                <v-btn v-if="item.workers?.length" class="template-members-button" variant="text" size="small" color="#2454d6"
+                  :aria-expanded="expandedMembersId === item.id" :aria-controls="`template-members-${item.id}`"
+                  :append-icon="expandedMembersId === item.id ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                  @click="expandedMembersId = expandedMembersId === item.id ? null : item.id">
+                  {{ expandedMembersId === item.id ? 'Ocultar miembros' : 'Ver miembros' }} ({{ item.workers.length }})
+                </v-btn>
+                <span v-else class="template-muted">Sin miembros</span>
+              </div>
+              <div>
+                <div class="template-time"><v-icon size="16" color="#2454d6">mdi-clock-outline</v-icon><strong>{{ item.schedule || '—' }}</strong></div>
+                <div class="template-duration"><small>Duración</small><span>{{ item.duration ?? '—' }}</span></div>
+              </div>
+              <div>
+                <div class="template-frequency"><v-icon size="15" color="#64748b">{{ getRecurrenceIcon(item.recurrence_pattern) }}</v-icon><span>{{ item.recurrence_pattern ? translateRecurrence(item.recurrence_pattern) : 'Sin frecuencia' }}</span></div>
+                <div v-if="item.days_of_week" class="template-week" :aria-label="formatFullDayNames(getDaysArray(item.days_of_week))">
+                  <span v-for="(day, index) in ['D', 'L', 'M', 'X', 'J', 'V', 'S']" :key="index" class="template-week-day" :class="{ 'template-week-day--selected': getDaysArray(item.days_of_week).includes(index) }" :title="['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][index]">{{ day }}</span>
+                </div>
+                <span v-else class="template-muted">Sin días definidos</span>
+              </div>
+              <div class="template-chip-stack">
+                <v-chip :color="getSaleModeColor(item)" size="x-small" variant="tonal" class="template-uniform-chip">{{ normalizeTemplateSaleMode(item) === 'express' ? 'Express' : 'Full' }}</v-chip>
+                <v-chip :color="item.active ? '#16845b' : '#64748b'" size="x-small" variant="tonal" class="template-uniform-chip">{{ item.active ? 'Activa' : 'Inactiva' }}</v-chip>
+              </div>
+              <div class="template-row-actions">
+                <v-btn icon="mdi-pencil-outline" variant="text" size="small" color="#2454d6" title="Editar plantilla" aria-label="Editar plantilla" @click="editItem(item)" />
+                <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="#dc2626" title="Eliminar plantilla" aria-label="Eliminar plantilla" @click="deleteItem(item)" />
+              </div>
+            </div>
+          </td></tr>
+          <tr v-if="expandedMembersId === item.id && item.workers?.length" class="template-members-expanded-row">
+            <td colspan="100" class="template-members-expanded-cell">
+              <section :id="`template-members-${item.id}`" class="template-members-panel" :aria-label="`Miembros de la plantilla ${item.routeCode || item.id}`">
+                <div class="template-members-panel-heading">
+                  <div><strong>Miembros asignados</strong><span>{{ item.routeCode || 'Plantilla' }} · {{ item.workers.length }} miembro(s)</span></div>
+                  <v-btn icon="mdi-close" variant="text" size="small" aria-label="Ocultar miembros" @click="expandedMembersId = null" />
+                </div>
+              <div class="template-worker-list">
+                <div v-for="person in item.workers || []" :key="person.id" class="template-worker-person">
+                  <v-avatar size="26" color="#eef3ff">
+                    <v-img v-if="person.workerImage || person.image" :src="`${$axios.defaults.baseURL}images/${person.workerImage || person.image}?t=${getCacheTimestamp()}`" :alt="person.workerName || person.name || 'Trabajador'"><template #error><v-icon size="16" color="#2454d6">mdi-account-outline</v-icon></template></v-img>
+                    <v-icon v-else size="16" color="#2454d6">mdi-account-outline</v-icon>
+                  </v-avatar>
+                  <div><strong>{{ person.workerName || person.name || 'Sin nombre' }}</strong><small v-if="person.roleName">{{ person.roleName }}</small></div>
+                </div>
+                <span v-if="!item.workers?.length" class="template-muted">Sin trabajadores</span>
+              </div>
+
+              </section>
             </td>
           </tr>
         </template>
@@ -398,7 +168,13 @@
     transition="dialog-bottom-transition"
     :no-click-animation="true"
   >
-    <v-card class="trip-template-dialog">
+    <v-card class="trip-template-dialog" elevation="0">
+      <div class="template-dialog-header">
+        <span class="template-dialog-icon"><v-icon size="23">mdi-calendar-clock</v-icon></span>
+        <div><div class="template-dialog-title">{{ formTitle }}</div><div class="template-dialog-subtitle">Configura el viaje, sus paradas, tarifas y trabajadores</div></div>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" size="small" aria-label="Cerrar plantilla" class="template-dialog-close" @click="close()" />
+      </div>
       <v-card-text class="trip-template-dialog-body pa-0">
         <v-form
           v-model="valid"
@@ -406,7 +182,7 @@
           class="trip-template-form"
         >
           <v-stepper
-            elevation="6"
+            elevation="0"
             v-model="step"
             :items="items"
             hide-actions
@@ -422,10 +198,10 @@
                       v-model="editedItem.branch_id"
                       :items="branches"
                       label="Sucursal"
-                      prepend-icon="mdi-store"
+                      prepend-inner-icon="mdi-store"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                       :disabled="editedIndex !== -1"
@@ -446,10 +222,10 @@
                       v-model="editedItem.route_id"
                       :items="routes"
                       label="Ruta"
-                      prepend-icon="mdi-road"
+                      prepend-inner-icon="mdi-road"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                       @update:model-value="updateStimated"
@@ -543,7 +319,7 @@
                       prepend-icon="mdi-car-side"
                       item-title="vehicleName"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                       @update:model-value="filterWorkers"
@@ -573,7 +349,7 @@
                       item-title="text"
                       item-value="value"
                       label="Frecuencia"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                       class="trip-template-frequency-select"
@@ -636,7 +412,7 @@
                       v-model="editedItem.schedule"
                       :items="filteredTimeSlots"
                       label="Hora de salida"
-                      variant="underlined"
+                      variant="outlined"
                       density="compact"
                       prepend-icon="mdi-calendar-clock"
                       :rules="selectRules"
@@ -650,7 +426,7 @@
                       v-model="editedItem.duration"
                       label="Duración (Minutos)"
                       prepend-icon="mdi-timer"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="durationRules"
                       density="compact"
                     />
@@ -664,7 +440,7 @@
                       prepend-icon="mdi-ticket-confirmation"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                     />
@@ -701,14 +477,14 @@
 
               <div class="trip-template-step-actions">
                 <v-row class="mt-1">
-                  <v-btn color="#E7E9E9" variant="flat" @click="close()">
+                  <v-btn class="template-secondary-btn" variant="flat" @click="close()">
                     Salir
                   </v-btn>
 
                   <v-spacer />
 
                   <v-btn
-                    color="#E7E9E9"
+                    :color="paleteColors.primary"
                     variant="flat"
                     @click="nextStep"
                     :disabled="
@@ -755,7 +531,7 @@
                       loading-text="Cargando datos..."
                       hide-default-header
                     >
-                      <template #top>
+                      <template #headers><tr><th colspan="100" class="template-header-cell">
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
@@ -813,11 +589,11 @@
                             </div>
                           </v-card-text>
                         </v-card>
-                      </template>
+                      </th></tr></template>
 
                       <template #item="slotProps">
                         <tr>
-                          <td colspan="100%" style="padding: 0; border: none">
+                          <td colspan="100" style="padding: 0; border: none">
                             <v-card
                               class="mb-2 mx-1 rounded-lg"
                               elevation="1"
@@ -852,7 +628,7 @@
                                     v-model="slotProps.item.stop_order"
                                     type="number"
                                     min="1"
-                                    variant="underlined"
+                                    variant="outlined"
                                     density="compact"
                                     hide-details
                                     @update:modelValue="onTemplateStopFieldChange"
@@ -987,14 +763,14 @@
 
               <div class="trip-template-step-actions">
                 <v-row class="mt-1">
-                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">
+                  <v-btn class="template-secondary-btn" variant="flat" @click="prevStep">
                     Volver
                   </v-btn>
 
                   <v-spacer />
 
                   <v-btn
-                    color="#E7E9E9"
+                    :color="paleteColors.primary"
                     variant="flat"
                     @click="nextStep"
                     :disabled="!templateStopRows.length"
@@ -1036,7 +812,7 @@
                       loading-text="Cargando datos..."
                       hide-default-header
                     >
-                      <template #top>
+                      <template #headers><tr><th colspan="100" class="template-header-cell">
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
@@ -1084,11 +860,11 @@
                             <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold"></div>
                           </v-card-text>
                         </v-card>
-                      </template>
+                      </th></tr></template>
 
                       <template #item="slotProps">
                         <tr>
-                          <td colspan="100%" style="padding: 0; border: none">
+                          <td colspan="100" style="padding: 0; border: none">
                             <v-card
                               class="mb-2 mx-1 rounded-lg"
                               elevation="1"
@@ -1203,7 +979,7 @@
                                           type="number"
                                           step="1"
                                           min="0"
-                                          variant="underlined"
+                                          variant="outlined"
                                           density="compact"
                                           hide-details
                                         />
@@ -1260,13 +1036,13 @@
 
               <div class="trip-template-step-actions">
                 <v-row class="mt-1">
-                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">
+                  <v-btn class="template-secondary-btn" variant="flat" @click="prevStep">
                     Volver
                   </v-btn>
 
                   <v-spacer />
 
-                  <v-btn color="#E7E9E9" variant="flat" @click="nextStep">
+                  <v-btn :color="paleteColors.primary" variant="flat" @click="nextStep">
                     Siguiente
                   </v-btn>
                 </v-row>
@@ -1382,7 +1158,7 @@
 
               <div class="trip-template-step-actions">
                 <v-row class="mt-1">
-                  <v-btn color="#E7E9E9" variant="flat" @click="prevStep">
+                  <v-btn class="template-secondary-btn" variant="flat" @click="prevStep">
                     Volver
                   </v-btn>
 
@@ -1408,7 +1184,7 @@
   </v-dialog>
 
   <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card class="busgo-dialog-card">
+    <v-card class="busgo-dialog-card template-small-dialog">
       <v-toolbar :color="paleteColors.error">
         <span class="text-subtitle-2 ml-4">
           Eliminar una plantilla de viaje
@@ -1445,7 +1221,7 @@
 
   <v-dialog v-model="dialogAssignedWorkers" max-width="400px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="busgo-dialog-card">
+      <v-card class="busgo-dialog-card template-small-dialog">
         <v-toolbar :color="paleteColors.primary">
           <span class="text-subtitle-2 ml-4">
             Asignar trabajadores al viaje
@@ -1461,10 +1237,10 @@
                   v-model="selectedWorker"
                   :items="filteredWorkers"
                   label="Personas"
-                  prepend-icon="mdi-account"
+                  prepend-inner-icon="mdi-account"
                   item-title="workerName"
                   item-value="id"
-                  variant="underlined"
+                  variant="outlined"
                   :rules="selectRules"
                 >
                   <template #item="{ props, item }">
@@ -1509,6 +1285,7 @@
       </v-card>
     </v-form>
   </v-dialog>
+</div>
 </template>
 
 <script>
@@ -1518,6 +1295,7 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 export default {
   data: () => ({
+    expandedMembersId: null,
     snackbar: false,
     sb_type: "",
     sb_message: "",
@@ -1691,7 +1469,7 @@ export default {
     },
     formTitle() {
       return this.editedIndex === -1
-        ? "Agregar Plantilla de Viaje"
+        ? "Nueva plantilla"
         : "Editar Plantilla de Viaje";
     },
     dateFormatted() {
@@ -1876,7 +1654,7 @@ export default {
       return this.getSaleModeName(template).replace(/^Venta\s+/i, "");
     },
     getSaleModeColor(template = {}) {
-      return this.normalizeTemplateSaleMode(template) === "express" ? "primary" : "grey";
+      return this.normalizeTemplateSaleMode(template) === "express" ? "#16845b" : "#2454d6";
     },
     ensureTemplateSaleMode({ useDefault = false } = {}) {
       if (useDefault || !this.editedItem.saleMode) {
@@ -2870,7 +2648,7 @@ export default {
   },
 };
 </script>
-<style>
+<style scoped>
 .selected-tab {
   background-color: #1976d2;
   /* Fondo del tab seleccionado */
@@ -3090,26 +2868,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* MÃ¡xima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}
+
 
 .trip-template-toolbar {
   display: flex;
@@ -3496,4 +3255,154 @@ table.v-table > thead,
     flex-wrap: wrap;
   }
 }
+
+/* Compact BusGo page and dialogs; isolated from other views. */
+.trip-templates-view { min-height:100%; background:#f6f8fb; color:#1e293b; }
+.busgo-page-header { display:flex; align-items:center; gap:11px; min-height:70px; padding:12px 24px; background:#fff; border-bottom:1px solid #e8edf5; border-radius:0!important; }
+.busgo-page-icon { flex:0 0 38px; width:38px!important; height:38px!important; border-radius:10px!important; color:#fff!important; background:#173b8f!important; }
+.busgo-page-title { font-size:19px; font-weight:800; color:#0f172a; line-height:1.2; }
+.busgo-page-subtitle { font-size:12px; color:#526176; line-height:1.5; margin-top:4px; }
+.busgo-add-btn { min-height:40px; background:#2454d6!important; color:#fff!important; border-radius:9px; font-size:12.5px; font-weight:750; letter-spacing:0; text-transform:none; }
+.busgo-container { padding:18px 24px 28px!important; }
+.busgo-card { background:#fff; border:1px solid #e4eaf2; border-radius:12px; overflow:hidden; }
+.busgo-card-header { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 16px; }
+.busgo-card-title { font-size:15px; font-weight:800; color:#0f172a; }
+.busgo-card-subtitle { font-size:12px; color:#526176; margin-top:4px; line-height:1.5; }
+.trip-template-toolbar { padding-inline:20px!important; gap:12px; }
+.trip-template-filter { flex:0 1 280px; }
+.trip-template-search { flex:0 1 320px; }
+.trip-template-toolbar :deep(.v-field),.template-small-dialog :deep(.v-field),.trip-template-dialog :deep(.v-field) { background:#fff; border-radius:9px; color:#233654; }
+.trip-template-toolbar :deep(.v-field__input),.template-small-dialog :deep(.v-field__input),.trip-template-dialog :deep(.v-field__input) { font-size:14px; color:#233654; }
+.trip-template-dialog :deep(.v-label),.template-small-dialog :deep(.v-label) { color:#475569; opacity:1; font-size:13px; }
+.trip-template-dialog :deep(.v-field__outline),.trip-template-toolbar :deep(.v-field__outline) { color:#c5cfdd; }
+.template-list-table :deep(.v-table__wrapper > table) { min-width:1390px; }
+.template-list-table :deep(thead),.trip-template-table :deep(thead) { display:table-header-group!important; }
+.template-header-cell { height:auto!important; padding:0!important; border:0!important; }
+.busgo-table-head,.trip-template-row { display:grid!important; grid-template-columns:2.3fr 1fr 1fr .85fr .7fr .9fr 1fr .65fr .65fr 80px; align-items:center; gap:12px; min-width:1390px; padding:12px 17px!important; margin:0!important; border-radius:0!important; }
+.busgo-table-head > div,.trip-template-row > div { width:auto!important; min-width:0; }
+.busgo-table-head { min-height:42px; background:#f3f6fa; border-bottom:1px solid #e4eaf2; color:#334155; font-size:11px; font-weight:800; }
+.busgo-table-head :deep(.v-icon) { font-size:14px!important; }
+.trip-template-row { min-height:70px; background:#fff; border-bottom:1px solid #edf1f6; color:#334155; font-size:13px; }
+.trip-template-row:hover { background:#f8faff; }
+.trip-template-sortable-header:hover { color:#2454d6; }
+.template-list-table :deep(.v-data-table-footer) { padding:6px 16px; font-size:12px; color:#475569; min-height:52px; }
+.trip-template-route-title,.busgo-name { font-size:13px; font-weight:750; color:#1e293b; }
+.trip-template-route-meta { display:grid; grid-template-columns:14px minmax(0,1fr); gap:3px 5px; font-size:12px; color:#526176; }
+.trip-template-route-meta .text-truncate { white-space:normal; overflow-wrap:anywhere; }
+.trip-template-route-meta :deep(.mx-2) { margin:0!important; }
+.template-internal-number { display:inline-block; padding:3px 7px; background:#eef3ff; color:#2454d6; border-radius:6px; font-size:11px; font-weight:750; }
+.busgo-actions { display:flex; align-items:center; justify-content:flex-end; gap:2px; }
+.busgo-actions :deep(.v-btn) { border-radius:8px; }
+.template-alert { display:flex; gap:10px; align-items:center; font-size:12px; }
+.template-alert strong { display:block; font-size:13px; margin-bottom:3px; }
+.trip-template-dialog { height:100vh; height:100dvh; min-height:0; background:#f6f8fb; color:#1e293b; border-radius:0; }
+.template-dialog-header { display:flex; align-items:center; flex-shrink:0; gap:11px; min-height:70px; padding:12px 24px; background:#142b55; color:#fff; }
+.template-dialog-icon { display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px; border-radius:10px; background:#294777; }
+.template-dialog-title { font-size:19px; font-weight:800; line-height:1.2; }
+.template-dialog-subtitle { font-size:12px; color:#d3def1; line-height:1.4; margin-top:4px; }
+.template-dialog-close { color:#fff; background:#294777; border-radius:9px; }
+.trip-template-stepper { background:#f6f8fb; box-shadow:none!important; }
+.trip-template-stepper :deep(.v-stepper-header) { flex-shrink:0; min-height:64px; background:#fff; border-bottom:1px solid #e1e8f1; box-shadow:none; }
+.trip-template-stepper :deep(.v-stepper-item) { padding:16px 20px; }
+.trip-template-stepper :deep(.v-stepper-item__title) { font-size:13px; font-weight:700; color:#475569; }
+.trip-template-stepper :deep(.v-stepper-item--selected .v-stepper-item__avatar) { background:#2454d6; color:#fff; }
+.trip-template-step-content,.trip-template-step-pane--summary .trip-template-step-content { overflow:auto; padding:18px 24px; height:auto; }
+.trip-template-step-content > .v-row { flex:0 0 auto; background:#fff; border:1px solid #e4eaf2; border-radius:12px; padding:12px; margin:0!important; }
+.trip-template-step-actions { flex-shrink:0; padding:14px 24px; background:#fff; border-top:1px solid #e1e8f1; }
+.trip-template-step-actions > .v-row { margin:0!important; gap:10px; }
+.trip-template-step-actions :deep(.v-btn),.busgo-dialog-actions :deep(.v-btn) { min-height:40px; border-radius:9px; font-size:13px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
+.template-secondary-btn { color:#475569!important; background:#f1f5f9!important; border:1px solid #dce3ed; }
+.trip-template-step-actions :deep(.v-btn--disabled) { background:#dce3ed!important; color:#64748b!important; }
+.trip-template-dialog :deep(.v-sheet),.trip-template-dialog :deep(.v-card) { border-radius:10px; }
+.trip-template-dialog :deep(.v-toolbar) { border-radius:10px 10px 0 0; }
+.trip-template-dialog :deep(.v-toolbar__content) { min-height:48px; height:auto!important; padding-block:8px; }
+.trip-template-dialog :deep(.text-subtitle-1) { font-size:14px!important; font-weight:700; }
+.trip-template-table { max-height:none!important; height:auto; overflow:visible!important; border:1px solid #e4eaf2; border-radius:10px; box-shadow:none!important; }
+.trip-template-table :deep(.v-table__wrapper) { height:auto; overflow:auto; }
+.trip-template-table :deep(table) { min-width:950px; }
+.trip-template-workers-table :deep(table) { min-width:650px; }
+.trip-template-table :deep(th) { font-size:12px; color:#334155; background:#f3f6fa; }
+.trip-template-table :deep(td) { font-size:13px; color:#334155; }
+.trip-template-workers-sheet,.trip-template-workers-card-text { height:auto; overflow:visible; flex:0 0 auto; }
+.trip-template-workers-card-text { display:block; padding:14px; }
+.trip-template-step-content--workers { overflow:auto; }
+.trip-fare-ticket-types-header { background:#f3f6fa; font-size:12px; }
+.trip-fare-ticket-types-row { font-size:13px; }
+.template-small-dialog { border:1px solid #e4eaf2; border-radius:12px; background:#fff; color:#1e293b; }
+.template-small-dialog :deep(.v-toolbar__content) { min-height:56px; height:auto!important; }
+.template-small-dialog :deep(.v-card-text) { font-size:14px; color:#334155; }
+.busgo-dialog-actions { background:#f8fafc; padding:14px 18px; gap:8px; }
+@media(max-width:959px) {
+  .busgo-page-header,.template-dialog-header { padding-inline:17px; }
+  .busgo-container { padding:15px 17px 24px!important; }
+  .trip-template-filter,.trip-template-search { flex:0 1 auto; width:100%; min-width:0; }
+  .trip-template-step-content { padding:15px 17px; }
+}
+@media(max-width:600px) {
+  .busgo-page-header { flex-wrap:wrap; padding:12px; }
+  .busgo-add-btn { margin-left:49px; }
+  .busgo-container { padding:12px!important; }
+  .busgo-page-title,.template-dialog-title { font-size:17px; }
+  .template-dialog-header { padding:12px; }
+  .template-dialog-subtitle { font-size:11px; }
+  .trip-template-step-content { padding:12px; }
+  .trip-template-step-actions { padding:12px; }
+  .trip-template-stepper :deep(.v-stepper-item) { padding:12px 8px; }
+}
+
+
+/* Group related information into readable columns without hiding fields. */
+.template-list-table :deep(.v-table__wrapper > table) { min-width:1100px; }
+.template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.7fr) minmax(115px,1fr) minmax(160px,1.25fr) minmax(90px,.75fr) minmax(176px,1.35fr) 80px 76px; gap:14px; padding:14px 18px; min-width:1100px; }
+.template-readable-head { background:#f3f6fa; color:#334155; font-size:11px; font-weight:750; border-bottom:1px solid #e4eaf2; align-items:center; }
+.template-heading-group { display:flex; flex-direction:column; gap:5px; }
+.template-sort-button { display:flex; align-items:center; gap:5px; text-align:left; font:inherit; color:inherit; cursor:pointer; width:fit-content; }
+.template-sort-button:hover { color:#2454d6; }
+.template-sort-button:focus-visible { outline:2px solid #2454d6; outline-offset:3px; border-radius:3px; }
+.template-sort-button--secondary { color:#64748b; font-size:10px; font-weight:600; }
+.template-readable-row { min-height:110px; align-items:start; background:#fff; border-bottom:1px solid #e8edf5; color:#334155; font-size:13px; }
+.template-readable-row:hover { background:#f8faff; }
+.template-readable-row > div { min-width:0; }
+.template-cell-title { display:block; font-size:13px; color:#1e293b; font-weight:750; line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
+.template-endpoint { display:flex; align-items:flex-start; gap:6px; margin-top:6px; color:#475569; font-size:12px; line-height:1.45; }
+.template-endpoint > .v-icon { margin-top:3px; flex-shrink:0; color:#64748b; }
+.template-endpoint span { min-width:0; overflow-wrap:anywhere; }
+.template-endpoint small { display:block; font-size:10px; color:#64748b; line-height:1.3; }
+.template-worker-list { display:flex; flex-direction:column; gap:9px; }
+.template-worker-person { display:flex; align-items:flex-start; gap:7px; }
+.template-worker-person > .v-avatar { flex-shrink:0; }
+.template-worker-person > div { min-width:0; }
+.template-worker-person strong { display:block; color:#334155; font-size:12px; font-weight:650; white-space:normal; overflow-wrap:anywhere; line-height:1.4; }
+.template-worker-person small { display:block; font-size:11px; color:#64748b; margin-top:2px; white-space:normal; }
+.template-time { display:flex; align-items:center; gap:6px; color:#233654; font-size:14px; }
+.template-duration { margin-top:10px; color:#475569; font-size:12px; }
+.template-duration small { display:block; font-size:10px; color:#64748b; margin-bottom:3px; }
+.template-frequency { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:650; line-height:1.5; }
+.template-week { display:flex; flex-wrap:wrap; gap:3px; margin-top:10px; }
+.template-week-day { display:grid; place-items:center; width:21px; height:23px; border-radius:5px; background:#f1f5f9; color:#64748b; border:1px solid #e4eaf2; font-size:10px; font-weight:650; }
+.template-week-day--selected { background:#eef3ff; border-color:#cbdcff; color:#2454d6; }
+.template-chip-stack { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.template-uniform-chip { height:23px; border-radius:6px; font-size:11px; font-weight:700; letter-spacing:0; max-width:100%; }
+.template-uniform-chip :deep(.v-chip__content) { white-space:normal; overflow-wrap:anywhere; }
+.template-row-actions { display:flex; align-items:center; gap:0; }
+.template-row-actions .v-btn { border-radius:8px; width:36px; height:36px; }
+.template-row-actions :deep(.v-icon) { font-size:18px; }
+.template-muted { display:block; color:#64748b; font-size:11px; line-height:1.5; margin-top:5px; }
+
+/* Keep the overview compact and reveal the team on demand. */
+.template-list-table :deep(.v-table__wrapper > table) { min-width:980px; }
+.template-readable-head,.template-readable-row { grid-template-columns:minmax(230px,1.8fr) minmax(164px,1.2fr) minmax(92px,.75fr) minmax(176px,1.3fr) 80px 76px; min-width:980px; gap:14px; padding:12px 18px; }
+.template-readable-row { min-height:86px; align-items:center; }
+.template-endpoint { margin-top:4px; }
+.template-endpoint small { display:inline; margin-right:5px; }
+.template-members-button.v-btn { display:flex; margin:5px 0 0 -8px; padding:0 8px; min-height:28px; height:auto; font-size:11px; font-weight:650; text-transform:none; letter-spacing:0; border-radius:6px; }
+.template-members-button:focus-visible { outline:2px solid #2454d6; outline-offset:2px; }
+.template-members-expanded-cell { padding:0 18px 14px!important; border-bottom:1px solid #dfe7f2!important; background:#f8faff; }
+.template-members-panel { border:1px solid #dfe7f2; border-radius:10px; background:#fff; padding:14px 16px; }
+.template-members-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.template-members-panel-heading strong { display:block; color:#233654; font-size:13px; font-weight:750; }
+.template-members-panel-heading span { display:block; margin-top:3px; color:#64748b; font-size:11px; }
+.template-members-panel .template-worker-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
+.template-members-panel .template-worker-person { padding:10px 12px; border:1px solid #e8edf5; border-radius:8px; background:#f9fbfe; align-items:center; }
+.template-members-panel .template-worker-person strong { font-size:13px; }
 </style>

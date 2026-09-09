@@ -1,34 +1,24 @@
 ﻿<template>
   <v-snackbar
-    class="mt-12"
+    class="busgo-snackbar"
     location="right top"
     :timeout="sb_timeout"
     :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
+    elevation="10"
     v-model="snackbar"
   >
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
-      </v-col>
-
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-      </v-col>
-    </v-row>
+    <div class="snackbar-content">
+      <v-icon :icon="sb_icon" size="22" />
+      <div><div class="snackbar-title">{{ sb_title }}</div><div class="snackbar-message">{{ sb_message }}</div></div>
+    </div>
   </v-snackbar>
 
   <v-card class="busgo-page-header" elevation="0">
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
-      <v-icon>mdi-steering</v-icon>
-    </v-avatar>
+    <div class="trip-page-icon"><v-icon size="21">mdi-steering</v-icon></div>
 
     <div>
       <div class="busgo-page-title">Viajes</div>
-      <div class="busgo-page-subtitle">Gestionar viajes operacionales</div>
+      <div class="busgo-page-subtitle">Planificación y control de viajes operacionales</div>
     </div>
 
     <v-spacer />
@@ -41,11 +31,26 @@
       class="busgo-add-btn"
       @click="showAdd()"
     >
-      Agregar Viaje
+      Crear viaje
     </v-btn>
   </v-card>
 
   <v-container fluid class="busgo-container">
+    <v-row class="trip-summary-row">
+      <v-col cols="12" sm="6">
+        <div class="trip-summary-card">
+          <div class="trip-summary-icon trip-summary-icon--blue"><v-icon size="19">mdi-bus-clock</v-icon></div>
+          <div><div class="trip-summary-value">{{ trips.length }}</div><div class="trip-summary-label">Viajes en la fecha seleccionada</div></div>
+        </div>
+      </v-col>
+      <v-col cols="12" sm="6">
+        <div class="trip-summary-card">
+          <div class="trip-summary-icon trip-summary-icon--green"><v-icon size="19">mdi-calendar-check-outline</v-icon></div>
+          <div><div class="trip-summary-value trip-summary-date">{{ dateFormattedSearch }}</div><div class="trip-summary-label">Período operativo consultado</div></div>
+        </div>
+      </v-col>
+    </v-row>
+
     <v-card class="busgo-card" elevation="0">
       <div class="busgo-card-header">
         <div>
@@ -56,7 +61,7 @@
         </div>
       </div>
 
-      <div class="trip-toolbar px-6 pb-4">
+      <div class="trip-toolbar">
         <v-autocomplete
           v-if="mostrarFila"
           :no-data-text="'No hay datos disponibles'"
@@ -139,10 +144,10 @@
         no-data-text="No hay datos disponibles"
         :loading="loading"
         loading-text="Cargando datos..."
-        :hide-default-header="true"
-        class="busgo-table"
+        class="busgo-table trips-main-table"
       >
-        <template #top>
+        <template #headers>
+<tr><th colspan="100" class="trip-header-shell">
           <div class="busgo-table-head">
             <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
               <span>Código</span>
@@ -194,11 +199,13 @@
             </div>
             <div class="trip-col-actions">Acciones</div>
           </div>
-        </template>
+        
+</th></tr>
+</template>
 
         <template #item="slotProps">
           <tr>
-            <td class="pa-0 border-0">
+            <td colspan="100" class="pa-0 border-0">
               <div class="busgo-row trip-row">
                 <div class="trip-col-code busgo-meta trip-code-cell">
                   <span class="trip-code-value text-truncate">
@@ -238,7 +245,7 @@
                 </div>
 
                 <div class="trip-col-vehicle busgo-name-cell">
-                  
+                  <div class="trip-vehicle-icon"><v-icon size="18">mdi-bus</v-icon></div>
 
                   <div class="min-width-0">
                     <div class="busgo-name">
@@ -346,27 +353,31 @@
                 </div>
 
                 <div class="trip-col-actions busgo-actions">
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.primary"
-                    @click="editItem(slotProps.item)"
-                    title="Editar Viaje"
-                  >
-                    <v-icon size="17">mdi-pencil</v-icon>
-                  </v-btn>
+                  <v-tooltip text="Editar viaje" location="top">
+                    <template #activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        icon="mdi-pencil-outline"
+                        variant="text"
+                        size="small"
+                        class="action-button action-button--edit"
+                        @click="editItem(slotProps.item)"
+                      />
+                    </template>
+                  </v-tooltip>
 
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.error"
-                    @click="deleteItem(slotProps.item)"
-                    title="Eliminar Viaje"
-                  >
-                    <v-icon size="17">mdi-delete</v-icon>
-                  </v-btn>
+                  <v-tooltip text="Eliminar viaje" location="top">
+                    <template #activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        icon="mdi-trash-can-outline"
+                        variant="text"
+                        size="small"
+                        class="action-button action-button--delete"
+                        @click="deleteItem(slotProps.item)"
+                      />
+                    </template>
+                  </v-tooltip>
                 </div>
               </div>
             </td>
@@ -383,14 +394,48 @@
     :no-click-animation="true"
   >
     <v-card class="trip-dialog">
+      <header class="trip-dialog-header">
+        <div class="trip-dialog-heading">
+          <div class="trip-dialog-icon"><v-icon size="21">mdi-bus-clock</v-icon></div>
+          <div>
+            <div class="trip-dialog-title">{{ formTitle }}</div>
+            <div class="trip-dialog-subtitle">Configura la operación, las paradas, las tarifas y el equipo del viaje</div>
+          </div>
+        </div>
+        <div class="trip-dialog-progress">
+          <span>Paso {{ step }} de {{ items.length }}</span>
+          <strong>{{ items[step - 1] }}</strong>
+        </div>
+        <v-btn icon="mdi-close" variant="text" class="trip-dialog-close" :disabled="loading" @click="close()" />
+      </header>
       <v-card-text class="trip-dialog-body pa-0">
+        <div class="trip-progress-nav">
+          <div
+            v-for="(progressItem, progressIndex) in items"
+            :key="progressItem"
+            class="trip-progress-item"
+            :class="{
+              'trip-progress-item--active': step === progressIndex + 1,
+              'trip-progress-item--complete': step > progressIndex + 1
+            }"
+          >
+            <div class="trip-progress-number">
+              <v-icon v-if="step > progressIndex + 1" size="16">mdi-check</v-icon>
+              <span v-else>{{ progressIndex + 1 }}</span>
+            </div>
+            <div class="trip-progress-copy">
+              <span>Etapa {{ String(progressIndex + 1).padStart(2, '0') }}</span>
+              <strong>{{ progressItem }}</strong>
+            </div>
+          </div>
+        </div>
         <v-form
           v-model="valid"
           enctype="multipart/form-data"
           class="trip-form"
         >
           <v-stepper
-            elevation="6"
+            elevation="0"
             bg-color=""
             v-model="step"
             :items="items"
@@ -400,6 +445,11 @@
             <template #item.1>
               <div class="trip-step-pane trip-step-pane--summary">
                 <div class="trip-step-content">
+                <div class="trip-form-intro">
+                  <div class="trip-form-intro-icon"><v-icon size="21">mdi-tune-variant</v-icon></div>
+                  <div><strong>Configuración operativa</strong><span>Selecciona los recursos y horarios que definirán este viaje.</span></div>
+                </div>
+                <div class="trip-form-section-title"><v-icon size="17">mdi-map-marker-path</v-icon><span>Ruta y recursos</span></div>
                 <v-row style="margin-top: 5px">
                   <v-col v-if="mostrarFila" cols="12" md="6">
                     <v-autocomplete
@@ -407,12 +457,13 @@
                       v-model="editedItem.branch_id"
                       :items="branches"
                       label="Sucursal"
-                      prepend-icon="mdi-store"
+                      prepend-inner-icon="mdi-store"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      :menu-props="{ contentClass: 'trip-branch-menu' }"
                       :disabled="editedIndex !== -1"
                       @update:model-value="onTripBranchChange"
                     >
@@ -431,109 +482,36 @@
                       v-model="editedItem.route_id"
                       :items="routes"
                       label="Ruta"
-                      prepend-icon="mdi-road"
+                      prepend-inner-icon="mdi-road-variant"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      :menu-props="{ contentClass: 'trip-route-menu' }"
                       @update:model-value="updateStimated"
                     >
+                      <template #selection="{ item }">
+                        <span class="trip-selected-label">{{ item.raw.routeCode || item.raw.name }} · {{ item.raw.originAddress }} → {{ item.raw.destinationAddress }}</span>
+                      </template>
                       <template #item="{ props, item }">
-                        <v-card class="mx-1 my-2" elevation="2">
-                          <v-list-item v-bind="{ ...props, title: undefined }">
-                            <v-row align="center" no-gutters>
-                              <v-col cols="12" class="d-flex align-center mb-2">
-                                <div class="trip-route-title-row">
-                                  <div class="text-subtitle-2 font-weight-bold text-truncate">
-                                    {{ item.raw.routeCode || "-" }}
-                                  </div>
-                                </div>
-                              </v-col>
-
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img
-                                    :src="getImageUrl(item.raw.originImage)"
-                                    max-width="40"
-                                  />
-                                </v-avatar>
-
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">
-                                      mdi-map-marker
-                                    </v-icon>
-                                    Origen
-                                  </div>
-
-                                  <v-tooltip location="top">
-                                    <template #activator="{ props: tooltipProps }">
-                                      <div
-                                        v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
-                                      >
-                                        {{ item.raw.originAddress }}
-                                      </div>
-                                    </template>
-
-                                    <span>{{ item.raw.originAddress }}</span>
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
-
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img
-                                    :src="getImageUrl(item.raw.destinationImage)"
-                                    max-width="40"
-                                  />
-                                </v-avatar>
-
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">
-                                      mdi-map-marker-check
-                                    </v-icon>
-                                    Destino
-                                  </div>
-
-                                  <v-tooltip location="top">
-                                    <template #activator="{ props: tooltipProps }">
-                                      <div
-                                        v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
-                                      >
-                                        {{ item.raw.destinationAddress }}
-                                      </div>
-                                    </template>
-
-                                    <span>{{ item.raw.destinationAddress }}</span>
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
-
-                              <v-col
-                                cols="12"
-                                md="4"
-                                class="align-center justify-md-left justify-center text-left"
-                              >
-                                <div class="text-caption text-grey ml-1">
-                                  Duración estimada
-                                </div>
-
-                                <div class="text-body-2 font-weight-medium">
-                                  <v-icon small class="mr-1" color="primary">
-                                    mdi-clock-time-four-outline
-                                  </v-icon>
-                                  {{ formatDuration(item.raw.estimated) }}
-                                </div>
-                              </v-col>
-                            </v-row>
-                          </v-list-item>
-                        </v-card>
+                        <v-list-item v-bind="{ ...props, title: undefined, subtitle: undefined }" class="trip-route-option">
+                          <div class="trip-option-heading">
+                            <strong>{{ item.raw.routeCode || item.raw.name || 'Ruta' }}</strong>
+                            <span><v-icon size="15">mdi-clock-outline</v-icon>{{ formatDuration(item.raw.estimated) }}</span>
+                          </div>
+                          <div class="trip-option-journey">
+                            <div class="trip-option-place">
+                              <v-avatar size="40" rounded="lg"><v-img :src="getImageUrl(item.raw.originImage)" cover /></v-avatar>
+                              <div><small>Origen</small><strong>{{ item.raw.originAddress || 'Sin dirección' }}</strong></div>
+                            </div>
+                            <v-icon class="trip-option-arrow" size="20">mdi-arrow-right</v-icon>
+                            <div class="trip-option-place">
+                              <v-avatar size="40" rounded="lg"><v-img :src="getImageUrl(item.raw.destinationImage)" cover /></v-avatar>
+                              <div><small>Destino</small><strong>{{ item.raw.destinationAddress || 'Sin dirección' }}</strong></div>
+                            </div>
+                          </div>
+                        </v-list-item>
                       </template>
                     </v-autocomplete>
                   </v-col>
@@ -544,12 +522,13 @@
                       v-model="editedItem.vehicle_id"
                       :items="vehicles"
                       label="Vehículo"
-                      prepend-icon="mdi-car-side"
+                      prepend-inner-icon="mdi-bus"
                       item-title="vehicleName"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      :menu-props="{ contentClass: 'trip-vehicle-menu' }"
                       @update:model-value="filterWorkers"
                     >
                       <template #item="{ props, item }">
@@ -558,10 +537,10 @@
                           :prepend-avatar="getImageUrl(item.raw.vehicleImage)"
                           :title="item.raw.vehicleName"
                         >
-                          <v-list-item-subtitle class="d-flex flex-column">
-                            <div>{{ vehicleInternalNumber(item.raw) }}</div>
-                            <div>Marca: {{ item.raw.brand }}</div>
-                            <div>Asientos: {{ item.raw.seats }}</div>
+                          <v-list-item-subtitle class="trip-vehicle-option-meta">
+                            <div><v-icon size="13">mdi-pound</v-icon><span>{{ vehicleInternalNumber(item.raw) }}</span></div>
+                            <div><v-icon size="13">mdi-factory</v-icon><span>{{ item.raw.brand || "Sin marca" }}</span></div>
+                            <div><v-icon size="13">mdi-seat-passenger</v-icon><span>{{ item.raw.seats ?? "N/D" }} asientos</span></div>
                           </v-list-item-subtitle>
                         </v-list-item>
                       </template>
@@ -581,8 +560,8 @@
                         <v-text-field
                           v-bind="props"
                           :modelValue="dateFormatted"
-                          variant="underlined"
-                          prepend-icon="mdi-calendar"
+                          variant="outlined"
+                          prepend-inner-icon="mdi-calendar"
                           label="Fecha"
                           density="compact"
                         />
@@ -603,35 +582,54 @@
                   </v-col>
                 </v-row>
 
+                <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-clock-outline</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="editedItem.schedule"
-                      :items="filteredTimeSlots"
-                      label="Hora de salida"
-                      variant="underlined"
-                      density="compact"
-                      prepend-icon="mdi-calendar-clock"
-                      @update:modelValue="updateArrival"
-                      :disabled="!editedItem.route_id"
-                      :rules="selectRules"
-                      :key="
-                        'timeslot-' +
-                        (editedItem.date || '') +
-                        (editedItem.schedule || '')
-                      "
-                    />
-                  </v-col>
-
-                  <v-col cols="12" md="4">
-                    <v-text-field
-                      v-model="editedItem.arrival"
-                      label="Hora de llegada"
-                      :disabled="true"
-                      variant="underlined"
-                      density="compact"
-                      prepend-icon="mdi-calendar-clock"
-                    />
+                  <v-col cols="12">
+                    <section class="trip-time-panel" aria-label="Horario del viaje">
+                      <div class="trip-time-panel-heading"><v-icon size="18">mdi-clock-outline</v-icon><strong>Horario del viaje</strong><span>Formato 24 horas</span></div>
+                      <div class="trip-time-journey">
+                        <v-input
+                          :model-value="editedItem.schedule"
+                          :rules="selectRules"
+                          :disabled="!editedItem.route_id"
+                          hide-details="auto"
+                          class="trip-departure-input"
+                        >
+                          <v-menu location="bottom start" :close-on-content-click="true" :disabled="!editedItem.route_id" content-class="trip-time-menu">
+                            <template #activator="{ props }">
+                              <button v-bind="props" type="button" class="trip-time-trigger" :disabled="!editedItem.route_id" aria-label="Seleccionar hora de salida">
+                                <span class="trip-time-label"><v-icon size="17">mdi-clock-start</v-icon>Salida</span>
+                                <span class="trip-time-value">{{ editedItem.schedule || '— : —' }}</span>
+                                <span class="trip-time-trigger-caption">{{ editedItem.schedule ? 'Cambiar horario' : 'Elegir horario' }}<v-icon size="17">mdi-chevron-down</v-icon></span>
+                              </button>
+                            </template>
+                            <v-card class="trip-time-picker" elevation="8">
+                              <div class="trip-time-picker-heading"><strong>Selecciona la salida</strong><span>{{ dateFormatted }} · Horarios disponibles</span></div>
+                              <div v-if="filteredTimeSlots.length" class="trip-time-grid" role="group" aria-label="Horarios disponibles">
+                                <button
+                                  v-for="time in filteredTimeSlots"
+                                  :key="time"
+                                  type="button"
+                                  class="trip-time-option"
+                                  :class="{ 'trip-time-option--selected': editedItem.schedule === time }"
+                                  :aria-pressed="editedItem.schedule === time"
+                                  @click="editedItem.schedule = time; updateArrival()"
+                                >{{ time }}</button>
+                              </div>
+                              <div v-else class="trip-time-empty"><v-icon size="24">mdi-clock-alert-outline</v-icon>No hay horarios disponibles para esta fecha.</div>
+                              <div class="trip-time-picker-note"><v-icon size="14">mdi-information-outline</v-icon>Solo se muestran los horarios permitidos para el viaje.</div>
+                            </v-card>
+                          </v-menu>
+                        </v-input>
+                        <div class="trip-time-duration"><span>{{ selectedRouteRecord ? formatDuration(selectedRouteRecord.estimated) : 'Duración estimada' }}</span><div><span></span><v-icon size="20">mdi-arrow-right</v-icon></div></div>
+                        <div class="trip-time-arrival" aria-live="polite">
+                          <span class="trip-time-label"><v-icon size="17">mdi-clock-end</v-icon>Llegada estimada</span>
+                          <span class="trip-time-value">{{ editedItem.arrival || '— : —' }}</span>
+                          <span class="trip-time-arrival-caption">Calculada automáticamente</span>
+                        </div>
+                      </div>
+                      <div v-if="!editedItem.route_id" class="trip-time-hint"><v-icon size="16">mdi-map-marker-path</v-icon>Selecciona una ruta para consultar los horarios.</div>
+                    </section>
                   </v-col>
 
                   <v-col cols="12" md="4">
@@ -639,10 +637,11 @@
                       v-model="editedItem.saleMode"
                       :items="saleModes"
                       label="Modo de venta"
-                      prepend-icon="mdi-ticket-confirmation"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
                       item-title="name"
                       item-value="id"
-                      variant="underlined"
+                      variant="outlined"
                       :rules="selectRules"
                       density="compact"
                     />
@@ -670,7 +669,7 @@
                       !editedItem.schedule
                     "
                   >
-                    Siguiente
+                    Continuar a paradas
                   </v-btn>
                 </v-row>
               </div>
@@ -680,8 +679,8 @@
             <template #item.2>
               <div class="trip-step-pane">
                 <div class="trip-step-content">
-                <v-sheet border>
-                  <v-toolbar :color="paleteColors.primary">
+                <v-sheet border class="trip-config-section">
+                  <v-toolbar class="trip-config-toolbar" color="transparent">
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1">
@@ -706,13 +705,14 @@
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
                       loading-text="Cargando datos..."
-                      hide-default-header
+                      fixed-header
                     >
-                      <template #top>
+                      <template #headers>
+<tr><th colspan="100" class="trip-header-shell">
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="mb-2 mx-1 rounded-lg"
+                          class="trip-table-manual-head"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -766,18 +766,20 @@
                             </div>
                           </v-card-text>
                         </v-card>
-                      </template>
+                      
+</th></tr>
+</template>
 
                       <template #item="slotProps">
                         <tr>
                           <td colspan="100%" style="padding: 0; border: none">
                             <v-card
-                              class="mb-2 mx-1 rounded-lg"
+                              class="trip-stop-row-card"
                               elevation="1"
                               density="comfortable"
                               flat
                               :style="{
-                                opacity: slotProps.item.included ? 1 : 0.55,
+                                opacity: slotProps.item.included ? 1 : 0.85,
                                 border: slotProps.item.included
                                   ? '1px solid #e5e7eb'
                                   : '1px dashed #cbd5e1'
@@ -816,7 +818,7 @@
                                     v-model="slotProps.item.stop_order"
                                     type="number"
                                     min="1"
-                                    variant="underlined"
+                                    variant="outlined"
                                     density="compact"
                                     hide-details
                                     @update:modelValue="syncTripStopTimes"
@@ -963,7 +965,7 @@
                     @click="nextStep"
                     :disabled="!tripStopRows.length"
                   >
-                    Siguiente
+                    Continuar a tarifas
                   </v-btn>
                 </v-row>
               </div>
@@ -973,8 +975,8 @@
             <template #item.3>
               <div class="trip-step-pane">
                 <div class="trip-step-content">
-                <v-sheet border>
-                  <v-toolbar :color="paleteColors.primary">
+                <v-sheet border class="trip-config-section">
+                  <v-toolbar class="trip-config-toolbar" color="transparent">
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1">
@@ -999,13 +1001,14 @@
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
                       loading-text="Cargando datos..."
-                      hide-default-header
+                      fixed-header
                     >
-                      <template #top>
+                      <template #headers>
+<tr><th colspan="100" class="trip-header-shell">
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="mb-2 mx-1 rounded-lg"
+                          class="trip-table-manual-head"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -1049,13 +1052,15 @@
                             <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold"></div>
                           </v-card-text>
                         </v-card>
-                      </template>
+                      
+</th></tr>
+</template>
 
                       <template #item="slotProps">
                         <tr>
                           <td colspan="100%" style="padding: 0; border: none">
                             <v-card
-                              class="mb-2 mx-1 rounded-lg"
+                              class="trip-fare-row-card"
                               elevation="1"
                               density="comfortable"
                               flat
@@ -1176,7 +1181,7 @@
                                           type="number"
                                           step="1"
                                           min="0"
-                                          variant="underlined"
+                                          variant="outlined"
                                           density="compact"
                                           hide-details
                                         />
@@ -1240,7 +1245,7 @@
                   <v-spacer />
 
                   <v-btn color="#E7E9E9" variant="flat" @click="nextStep">
-                    Siguiente
+                    Asignar trabajadores
                   </v-btn>
                 </v-row>
               </div>
@@ -1250,8 +1255,8 @@
             <template #item.4>
               <div class="trip-step-pane">
                 <div class="trip-step-content">
-                <v-sheet border>
-                  <v-toolbar :color="paleteColors.primary">
+                <v-sheet border class="trip-config-section">
+                  <v-toolbar class="trip-config-toolbar" color="transparent">
                     <v-row align="center">
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1">
@@ -1359,54 +1364,63 @@
               </div>
             </template>
           </v-stepper>
+          <aside class="trip-live-summary" aria-label="Resumen del viaje">
+            <div class="trip-summary-heading"><v-icon size="20">mdi-clipboard-text-outline</v-icon><div><strong>Tu viaje</strong><span>Resumen de la configuración actual</span></div></div>
+            <section class="trip-route-preview">
+              <div class="trip-preview-eyebrow">Recorrido</div>
+              <template v-if="selectedRouteRecord">
+                <div class="trip-preview-route-code">{{ selectedRouteRecord.routeCode || selectedRouteRecord.name }}</div>
+                <div class="trip-preview-stop"><span class="trip-preview-dot"></span><div><small>Origen</small><strong>{{ selectedRouteRecord.originAddress || 'Sin dirección' }}</strong></div></div>
+                <div class="trip-preview-stop trip-preview-stop--destination"><span class="trip-preview-dot"></span><div><small>Destino</small><strong>{{ selectedRouteRecord.destinationAddress || 'Sin dirección' }}</strong></div></div>
+                <div class="trip-preview-duration"><v-icon size="16">mdi-clock-outline</v-icon>{{ formatDuration(selectedRouteRecord.estimated) }} estimados</div>
+              </template>
+              <div v-else class="trip-preview-empty"><v-icon size="26">mdi-map-marker-path</v-icon><span>Selecciona una ruta para ver el recorrido.</span></div>
+            </section>
+            <section class="trip-vehicle-preview">
+              <div class="trip-preview-eyebrow">Vehículo asignado</div>
+              <template v-if="vehicles.some(vehicle => String(vehicle.id) === String(editedItem.vehicle_id))">
+                <div v-for="vehicle in vehicles.filter(vehicle => String(vehicle.id) === String(editedItem.vehicle_id)).slice(0, 1)" :key="vehicle.id">
+                  <v-img :src="getImageUrl(vehicle.vehicleImage)" height="120" class="trip-preview-vehicle-image" contain>
+                    <template #error><div class="trip-preview-image-fallback"><v-icon size="44">mdi-bus</v-icon></div></template>
+                  </v-img>
+                  <strong class="trip-preview-vehicle-name">{{ vehicle.vehicleName }}</strong>
+                  <div class="trip-preview-vehicle-meta"><span><v-icon size="14">mdi-pound</v-icon>{{ vehicleInternalNumber(vehicle) }}</span><span><v-icon size="14">mdi-seat-passenger</v-icon>{{ vehicle.seats ?? 'N/D' }} asientos</span></div>
+                  <div class="trip-preview-brand">{{ vehicle.brand || 'Sin marca' }}</div>
+                </div>
+              </template>
+              <div v-else class="trip-preview-empty"><v-icon size="26">mdi-bus</v-icon><span>Selecciona el vehículo del viaje.</span></div>
+            </section>
+            <section class="trip-schedule-preview">
+              <div class="trip-preview-eyebrow">Programación</div>
+              <div class="trip-preview-date"><v-icon size="17">mdi-calendar-outline</v-icon>{{ dateFormatted || 'Fecha pendiente' }}</div>
+              <div class="trip-preview-times"><div><small>Salida</small><strong>{{ editedItem.schedule || '—' }}</strong></div><v-icon size="19">mdi-arrow-right</v-icon><div><small>Llegada estimada</small><strong>{{ editedItem.arrival || '—' }}</strong></div></div>
+            </section>
+            <div class="trip-preview-note"><v-icon size="16">mdi-information-outline</v-icon><span>Los cambios se guardan al confirmar el viaje en la última etapa.</span></div>
+          </aside>
         </v-form>
       </v-card-text>
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card class="busgo-dialog-card">
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4">
-          Eliminar un viaje
-        </span>
-      </v-toolbar>
-
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el viaje seleccionado?
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="busgo-dialog-actions">
-        <v-spacer />
-
-        <v-btn
-          :color="paleteColors.gris"
-          variant="flat"
-          @click="closeDelete"
-        >
-          Cancelar
-        </v-btn>
-
-        <v-btn
-          :color="paleteColors.error"
-          variant="flat"
-          @click="deleteItemConfirm"
-        >
-          Aceptar
-        </v-btn>
-      </v-card-actions>
+  <v-dialog v-model="dialogDelete" max-width="430px" persistent>
+    <v-card class="trip-delete-dialog" elevation="0">
+      <div class="trip-delete-icon"><v-icon size="27">mdi-bus-alert</v-icon></div>
+      <div class="trip-delete-title">Eliminar viaje</div>
+      <div class="trip-delete-message">¿Deseas eliminar el viaje seleccionado? Esta acción no se puede deshacer.</div>
+      <div class="trip-delete-actions">
+        <v-btn variant="text" class="trip-cancel-button" @click="closeDelete">Cancelar</v-btn>
+        <v-btn class="trip-delete-button" elevation="0" @click="deleteItemConfirm">Eliminar</v-btn>
+      </div>
     </v-card>
   </v-dialog>
 
   <v-dialog v-model="dialogAssignedWorkers" max-width="400px">
     <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="busgo-dialog-card">
-        <v-toolbar :color="paleteColors.primary">
+      <v-card class="busgo-dialog-card trip-worker-dialog">
+        <v-toolbar class="trip-worker-dialog-toolbar" color="transparent">
           <span class="text-subtitle-2 ml-4">
             Asignar trabajadores al viaje
-          </span>
+          </span><v-spacer /><v-btn icon="mdi-close" variant="text" size="small" @click="closeAssignedWorker" />
         </v-toolbar>
 
         <v-card-text>
@@ -1418,10 +1432,12 @@
                   v-model="selectedWorker"
                   :items="dialogAssignableWorkers"
                   label="Personas"
-                  prepend-icon="mdi-account"
+                  prepend-inner-icon="mdi-account-search-outline"
                   item-title="workerName"
                   item-value="id"
-                  variant="underlined"
+                  variant="outlined"
+                  density="comfortable"
+                  :menu-props="{ contentClass: 'trip-worker-menu' }"
                   :rules="selectRules"
                 >
                   <template #item="{ props, item }">
@@ -1460,7 +1476,7 @@
             @click="saveAssignedWorker()"
             :disabled="!valid"
           >
-            Aceptar
+                    {{ editedIndex === -1 ? 'Crear viaje' : 'Guardar cambios' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -1765,7 +1781,7 @@ export default {
       return this.getSaleModeName(trip).replace(/^Venta\s+/i, "");
     },
     getSaleModeColor(trip = {}) {
-      return this.normalizeTripSaleMode(trip) === "express" ? "primary" : "grey";
+      return this.normalizeTripSaleMode(trip) === "express" ? "green" : "primary";
     },
     ensureTripSaleMode({ useDefault = false } = {}) {
       if (useDefault || !this.editedItem.saleMode) {
@@ -2999,27 +3015,7 @@ export default {
   transform: translateY(-1px) scale(1.05);
 }
 
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* MÃ¡xima especificidad para ocultar el thead */
-.v-data-table>.v-data-table__wrapper>table>thead,
-.v-data-table>.v-data-table__wrapper>.v-table>table>thead,
-.v-data-table__content>table>thead,
-.v-data-table__content>thead,
-table.v-table>thead,
-.v-table>.v-table__wrapper>table>thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
 
-.hidden-header .v-data-table__content>table>thead {
-  display: none !important;
-}
 
 .trip-toolbar {
   display: flex;
@@ -3730,5 +3726,219 @@ justify-content:flex-start;
 
 }
 
+}
+
+/* ======================================================
+   BUSGO · REFINAMIENTO VISUAL DE VIAJES
+   ====================================================== */
+body { color:#1e293b; }
+.busgo-page-header { min-height:70px; padding:12px 24px; gap:11px; background:#fff; border-bottom:1px solid #e8edf5; box-shadow:none; }
+.trip-page-icon { display:grid; flex:0 0 38px; width:38px; height:38px; place-items:center; color:#fff; background:radial-gradient(circle at 90% 5%,rgba(53,184,232,.5),transparent 28px),linear-gradient(135deg,#0e1f46,#2454d6); border-radius:10px; box-shadow:0 5px 12px rgba(36,84,214,.17); }
+.busgo-page-title { color:#0f172a; font-size:19px; font-weight:850; line-height:1.2; }.busgo-page-subtitle { margin-top:3px; color:#526176; font-size:12px; font-weight:650; }
+.busgo-add-btn { min-height:40px; padding-inline:16px!important; color:#fff!important; background:linear-gradient(100deg,#2454d6,#3266e4)!important; border-radius:9px!important; font-size:12.5px; font-weight:800; letter-spacing:0; text-transform:none; box-shadow:0 5px 12px rgba(36,84,214,.2)!important; }
+.busgo-container { padding:18px 24px 28px!important; background:#f6f8fb; }
+.trip-summary-row { margin-bottom:4px; }.trip-summary-card { display:flex; align-items:center; gap:11px; min-height:72px; padding:13px 15px; background:#fff; border:1px solid #e8edf5; border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.035); }.trip-summary-icon { display:grid; width:36px; height:36px; place-items:center; border-radius:9px; }.trip-summary-icon--blue { color:#2454d6; background:#eef3ff; }.trip-summary-icon--green { color:#16875a; background:#eaf8f1; }.trip-summary-value { color:#0f172a; font-size:20px; font-weight:900; line-height:1; }.trip-summary-date { font-size:16px; }.trip-summary-label { margin-top:4px; color:#526176; font-size:11px; font-weight:700; }
+.busgo-card { overflow:hidden; background:#fff; border:1px solid #e8edf5; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04)!important; }.busgo-card-header { min-height:67px; padding:13px 17px; }.busgo-card-title { color:#0f172a; font-size:15px; font-weight:850; }.busgo-card-subtitle { margin-top:3px; color:#64748b; font-size:11px; font-weight:650; }
+.trip-toolbar { gap:9px; padding:10px 17px 13px; border-top:1px solid #f1f4f8; }.trip-filter,.trip-date-filter,.trip-search { min-width:0; }.trip-filter { width:260px; }.trip-date-filter { width:170px; }.trip-search { width:285px; }.trip-toolbar .v-field { min-height:40px; color:#1e293b; border-radius:9px!important; font-size:12px; }.trip-toolbar .v-field__outline { color:#dce3ed; }.trip-toolbar .v-field__input { color:#1e293b; font-size:12px; font-weight:650; }.trip-toolbar .v-icon { color:#64748b; }
+.busgo-table { max-height:none; color:#1e293b; background:transparent; }.busgo-table .v-data-table__wrapper { overflow-x:auto; }.busgo-table-head { min-width:1120px; height:40px; margin:0; padding:0 17px; color:#334155; background:#f8fafc; border-top:1px solid #e8edf5; border-bottom:1px solid #e8edf5; border-radius:0; font-size:10px; font-weight:850; letter-spacing:.04em; }.busgo-row { min-width:1120px; min-height:66px; margin:0; padding:7px 17px; background:#fff; border:0; border-bottom:1px solid #eef2f6; border-radius:0; }.busgo-row:hover { background:#f8faff; border-color:#eef2f6; }.busgo-table .v-data-table-footer { min-height:52px; padding:6px 16px; color:#334155; font-size:11.5px; font-weight:700; border-top:1px solid #edf1f5; }
+.trip-sortable { cursor:pointer; transition:color .15s ease; }.trip-sortable:hover { color:#2454d6; }.trip-code-value,.trip-route-title,.busgo-name { color:#0f172a; font-size:12px; font-weight:850; }.trip-route-meta,.busgo-submeta { color:#64748b; font-size:10px; font-weight:650; }.trip-vehicle-icon { display:grid; flex:0 0 32px; width:32px; height:32px; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:8px; }.trip-worker-avatar { width:30px!important; height:30px!important; border:2px solid #fff; box-shadow:0 2px 7px rgba(15,23,42,.13); }.trip-sale-mode-chip { font-size:9.5px!important; font-weight:800!important; }.trip-datetime-value { color:#334155; font-size:10px; font-weight:700; }.trip-datetime-time { color:#2454d6; font-weight:850; }.busgo-actions .v-btn { border-radius:8px!important; }
+
+.trip-dialog { min-height:100vh; color:#1e293b; background:#f6f8fb; }.trip-dialog-header { z-index:5; display:grid; grid-template-columns:minmax(0,1fr) auto 42px; align-items:center; gap:18px; min-height:72px; padding:11px 22px; color:#fff; background:radial-gradient(circle at 88% -40%,rgba(53,184,232,.38),transparent 230px),linear-gradient(110deg,#0e1f46,#173b8f 58%,#2454d6); box-shadow:0 5px 18px rgba(15,23,42,.18); }.trip-dialog-heading { display:flex; align-items:center; gap:11px; min-width:0; }.trip-dialog-icon { display:grid; flex:0 0 40px; width:40px; height:40px; place-items:center; color:#fff; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.17); border-radius:10px; }.trip-dialog-title { font-size:17px; font-weight:850; line-height:1.2; }.trip-dialog-subtitle { margin-top:3px; overflow:hidden; color:#dbe7ff; font-size:11px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }.trip-dialog-progress { display:flex; align-items:flex-end; flex-direction:column; }.trip-dialog-progress span { color:#b8cbf5; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }.trip-dialog-progress strong { margin-top:2px; font-size:12px; font-weight:800; }.trip-dialog-close { color:#fff!important; border-radius:9px!important; }
+.trip-dialog-body { background:#f6f8fb; }.trip-stepper { background:transparent!important; box-shadow:none!important; }.trip-stepper .v-stepper-header { min-height:66px; padding:4px 18px; background:#fff; border-bottom:1px solid #e7ecf3; box-shadow:none!important; }.trip-stepper .v-stepper-item { padding:11px 14px; }.trip-stepper .v-stepper-item__avatar { width:30px; height:30px; color:#526176; background:#eef2f7; font-size:11px; font-weight:850; }.trip-stepper .v-stepper-item--selected .v-stepper-item__avatar,.trip-stepper .v-stepper-item--complete .v-stepper-item__avatar { color:#fff; background:#2454d6; }.trip-stepper .v-stepper-item__title { color:#526176; font-size:11px; font-weight:750; }.trip-stepper .v-stepper-item--selected .v-stepper-item__title { color:#0f172a; font-weight:850; }.trip-stepper .v-divider { color:#dfe6ef; }
+.trip-step-pane { padding:18px 24px 14px; }.trip-step-pane--summary .trip-step-content { max-width:1120px; width:100%; margin:0 auto; padding:18px 20px 8px; background:#fff; border:1px solid #e4eaf2; border-radius:13px; box-shadow:0 5px 18px rgba(15,23,42,.04); }.trip-step-pane--summary .v-row { margin-top:0!important; }.trip-step-pane--summary .v-col { padding:8px 10px; }.trip-step-pane--summary .v-field { min-height:51px; padding-inline:4px; background:#fff; border:1px solid #dce3ed; border-radius:9px 9px 0 0; }.trip-step-pane--summary .v-field--variant-underlined .v-field__outline::before { border-color:#dce3ed; }.trip-step-pane--summary .v-field__input { color:#1e293b; font-size:12.5px; font-weight:650; }.trip-step-pane--summary .v-label { color:#526176; font-size:12px; font-weight:700; opacity:1; }.trip-step-pane--summary .v-input__prepend .v-icon { color:#2454d6; }
+.trip-config-section { overflow:hidden; background:#fff; border:1px solid #e1e8f1!important; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04); }.trip-config-toolbar { min-height:62px!important; color:#0f172a!important; background:#f8fafc!important; border-bottom:1px solid #e6ebf2; box-shadow:none!important; }.trip-config-toolbar .text-subtitle-1 { font-size:14px!important; font-weight:850!important; }.trip-config-toolbar .text-caption { color:#64748b!important; font-size:10.5px!important; font-weight:600; opacity:1!important; }.trip-config-section > .v-card-text { padding:13px!important; }.trip-step-table { max-height:54vh!important; background:transparent!important; box-shadow:none!important; }.trip-step-table .v-data-table-footer { min-height:48px; color:#475569; font-size:11px; }.trip-step-table .v-data-table__th { color:#334155!important; background:#f8fafc!important; font-size:10.5px!important; font-weight:850!important; text-transform:uppercase; }.trip-step-table .v-data-table__td { color:#334155; font-size:12px; font-weight:600; }
+.trip-step-actions { max-width:1120px; width:100%; margin:12px auto 0; padding:12px 0 calc(8px + env(safe-area-inset-bottom)); border-top:1px solid #dfe5ed; }.trip-step-actions .v-row { align-items:center; margin:0!important; }.trip-step-actions .v-btn { min-width:108px; min-height:39px; border-radius:9px!important; font-size:12px; font-weight:800; letter-spacing:0; text-transform:none; }.trip-step-actions .v-btn:first-child { color:#475569!important; background:#fff!important; border:1px solid #dce3ed; }.trip-step-actions .v-btn:last-child { color:#fff!important; background:linear-gradient(100deg,#2454d6,#3266e4)!important; box-shadow:0 5px 12px rgba(36,84,214,.18)!important; }.trip-step-actions .v-btn--disabled { color:#94a3b8!important; background:#e8edf4!important; box-shadow:none!important; }
+.trip-fare-ticket-types-panel { border-color:#dfe6ef!important; border-radius:10px!important; }.trip-fare-ticket-types-header { color:#334155; background:#f8fafc; border-color:#e7ecf3; font-size:11px; font-weight:850; text-transform:uppercase; }.trip-fare-ticket-types-row { border-color:#edf1f5; font-size:12px; }
+
+.trip-delete-dialog { padding:29px 27px 24px; color:#1e293b; text-align:center; background:#fff; border:1px solid #dfe6ef; border-radius:14px!important; box-shadow:0 22px 60px rgba(15,23,42,.2)!important; }.trip-delete-icon { display:grid; width:56px; height:56px; margin:0 auto 16px; place-items:center; color:#dc2626; background:#fff1f2; border:1px solid #ffe0e4; border-radius:15px; }.trip-delete-title { color:#0f172a; font-size:18px; font-weight:850; }.trip-delete-message { max-width:340px; margin:10px auto 22px; color:#64748b; font-size:12.5px; font-weight:600; line-height:1.55; }.trip-delete-actions { display:flex; justify-content:center; gap:9px; }.trip-cancel-button { min-width:94px; min-height:39px; color:#475569!important; font-size:12.5px; font-weight:750; text-transform:none; border-radius:9px!important; }.trip-delete-button { min-width:112px; min-height:40px; color:#fff!important; background:#dc2626!important; border-radius:9px!important; font-size:12.5px; font-weight:800; text-transform:none; }.trip-worker-dialog { color:#1e293b; border:1px solid #dfe6ef; border-radius:14px!important; box-shadow:0 22px 60px rgba(15,23,42,.2)!important; }.trip-worker-dialog-toolbar { color:#0f172a!important; background:#f8fafc!important; border-bottom:1px solid #e5eaf2; box-shadow:none!important; }.trip-worker-dialog-toolbar .text-subtitle-2 { font-size:14px!important; font-weight:850; }
+.snackbar-content { display:flex; align-items:center; gap:10px; }.snackbar-title { font-size:11px; font-weight:850; }.snackbar-message { margin-top:2px; font-size:9.5px; font-weight:600; }.busgo-snackbar .v-snackbar__wrapper { border-radius:11px; }
+
+.trip-route-menu { min-width:620px!important; max-width:min(720px,calc(100vw - 24px))!important; }.trip-route-menu .v-list { padding:7px!important; background:#f8fafc!important; }.trip-route-menu .v-card { overflow:hidden; background:#fff; border:1px solid #e5eaf2; border-radius:11px!important; box-shadow:none!important; }.trip-route-menu .v-card:hover { border-color:#cbd8f7; box-shadow:0 5px 15px rgba(36,84,214,.08)!important; }.trip-route-menu .v-list-item { padding:10px 12px!important; }.trip-route-menu .trip-route-title-row { padding-bottom:7px; color:#0f172a; border-bottom:1px solid #edf1f5; }.trip-route-menu .text-caption { color:#64748b!important; font-size:9px!important; font-weight:800; text-transform:uppercase; }.trip-route-menu .text-truncate { color:#1e293b; font-size:11px; font-weight:750; }.trip-route-menu .v-avatar { overflow:hidden; border:1px solid #dce6ff; border-radius:9px!important; }
+.trip-vehicle-menu .v-list,.trip-branch-menu .v-list { padding:6px!important; }.trip-vehicle-menu .v-list-item,.trip-branch-menu .v-list-item { min-height:58px; margin:2px 0; border-radius:9px!important; }.trip-vehicle-menu .v-list-item:hover,.trip-branch-menu .v-list-item:hover { background:#f4f7ff!important; }.trip-vehicle-menu .v-list-item-title,.trip-branch-menu .v-list-item-title { color:#0f172a!important; font-size:12.5px!important; font-weight:800!important; }.trip-vehicle-menu .v-list-item-subtitle { color:#64748b!important; font-size:10.5px!important; font-weight:600!important; opacity:1!important; }
+
+@media(max-width:959px) { .busgo-page-header { padding-inline:17px; }.busgo-container { padding:15px 17px 24px!important; }.trip-toolbar { align-items:stretch; }.trip-search { width:100%; }.trip-dialog-header { grid-template-columns:minmax(0,1fr) 42px; }.trip-dialog-progress { display:none; }.trip-step-pane { padding:14px 15px 10px; }.trip-stepper .v-stepper-header { overflow-x:auto; justify-content:flex-start; }.trip-stepper .v-stepper-item { flex:0 0 auto; }.trip-route-menu { min-width:calc(100vw - 24px)!important; } }
+/* Una sola cabecera real en el Nivel 1: se conserva la cabecera visual alineada con las filas personalizadas. */
+.trips-main-table thead { display:table-header-group!important; }
+.busgo-table-head { display:flex!important; visibility:visible!important; }
+
+/* Primer paso: formulario operativo, no formulario genérico. */
+.trip-form-intro { display:flex; align-items:center; gap:11px; margin:-2px -2px 17px; padding:12px 13px; color:#1e293b; background:linear-gradient(100deg,#f4f7ff,#f8fbff); border:1px solid #dfe7fb; border-radius:10px; }.trip-form-intro-icon { display:grid; flex:0 0 36px; width:36px; height:36px; place-items:center; color:#2454d6; background:#fff; border:1px solid #dce6ff; border-radius:9px; }.trip-form-intro > div:last-child { display:flex; flex-direction:column; }.trip-form-intro strong { color:#0f172a; font-size:13px; font-weight:850; }.trip-form-intro span { margin-top:2px; color:#64748b; font-size:10.5px; font-weight:600; }.trip-form-section-title { display:flex; align-items:center; gap:7px; margin:0 8px 4px; color:#334155; font-size:10.5px; font-weight:850; letter-spacing:.055em; text-transform:uppercase; }.trip-form-section-title .v-icon { color:#2454d6; }.trip-form-section-title--schedule { margin-top:10px; padding-top:14px; border-top:1px solid #edf1f5; }
+.trip-step-pane--summary .v-field { min-height:50px; border:0; border-radius:9px!important; }.trip-step-pane--summary .v-field__outline { color:#d5deea; }.trip-step-pane--summary .v-field--focused .v-field__outline { color:#2454d6; }.trip-step-pane--summary .v-field__prepend-inner .v-icon { color:#64748b; }.trip-step-pane--summary .v-field--focused .v-field__prepend-inner .v-icon { color:#2454d6; }.trip-step-pane--summary .v-input__details { padding-inline:4px; }.trip-step-pane--summary .v-field--disabled { background:#f8fafc; opacity:.78; }
+
+/* Tablas internas con la misma densidad y lenguaje visual del Nivel 1. */
+.trip-config-section .trip-table-manual-head { height:40px!important; min-height:40px!important; margin:0!important; color:#334155!important; background:#f8fafc!important; border:1px solid #e8edf5!important; border-radius:9px 9px 0 0!important; box-shadow:none!important; }.trip-config-section .trip-table-manual-head .v-card-text { color:#334155; font-size:10px; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; }
+.trip-stop-row-card,.trip-fare-row-card { margin:0!important; background:#fff!important; border:0!important; border-bottom:1px solid #edf1f5!important; border-radius:0!important; box-shadow:none!important; transition:background .15s ease; }.trip-stop-row-card:hover,.trip-fare-row-card:hover { background:#f8faff!important; }.trip-stop-row-card .v-card-text,.trip-fare-row-card .v-card-text { min-height:58px; padding:7px 14px!important; color:#334155; font-size:11.5px; font-weight:650; }.trip-stop-row-card .v-avatar { width:34px!important; height:34px!important; border:1px solid #dce6ff; border-radius:8px!important; }.trip-stop-row-card .font-weight-medium,.trip-fare-row-card .font-weight-medium { color:#1e293b; font-size:11.5px; font-weight:800!important; }.trip-stop-row-card .text-caption { color:#64748b!important; font-size:9.5px!important; }.trip-stop-row-card .v-field,.trip-fare-row-card .v-field,.trip-fare-ticket-types-row .v-field { background:#fff; border-radius:7px!important; }.trip-stop-row-card .v-field__outline,.trip-fare-row-card .v-field__outline { color:#dce3ed; }
+.trip-step-table .v-data-table__wrapper { border:1px solid #e8edf5; border-radius:9px; }.trip-step-table thead th { height:40px!important; color:#334155!important; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; font-size:10px!important; font-weight:850!important; letter-spacing:.04em!important; text-transform:uppercase; }.trip-step-table tbody td { height:56px!important; color:#334155!important; border-bottom:1px solid #edf1f5!important; font-size:11.5px!important; font-weight:650!important; }.trip-step-table tbody tr:hover { background:#f8faff!important; }.trip-step-table .v-data-table-footer { border-top:1px solid #e8edf5; }
+
+/* Menús de selección estructurados. */
+.trip-route-menu .v-card { margin:4px!important; }.trip-route-menu .v-list-item__content { overflow:visible!important; }.trip-route-menu .v-row { margin:0!important; }.trip-route-menu .v-col { padding:5px 7px!important; }.trip-route-menu .v-col:first-child { padding-bottom:8px!important; border-bottom:1px solid #edf1f5; }.trip-route-menu .trip-route-title-row::before { content:'Código de ruta'; margin-right:8px; color:#94a3b8; font-size:8px; font-weight:850; letter-spacing:.05em; text-transform:uppercase; }.trip-route-menu .trip-route-title-row { display:flex; align-items:center; }.trip-route-menu .v-col:nth-child(2),.trip-route-menu .v-col:nth-child(3) { position:relative; min-height:58px; }.trip-route-menu .v-col:nth-child(4) { color:#334155; background:#f8fafc; border-radius:8px; }.trip-route-menu .v-avatar { flex:0 0 38px; width:38px!important; height:38px!important; }.trip-route-menu .v-img__img { object-fit:cover; }
+.trip-vehicle-menu { min-width:370px!important; }.trip-vehicle-menu .v-list-item { min-height:76px!important; padding-block:8px!important; }.trip-vehicle-menu .v-avatar { width:42px!important; height:42px!important; overflow:hidden; border:1px solid #dce6ff; border-radius:9px!important; }.trip-vehicle-option-meta { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px 10px; margin-top:5px; opacity:1!important; }.trip-vehicle-option-meta div { display:flex; align-items:center; gap:4px; min-width:0; padding:3px 5px; color:#526176; background:#f8fafc; border-radius:5px; font-size:9px; font-weight:700; }.trip-vehicle-option-meta .v-icon { color:#2454d6; }.trip-branch-menu .v-list-item { min-height:54px!important; }.trip-branch-menu .v-avatar { overflow:hidden; border:1px solid #dce6ff; border-radius:8px!important; }
+.trip-worker-menu .v-list { padding:6px!important; }.trip-worker-menu .v-list-item { min-height:58px!important; margin:2px 0; border-radius:9px!important; }.trip-worker-menu .v-list-item:hover { background:#f4f7ff!important; }.trip-worker-menu .v-avatar { width:38px!important; height:38px!important; overflow:hidden; border:1px solid #dce6ff; }.trip-worker-menu .v-list-item-title { color:#0f172a!important; font-size:12.5px!important; font-weight:800!important; }.trip-worker-menu .v-list-item-subtitle { color:#64748b!important; font-size:10.5px!important; font-weight:650!important; opacity:1!important; }
+
+@media(max-width:600px) { .busgo-page-header { align-items:flex-start; padding:11px 12px; }.busgo-page-subtitle { max-width:190px; }.busgo-add-btn { min-width:40px!important; padding-inline:9px!important; }.busgo-add-btn .v-btn__content { font-size:0; }.busgo-add-btn .v-icon { margin:0!important; }.busgo-container { padding:11px 12px 20px!important; }.trip-filter,.trip-date-filter,.trip-search { width:100%; }.trip-dialog-header { padding:10px 12px; }.trip-dialog-subtitle { max-width:230px; }.trip-stepper .v-stepper-header { min-height:58px; padding-inline:6px; }.trip-stepper .v-stepper-item { padding:8px; }.trip-stepper .v-stepper-item__title { display:none; }.trip-step-pane--summary .trip-step-content { padding:10px 10px 4px; }.trip-config-section > .v-card-text { padding:8px!important; }.trip-vehicle-menu { min-width:calc(100vw - 24px)!important; }.trip-vehicle-option-meta { grid-template-columns:1fr; } }
+/* Cabeceras únicas: el slot headers sustituye por completo la cabecera nativa. */
+.trips-main-table .trip-header-shell,.trip-step-table .trip-header-shell { padding:0!important; height:auto!important; border:0!important; }
+.trips-main-table .v-table__wrapper > table { min-width:1120px; }
+.trip-step-table .v-table__wrapper > table { min-width:900px; }
+.trip-header-shell .trip-table-manual-head { border-radius:0!important; border-inline:0!important; }
+.trip-header-shell .busgo-table-head { white-space:normal; }
+.busgo-row { flex-direction:row!important; align-items:center!important; gap:0!important; }
+.action-button { border-radius:8px!important; }
+.action-button--edit { color:#2454d6!important; }
+.action-button--edit:hover { background:#eef3ff!important; }
+.action-button--delete { color:#dc2626!important; }
+.action-button--delete:hover { background:#fff1f2!important; }
+.trip-progress-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; flex-shrink:0; padding:18px 24px; background:#fff; border-bottom:1px solid #e5eaf2; }
+.trip-progress-item { display:flex; align-items:center; gap:11px; padding:12px 14px; border:1px solid #e5eaf2; border-radius:11px; background:#f8fafc; }
+.trip-progress-number { display:grid; place-items:center; flex:0 0 34px; height:34px; border-radius:10px; background:#e8edf4; color:#475569; font-weight:800; }
+.trip-progress-copy { display:flex; flex-direction:column; gap:3px; }
+.trip-progress-copy > span { font-size:10px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; color:#64748b; }
+.trip-progress-copy strong { color:#334155; font-size:13px; line-height:1.3; }
+.trip-progress-item--active { border-color:#a8bff8; background:#eef3ff; box-shadow:0 3px 10px #2454d610; }
+.trip-progress-item--active .trip-progress-number { background:#2454d6; color:#fff; }
+.trip-progress-item--active strong { color:#183d9c; }
+.trip-progress-item--complete .trip-progress-number { background:#e0f5eb; color:#16875a; }
+.trip-stepper .v-stepper-header { display:none!important; }
+.trip-stepper .v-stepper-window { flex:1; min-height:0; overflow:auto; margin:0; }
+.trip-step-pane--summary .trip-step-content { max-width:1120px; padding:24px 26px 16px; }
+.trip-form-intro { padding:18px; margin-bottom:22px; }
+.trip-form-intro strong { font-size:17px; }
+.trip-form-intro span { font-size:13px; line-height:1.5; }
+.trip-form-section-title { font-size:12px; margin-bottom:12px; }
+.trip-dialog .v-label,.trip-dialog .v-field__input,.trip-dialog .v-select__selection-text,.trip-dialog .v-autocomplete__selection-text { font-size:14px!important; font-weight:600; color:#334155; opacity:1; }
+.trip-dialog .v-field { border-radius:9px!important; }
+.trip-config-section > .v-card-text { padding:0!important; }
+.trip-stop-row-card .v-card-text,.trip-fare-row-card .v-card-text { font-size:13px; }
+.trip-stop-row-card .font-weight-medium,.trip-fare-row-card .font-weight-medium { font-size:13px; }
+.trip-selected-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; color:#1e293b; font-size:14px; }
+.trip-route-menu { min-width:0!important; width:640px; max-width:calc(100vw - 24px)!important; }
+.trip-route-menu .trip-route-option { margin:4px 0; padding:13px!important; border:1px solid #e2e8f0; border-radius:10px; background:#fff; }
+.trip-route-menu .trip-route-option:hover { background:#f5f8ff; border-color:#b5c9f7; }
+.trip-option-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #e8edf5; }
+.trip-option-heading strong { color:#0f172a; font-size:14px; }
+.trip-option-heading > span { display:flex; align-items:center; gap:5px; color:#475569; font-size:12px; }
+.trip-option-journey { display:grid; grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr); gap:12px; align-items:center; }
+.trip-option-place { display:flex; align-items:center; gap:10px; min-width:0; }
+.trip-option-place > div { min-width:0; }
+.trip-option-place small { display:block; color:#526176; font-size:11px; font-weight:700; margin-bottom:3px; }
+.trip-option-place strong { display:block; color:#1e293b; font-size:13px; line-height:1.5; font-weight:650; white-space:normal; overflow-wrap:anywhere; }
+.trip-option-arrow { color:#2454d6; }
+.trip-vehicle-option-meta { display:flex!important; flex-wrap:wrap; gap:6px; -webkit-line-clamp:unset!important; overflow:visible!important; }
+.trip-vehicle-option-meta div { font-size:12px; padding:4px 7px; }
+.trip-vehicle-menu .v-list-item-title,.trip-branch-menu .v-list-item-title,.trip-worker-menu .v-list-item-title,.trip-standard-menu .v-list-item-title { color:#1e293b!important; font-size:14px!important; font-weight:700!important; white-space:normal; }
+.trip-standard-menu .v-list { padding:6px; border:1px solid #e2e8f0; border-radius:11px; }
+.trip-standard-menu .v-list-item { border-radius:8px; margin:2px 0; }
+.trip-standard-menu .v-list-item--active { color:#2454d6; background:#eef3ff; }
+@media(max-width:700px) {
+  .trip-progress-nav { grid-template-columns:repeat(2,minmax(0,1fr)); padding:10px; gap:7px; }
+  .trip-progress-item { padding:8px; gap:7px; }
+  .trip-progress-copy strong { font-size:11px; }
+  .trip-progress-number { flex-basis:28px; height:28px; }
+  .trip-option-journey { grid-template-columns:1fr; gap:10px; }
+  .trip-option-arrow { display:none; }
+  .trip-step-pane--summary .trip-step-content { padding:16px 12px; }
+}
+/* Espacio de planificación: el resumen no introduce campos ni modifica el guardado. */
+.trip-dialog .trip-form { display:grid; grid-template-columns:minmax(0,1fr) 300px; height:auto; flex:1; min-height:0; }
+.trip-dialog .trip-stepper { min-width:0; height:100%; }
+.trip-dialog .trip-stepper .v-stepper-window { height:100%; min-height:0; overflow:hidden; }
+.trip-dialog .trip-stepper .v-window__container { height:100%; min-height:0; }
+.trip-dialog .trip-stepper .v-stepper-window-item { height:100%; min-height:0; }
+.trip-dialog .trip-step-pane { height:100%; padding:20px 22px 0; overflow:hidden; }
+.trip-dialog .trip-step-content { min-height:0; height:auto; overflow:auto; overscroll-behavior:contain; flex:1 1 auto; }
+.trip-dialog .trip-step-pane--summary .trip-step-content { max-width:none; }
+.trip-dialog .trip-step-actions { position:relative; z-index:2; flex:0 0 auto; max-width:none; margin:14px 0 0; padding:14px 0 calc(14px + env(safe-area-inset-bottom)); background:#f6f8fb; box-shadow:0 -8px 16px #f6f8fb; }
+.trip-dialog .trip-step-actions .v-btn { min-height:42px; font-size:13px; }
+.trip-dialog .trip-step-actions .v-btn--disabled { opacity:.55; }
+.trip-live-summary { min-height:0; overflow-y:auto; padding:22px 18px; background:#fff; border-left:1px solid #e1e8f1; }
+.trip-summary-heading { display:flex; align-items:center; gap:9px; margin-bottom:20px; color:#2454d6; }
+.trip-summary-heading strong { display:block; color:#0f172a; font-size:16px; font-weight:800; }
+.trip-summary-heading span { display:block; margin-top:3px; color:#64748b; font-size:11px; }
+.trip-route-preview,.trip-vehicle-preview,.trip-schedule-preview { padding:15px; margin-bottom:14px; border:1px solid #e4eaf3; border-radius:12px; }
+.trip-route-preview { background:linear-gradient(145deg,#f0f5ff,#fff); border-color:#dce6fb; }
+.trip-preview-eyebrow { color:#526176; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
+.trip-preview-route-code { margin-bottom:15px; color:#183d9c; font-size:15px; font-weight:800; overflow-wrap:anywhere; }
+.trip-preview-stop { position:relative; display:flex; gap:12px; padding-bottom:22px; }
+.trip-preview-stop::before { content:''; position:absolute; width:2px; left:5px; top:12px; bottom:0; background:#cbdafa; }
+.trip-preview-dot { position:relative; z-index:1; flex:0 0 12px; height:12px; margin-top:4px; border:3px solid #2454d6; border-radius:50%; background:#fff; }
+.trip-preview-stop small { display:block; color:#64748b; font-size:11px; margin-bottom:3px; }
+.trip-preview-stop strong { display:block; color:#1e293b; font-size:13px; font-weight:700; line-height:1.5; overflow-wrap:anywhere; }
+.trip-preview-stop--destination { padding-bottom:0; }
+.trip-preview-stop--destination::before { display:none; }
+.trip-preview-stop--destination .trip-preview-dot { border-color:#16875a; }
+.trip-preview-duration { display:flex; align-items:center; gap:6px; margin-top:16px; padding-top:12px; border-top:1px solid #dfe7f5; color:#475569; font-size:12px; font-weight:650; }
+.trip-preview-empty { display:flex; align-items:center; gap:10px; color:#64748b; font-size:12px; line-height:1.6; padding-block:8px; }
+.trip-preview-empty .v-icon { color:#7692be; }
+.trip-preview-vehicle-image { background:#f5f8fc; border-radius:9px; margin-bottom:12px; }
+.trip-preview-image-fallback { display:grid; place-items:center; width:100%; height:100%; color:#2454d6; }
+.trip-preview-vehicle-name { display:block; color:#0f172a; font-size:14px; }
+.trip-preview-vehicle-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.trip-preview-vehicle-meta > span { display:flex; align-items:center; gap:4px; padding:4px 6px; color:#475569; background:#f1f5f9; border-radius:5px; font-size:11px; }
+.trip-preview-brand { margin-top:8px; color:#64748b; font-size:12px; }
+.trip-preview-date { display:flex; align-items:center; gap:7px; color:#334155; font-size:13px; font-weight:650; }
+.trip-preview-times { display:flex; align-items:center; justify-content:space-between; gap:7px; margin-top:14px; }
+.trip-preview-times small { display:block; color:#64748b; font-size:10px; }
+.trip-preview-times strong { display:block; margin-top:5px; color:#0f172a; font-size:18px; font-variant-numeric:tabular-nums; }
+.trip-preview-times .v-icon { color:#8aa1c5; }
+.trip-preview-note { display:flex; align-items:flex-start; gap:6px; color:#64748b; font-size:11px; line-height:1.6; }
+.trip-preview-note .v-icon { flex-shrink:0; margin-top:2px; }
+@media(max-width:1199px) {
+  .trip-dialog .trip-form { grid-template-columns:minmax(0,1fr) 260px; }
+  .trip-live-summary { padding:16px 12px; }
+  .trip-dialog .trip-step-pane { padding-inline:14px; }
+}
+@media(max-width:959px) {
+  .trip-dialog .trip-form { display:flex; flex-direction:column; }
+  .trip-live-summary { order:-1; display:flex; gap:10px; flex:0 0 auto; max-height:148px; padding:10px 14px; border-left:0; border-bottom:1px solid #e1e8f1; overflow:auto; }
+  .trip-summary-heading,.trip-vehicle-preview,.trip-preview-note { display:none; }
+  .trip-route-preview,.trip-schedule-preview { flex:1 0 220px; margin:0; padding:10px 12px; }
+  .trip-live-summary .trip-preview-eyebrow,.trip-preview-duration,.trip-preview-route-code { display:none; }
+  .trip-preview-stop { padding-bottom:8px; }
+  .trip-preview-stop small { display:none; }
+  .trip-preview-stop strong { font-size:12px; }
+  .trip-dialog .trip-stepper { flex:1 1 auto; height:auto; }
+  .trip-dialog .trip-step-actions .v-btn { font-size:12px; min-width:80px; }
+}
+.trip-time-panel { padding:18px; margin-bottom:8px; border:1px solid #dce6f5; border-radius:13px; background:linear-gradient(115deg,#f4f8ff,#fff 70%); }
+.trip-time-panel-heading { display:flex; align-items:center; gap:7px; margin-bottom:16px; color:#2454d6; }
+.trip-time-panel-heading strong { color:#1e293b; font-size:13px; }
+.trip-time-panel-heading > span { margin-left:auto; color:#64748b; font-size:11px; }
+.trip-time-journey { display:grid; grid-template-columns:minmax(0,1fr) minmax(80px,.65fr) minmax(0,1fr); align-items:start; gap:16px; }
+.trip-departure-input { min-width:0; }
+.trip-departure-input .v-input__control { display:block; width:100%; }
+.trip-time-trigger { display:flex; flex-direction:column; align-items:flex-start; gap:8px; width:100%; padding:14px 16px; border:1px solid #b6cafa; border-radius:11px; background:#fff; text-align:left; cursor:pointer; transition:background .15s,border-color .15s; }
+.trip-time-trigger:hover:not(:disabled) { background:#f0f5ff; border-color:#2454d6; }
+.trip-time-trigger:focus-visible,.trip-time-option:focus-visible { outline:3px solid #7396eb; outline-offset:3px; }
+.trip-time-trigger:disabled { cursor:not-allowed; background:#f1f5f9; border-color:#dce3ed; }
+.trip-time-label { display:flex; align-items:center; gap:6px; color:#475569; font-size:12px; font-weight:700; }
+.trip-time-value { display:block; color:#183d9c; font-size:32px; font-weight:800; line-height:1.15; letter-spacing:.015em; font-variant-numeric:tabular-nums; }
+.trip-time-trigger:disabled .trip-time-value { color:#64748b; }
+.trip-time-trigger-caption { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; color:#2454d6; font-size:11px; font-weight:650; }
+.trip-time-duration { align-self:center; text-align:center; color:#526176; font-size:11px; font-weight:650; }
+.trip-time-duration > div { display:flex; align-items:center; margin-top:8px; color:#8da8d8; }
+.trip-time-duration > div > span { flex:1; height:1px; background:#c7d7f1; }
+.trip-time-arrival { display:flex; flex-direction:column; gap:8px; padding:15px 0; }
+.trip-time-arrival .trip-time-value { color:#0f172a; }
+.trip-time-arrival-caption { color:#526176; font-size:11px; line-height:1.5; }
+.trip-time-hint { display:flex; align-items:center; gap:7px; margin-top:14px; color:#526176; font-size:12px; }
+.trip-time-menu { max-width:calc(100vw - 24px)!important; }
+.trip-time-picker { width:360px; max-width:100%; color:#1e293b; background:#fff; border:1px solid #dce6f5; border-radius:13px!important; }
+.trip-time-picker-heading { display:flex; flex-direction:column; gap:4px; padding:16px; border-bottom:1px solid #e8edf5; }
+.trip-time-picker-heading strong { color:#0f172a; font-size:14px; }
+.trip-time-picker-heading span { color:#526176; font-size:12px; }
+.trip-time-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-height:min(320px,45vh); padding:14px; overflow-y:auto; overscroll-behavior:contain; }
+.trip-time-option { min-height:42px; padding:7px; color:#334155; background:#f8fafc; border:1px solid #dce3ed; border-radius:8px; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; }
+.trip-time-option:hover { color:#2454d6; background:#eef3ff; border-color:#a8bff8; }
+.trip-time-option--selected,.trip-time-option--selected:hover { color:#fff; background:#2454d6; border-color:#2454d6; box-shadow:0 3px 7px #2454d62b; }
+.trip-time-picker-note { display:flex; align-items:flex-start; gap:6px; padding:12px 14px; border-top:1px solid #e8edf5; color:#64748b; font-size:11px; line-height:1.5; }
+.trip-time-empty { display:flex; align-items:center; gap:10px; padding:24px 16px; color:#526176; font-size:13px; }
+@media(max-width:600px) {
+ .trip-time-panel { padding:12px; }
+ .trip-time-journey { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+ .trip-time-duration { grid-column:1 / -1; grid-row:2; display:flex; justify-content:center; gap:8px; }
+ .trip-time-duration > div { margin:0; }
+ .trip-time-value { font-size:27px; }
+ .trip-time-trigger { padding:12px; }
+ .trip-time-panel-heading > span { font-size:10px; }
 }
 </style>

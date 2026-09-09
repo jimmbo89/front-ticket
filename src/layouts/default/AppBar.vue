@@ -16,84 +16,142 @@
     </div>
   </v-snackbar>
 
-  <v-app-bar class="busgo-appbar" elevation="1">
+  <v-app-bar class="busgo-appbar" elevation="0">
+  <!-- Menú móvil -->
+  <v-app-bar-nav-icon
+    v-if="!$vuetify.display.mdAndUp"
+    class="drawer-toggle"
+    aria-label="Abrir menú"
+    @click.stop="$emit('toggle-drawer')"
+  />
 
-    <!-- MENU MOBILE -->
-    <v-app-bar-nav-icon
-      v-if="!$vuetify.display.mdAndUp"
-      @click.stop="$emit('toggle-drawer')"
-    />
+  <!-- Identidad -->
+  <v-app-bar-title class="busgo-brand">
+    <div class="brand-container">
+      <div class="brand-symbol">
+        <v-icon size="20">mdi-bus</v-icon>
+      </div>
 
-    <!-- BRAND -->
-    <v-app-bar-title class="busgo-brand">
-      <span class="brand-bus">Bus</span>
-      <span class="brand-go">Go</span>
-    </v-app-bar-title>
+      <div class="brand-wordmark">
+        <span class="brand-bus">Bus</span>
+        <span class="brand-go">GO</span>
+      </div>
+    </div>
+  </v-app-bar-title>
 
-    <v-spacer />
+  <v-spacer />
 
-    <!-- USER MENU -->
-    <v-menu
-      :max-width="mobile ? 280 : 320"
-      location="bottom end"
-      :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
-    >
+  <!-- Estado del sistema -->
+  <div v-if="!mobile" class="appbar-status">
+    <span class="appbar-status-dot"></span>
+    <span>Sistema en línea</span>
+  </div>
 
-      <template v-slot:activator="{ props: menuProps }">
+  <div v-if="!mobile" class="appbar-divider"></div>
 
-        <!-- MOBILE -->
-        <div
-          v-if="mobile"
-          v-bind="menuProps"
-          class="user-chip-mobile"
-        >
-          <v-avatar size="36">
-            <v-img :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" />
-          </v-avatar>
+  <!-- Menú del usuario -->
+  <v-menu
+    :max-width="mobile ? 280 : 320"
+    location="bottom end"
+    offset="8"
+    :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
+  >
+    <template #activator="{ props: menuProps }">
+      <!-- Móvil -->
+      <button
+        v-if="mobile"
+        v-bind="menuProps"
+        type="button"
+        class="user-chip-mobile"
+        aria-label="Abrir menú de usuario"
+      >
+        <v-avatar size="36" class="user-avatar">
+          <v-img
+            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
+            cover
+          />
 
-          <v-btn icon="mdi-dots-vertical" variant="text" />
-        </div>
+          <span class="avatar-status"></span>
+        </v-avatar>
 
-        <!-- DESKTOP -->
-        <div
-          v-else
-          v-bind="menuProps"
-          class="user-chip"
-        >
-          <v-avatar size="36">
-            <v-img :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`" />
-          </v-avatar>
+        <v-icon size="20">mdi-dots-vertical</v-icon>
+      </button>
 
-          <div class="user-info">
-            <div class="user-name">{{ name }}</div>
-            <div class="user-role">{{ role }}</div>
+      <!-- Escritorio -->
+      <button
+        v-else
+        v-bind="menuProps"
+        type="button"
+        class="user-chip"
+      >
+        <v-avatar size="36" class="user-avatar">
+          <v-img
+            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
+            cover
+          />
+
+          <span class="avatar-status"></span>
+        </v-avatar>
+
+        <div class="user-info">
+          <div class="user-name">
+            {{ name }}
           </div>
 
-          <v-icon size="18">mdi-chevron-down</v-icon>
+          <div class="user-role">
+            {{ role }}
+          </div>
         </div>
 
-      </template>
+        <v-icon class="user-chevron" size="18">
+          mdi-chevron-down
+        </v-icon>
+      </button>
+    </template>
 
-      <!-- MENU -->
-      <v-list density="compact" class="user-menu">
+    <!-- Menú desplegable -->
+    <v-list density="compact" class="user-menu">
+      <div class="menu-header">
+        <v-avatar size="40" class="menu-avatar">
+          <v-img
+            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
+            cover
+          />
+        </v-avatar>
 
-        <v-list-item
-          v-for="(item, i) in items"
-          :key="i"
-          @click="handleItemClick(item)"
-          class="menu-item"
-        >
-          <template v-slot:prepend>
-            <v-icon :icon="item.icon" />
-          </template>
+        <div class="menu-user-information">
+          <div class="menu-user-name">
+            {{ name }}
+          </div>
 
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
+          <div class="menu-user-role">
+            {{ role }}
+          </div>
+        </div>
+      </div>
 
-      </v-list>
-    </v-menu>
+      <v-divider class="menu-divider" />
 
-  </v-app-bar>
+      <v-list-item
+        v-for="(item, i) in items"
+        :key="i"
+        class="menu-item"
+        :class="{ 'menu-item--logout': item.title === 'Cerrar Sesión' }"
+        @click="handleItemClick(item)"
+      >
+        <template #prepend>
+          <div class="menu-icon">
+            <v-icon :icon="item.icon" size="18" />
+          </div>
+        </template>
+
+        <v-list-item-title>
+          {{ item.title }}
+        </v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
+</v-app-bar>
 
   <!-- DIALOG PASSWORD (sin cambios de lógica) -->
   <v-dialog v-model="dialogChangePass" max-width="420px">
@@ -316,84 +374,498 @@ export default {
 }
 </script>
 <style scoped>
-/* APP BAR */
+/* ========================================
+   VARIABLES
+======================================== */
+
 .busgo-appbar {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  color: white;
+  --busgo-blue: #2454d6;
+  --busgo-blue-light: #3266e4;
+  --busgo-blue-dark: #132d6b;
+  --busgo-blue-deep: #0e1f46;
+  --busgo-cyan: #35b8e8;
+
+  --appbar-text: #1e293b;
+  --appbar-muted: #64748b;
+  --appbar-border: #e8edf5;
+  --appbar-hover: #f2f5fb;
+
+  color: var(--appbar-text) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid var(--appbar-border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
-/* BRAND */
+/* Corrige el contenido interno de Vuetify */
+
+.busgo-appbar :deep(.v-toolbar__content) {
+  min-height: 60px;
+  padding: 0 18px;
+}
+
+/* ========================================
+   BOTÓN DEL DRAWER
+======================================== */
+
+.drawer-toggle {
+  margin-right: 6px;
+  color: var(--busgo-blue-dark) !important;
+  border-radius: 9px;
+}
+
+.drawer-toggle:hover {
+  color: var(--busgo-blue) !important;
+  background: var(--appbar-hover);
+}
+
+.drawer-toggle :deep(.v-icon) {
+  opacity: 1 !important;
+}
+
+/* ========================================
+   MARCA BUSGO
+======================================== */
+
 .busgo-brand {
-  font-weight: 800;
-  font-size: 1.3rem;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.busgo-brand :deep(.v-toolbar-title__placeholder) {
+  overflow: visible;
+}
+
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.brand-symbol {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+
+  color: #ffffff;
+  background:
+    radial-gradient(
+      circle at 90% 5%,
+      rgba(53, 184, 232, 0.5),
+      transparent 24px
+    ),
+    linear-gradient(
+      135deg,
+      var(--busgo-blue-deep),
+      var(--busgo-blue)
+    );
+
+  border-radius: 9px;
+  box-shadow: 0 4px 10px rgba(36, 84, 214, 0.18);
+}
+
+.brand-symbol :deep(.v-icon) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.brand-wordmark {
+  display: flex;
+  align-items: baseline;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
 .brand-bus {
-  color: rgb(0, 0, 0);
+  color: var(--busgo-blue-deep);
 }
 
 .brand-go {
-  color: #f59e0b;
+  margin-left: 2px;
+  color: var(--busgo-blue);
 }
 
-/* SNACKBAR */
-.busgo-snackbar {
-  border-radius: 12px;
+/* ========================================
+   ESTADO DEL SISTEMA
+======================================== */
+
+.appbar-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  background: #f8fafc;
+  border: 1px solid #edf1f5;
+  border-radius: 20px;
 }
 
-/* USER CHIP DESKTOP */
+.appbar-status-dot {
+  width: 7px;
+  height: 7px;
+  background: #20a66a;
+  border: 1px solid #d7f5e7;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(32, 166, 106, 0.1);
+}
+
+.appbar-divider {
+  width: 1px;
+  height: 26px;
+  margin: 0 12px;
+  background: var(--appbar-border);
+}
+
+/* ========================================
+   USUARIO EN ESCRITORIO
+======================================== */
+
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 14px;
+  gap: 9px;
+  min-width: 0;
+  padding: 5px 7px 5px 5px;
+
+  color: var(--appbar-text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: 0.2s;
-  background: rgba(255,255,255,0.06);
+
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  outline: none;
+
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .user-chip:hover {
-  background: rgba(255,255,255,0.1);
+  background: var(--appbar-hover);
+  border-color: #e9eef6;
 }
 
-/* USER INFO */
+.user-chip:focus-visible {
+  border-color: rgba(36, 84, 214, 0.4);
+  box-shadow: 0 0 0 3px rgba(36, 84, 214, 0.1);
+}
+
+.user-avatar {
+  position: relative;
+  overflow: visible !important;
+  background: #e8edf5;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #dce3ed;
+}
+
+.user-avatar :deep(.v-img) {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.avatar-status {
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  z-index: 2;
+
+  width: 9px;
+  height: 9px;
+
+  background: #20a66a;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
+  min-width: 0;
+  max-width: 170px;
+  line-height: 1.15;
 }
 
 .user-name {
-  font-size: 0.9rem;
-  font-weight: 600;
+  overflow: hidden;
+  color: var(--appbar-text);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-role {
-  font-size: 0.75rem;
-  opacity: 0.7;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--appbar-muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* MOBILE CHIP */
+.user-chevron {
+  color: #7c899b !important;
+  opacity: 1 !important;
+  transition: transform 150ms ease;
+}
+
+.user-chip:hover .user-chevron {
+  color: var(--busgo-blue) !important;
+  transform: translateY(1px);
+}
+
+/* ========================================
+   USUARIO EN MÓVIL
+======================================== */
+
 .user-chip-mobile {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  padding: 4px;
+
+  color: var(--appbar-text);
+  font: inherit;
+  cursor: pointer;
+
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  outline: none;
 }
 
-/* MENU */
+.user-chip-mobile:hover {
+  background: var(--appbar-hover);
+}
+
+.user-chip-mobile :deep(.v-icon) {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+/* ========================================
+   MENÚ DEL USUARIO
+======================================== */
+
 .user-menu {
-  border-radius: 12px;
-  padding: 6px;
+  min-width: 270px;
+  padding: 7px;
+
+  color: var(--appbar-text);
+  background: rgba(255, 255, 255, 0.99);
+  border: 1px solid var(--appbar-border);
+  border-radius: 13px !important;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.14);
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px 9px;
+}
+
+.menu-avatar {
+  flex: 0 0 auto;
+  background: #e8edf5;
+  border: 1px solid #dce3ed;
+}
+
+.menu-user-information {
+  min-width: 0;
+}
+
+.menu-user-name {
+  overflow: hidden;
+  color: var(--appbar-text);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-user-role {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--appbar-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-divider {
+  margin: 1px 3px 6px;
+  border-color: var(--appbar-border);
+  opacity: 1;
 }
 
 .menu-item {
-  border-radius: 10px;
+  min-height: 38px !important;
   margin: 2px 0;
+  padding: 3px 7px !important;
+
+  color: #334155 !important;
+  cursor: pointer;
+  border-radius: 9px !important;
+}
+
+.menu-item :deep(.v-list-item__overlay) {
+  display: none;
+}
+
+.menu-item :deep(.v-list-item__prepend) {
+  margin-right: 9px;
+  opacity: 1 !important;
+}
+
+.menu-item :deep(.v-list-item__spacer) {
+  width: 0 !important;
+}
+
+.menu-item :deep(.v-list-item-title) {
+  color: inherit !important;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 1 !important;
+}
+
+.menu-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 7px;
+}
+
+.menu-icon :deep(.v-icon) {
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 .menu-item:hover {
-  background: rgba(59,130,246,0.08);
+  color: var(--busgo-blue) !important;
+  background: var(--appbar-hover);
+}
+
+.menu-item:hover .menu-icon {
+  color: var(--busgo-blue);
+  background: #e8eefc;
+}
+
+.menu-item--logout:hover {
+  color: #dc2626 !important;
+  background: #fff1f2;
+}
+
+.menu-item--logout:hover .menu-icon {
+  color: #dc2626;
+  background: #ffe4e6;
+}
+
+/* ========================================
+   SNACKBAR
+======================================== */
+
+.busgo-snackbar :deep(.v-snackbar__wrapper) {
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+}
+
+/* ========================================
+   DIÁLOGO DE CONTRASEÑA
+======================================== */
+
+.password-dialog {
+  overflow: hidden;
+  border: 1px solid var(--appbar-border);
+  border-radius: 14px !important;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.2);
+}
+
+.password-dialog :deep(.v-toolbar) {
+  color: #ffffff;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(53, 184, 232, 0.25),
+      transparent 110px
+    ),
+    linear-gradient(
+      135deg,
+      var(--busgo-blue-deep),
+      var(--busgo-blue-dark)
+    ) !important;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 959px) {
+  .busgo-appbar :deep(.v-toolbar__content) {
+    padding: 0 10px;
+  }
+
+  .brand-symbol {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-wordmark {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 600px) {
+  .busgo-appbar :deep(.v-toolbar__content) {
+    min-height: 56px;
+    padding: 0 7px;
+  }
+
+  .drawer-toggle {
+    margin-right: 1px;
+  }
+
+  .brand-container {
+    gap: 7px;
+  }
+
+  .brand-symbol {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .brand-symbol :deep(.v-icon) {
+    font-size: 18px !important;
+  }
+
+  .brand-wordmark {
+    font-size: 16px;
+  }
+
+  .user-menu {
+    min-width: 260px;
+  }
 }
 </style>

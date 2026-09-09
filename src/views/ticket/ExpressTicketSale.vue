@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="dialogModel" fullscreen transition="dialog-bottom-transition">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="ticket-sale-dialog-pro">
+    <v-form ref="form" v-model="valid" enctype="multipart/form-data" class="express-sale-form">
+      <v-card class="ticket-sale-dialog-pro" elevation="0">
         <div class="ticket-sale-topbar">
           <div class="ticket-sale-topbar__left">
             <div class="ticket-sale-topbar__icon">
@@ -26,7 +26,7 @@
             Paso 2 - Pasajes y pago
           </v-chip>
 
-          <v-btn icon="mdi-close" variant="text" size="small" class="ticket-sale-close" @click="close" />
+          <v-btn icon="mdi-close" variant="text" size="small" class="ticket-sale-close" aria-label="Cerrar venta Express" @click="close" />
         </div>
 
         <v-card-text class="ticket-sale-body">
@@ -34,7 +34,7 @@
             <div class="ticket-sale-section-card">
               <div class="ticket-sale-section-header">
                 <div>
-                  <div class="ticket-sale-section-title">Seleccion del tramo</div>
+                  <div class="ticket-sale-section-title">Selección del tramo</div>
                   <div class="ticket-sale-section-subtitle">
                     Elige fecha, origen, destino y luego selecciona el viaje disponible.
                   </div>
@@ -42,7 +42,7 @@
               </div>
 
               <v-row dense>
-                <v-col v-if="mostrarFila" cols="12">
+                <v-col v-if="mostrarFila" cols="12" md="6">
                   <label class="ticket-sale-label">Sucursal</label>
                   <v-autocomplete
                     v-model="selectedBranchId"
@@ -52,7 +52,7 @@
                     item-title="name"
                     item-value="id"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     rounded="lg"
                     clearable
                     hide-details="auto"
@@ -61,7 +61,7 @@
                   />
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" :md="mostrarFila ? 6 : 12">
                   <label class="ticket-sale-label">Fecha</label>
                   <v-menu
                     v-model="menuDate"
@@ -77,7 +77,7 @@
                         :modelValue="dateFormatted"
                         prepend-inner-icon="mdi-calendar"
                         placeholder="Fecha"
-                        density="comfortable"
+                        density="compact"
                         variant="outlined"
                         rounded="lg"
                         hide-details="auto"
@@ -89,7 +89,7 @@
                       <v-date-picker
                         header="Calendario"
                         title="Seleccione la fecha"
-                        :color="paleteColors.primary"
+                        :color="'#16845b'"
                         :modelValue="selectedDate"
                         @update:model-value="updateDate"
                         format="yyyy-MM-dd"
@@ -109,16 +109,16 @@
                     item-title="address"
                     item-value="id"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     rounded="lg"
                     clearable
                     hide-details="auto"
                     :no-data-text="'No hay ubicaciones disponibles'"
-                    :menu-props="{ maxHeight: 360, maxWidth: 520 }"
+                    :menu-props="{ maxHeight: 360, maxWidth: 520, contentClass: 'busgo-express-location-menu' }"
                     @update:model-value="handleOriginSelectionChange"
                   >
                     <template #item="{ props, item }">
-                      <v-list-item v-bind="props" title="" class="ticket-location-option">
+                      <v-list-item v-bind="{ ...props, title: undefined, subtitle: undefined }" class="ticket-location-option">
                         <div class="ticket-location-option__title">
                           {{ getTableRowItem(item).address }}
                         </div>
@@ -140,18 +140,18 @@
                     item-title="address"
                     item-value="id"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     rounded="lg"
                     clearable
                     hide-details="auto"
                     :disabled="!selectedOriginLocationId"
                     :loading="loadingDestinations"
                     :no-data-text="loadingDestinations ? 'Cargando destinos...' : 'No hay ubicaciones disponibles'"
-                    :menu-props="{ maxHeight: 360, maxWidth: 520 }"
+                    :menu-props="{ maxHeight: 360, maxWidth: 520, contentClass: 'busgo-express-location-menu' }"
                     @update:model-value="handleLocationSelectionChange"
                   >
                     <template #item="{ props, item }">
-                      <v-list-item v-bind="props" title="" class="ticket-location-option">
+                      <v-list-item v-bind="{ ...props, title: undefined, subtitle: undefined }" class="ticket-location-option">
                         <div class="ticket-location-option__title">
                           {{ getTableRowItem(item).address }}
                         </div>
@@ -170,7 +170,7 @@
                     placeholder="Filtrar por ruta, patente, horario o tramo..."
                     prepend-inner-icon="mdi-magnify"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     rounded="lg"
                     clearable
                     hide-details="auto"
@@ -199,7 +199,7 @@
               <div class="trip-sale-panel-pro">
                 <div class="trip-sale-panel-pro__header">
                   <div class="trip-sale-sortable-header" @click="toggleSort('code')">
-                    <span>Codigo</span>
+                    <span>Código</span>
                     <v-icon size="14">{{ sortIcon('code') }}</v-icon>
                   </div>
                   <div class="trip-sale-sortable-header" @click="toggleSort('routeCode')">
@@ -215,7 +215,7 @@
                     <v-icon size="14">{{ sortIcon('arrival') }}</v-icon>
                   </div>
                   <div class="trip-sale-sortable-header" @click="toggleSort('plate')">
-                    <span>Vehiculo</span>
+                    <span>Vehículo</span>
                     <v-icon size="14">{{ sortIcon('plate') }}</v-icon>
                   </div>
                   <div class="trip-sale-sortable-header" @click="toggleSort('availableCapacity')">
@@ -275,7 +275,7 @@
                     <div class="d-flex justify-end">
                       <v-chip
                         size="small"
-                        :color="selectedTripRowId === tripRow.id ? paleteColors.active : paleteColors.primary"
+                        :color="selectedTripRowId === tripRow.id ? '#116546' : '#16845b'"
                         :variant="selectedTripRowId === tripRow.id ? 'flat' : 'tonal'"
                       >
                         {{ selectedTripRowId === tripRow.id ? "Seleccionado" : "Seleccionar" }}
@@ -288,7 +288,7 @@
                   <v-icon size="42">mdi-bus-alert</v-icon>
                   <div class="ticket-sale-empty__title">No hay viajes disponibles</div>
                   <div class="ticket-sale-empty__text">
-                    Cambia la fecha, origen, destino o busqueda para encontrar viajes.
+                    Cambia la fecha, origen, destino o búsqueda para encontrar viajes.
                   </div>
                 </div>
               </div>
@@ -410,7 +410,7 @@
                       @click="!method.disabled && (selectedMethod = method.value)"
                     >
                       <v-card-text class="payment-method-content-pro">
-                        <v-icon size="24" :color="selectedMethod === method.value ? paleteColors.active : paleteColors.primary">
+                        <v-icon size="24" :color="selectedMethod === method.value ? '#116546' : '#16845b'">
                           {{ method.icon }}
                         </v-icon>
 
@@ -1143,3 +1143,103 @@ export default {
   },
 };
 </script>
+
+
+<style scoped>
+/* Self-contained styles for the Express dialog, including Vuetify controls. */
+.express-sale-form { height:100%; min-height:0; }
+.ticket-sale-dialog-pro { display:flex; flex-direction:column; height:100vh; height:100dvh; min-height:0; color:#1e293b; background:#f6f8fb; border-radius:0; }
+.ticket-sale-topbar { display:flex; align-items:center; flex-shrink:0; gap:12px; min-height:70px; padding:12px 24px; color:#fff; background:#004D40; border-bottom:1px solid #22664c; }
+.ticket-sale-topbar__left { display:flex; align-items:center; gap:11px; min-width:0; }
+.ticket-sale-topbar__icon { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:10px; background:#00796B; color:#fff; }
+.ticket-sale-topbar__icon :deep(.v-icon) { font-size:23px!important; }
+.ticket-sale-topbar__title { font-size:19px; font-weight:800; line-height:1.2; }
+.ticket-sale-topbar__subtitle { color:#d4ece1; font-size:12px; line-height:1.4; margin-top:4px; }
+.ticket-sale-step-chip { color:#e0f3e9; background:#00796B; font-size:11px; font-weight:650; }
+.ticket-sale-close { flex-shrink:0; color:#fff; background:#00796B; border-radius:9px; }
+.ticket-sale-body { flex:1; min-height:0; overflow-y:auto; padding:18px 24px 0!important; }
+.ticket-sale-layout { max-width:1480px; margin:0 auto; }
+.ticket-sale-section-card,.ticket-sale-summary-pro { padding:18px; background:#fff; border:1px solid #e4eaf2; border-radius:12px; box-shadow:0 4px 14px #15264b05; }
+.ticket-sale-fill { height:100%; }
+.ticket-sale-section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.ticket-sale-section-title { color:#0f172a; font-size:15px; font-weight:800; line-height:1.4; }
+.ticket-sale-section-subtitle { color:#526176; font-size:12px; line-height:1.5; margin-top:3px; }
+.ticket-sale-mini-icon { display:grid; place-items:center; width:36px; height:36px; margin-right:10px; flex-shrink:0; border-radius:9px; background:#edf8f2; color:#00796B; }
+.ticket-sale-label { display:block; margin-bottom:6px; color:#475569; font-size:12px; font-weight:700; }
+.ticket-sale-section-card :deep(.v-row) { row-gap:9px; }
+.ticket-sale-dialog-pro :deep(.v-field) { color:#233654; background:#fff; border-radius:9px!important; font-size:14px; }
+.ticket-sale-dialog-pro :deep(.v-field__outline) { color:#c5cfdd; opacity:1; }
+.ticket-sale-dialog-pro :deep(.v-field--focused .v-field__outline) { color:#00796B; }
+.ticket-sale-dialog-pro :deep(.v-field__input),.ticket-sale-dialog-pro :deep(.v-label) { color:#233654; font-size:14px; font-weight:500; opacity:1; }
+.ticket-sale-dialog-pro :deep(.v-field__input::placeholder) { color:#64748b; opacity:1; }
+.ticket-sale-dialog-pro :deep(.v-field__prepend-inner .v-icon) { color:#64748b; opacity:1; }
+.ticket-sale-dialog-pro :deep(.v-input__details) { font-size:12px; }
+.ticket-location-option__title { color:#1e293b; font-size:14px; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
+.ticket-location-option__subtitle { margin-top:3px; color:#526176; font-size:12px; line-height:1.45; white-space:normal; }
+:global(.busgo-express-location-menu .v-list) { background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:6px; }
+:global(.busgo-express-location-menu .v-list-item) { border-radius:8px; padding:10px 12px!important; margin:2px 0; }
+:global(.busgo-express-location-menu .v-list-item--active) { background:#edf8f2; color:#16845b; }
+.trip-sale-panel-pro { border:1px solid #e4eaf2; border-radius:10px; overflow-x:auto; }
+.trip-sale-panel-pro__header,.trip-sale-row-pro { display:grid; grid-template-columns:1fr 2.2fr .8fr .8fr 1fr .9fr 1fr 112px; min-width:1000px; align-items:center; gap:12px; padding:12px 16px; }
+.trip-sale-panel-pro__header { min-height:42px; color:#334155; background:#f3f6fa; font-size:11px; font-weight:800; border-bottom:1px solid #e4eaf2; }
+.trip-sale-sortable-header { display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none; }
+.trip-sale-sortable-header:hover { color:#16845b; }
+.trip-sale-row-pro { min-height:68px; cursor:pointer; background:#fff; border-bottom:1px solid #edf1f6; }
+.trip-sale-row-pro:last-child { border-bottom:0; }
+.trip-sale-row-pro:hover { background:#f5fbf7; }
+.trip-sale-row-pro--selected { background:#edf8f2; box-shadow:inset 3px 0 #16845b; }
+.trip-sale-code,.trip-sale-strong,.trip-sale-route__name { color:#1e293b; font-size:13px; font-weight:750; }
+.trip-sale-route { min-width:0; }
+.trip-sale-route__title-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.trip-sale-route__meta,.trip-sale-muted { color:#526176; font-size:12px; line-height:1.5; margin-top:3px; overflow-wrap:anywhere; }
+.trip-sale-price { color:#116546; font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; }
+.ticket-sale-empty { padding:30px 18px; text-align:center; color:#718198; }
+.ticket-sale-empty__title { color:#475569; font-size:14px; font-weight:750; margin-top:10px; }
+.ticket-sale-empty__text { color:#64748b; font-size:12px; line-height:1.5; margin-top:5px; }
+.ticket-sale-summary-grid { display:grid; grid-template-columns:1.8fr 1fr .8fr 1fr; gap:12px; margin-top:14px; }
+.ticket-sale-summary-grid > div { min-width:0; padding:12px; background:#f8fafc; border:1px solid #e7edf5; border-radius:9px; }
+.ticket-sale-summary-grid span { display:block; color:#64748b; font-size:11px; font-weight:650; margin-bottom:5px; }
+.ticket-sale-summary-grid strong { display:block; color:#233654; font-size:14px; line-height:1.4; font-weight:750; overflow-wrap:anywhere; }
+.ticket-sale-summary-grid > div:last-child { background:#edf8f2; border-color:#cce9da; }
+.ticket-sale-summary-grid > div:last-child strong { color:#16845b; }
+.ticket-type-list { display:flex; flex-direction:column; gap:10px; }
+.ticket-type-card { padding:12px 14px; margin-bottom:9px; border:1px solid #e4eaf2; border-radius:10px; background:#fff; }
+.ticket-type-card:last-child { margin-bottom:0; }
+.ticket-type-card__main { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.ticket-type-card__main > div:first-child { min-width:0; }
+.ticket-type-card__title { color:#233654; font-size:14px; font-weight:750; overflow-wrap:anywhere; }
+.ticket-type-card__price { color:#526176; font-size:12px; margin-top:4px; }
+.ticket-type-card__input { flex:0 0 100px; width:100px; }
+.ticket-type-card__total { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 10px; margin-top:10px; border-radius:7px; background:#edf8f2; color:#116546; font-size:12px; }
+.payment-methods-grid-pro { display:grid; gap:9px; }
+.payment-method-card-pro { color:#334155; background:#fff; border:1px solid #dce4ef; border-radius:9px!important; box-shadow:none!important; cursor:pointer; }
+.payment-method-content-pro { display:flex; align-items:center; gap:10px; padding:12px!important; min-height:48px; }
+.payment-method-label { font-size:13px; font-weight:700; }
+.payment-method-selected { background:#edf8f2; border-color:#16845b; box-shadow:inset 0 0 0 1px #16845b!important; }
+.payment-method-disabled { cursor:not-allowed; opacity:.5; background:#f8fafc; }
+.ticket-total-box { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:15px; margin-top:16px; border-radius:10px; background:#104b36; color:#fff; }
+.ticket-total-box span { font-size:12px; font-weight:650; }
+.ticket-total-box strong { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.ticket-sale-footer-actions { display:flex; align-items:center; gap:10px; position:sticky; bottom:0; z-index:3; margin-top:16px; padding:14px 0; border-top:1px solid #e1e8f1; background:#f6f8fb; }
+.ticket-sale-btn-primary,.ticket-sale-btn-secondary { min-height:40px; padding-inline:18px; border-radius:9px!important; font-size:13px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none!important; }
+.ticket-sale-btn-primary { color:#fff!important; background:#16845b!important; }
+.ticket-sale-btn-secondary { color:#475569!important; background:#fff!important; border:1px solid #dce3ed; }
+.ticket-sale-btn-primary.v-btn--disabled { background:#dce3ed!important; color:#64748b!important; }
+.ticket-sale-btn-primary:focus-visible,.ticket-sale-btn-secondary:focus-visible { outline:3px solid #78c9a2; outline-offset:3px; }
+@media(max-width:959px) { .ticket-sale-topbar { padding-inline:17px; }.ticket-sale-body { padding:15px 17px 0!important; }.ticket-sale-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) {
+  .ticket-sale-topbar { padding:12px; gap:9px; }
+  .ticket-sale-topbar__left { flex:1; gap:9px; }
+  .ticket-sale-topbar__title { font-size:17px; }
+  .ticket-sale-topbar__subtitle { font-size:11px; }
+  .ticket-sale-step-chip { display:none; }
+  .ticket-sale-body { padding:12px 12px 0!important; }
+  .ticket-sale-section-card,.ticket-sale-summary-pro { padding:14px; }
+  .ticket-sale-summary-grid { gap:8px; }
+  .ticket-sale-summary-grid > div:first-child { grid-column:1 / -1; }
+  .ticket-type-card { padding:11px; }
+  .ticket-type-card__input { flex-basis:88px; width:88px; }
+  .ticket-sale-footer-actions .v-spacer { display:none; }
+  .ticket-sale-btn-primary,.ticket-sale-btn-secondary { flex:1; min-width:0; padding-inline:12px; }
+}
+</style>
