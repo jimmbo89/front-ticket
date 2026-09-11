@@ -343,6 +343,7 @@ export default {
         this.data.email = this.editedItem.email;
         this.data.password = this.editedItem.password;
         this.data.branch_id = this.editedItem.branch_id;
+        this.data.platform = 'web';
 
         // Petición al servidor utilizando handleRequest
         const result = await handleRequest({

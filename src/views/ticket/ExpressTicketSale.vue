@@ -911,6 +911,7 @@ export default {
         branch_id: Number(branchId),
         date: this.dateFormatted,
         method: this.selectedMethod,
+        sale_mode: "express",
         quantity: this.totalQuantity,
         price: Number(this.selectedTripRow?.price ?? 0) || 0,
         total: this.total,

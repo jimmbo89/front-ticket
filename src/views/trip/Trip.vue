@@ -459,7 +459,7 @@
                                   />
                                 </v-avatar>
 
-                                <div class="ml-2">
+                                <div class="ml-2 trip-route-stop-details">
                                   <div class="text-caption text-grey">
                                     <v-icon small class="mr-1">
                                       mdi-map-marker
@@ -467,18 +467,19 @@
                                     Origen
                                   </div>
 
-                                  <v-tooltip location="top">
+                                  <v-tooltip location="top" max-width="350px">
                                     <template #activator="{ props: tooltipProps }">
                                       <div
                                         v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
+                                        class="text-truncate trip-route-stop-address"
                                       >
-                                        {{ item.raw.originAddress }}
+                                        {{ item.raw.originAddress || "No especificado" }}
                                       </div>
                                     </template>
 
-                                    <span>{{ item.raw.originAddress }}</span>
+                                    <span style="white-space: normal; word-break: break-word">
+                                      {{ item.raw.originAddress || "No especificado" }}
+                                    </span>
                                   </v-tooltip>
                                 </div>
                               </v-col>
@@ -491,7 +492,7 @@
                                   />
                                 </v-avatar>
 
-                                <div class="ml-2">
+                                <div class="ml-2 trip-route-stop-details">
                                   <div class="text-caption text-grey">
                                     <v-icon small class="mr-1">
                                       mdi-map-marker-check
@@ -499,18 +500,19 @@
                                     Destino
                                   </div>
 
-                                  <v-tooltip location="top">
+                                  <v-tooltip location="top" max-width="350px">
                                     <template #activator="{ props: tooltipProps }">
                                       <div
                                         v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
+                                        class="text-truncate trip-route-stop-address"
                                       >
-                                        {{ item.raw.destinationAddress }}
+                                        {{ item.raw.destinationAddress || "No especificado" }}
                                       </div>
                                     </template>
 
-                                    <span>{{ item.raw.destinationAddress }}</span>
+                                    <span style="white-space: normal; word-break: break-word">
+                                      {{ item.raw.destinationAddress || "No especificado" }}
+                                    </span>
                                   </v-tooltip>
                                 </div>
                               </v-col>
@@ -3182,6 +3184,17 @@ table.v-table>thead,
   font-size: 12px;
   color: #64748b;
   min-width: 0;
+}
+
+.trip-route-stop-details {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.trip-route-stop-address {
+  display: block;
+  width: 100%;
 }
 
 .trip-worker-row {

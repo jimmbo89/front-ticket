@@ -215,7 +215,7 @@
                     </div>
                     <div class="route-meta">
                       <v-icon size="x-small">mdi-clock-outline</v-icon>
-                      <span>{{ slotProps.item.estimated }} min</span>
+                      <span>{{ slotProps.item.duration }} min</span>
                       <span>{{ formatTimeRange(slotProps.item.horario) }}</span>
                     </div>
                   </div>
@@ -971,7 +971,7 @@ table.v-table > thead,
 .kpi-card-stat {
   position: relative;
   min-height: 150px;
-  padding: 20px 24px;
+  padding: 10px 20px !important;
   background: #ffffff;
   border: 1px solid #edf1f5;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
@@ -1041,7 +1041,7 @@ table.v-table > thead,
 .kpi-icon-circle {
   position: absolute;
   top: 28px;
-  right: 24px;
+  right: 32px;
   width: 58px;
   height: 58px;
   border-radius: 999px;

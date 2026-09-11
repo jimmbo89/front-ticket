@@ -21,28 +21,67 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
 
   } catch (error) {
     if (error.response) {
-      const getMessage = (d) => d?.message || d?.msg || 'Error desconocido';
       const status = error.response.status;
-      const responseData = error.response.data || {};
+      const responseData = error.response.data ?? {};
+      const getMessage = (data, fallback = 'Error desconocido') => {
+        if (typeof data === 'string') {
+          return data;
+        }
+
+        if (!data || typeof data !== 'object') {
+          return fallback;
+        }
+
+        if (typeof data.msg === 'string' && data.msg.trim()) {
+          return data.msg;
+        }
+
+        if (typeof data.message === 'string' && data.message.trim()) {
+          return data.message;
+        }
+
+        if (data.errors) {
+          const validationErrors = Object.values(data.errors)
+            .flat(Infinity)
+            .filter((message) => typeof message === 'string' && message.trim());
+
+          if (validationErrors.length) {
+            return `Errores de validación: ${validationErrors.join(', ')}`;
+          }
+        }
+
+        if (typeof data.error === 'string' && data.error.trim()) {
+          return data.error;
+        }
+
+        return fallback;
+      };
+
       switch (status) {
         case 400:
-          if (responseData.msg) {
-            return { success: false, message: responseData.msg, data: responseData };
-          } else if (responseData.errors) {
-            const validationErrors = Object.values(responseData.errors).flat();
-            return { success: false, message: `Errores de validación: ${validationErrors.join(', ')}`, data: responseData };
-          } else {
-            return { success: false, message: `Error: ${responseData.error || 'Ocurrió un error de validación'}`, data: responseData };
-          }
+        case 409:
+        case 422:
+          return {
+            success: false,
+            message: getMessage(responseData, status === 409
+              ? 'El registro entra en conflicto con otro existente.'
+              : 'Ocurrió un error de validación.'),
+            data: responseData,
+            status,
+          };
         case 401:
-          return { success: false, message: `Acceso no autorizado: Revocado o no válido.:${error.response}` };
-          case 404:
-          // ✅ Manejo específico para 404 con mensaje del backend
-          return { success: false, message: getMessage(data) };
+          return {
+            success: false,
+            message: `Acceso no autorizado: ${getMessage(responseData, 'Revocado o no válido.')}`,
+            data: responseData,
+            status,
+          };
+        case 404:
+          return { success: false, message: getMessage(responseData, 'Recurso no encontrado.'), data: responseData, status };
         case 500:
-          return { success: false, message: 'Error interno del servidor.' };
+          return { success: false, message: getMessage(responseData, 'Error interno del servidor.'), data: responseData, status };
         default:
-          return { success: false, message: `Error inesperado: ${status}:${error.response}` };
+          return { success: false, message: getMessage(responseData, `Error inesperado: ${status}`), data: responseData, status };
       }
     } else if (error.request) {
       return { success: false, message: 'No se recibió respuesta del servidor.' };

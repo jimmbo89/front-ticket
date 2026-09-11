@@ -3295,7 +3295,12 @@ export default {
         return;
       }
 
-      this.currentTicket = ticket;
+      // El endpoint de venta express puede no incluir el modo en la respuesta.
+      // En este flujo el origen de la operación es inequívocamente express.
+      this.currentTicket = {
+        ...ticket,
+        sale_mode: "express",
+      };
       this.showTicketDialog = true;
 
       const branchIdBuscado = this.currentTicket.branch_id ?? this.currentTicket.branchId;

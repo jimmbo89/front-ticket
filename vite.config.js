@@ -37,5 +37,9 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    watch: {
+      // El build reemplaza este directorio; no debe ser observado por Vite dev.
+      ignored: ['**/dist/**'],
+    },
   },
 })

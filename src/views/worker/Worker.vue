@@ -105,37 +105,79 @@
                 </v-avatar>
 
                 <div class="branch-name-text">
-                  <span>{{ slotProps.item.name }}</span>
+                  <span class="text-truncate">{{ slotProps.item.name }}</span>
+
+                  <v-tooltip activator="parent" location="bottom" max-width="350px">
+                    <span style="white-space: normal; word-break: break-word">
+                      Nombre: {{ slotProps.item.name }}
+                    </span>
+                  </v-tooltip>
                 </div>
               </div>
 
               <div class="worker-col-user branch-info-cell">
                 <span class="text-truncate">{{ slotProps.item.user }}</span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Usuario: {{ slotProps.item.user }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-email branch-info-cell">
                 <v-icon size="16" color="primary">mdi-email-outline</v-icon>
                 <span class="text-truncate">{{ slotProps.item.email }}</span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Correo: {{ slotProps.item.email }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-phone branch-info-cell">
                 <v-icon size="16" color="primary">mdi-phone</v-icon>
                 <span class="text-truncate">{{ slotProps.item.phone }}</span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Teléfono: {{ slotProps.item.phone }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-rut branch-info-cell">
                 <span class="text-truncate">{{ slotProps.item.rut }}</span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    RUT: {{ slotProps.item.rut }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-role branch-info-cell">
                 <span class="worker-role-chip">
                   {{ slotProps.item.role }}
                 </span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Rol: {{ slotProps.item.role }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-address branch-info-cell">
                 <v-icon size="16" color="primary">mdi-map-marker-outline</v-icon>
                 <span class="text-truncate">{{ slotProps.item.address }}</span>
+
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span style="white-space: normal; word-break: break-word">
+                    Dirección: {{ slotProps.item.address }}
+                  </span>
+                </v-tooltip>
               </div>
 
               <div class="worker-col-actions branch-actions">
@@ -538,6 +580,7 @@ export default {
     async save() {
       //this.$refs.form.reset();
       this.loading = true;
+      let closeAfterSave = false;
       if (this.editedIndex === -1) {
         this.loading = true;
         this.valid = false;
@@ -568,6 +611,7 @@ export default {
 
             // Manejo de la respuesta según el resultado
             if (result.success) {
+              closeAfterSave = true;
               this.loading = false;
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -614,6 +658,7 @@ export default {
 
             // Manejo de la respuesta según el resultado
             if (result.success) {
+              closeAfterSave = true;
               this.loading = false;
               this.showAlert("success", result.message, 3000);
               this.initialize();
@@ -632,9 +677,16 @@ export default {
         } else {
           this.loading = false;
           this.showAlert("success", "No se realizaron cambios.", 3000);
+          closeAfterSave = true;
         }
       }
-      this.close();
+
+      if (closeAfterSave) {
+        this.close();
+      } else {
+        // Mantener el formulario abierto y habilitado para corregir el error.
+        this.valid = true;
+      }
     },
     async editItem(item) {
       this.editedIndex = 1;
@@ -944,8 +996,55 @@ table.v-table > thead,
   gap: 12px;
 }
 
+.worker-name-cell > .branch-avatar {
+  flex: 0 0 auto;
+}
+
+.branch-name-text {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.branch-name-text .text-truncate {
+  display: block;
+  width: 100%;
+}
+
+.branch-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: #374151;
+}
+
+.branch-info-cell > .v-icon {
+  flex: 0 0 auto;
+}
+
+.branch-info-cell .text-truncate,
+.worker-role-chip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-info-cell .text-truncate {
+  display: block;
+  flex: 1 1 0;
+  width: 0;
+}
+
 .worker-role-chip {
   max-width: 100%;
+  display: inline-block;
   padding: 3px 9px;
   border-radius: 999px;
   background: #eef2ff;
