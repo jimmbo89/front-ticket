@@ -105,6 +105,13 @@ const routes = [
         component: () =>
           import(/* webpackChunkName: "home" */ "@/views/ticket/Tickect.vue"),
       },
+
+       {
+        path: "/sales",
+        name: "Sales",
+        component: () =>
+          import(/* webpackChunkName: "home" */ "@/views/sales/Sales.vue"),
+      },
       {
         path: "/permission",
         name: "Permission",

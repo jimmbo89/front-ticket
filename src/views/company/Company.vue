@@ -1,998 +1,256 @@
 <template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
-      </v-col>
-
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-      </v-col>
-    </v-row>
-  </v-snackbar>
-
-  <v-card class="busgo-page-header" elevation="0">
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
-      <v-icon>mdi-office-building</v-icon>
-    </v-avatar>
-
-    <div>
-      <div class="busgo-page-title">Empresa</div>
-      <div class="busgo-page-subtitle">Administración de la empresa</div>
-    </div>
-
-    <v-spacer />
-
-    <v-btn
-      v-if="companies.length <= 0"
-      :color="paleteColors.primary"
-      variant="flat"
-      elevation="0"
-      prepend-icon="mdi-plus"
-      class="busgo-add-btn"
-      @click="showAddBussines"
-    >
-      Agregar Empresa
-    </v-btn>
-  </v-card>
-
-  <v-container fluid class="busgo-container">
-    <v-card class="busgo-card" elevation="0">
-      <div class="busgo-card-header">
-        <div>
-          <div class="busgo-card-title">Datos de la empresa</div>
-          <div class="busgo-card-subtitle">
-            Administra la información principal, contacto e imagen corporativa.
-          </div>
-        </div>
+  <div class="company-page">
+    <v-snackbar v-model="snackbar" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="10">
+      <div class="snackbar-content">
+        <v-icon :icon="sb_icon" size="22" />
+        <div><strong>{{ sb_title }}</strong><small>{{ sb_message }}</small></div>
       </div>
+    </v-snackbar>
 
-      <div class="busgo-table-head">
-        <div class="company-col-main">Nombre / Dirección</div>
-        <div class="company-col-rut">RUT</div>
-        <div class="company-col-phone">Teléfono</div>
-        <div class="company-col-actions"></div>
+    <header class="page-header">
+      <div class="page-heading">
+        <div class="page-icon"><v-icon size="22">mdi-office-building-outline</v-icon></div>
+        <div><h1>Empresa</h1><p>Administra la identidad y los datos principales de tu organización</p></div>
       </div>
+      <v-btn v-if="!loading && companies.length === 0" class="primary-button" prepend-icon="mdi-plus" elevation="0" @click="showAddBusiness">
+        Agregar empresa
+      </v-btn>
+    </header>
 
-      <div
-        v-for="(company, index) in companies"
-        :key="index"
-        class="busgo-row company-row-modern"
-      >
-        <div class="company-col-main busgo-name-cell">
-          <v-dialog max-width="500">
-            <template #activator="{ props }">
-              <v-avatar
-                v-bind="props"
-                rounded="lg"
-                color="grey-lighten-4"
-                class="busgo-avatar company-logo-avatar"
-                style="cursor: pointer"
-              >
-                <v-img
-                  :src="`${$axios.defaults.baseURL}images/${company.image}?t=${getCacheTimestamp()}`"
-                  contain
-                  class="company-logo-img"
-                />
-              </v-avatar>
-            </template>
+    <v-container fluid class="page-content">
+      <v-row class="summary-row">
+        <v-col cols="12" sm="4">
+          <div class="summary-card"><div class="summary-icon blue"><v-icon size="19">mdi-domain</v-icon></div><div><b>{{ companies.length }}</b><span>Empresa registrada</span></div></div>
+        </v-col>
+        <v-col cols="12" sm="4">
+          <div class="summary-card"><div class="summary-icon green"><v-icon size="19">mdi-check-decagram-outline</v-icon></div><div><b>{{ companies.length ? 'Configurada' : 'Pendiente' }}</b><span>Estado de la organización</span></div></div>
+        </v-col>
+        <v-col cols="12" sm="4">
+          <div class="summary-card"><div class="summary-icon amber"><v-icon size="19">mdi-image-outline</v-icon></div><div><b>{{ companies[0]?.image ? 'Disponible' : 'Sin logo' }}</b><span>Identidad corporativa</span></div></div>
+        </v-col>
+      </v-row>
 
-            <v-card>
-              <v-img
-                :src="`${$axios.defaults.baseURL}images/${company.image}`"
-                max-height="500"
-                contain
-              />
-
-              <v-card-actions>
-                <v-spacer />
-                <v-btn variant="text">Cerrar</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-
-          <div class="min-width-0">
-            <div class="busgo-name">
-              {{ company.name }}
-            </div>
-
-            <div class="busgo-submeta text-truncate">
-              {{ company.address }}
-            </div>
-          </div>
+      <v-card class="table-panel" elevation="0">
+        <div class="table-toolbar">
+          <div><div class="section-title">Datos de la empresa</div><div class="section-subtitle">{{ registeredCountText }}</div></div>
+          <v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar empresa..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable />
         </div>
-
-        <div class="company-col-rut busgo-meta">
-          <span class="text-truncate">{{ company.rut }}</span>
-        </div>
-
-        <div class="company-col-phone busgo-meta">
-          <v-icon size="16" color="primary">mdi-phone</v-icon>
-          <span class="text-truncate">{{ company.phone }}</span>
-        </div>
-
-        <div class="company-col-actions busgo-actions">
-          <v-btn
-            size="30"
-            icon
-            variant="tonal"
-            :color="paleteColors.primary"
-            @click="editItem(company)"
-            title="Editar Empresa"
-          >
-            <v-icon size="17">mdi-pencil</v-icon>
-          </v-btn>
-
-          <v-btn
-            size="30"
-            icon
-            variant="tonal"
-            :color="paleteColors.error"
-            @click="deleteItem(company)"
-            title="Eliminar Empresa"
-          >
-            <v-icon size="17">mdi-delete</v-icon>
-          </v-btn>
-        </div>
-      </div>
-    </v-card>
-  </v-container>
-
-  <v-dialog v-model="dialog" max-width="600px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card>
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.name"
-                  clearable
-                  label="Nombre"
-                  prepend-icon="mdi-store"
-                  variant="underlined"
-                  :rules="nameRules"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.rut"
-                  clearable
-                  label="Rut"
-                  prepend-icon="mdi-identifier"
-                  variant="underlined"
-                  :rules="rutRules"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.phone"
-                  clearable
-                  label="Teléfono"
-                  placeholder="+56912345678"
-                  prepend-icon="mdi-phone"
-                  variant="underlined"
-                  :rules="mobileRules"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.address"
-                  clearable
-                  label="Dirección"
-                  prepend-icon="mdi-map-marker-outline"
-                  variant="underlined"
-                />
-              </v-col>
-            </v-row>
-
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-file-input
-                  clearable
-                  v-model="file"
-                  ref="fileInput"
-                  label="Imagen de la Empresa"
-                  variant="underlined"
-                  density="compact"
-                  name="file"
-                  accept=".png, .jpg, .jpeg"
-                  @change="onFileSelected"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-card elevation="6" class="mx-auto" max-width="210" max-height="120">
-                  <img
-                    v-if="imagenDisponible()"
-                    :src="imgedit"
-                    class="company-image-preview"
-                  />
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-
         <v-divider />
-
-        <v-card-actions>
-          <v-spacer />
-
-          <v-btn
-            :color="paleteColors.gris"
-            variant="flat"
-            @click="close"
-          >
-            Cancelar
-          </v-btn>
-
-          <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="!valid"
-            :loading="loading"
-          >
-            Aceptar
-          </v-btn>
-        </v-card-actions>
+        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="companies" :search="search" :loading="loading" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay empresas disponibles" loading-text="Cargando empresa..." class="companies-table">
+          <template #loading><v-skeleton-loader type="table-row@3" /></template>
+          <template #[`item.name`]="{ item }">
+            <div class="company-name-cell">
+              <button type="button" class="company-avatar" title="Ampliar logotipo" @click="openLogo(item)"><v-img v-if="item.displayImage" :src="item.displayImage" class="company-photo" width="46" height="38" contain><template #error><div class="image-fallback"><v-icon size="18">mdi-domain</v-icon></div></template></v-img><v-icon v-else size="18">mdi-domain</v-icon></button>
+              <div class="cell-copy"><div class="company-name">{{ item.name || 'Empresa sin nombre' }}</div><div class="company-address">{{ item.address || 'Dirección no registrada' }}</div></div>
+            </div>
+          </template>
+          <template #[`item.rut`]="{ item }"><span class="table-value">{{ item.rut || 'No registrado' }}</span></template>
+          <template #[`item.phone`]="{ item }"><span class="phone-value"><v-icon size="15">mdi-phone-outline</v-icon>{{ item.phone || 'No registrado' }}</span></template>
+          <template #[`item.image`]="{ item }"><span class="status-badge" :class="item.image ? 'status-badge--active' : 'status-badge--inactive'"><span class="status-dot" />{{ item.image ? 'Disponible' : 'Sin logo' }}</span></template>
+          <template #[`item.actions`]="{ item }"><div class="action-buttons"><v-tooltip text="Editar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Eliminar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div></template>
+        </v-data-table>
+        <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>El logotipo se utiliza en la navegación y otros elementos de identidad de BusGo.</div>
       </v-card>
-    </v-form>
-  </v-dialog>
+    </v-container>
 
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card>
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4">
-          Eliminar Empresa
-        </span>
-      </v-toolbar>
+    <v-dialog v-model="logoDialog" max-width="620">
+      <v-card class="logo-dialog" elevation="0">
+        <div class="dialog-header">
+        <div class="dialog-heading"><div class="dialog-icon"><v-icon size="20">mdi-image-outline</v-icon></div><div><div class="dialog-title">Logotipo corporativo</div><div class="dialog-subtitle">{{ selectedCompany?.name || 'Empresa' }}</div></div></div>
+          <v-btn icon="mdi-close" variant="text" size="small" @click="logoDialog = false" />
+        </div>
+        <v-divider />
+        <div class="logo-preview-large"><v-img :src="selectedCompany?.displayImageNoCache || selectedCompany?.displayImage" max-height="420" contain><template #error><div class="large-logo-fallback"><v-icon size="54">mdi-domain</v-icon></div></template></v-img></div>
+        <v-divider />
+        <v-card-actions class="dialog-actions"><v-btn class="cancel-button" variant="text" @click="logoDialog = false">Cerrar</v-btn></v-card-actions>
+      </v-card>
+    </v-dialog>
 
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar la empresa seleccionada?
-      </v-card-text>
+    <v-dialog v-model="dialog" max-width="760" persistent>
+      <v-form ref="form" v-model="valid" @submit.prevent="save">
+        <v-card class="form-dialog" elevation="0">
+          <div class="dialog-header">
+            <div class="dialog-heading"><div class="dialog-icon"><v-icon class="dialog-icon-main" size="20">mdi-office-building-outline</v-icon><v-icon class="dialog-icon-action" size="11">{{ editedIndex === -1 ? 'mdi-plus' : 'mdi-pencil' }}</v-icon></div><div><div class="dialog-title">{{ formTitle }}</div><div class="dialog-subtitle">{{ editedIndex === -1 ? 'Registra la información de tu organización' : 'Actualiza los datos y la identidad corporativa' }}</div></div></div>
+            <v-btn icon="mdi-close" variant="text" size="small" class="dialog-close" :disabled="loading" @click="close" />
+          </div>
+          <v-divider />
+          <v-card-text class="dialog-body">
+            <div class="form-section-label">Información general</div>
+            <v-row dense>
+              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.name" label="Nombre de la empresa" prepend-inner-icon="mdi-domain" variant="outlined" density="comfortable" clearable :rules="nameRules" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.rut" label="RUT" placeholder="12.345.678-9" prepend-inner-icon="mdi-card-account-details-outline" variant="outlined" density="comfortable" clearable :rules="rutRules" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.phone" label="Teléfono" placeholder="+56912345678" prepend-inner-icon="mdi-phone-outline" variant="outlined" density="comfortable" clearable :rules="mobileRules" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.address" label="Dirección" prepend-inner-icon="mdi-map-marker-outline" variant="outlined" density="comfortable" clearable /></v-col>
+            </v-row>
 
-      <v-divider />
+            <div class="form-section-label form-section-label--spaced">Imagen de la empresa</div>
+            <div class="image-upload-area">
+              <div class="image-preview"><v-img v-if="imgMiniatura" :src="imgMiniatura" class="preview-image" contain><template #error><div class="preview-placeholder"><v-icon size="28">mdi-image-off-outline</v-icon></div></template></v-img><div v-else class="preview-placeholder"><v-icon size="28">mdi-image-outline</v-icon></div></div>
+              <div class="upload-copy"><div class="upload-title">Logotipo corporativo</div><div class="upload-description">Formatos JPG, JPEG o PNG. Se optimizará automáticamente hasta 500 KB.</div><v-file-input ref="fileInput" v-model="file" class="file-field" label="Seleccionar imagen" prepend-inner-icon="mdi-upload-outline" prepend-icon="" variant="outlined" density="compact" accept=".png,.jpg,.jpeg" hide-details clearable @change="onFileInputChange" @update:model-value="onFileSelected" /></div>
+            </div>
+          </v-card-text>
+          <v-divider />
+          <v-card-actions class="dialog-actions">
+            <v-btn variant="text" class="cancel-button" :disabled="loading" @click="close">Cancelar</v-btn>
+            <v-btn type="submit" class="save-button" prepend-icon="mdi-content-save-outline" elevation="0" :disabled="!valid" :loading="loading">{{ editedIndex === -1 ? 'Crear empresa' : 'Guardar cambios' }}</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
 
-      <v-card-actions>
-        <v-spacer />
-
-        <v-btn
-          :color="paleteColors.gris"
-          variant="flat"
-          @click="closeDelete"
-        >
-          Cancelar
-        </v-btn>
-
-        <v-btn
-          :color="paleteColors.error"
-          variant="flat"
-          @click="deleteItemConfirm"
-        >
-          Aceptar
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <v-dialog v-model="dialogDelete" max-width="440" persistent>
+      <v-card class="delete-dialog" elevation="0">
+        <div class="delete-icon"><v-icon size="28">mdi-trash-can-outline</v-icon></div>
+        <div class="delete-title">Eliminar empresa</div>
+        <div class="delete-message">¿Deseas eliminar <strong>{{ editedItem.name || 'esta empresa' }}</strong>? Esta acción no se puede deshacer.</div>
+        <div class="delete-actions"><v-btn variant="text" class="cancel-button" :disabled="loading" @click="closeDelete">Cancelar</v-btn><v-btn class="confirm-delete" elevation="0" :loading="loading" @click="deleteItemConfirm">Eliminar</v-btn></div>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
+
 <script>
-import { paleteColors } from "@/assets/colors";
-import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { handleRequest } from "@/utils/api";
 import LocalStorageService from "@/LocalStorageService";
+
 export default {
+  name: "CompanyView",
   data: () => ({
-    snackbar: false,
-    sb_type: "",
-    sb_message: "",
-    sb_timeout: 2000,
-    sb_title: "",
-    sb_icon: "",
-    paleteColors: paleteColors,
-    valid: true,
-    permissions: '',
-    mostrar: false,
-    file: null,
-    imgMiniatura: "",
-
-    dialog: false,
-    dialogDelete: false,
-    companies: [],
-    data: {},
+    snackbar: false, sb_type: "", sb_message: "", sb_timeout: 2500, sb_title: "", sb_icon: "",
+    valid: false, loading: false, dialog: false, dialogDelete: false, logoDialog: false,
+    companies: [], selectedCompany: null, file: null, imgMiniatura: "", editedIndex: -1,
+    search: "", page: 1, itemsPerPage: 10, sortBy: [],
     headers: [
-      { title: "Nombre", value: "name", width: "30%" },
-      { title: "Rut", value: "rut", width: "10%" },
-      { title: "Teléfono", value: "phone", width: "10%" },
-      { title: "Dirección", value: "address", width: "40%" },
-      { title: "Acciones", value: "actions", sortable: false, width: "20%" },
+      { title: "Empresa / Dirección", key: "name", sortable: true, width: "42%" },
+      { title: "RUT", key: "rut", sortable: true, width: "18%" },
+      { title: "Teléfono", key: "phone", sortable: true, width: "18%" },
+      { title: "Logotipo", key: "image", sortable: true, width: "13%" },
+      { title: "", key: "actions", sortable: false, align: "end", width: "9%" },
     ],
-    loading: true,
-
-    administracion: [
-      {
-        icon: "mdi-store",
-        title: "Sucursales",
-        to: "/branch",
-        value: "branch",
-        permission: ["view_branches", "view_branches_company"],
-      },
-      {
-        icon: "mdi-account",
-        title: "Trabajadores",
-        to: "/worker",
-        value: "worker",
-        permission: ["view_workers"],
-      },
-      {
-        icon: "mdi-bus",
-        title: "Vehículos",
-        to: "/structure-vehicle",
-        value: "structure-vehicle",
-        permission: ["view_vehicles"],
-      },
-      /*{
-        icon: "mdi-map-marker",
-        title: "Lugares",
-        to: "/location",
-        value: "location",
-        permission: "view_locations",
-      },*/
-      {
-        icon: "mdi-road-variant",
-        title: "Rutas",
-        to: "/location-route",
-        value: "location-route",
-        permission: ["view_routes", "view_routes_company"],
-      },
-      {
-        icon: "mdi-devices",
-        title: "Dispositivos",
-        to: "/device",
-        value: "devices",
-        permission: ["view_devices", "view_devices_company"],
-      },
-    ],
-
-    editedItem: {
-      id: "",
-      name: "",
-      address: "",
-      rut: "",
-      image: "",
-      phone: "",
-    },
-    originalItem: {
-      id: "",
-      name: "",
-      address: "",
-      rut: "",
-      image: "",
-      phone: "",
-    },
-    defaultItem: {
-      id: "",
-      name: "",
-      address: "",
-      rut: "",
-      image: "",
-      phone: "",
-    },
-    editedIndex: -1,
-    search: "",
-    nameRules: [
-      (v) => !!v || "El campo es requerido",
-      (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
-      (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
-    ],
-    selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    mobileRules: [
-      (v) => !!v || "El número de móvil es requerido",
-      (v) =>
-        /^\+569\d{8}$/.test(v) ||
-        "Formato de número móvil inválido. Ejemplo: +56912345678",
-    ],
-    rutRules: [
-      (v) => !!v || "El RUT es requerido",
-      (v) =>
-        /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(v) ||
-        "El RUT debe estar en el formato XX.XXX.XXX-Y (ejemplo: 12.345.678-9)",
-    ],
+    editedItem: { id: "", name: "", address: "", rut: "", image: "", phone: "" },
+    originalItem: { id: "", name: "", address: "", rut: "", image: "", phone: "" },
+    defaultItem: { id: "", name: "", address: "", rut: "", image: "", phone: "" },
+    nameRules: [v => !!v || "El nombre es requerido", v => !v || v.length >= 3 || "Debe tener al menos 3 caracteres", v => !v || v.length <= 50 || "Debe tener como máximo 50 caracteres"],
+    mobileRules: [v => !!v || "El teléfono es requerido", v => /^\+569\d{8}$/.test(v || "") || "Usa el formato +56912345678"],
+    rutRules: [v => !!v || "El RUT es requerido", v => /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(v || "") || "Usa el formato 12.345.678-9"],
   }),
   computed: {
-    filteredAdministracion() {
-    return this.administracion.filter(item => this.hasPermission(item.permission));
+    formTitle() { return this.editedIndex === -1 ? "Agregar empresa" : "Editar empresa"; },
+    registeredCountText() { return this.companies.length === 1 ? "1 empresa registrada" : `${this.companies.length} empresas registradas`; },
   },
-    formTitle() {
-      return this.editedIndex === -1 ? "Agregar Empresa" : "Editar Empresa";
-    },
-    imgedit() {
-      return this.imgMiniatura;
-    },
-  },
-  mounted() {
-    this.permissions = LocalStorageService.getItem('permissions');
-    this.initialize();
-  },
+  mounted() { this.initialize(); },
   methods: {
-    /* hasPermission(permission) {
-      return this.permissions.includes(permission);
-    },*/
-    hasPermission(requiredPermissions) {
-        // Si es un string, lo convertimos a array
-        const perms = Array.isArray(requiredPermissions) 
-          ? requiredPermissions 
-          : [requiredPermissions];
-        
-        // Retorna true si al menos uno coincide
-        return perms.some(p => this.permissions.includes(p));
-      },
-    getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del día actual
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al día)
+    clone(value) { return JSON.parse(JSON.stringify(value)); },
+    unwrapItem(item) { return item?.raw ?? item ?? {}; },
+    resolveCompanyImage(image, cache = true) {
+      const source = String(image || "").trim();
+      if (!source) return "";
+      if (/^(https?:|data:|blob:)/i.test(source)) return source;
+      const base = String(this.$axios.defaults.baseURL || "");
+      const path = source.replace(/^\/+/, "");
+      const url = path.startsWith("images/") ? `${base}${path}` : `${base}images/${path}`;
+      return cache ? `${url}${url.includes("?") ? "&" : "?"}t=${this.getCacheTimestamp()}` : url;
     },
-    showAddBussines() {
-      this.close();
-      this.dialog = true;
-    },
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.originalItem = Object.assign({}, this.defaultItem);
-      });
-      this.editedIndex = -1;
-      this.file = null;
-      this.imgMiniatura = "";
-    },
+    getCacheTimestamp() { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); },
+    openLogo(item) { this.selectedCompany = this.unwrapItem(item); this.logoDialog = true; },
+    showAddBusiness() { this.resetForm(); this.dialog = true; this.$nextTick(() => this.$refs.form?.resetValidation()); },
     async initialize() {
-      try {
-        this.loading = true;
-        const result = await handleRequest({
-          endpoint: "company",
-          method: "GET",
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.companies = result.data?.companies || [];
-          const company = this.companies[0];
-          if (company) {
-            LocalStorageService.setItem("nameBusiness", company.name ?? "");
-            LocalStorageService.setItem("imageBusiness", company.image ?? "");
-            window.dispatchEvent(new Event("branding-updated"));
-          }
-        } else {
-          // Si no hay datos, asignamos un array vacío
-          this.companies = [];
-        }
-      } catch (error) {
-        this.loading = false;
-        // Captura de errores no controlados
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.loading = false;
-      }
-    },
-    async save() {
       this.loading = true;
-      //this.$refs.form.reset();
-      if (this.editedIndex === -1) {
-        this.valid = false;
-        this.data.name = this.editedItem.name;
-        this.data.address = this.editedItem.address;
-        this.data.phone = this.editedItem.phone;
-        this.data.rut = this.editedItem.rut;
-
-        // Crear un objeto FormData
-        const formData = new FormData();
-        formData.append("name", this.data.name);
-        formData.append("address", this.data.address);
-        formData.append("phone", this.data.phone);
-        formData.append("rut", this.data.rut);
-        if (this.file) {
-          formData.append("image", this.editedItem.image);
+      try {
+        const result = await handleRequest({ endpoint: "company", method: "GET" });
+        const rows = result.success ? (result.data?.companies || []) : [];
+        this.companies = rows.map(company => ({
+          ...company,
+          displayImage: this.resolveCompanyImage(company.image),
+          displayImageNoCache: this.resolveCompanyImage(company.image, false),
+        }));
+        const company = this.companies[0];
+        if (company) {
+          LocalStorageService.setItem("nameBusiness", company.name ?? "");
+          LocalStorageService.setItem("imageBusiness", company.image ?? "");
+          window.dispatchEvent(new Event("branding-updated"));
         }
-
-        try {
-          const result = await handleRequest({
-            endpoint: "company",
-            method: "POST",
-            data: formData,
-          });
-
-          // Manejo de la respuesta según el resultado
-          if (result.success) {
-            this.showAlert("success", result.message, 3000);
-            this.initialize();
-            this.loading = false;
-          } else {
-            this.showAlert("warning", result.message, 3000);
-            this.loading = false;
-          }
-        } catch (error) {
-          // Este bloque captura errores inesperados fuera del manejo estándar
-          this.showAlert(
-            "error",
-            "Ocurrió un error inesperado al procesar la solicitud.",
-            3000
-          );
-          this.loading = false;
-        }
-      } else {
-        this.valid = false;
-        const fieldsToUpdate = ["id", "name", "address", "rut", "phone", "image"];
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
-            return obj;
-          }, {});
-        if (Object.keys(updatedFields).length > 0) {
-          updatedFields.id = this.editedItem.id;
-          if (this.file) {
-            updatedFields.image = this.editedItem.image;
-          }
-          const formData = new FormData();
-          for (let key in updatedFields) {
-            formData.append(key, updatedFields[key]);
-          }
-          try {
-            const result = await handleRequest({
-              endpoint: "company-update",
-              method: "POST",
-              data: formData,
-            });
-
-            // Manejo de la respuesta según el resultado
-          if (result.success) {
-            this.showAlert("success", result.message, 3000);
-            await this.initialize();
-            window.dispatchEvent(new Event("branding-updated"));
-            this.loading = false;
-            } else {
-              this.showAlert("warning", result.message, 3000);
-              this.loading = false;
-            }
-          } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-            this.loading = false;
-          }
-        } else {
-          this.showAlert("success", "No se realizaron cambios.", 3000);
-          this.loading = false;
-        }
-      }
-      this.close();
+      } catch (error) { this.showAlert("error", "No fue posible cargar la información de la empresa.", 3000); }
+      finally { this.loading = false; }
     },
     editItem(item) {
-      this.editedIndex = 1;
-      this.originalItem = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item);
+      const company = this.unwrapItem(item);
+      this.editedIndex = this.companies.findIndex(item => String(item.id) === String(company.id));
+      this.originalItem = this.clone(company);
+      this.editedItem = this.clone(company);
       this.file = null;
-      // Crear la imagen y configurar el src
-      const img = new Image();
-      img.src = `${this.$axios.defaults.baseURL}images/${item.image}`; // Se asume que item.image_url es la URL de la imagen
-
-      // Usar una función asíncrona para manejar la carga de la imagen
-      img.onload = async () => {
-        try {
-          // Asignar la imagen cargada a imgMiniatura
-          this.imgMiniatura = `${this.$axios.defaults.baseURL}images/${item.image}`;
-        } catch (error) {
-          console.error("Error al cargar la imagen", error);
-          this.showAlert("error", "Error al cargar la imagen.", 3000);
-        }
-      };
+      this.imgMiniatura = company.displayImageNoCache || this.resolveCompanyImage(company.image, false);
       this.dialog = true;
+      this.$nextTick(() => this.$refs.form?.resetValidation());
     },
-    deleteItem(item) {
-      this.editedIndex = 1;
-      this.editedItem.id = item.id;
-      this.dialogDelete = true;
+    deleteItem(item) { const company = this.unwrapItem(item); this.editedItem = { ...this.defaultItem, ...company }; this.dialogDelete = true; },
+    close() { if (!this.loading) { this.dialog = false; this.$nextTick(this.resetForm); } },
+    resetForm() { this.editedItem = { ...this.defaultItem }; this.originalItem = { ...this.defaultItem }; this.editedIndex = -1; this.file = null; this.imgMiniatura = ""; this.$refs.form?.resetValidation(); },
+    closeDelete() { if (!this.loading) { this.dialogDelete = false; this.editedItem = { ...this.defaultItem }; } },
+    changedFields() {
+      const keys = ["name", "address", "rut", "phone"];
+      return keys.reduce((result, key) => { if (this.editedItem[key] !== this.originalItem[key]) result[key] = this.editedItem[key]; return result; }, {});
     },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-      });
+    async save() {
+      const validation = await this.$refs.form?.validate();
+      if (!validation?.valid) return;
+      const creating = this.editedIndex === -1;
+      const fields = creating ? { name: this.editedItem.name, address: this.editedItem.address || "", phone: this.editedItem.phone, rut: this.editedItem.rut } : this.changedFields();
+      if (!creating && !Object.keys(fields).length && !this.file) { this.showAlert("success", "No se realizaron cambios.", 2500); this.dialog = false; this.resetForm(); return; }
+      const formData = new FormData();
+      if (!creating) formData.append("id", this.editedItem.id);
+      Object.entries(fields).forEach(([key, value]) => formData.append(key, value ?? ""));
+      if (this.file) formData.append("image", this.file);
+      this.loading = true;
+      try {
+        const result = await handleRequest({ endpoint: creating ? "company" : "company-update", method: "POST", data: formData });
+        if (result.success) {
+          this.showAlert("success", result.message || "Empresa guardada correctamente.", 3000);
+          this.dialog = false; this.resetForm(); await this.initialize();
+        } else this.showAlert("warning", result.message || "No fue posible guardar la empresa.", 3000);
+      } catch (error) { this.showAlert("error", "Ocurrió un error al guardar la empresa.", 3000); }
+      finally { this.loading = false; }
     },
     async deleteItemConfirm() {
+      this.loading = true;
       try {
-        let request = {
-          id: this.editedItem.id,
-        };
-        const result = await handleRequest({
-          endpoint: "company-destroy",
-          method: "POST",
-          data: request,
-        });
-
-        // Manejo de la respuesta según el resultado
-        if (result.success) {
-          this.showAlert("success", result.message, 3000);
-          this.initialize();
-        } else {
-          this.showAlert("warning", result.message, 3000);
-        }
-      } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estándar
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.closeDelete();
-      }
+        const result = await handleRequest({ endpoint: "company-destroy", method: "POST", data: { id: this.editedItem.id } });
+        if (result.success) { this.dialogDelete = false; this.showAlert("success", result.message || "Empresa eliminada correctamente.", 3000); this.editedItem = { ...this.defaultItem }; await this.initialize(); }
+        else this.showAlert("warning", result.message || "No fue posible eliminar la empresa.", 3000);
+      } catch (error) { this.showAlert("error", "Ocurrió un error al eliminar la empresa.", 3000); }
+      finally { this.loading = false; }
     },
-    showAlert(sb_type, sb_message, sb_timeout) {
-      this.sb_type = sb_type;
-
-      if (sb_type == "success") {
-        this.sb_title = "Éxito";
-        this.sb_icon = "mdi-check-circle";
-      }
-
-      if (sb_type == "error") {
-        this.sb_title = "Error";
-        this.sb_icon = "mdi-check-circle";
-      }
-
-      if (sb_type == "warning") {
-        this.sb_title = "Advertencia";
-        this.sb_icon = "mdi-alert-circle";
-      }
-      this.sb_message = sb_message;
-      this.sb_timeout = sb_timeout;
-      this.snackbar = true;
-    },
-    imagenDisponible() {
-      if (this.imgedit !== undefined && this.imgedit !== "") {
-        // Intenta cargar la imagen en un elemento oculto para verificar si está disponible
-        let img = new Image();
-        img.src = this.imgedit;
-        return true; // Devuelve true si la imagen está disponible
-      }
-      return false; // Si la URL de la imagen no está definida o está vacía, devuelve false
-    },
-    async onFileSelected(event) {
-      let file = event.target.files[0];
-
-      if (!file) {
-        return;
-      }
-
-      const maxSize = 500 * 1024;
-      const maxLogoDimension = 320;
-
+    async onFileSelected(value) {
+      const selected = Array.isArray(value) ? value[0] : value;
+      if (!selected) { this.file = null; this.imgMiniatura = this.editedIndex >= 0 ? this.resolveCompanyImage(this.originalItem.image, false) : ""; return; }
+      const maxSize = 500 * 1024, maxDimension = 320;
       try {
-        const dimensions = await this.getImageDimensions(file);
-        const shouldResize =
-          dimensions.width > maxLogoDimension ||
-          dimensions.height > maxLogoDimension ||
-          file.size > maxSize;
-        const imageFile = shouldResize
-          ? await this.resizeImageFile(file, maxLogoDimension, maxLogoDimension)
-          : file;
-
-        if (imageFile.size > maxSize) {
-          this.showAlert("warning", "No se pudo optimizar la imagen por debajo de 500 KB.", 3000);
-          this.clearFileInput();
-          return;
-        }
-
-        this.file = imageFile;
-        this.editedItem.image = imageFile;
-        this.cargarImage(imageFile);
-
-      } catch (error) {
-        console.error("Error al leer la imagen:", error);
-        this.showAlert("error", "No se pudo cargar la imagen. Formato inválido.", 3000);
-        this.clearFileInput();
-      }
+        const dimensions = await this.getImageDimensions(selected);
+        const shouldResize = dimensions.width > maxDimension || dimensions.height > maxDimension || selected.size > maxSize;
+        const imageFile = shouldResize ? await this.resizeImageFile(selected, maxDimension, maxDimension) : selected;
+        if (imageFile.size > maxSize) throw new Error("La imagen optimizada supera los 500 KB");
+        this.file = imageFile; this.editedItem.image = imageFile; this.loadPreview(imageFile);
+      } catch (error) { this.showAlert("warning", error.message || "No se pudo cargar la imagen.", 3000); this.clearFileInput(); }
     },
-    async getImageDimensions(file) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
-
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl); // Liberar memoria
-          resolve({ width: img.width, height: img.height });
-        };
-
-        img.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error("No se pudo cargar la imagen."));
-        };
-
-        img.src = objectUrl;
-      });
-    },
+    onFileInputChange(event) { const selected = event?.target?.files?.[0]; if (selected) this.onFileSelected(selected); },
+    getImageDimensions(file) { return new Promise((resolve, reject) => { const image = new Image(), url = URL.createObjectURL(file); image.onload = () => { URL.revokeObjectURL(url); resolve({ width: image.width, height: image.height }); }; image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("La imagen no es válida.")); }; image.src = url; }); },
     async resizeImageFile(file, maxWidth, maxHeight) {
-      const imageData = await new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
-
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(img);
-        };
-
-        img.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error("No se pudo cargar la imagen."));
-        };
-
-        img.src = objectUrl;
-      });
-
-      const scale = Math.min(
-        maxWidth / imageData.width,
-        maxHeight / imageData.height,
-        1
-      );
-      const width = Math.max(1, Math.round(imageData.width * scale));
-      const height = Math.max(1, Math.round(imageData.height * scale));
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      canvas.width = width;
-      canvas.height = height;
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = "high";
-      context.drawImage(imageData, 0, 0, width, height);
-
+      const image = await new Promise((resolve, reject) => { const element = new Image(), url = URL.createObjectURL(file); element.onload = () => { URL.revokeObjectURL(url); resolve(element); }; element.onerror = () => { URL.revokeObjectURL(url); reject(new Error("La imagen no es válida.")); }; element.src = url; });
+      const scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1), width = Math.max(1, Math.round(image.width * scale)), height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas"), context = canvas.getContext("2d"); canvas.width = width; canvas.height = height; context.imageSmoothingEnabled = true; context.imageSmoothingQuality = "high"; context.drawImage(image, 0, 0, width, height);
       const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, mimeType, 0.9);
-      });
-
-      return new File([blob], file.name, {
-        type: mimeType,
-        lastModified: Date.now(),
-      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.9));
+      if (!blob) throw new Error("No se pudo optimizar la imagen.");
+      return new File([blob], file.name, { type: mimeType, lastModified: Date.now() });
     },
-    clearFileInput() {
-      this.file = null;
-      this.editedItem.image = null;
-      this.imgMiniatura = "";
-      if (this.$refs.fileInput) {
-        this.$refs.fileInput.reset();
-      }
-    },
-    cargarImage(file) {
-      let reader = new FileReader();
-      reader.onload = (e) => {
-        this.imgMiniatura = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    },
+    clearFileInput() { this.file = null; this.editedItem.image = this.originalItem.image || ""; this.imgMiniatura = this.editedIndex >= 0 ? this.resolveCompanyImage(this.originalItem.image, false) : ""; this.$refs.fileInput?.reset?.(); },
+    loadPreview(file) { const reader = new FileReader(); reader.onload = event => { this.imgMiniatura = event.target.result; }; reader.readAsDataURL(file); },
+    showAlert(type, message, timeout = 3000) { const config = { success: ["Éxito", "mdi-check-circle"], warning: ["Advertencia", "mdi-alert-circle"], error: ["Error", "mdi-close-circle"] }[type] || ["Información", "mdi-information"]; this.sb_type = type; this.sb_title = config[0]; this.sb_icon = config[1]; this.sb_message = message; this.sb_timeout = timeout; this.snackbar = true; },
   },
 };
 </script>
-<style>
-.icono-concavo {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
-  box-shadow: inset;*/
-  position: relative;
-  overflow: hidden;
-}
 
-.icono-concavo::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  border-radius: 8px;
-  background: transparent;
-}
-.text-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}
-
-.company-header {
-  background: #f5f7f9;
-  border: 1px solid #eceff1;
-}
-
-.company-row {
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.company-row:hover {
-  transform: translateY(-2px);
-  border-color: rgba(25, 118, 210, 0.2);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-}
-
-.company-col {
-  width: 160px;
-  display: flex;
-  align-items: center;
-}
-
-.min-width-0 {
-  min-width: 0;
-}
-.launchpad-card {
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-}
-
-.launchpad-grid {
-  margin: 0;
-}
-
-.launchpad-item {
-  width: 100px;
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-
-  transition: all 0.18s ease;
-  background: #f7f8fa;
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.launchpad-item:hover {
-  transform: translateY(-3px) scale(1.03);
-  background: #ffffff;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-}
-
-.launchpad-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: linear-gradient(135deg, #4f46e5, #3b82f6);
-  color: white;
-  margin-bottom: 8px;
-}
-
-.launchpad-label {
-  font-size: 11px;
-  text-align: center;
-  line-height: 1.1;
-  font-weight: 500;
-  color: #1f2937;
-}
-
-.launchpad-wrapper {
-  display: flex;
-  justify-content: flex-start;
-}
-.company-col-main {
-  width: 55%;
-  min-width: 0;
-}
-
-.company-col-rut {
-  width: 15%;
-  min-width: 0;
-}
-
-.company-col-phone {
-  width: 15%;
-  min-width: 0;
-}
-
-.company-col-actions {
-  width: 15%;
-  min-width: 0;
-}
-
-.company-row-modern {
-  min-height: 68px;
-}
-
-.company-logo-avatar {
-  width: 56px !important;
-  height: 42px !important;
-  border: 1px solid #e2e8f0;
-  background: #ffffff !important;
-  padding: 4px;
-}
-
-.company-logo-img,
-.company-image-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.busgo-submeta {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-.min-width-0 {
-  min-width: 0;
-}
-
-@media (max-width: 960px) {
-  .company-col-main,
-  .company-col-rut,
-  .company-col-phone,
-  .company-col-actions {
-    width: 100%;
-  }
-}
+<style scoped>
+.company-page{--blue:#2454d6;--blue-light:#3266e4;min-height:100%;color:#1e293b;background:#f6f8fb}.page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:70px;padding:12px 24px;background:#fff;border-bottom:1px solid #e8edf5}.page-heading,.dialog-heading{display:flex;align-items:center;gap:11px}.page-icon,.dialog-icon{position:relative;display:grid;flex:0 0 38px;width:38px;height:38px;place-items:center;color:#fff;background:radial-gradient(circle at 90% 5%,rgba(53,184,232,.5),transparent 28px),linear-gradient(135deg,#0e1f46,#2454d6);border-radius:10px;box-shadow:0 5px 12px rgba(36,84,214,.17)}.dialog-icon-main{transform:translate(-2px,1px)}.dialog-icon-action{position:absolute;right:5px;bottom:5px;padding:1px;color:#0e1f46;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(15,23,42,.22)}h1,h2,h3,p{margin:0}.page-heading h1{color:#0f172a;font-size:19px;font-weight:850}.page-heading p{margin-top:3px;color:#526176;font-size:12px;font-weight:650}.primary-button,.save-button{min-height:40px;color:#fff!important;background:linear-gradient(100deg,#2454d6,#3266e4)!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:0 5px 12px rgba(36,84,214,.2)!important}.page-content{padding:18px 24px 28px}.summary-row{margin-bottom:4px}.summary-card{display:flex;align-items:center;gap:11px;min-height:72px;padding:13px 15px;background:#fff;border:1px solid #e8edf5;border-radius:12px;box-shadow:0 4px 14px rgba(15,23,42,.035)}.summary-icon{display:grid;flex:0 0 36px;width:36px;height:36px;place-items:center;border-radius:9px}.summary-icon.blue{color:#2454d6;background:#eef3ff}.summary-icon.green{color:#16875a;background:#eaf8f1}.summary-icon.amber{color:#64748b;background:#f1f5f9}.summary-card b{display:block;color:#0f172a;font-size:20px;font-weight:900;line-height:1}.summary-card span{display:block;margin-top:4px;color:#526176;font-size:11px;font-weight:700}.table-panel{overflow:hidden;background:#fff;border:1px solid #e8edf5;border-radius:13px!important;box-shadow:0 5px 18px rgba(15,23,42,.04)!important}.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:69px;padding:12px 17px}.section-title{color:#0f172a;font-size:15px;font-weight:850}.section-subtitle{margin-top:3px;color:#64748b;font-size:11px;font-weight:650}.search-field{flex:0 1 320px}.search-field :deep(.v-field){border-radius:9px;font-size:12px}.companies-table{color:#1e293b;background:transparent}.companies-table :deep(thead th){height:40px!important;color:#334155!important;font-size:11px!important;font-weight:850!important;letter-spacing:.04em;text-transform:uppercase;background:#f8fafc!important;border-bottom:1px solid #e8edf5!important}.companies-table :deep(tbody td){height:62px!important;color:#1e293b;font-size:13px;font-weight:600;border-bottom:1px solid #eef2f6!important}.companies-table :deep(tbody tr:hover){background:#f8faff!important}.companies-table :deep(.v-data-table-footer){min-height:52px;padding:6px 16px;color:#334155;font-size:11.5px;font-weight:700}.companies-table :deep(.v-data-table__th--sortable:hover),.companies-table :deep(.v-data-table__th--sorted){color:#2454d6!important;background:#f4f7ff!important}.company-name-cell{display:flex;align-items:center;gap:10px;min-width:0}.company-avatar{display:grid;flex:0 0 48px;width:48px;height:40px;padding:3px;overflow:hidden;place-items:center;color:#2454d6;background:#fff;border:1px solid #dce6ff;border-radius:9px;cursor:pointer}.company-photo,.preview-image{width:100%!important;height:100%!important}.image-fallback,.large-logo-fallback{display:grid;width:100%;height:100%;place-items:center;color:#2454d6;background:#eef3ff}.cell-copy{min-width:0}.company-name{max-width:320px;overflow:hidden;color:#0f172a;font-size:13.5px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}.company-address{margin-top:2px;overflow:hidden;color:#526176;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.table-value,.phone-value{color:#334155;font-size:12.5px;font-weight:700}.phone-value{display:flex;align-items:center;gap:5px}.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;font-size:11.5px;font-weight:800;border-radius:7px}.status-badge--active{color:#116b49;background:#eaf8f1}.status-badge--inactive{color:#475569;background:#f1f5f9}.status-dot{width:6px;height:6px;background:currentColor;border-radius:50%}.action-buttons{display:flex;justify-content:flex-end;gap:2px}.action-button{border-radius:8px!important}.action-button--edit{color:#2454d6!important}.action-button--edit:hover{background:#eef3ff}.action-button--delete{color:#dc2626!important}.action-button--delete:hover{background:#fff1f2}.table-footer-note{display:flex;align-items:center;gap:6px;min-height:42px;padding:9px 16px;color:#64748b;font-size:10.5px;font-weight:650;border-top:1px solid #edf1f5}.form-dialog,.logo-dialog,.delete-dialog{overflow:hidden;color:#1e293b;background:#fff;border:1px solid #dfe6ef;border-radius:14px!important;box-shadow:0 22px 60px rgba(15,23,42,.2)!important}.dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px}.dialog-title{color:#0f172a;font-size:16px;font-weight:850;line-height:1.2}.dialog-subtitle{margin-top:4px;color:#64748b;font-size:11.5px;font-weight:600}.dialog-close{color:#64748b!important}.dialog-body{max-height:70vh;padding:21px 22px 16px!important;overflow-y:auto}.form-section-label{margin-bottom:13px;color:#475569;font-size:10.5px;font-weight:850;letter-spacing:.065em;text-transform:uppercase}.form-section-label--spaced{margin-top:7px}.dialog-body :deep(.v-field){border-radius:9px}.dialog-body :deep(.v-field__outline){color:#d6dee9}.dialog-body :deep(.v-label){color:#64748b;font-size:13px;font-weight:650;opacity:1}.dialog-body :deep(.v-field__input){color:#1e293b;font-size:13px;font-weight:650}.image-upload-area{display:flex;align-items:center;gap:14px;padding:12px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.image-preview{flex:0 0 112px;width:112px;height:76px;overflow:hidden;background:#eef3ff;border:1px solid #dce6ff;border-radius:9px}.preview-placeholder{display:grid;width:100%;height:100%;place-items:center;color:#2454d6}.upload-copy{flex:1;min-width:0}.upload-title{color:#334155;font-size:12.5px;font-weight:800}.upload-description{margin:3px 0 8px;color:#64748b;font-size:10.5px;font-weight:600}.file-field{max-width:350px}.dialog-actions{justify-content:flex-end;gap:9px;padding:14px 20px!important}.cancel-button{min-width:94px;min-height:39px;color:#475569!important;font-size:12.5px;font-weight:750;letter-spacing:0;text-transform:none;border-radius:9px!important}.cancel-button:hover{background:#f1f5f9}.save-button{min-width:150px;padding-inline:18px!important}.logo-preview-large{display:grid;min-height:300px;padding:28px;place-items:center;background:#f8fafc}.delete-dialog{padding:29px 27px 24px;text-align:center}.delete-icon{display:grid;width:56px;height:56px;margin:0 auto 16px;place-items:center;color:#dc2626;background:#fff1f2;border:1px solid #ffe0e4;border-radius:15px}.delete-title{color:#0f172a;font-size:18px;font-weight:850}.delete-message{max-width:350px;margin:10px auto 22px;color:#64748b;font-size:12.5px;font-weight:600;line-height:1.55}.delete-message strong{color:#334155;font-weight:800}.delete-actions{display:flex;justify-content:center;gap:9px}.confirm-delete{min-width:112px;min-height:40px;color:#fff!important;background:#dc2626!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none}.snackbar-content{display:flex;align-items:center;gap:10px}.snackbar-content strong,.snackbar-content small{display:block}.snackbar-content small{margin-top:2px}
+@media(max-width:1050px){.companies-table{overflow-x:auto}.companies-table :deep(.v-table__wrapper){min-width:880px}}@media(max-width:700px){.page-header{align-items:flex-start;padding:12px 14px}.page-heading p{display:none}.page-content{padding:12px 13px 22px}.table-toolbar{align-items:stretch;flex-direction:column}.search-field{width:100%;max-width:none}.image-editor{grid-template-columns:1fr}.image-preview{margin:auto}.dialog-body{padding:17px 14px 13px!important}}@media(max-width:450px){.page-header{flex-direction:column}.primary-button{width:100%}}
 </style>

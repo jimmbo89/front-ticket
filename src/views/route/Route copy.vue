@@ -83,7 +83,7 @@
         no-data-text="No hay datos disponibles"
         :loading="loading"
         loading-text="Cargando datos..."
-        :hide-default-header="true"
+       
         class="elevation-1"
         style="max-height: 68vh; overflow-y: auto; background: transparent"
       >
@@ -774,24 +774,5 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
-}
+
 </style>

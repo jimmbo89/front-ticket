@@ -1,405 +1,465 @@
 <template>
-  <v-snackbar
-    class="mt-12"
-    location="right top"
-    :timeout="sb_timeout"
-    :color="sb_type"
-    elevation="24"
-    :multi-line="true"
-    vertical
-    v-model="snackbar"
-  >
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
-      </v-col>
-
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-      </v-col>
-    </v-row>
-  </v-snackbar>
-
-  <v-card class="busgo-page-header" elevation="0">
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
-      <v-icon>mdi-map-marker</v-icon>
-    </v-avatar>
-
-    <div>
-      <div class="busgo-page-title">Ubicaciones</div>
-      <div class="busgo-page-subtitle">Gestionar ubicaciones</div>
-    </div>
-
-    <v-spacer />
-
-    <v-btn
-      :color="paleteColors.primary"
-      variant="flat"
-      elevation="0"
-      prepend-icon="mdi-plus"
-      class="busgo-add-btn"
-      @click="showAdd()"
+  <div class="locations-page">
+    <v-snackbar
+      v-model="snackbar"
+      location="right top"
+      :timeout="sb_timeout"
+      :color="sb_type"
+      elevation="10"
+      class="busgo-snackbar"
     >
-      Agregar Ubicación
-    </v-btn>
-  </v-card>
-
-  <v-container fluid class="busgo-container">
-    <v-card class="busgo-card" elevation="0">
-      <div class="busgo-card-header">
+      <div class="snackbar-content">
+        <v-icon :icon="sb_icon" size="22" />
         <div>
-          <div class="busgo-card-title">Listado de ubicaciones</div>
-          <div class="busgo-card-subtitle">
-            Administra direcciones, coordenadas, país, ciudad y estado.
-          </div>
+          <div class="snackbar-title">{{ sb_title }}</div>
+          <div class="snackbar-message">{{ sb_message }}</div>
         </div>
+      </div>
+    </v-snackbar>
 
-        <v-text-field
-          v-model="search"
-          density="compact"
-          placeholder="Buscar ubicación..."
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          single-line
-          class="busgo-search"
-        />
+    <header class="page-header">
+      <div class="page-heading">
+        <div class="page-icon">
+          <v-icon size="21">mdi-map-marker-multiple-outline</v-icon>
+        </div>
+        <div>
+          <h1 class="page-title">Ubicaciones</h1>
+          <p class="page-subtitle">
+            Administra los lugares utilizados en rutas y operaciones
+          </p>
+        </div>
       </div>
 
-      <v-data-table
-        :headers="headers"
-        :items="locations"
-        :search="search"
-        :items-per-page-text="'Elementos por página'"
-        no-data-text="No hay datos disponibles"
-        :loading="loading"
-        loading-text="Cargando datos..."
-        :hide-default-header="true"
-        class="busgo-table"
+      <v-btn
+        class="add-button"
+        prepend-icon="mdi-plus"
+        elevation="0"
+        @click="showAdd"
       >
-        <template #top>
-          <div class="busgo-table-head">
-            <div class="location-list-col-address">Nombre</div>
-            <div class="location-list-col-longitude">Longitud</div>
-            <div class="location-list-col-latitude">Latitud</div>
-            <div class="location-list-col-country">País</div>
-            <div class="location-list-col-city">Ciudad</div>
-            <div class="location-list-col-status">Estado</div>
-            <div class="location-list-col-actions"></div>
+        Agregar ubicación
+      </v-btn>
+    </header>
+
+    <v-container fluid class="page-content">
+      <v-row class="summary-row">
+        <v-col cols="12" sm="4">
+          <div class="summary-card">
+            <div class="summary-icon summary-icon--blue">
+              <v-icon size="19">mdi-map-marker-multiple-outline</v-icon>
+            </div>
+            <div>
+              <div class="summary-value">{{ locations.length }}</div>
+              <div class="summary-label">Total de ubicaciones</div>
+            </div>
           </div>
-        </template>
+        </v-col>
 
-        <template #item="slotProps">
-          <tr>
-            <td class="pa-0 border-0">
-              <div class="busgo-row location-list-row">
-                <div class="location-list-col-address busgo-name-cell">
-                  <v-avatar
-                    size="36"
-                    rounded="lg"
-                    color="grey-lighten-4"
-                    class="busgo-avatar"
-                  >
-                    <v-img
-                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.image}?v=${imageVersion}`"
-                      cover
-                    />
-                  </v-avatar>
+        <v-col cols="12" sm="4">
+          <div class="summary-card">
+            <div class="summary-icon summary-icon--green">
+              <v-icon size="19">mdi-check-circle-outline</v-icon>
+            </div>
+            <div>
+              <div class="summary-value">{{ activeLocations }}</div>
+              <div class="summary-label">Ubicaciones activas</div>
+            </div>
+          </div>
+        </v-col>
 
-                  <div class="busgo-name">
-                    {{ slotProps.item.address }}
-                  </div>
+        <v-col cols="12" sm="4">
+          <div class="summary-card">
+            <div class="summary-icon summary-icon--slate">
+              <v-icon size="19">mdi-pause-circle-outline</v-icon>
+            </div>
+            <div>
+              <div class="summary-value">{{ inactiveLocations }}</div>
+              <div class="summary-label">Ubicaciones inactivas</div>
+            </div>
+          </div>
+        </v-col>
+      </v-row>
 
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Dirección: {{ slotProps.item.address }}
-                    </span>
-                  </v-tooltip>
-                </div>
+      <v-card class="table-panel" elevation="0">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title">Listado de ubicaciones</div>
+            <div class="section-subtitle">{{ registeredCountText }}</div>
+          </div>
 
-                <div class="location-list-col-longitude busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.longitude }}
-                  </span>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Longitud: {{ slotProps.item.longitude }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="location-list-col-latitude busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.latitude }}
-                  </span>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Latitud: {{ slotProps.item.latitude }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="location-list-col-country busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.country }}
-                  </span>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      País: {{ slotProps.item.country }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="location-list-col-city busgo-meta">
-                  <span class="text-truncate">
-                    {{ slotProps.item.city }}
-                  </span>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Ciudad: {{ slotProps.item.city }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="location-list-col-status">
-                  <v-chip
-                    size="small"
-                    :color="
-                      slotProps.item.active
-                        ? paleteColors.active
-                        : paleteColors.inactive
-                    "
-                    :text-color="paleteColors.white"
-                  >
-                    {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                  </v-chip>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Estado: {{ slotProps.item.active ? "Activa" : "Inactiva" }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="location-list-col-actions busgo-actions">
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.primary"
-                    @click="editItem(slotProps.item)"
-                    title="Editar Lugar"
-                  >
-                    <v-icon size="17">mdi-pencil</v-icon>
-                  </v-btn>
-
-                  <v-btn
-                    size="30"
-                    icon
-                    variant="tonal"
-                    :color="paleteColors.error"
-                    @click="deleteItem(slotProps.item)"
-                    title="Eliminar Lugar"
-                  >
-                    <v-icon size="17">mdi-delete</v-icon>
-                  </v-btn>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </v-data-table>
-    </v-card>
-  </v-container>
-
-  <v-dialog v-model="dialog" max-width="700px">
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="busgo-dialog-card">
-        <v-toolbar :color="paleteColors.primary">
-          <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-        </v-toolbar>
-
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-text-field
-                  v-model="editedItem.address"
-                  label="Dirección"
-                  prepend-icon="mdi-map-marker-outline"
-                  variant="underlined"
-                  :rules="addressRules"
-                  hint="Ejemplo: Terminal Magallanes"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.longitude"
-                  label="Longitud"
-                  prepend-icon="mdi-earth"
-                  variant="underlined"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.latitude"
-                  label="Latitud"
-                  prepend-icon="mdi-earth"
-                  variant="underlined"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.country"
-                  label="País"
-                  prepend-icon="mdi-earth"
-                  variant="underlined"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedItem.city"
-                  label="Ciudad"
-                  prepend-icon="mdi-city"
-                  variant="underlined"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6" class="d-flex align-center">
-                <div class="d-flex align-center compact-switch-line">
-                  <v-switch
-                    v-model="editedItem.active"
-                    :true-value="true"
-                    :false-value="false"
-                    :color="switchColor"
-                    :base-color="switchColor"
-                    hide-details
-                    inset
-                    density="compact"
-                    class="custom-switch compact-inline-switch"
-                  />
-
-                  <span
-                    class="text-body-1 compact-switch-label"
-                    :style="{ color: switchColor }"
-                  >
-                    {{ editedItem.active ? "Activa" : "Inactiva" }}
-                  </span>
-                </div>
-              </v-col>
-            </v-row>
-
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-file-input
-                  clearable
-                  v-model="file"
-                  ref="fileInput"
-                  label="Imagen del lugar"
-                  variant="underlined"
-                  density="compact"
-                  name="file"
-                  accept=".png, .jpg, .jpeg"
-                  @change="onFileSelected"
-                />
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-card
-                  elevation="6"
-                  class="mx-auto location-preview-card"
-                  max-width="210"
-                  max-height="120"
-                >
-                  <img
-                    v-if="imagenDisponible()"
-                    :src="imgedit"
-                    height="120"
-                    width="210"
-                  />
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
+          <v-text-field
+            v-model="search"
+            class="search-field"
+            density="compact"
+            placeholder="Buscar ubicación..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            hide-details
+            clearable
+          />
+        </div>
 
         <v-divider />
 
-        <v-card-actions class="busgo-dialog-actions">
-          <v-spacer />
+        <v-data-table
+          v-model:items-per-page="itemsPerPage"
+          v-model:page="page"
+          v-model:sort-by="sortBy"
+          :headers="headers"
+          :items="locations"
+          :search="search"
+          :loading="loading"
+          :items-per-page-options="[5, 10, 15, 25]"
+          items-per-page-text="Elementos por página"
+          no-data-text="No hay ubicaciones disponibles"
+          loading-text="Cargando ubicaciones..."
+          class="locations-table"
+        >
+          <template #loading>
+            <v-skeleton-loader type="table-row@5" />
+          </template>
 
+          <template #[`item.address`]="{ item }">
+            <div class="location-name-cell">
+              <div class="location-avatar">
+                <v-img
+                  v-if="hasLocationImage(item)"
+                  :src="locationImage(item)"
+                  class="location-photo"
+                  width="38"
+                  height="38"
+                  cover
+                >
+                  <template #error>
+                    <div class="image-fallback">
+                      <v-icon size="18">mdi-map-marker-outline</v-icon>
+                    </div>
+                  </template>
+                </v-img>
+                <v-icon v-else size="18">mdi-map-marker-outline</v-icon>
+              </div>
+
+              <div class="cell-copy">
+                <div class="location-name">{{ item.address || "Sin dirección" }}</div>
+                <div class="location-area">{{ locationArea(item) }}</div>
+              </div>
+            </div>
+          </template>
+
+          <template #[`item.longitude`]="{ item }">
+            <span class="coordinate-value">{{ displayCoordinate(item.longitude) }}</span>
+          </template>
+
+          <template #[`item.latitude`]="{ item }">
+            <span class="coordinate-value">{{ displayCoordinate(item.latitude) }}</span>
+          </template>
+
+          <template #[`item.country`]="{ item }">
+            <span class="table-value">{{ item.country || "Sin país" }}</span>
+          </template>
+
+          <template #[`item.city`]="{ item }">
+            <span class="table-value">{{ item.city || "Sin ciudad" }}</span>
+          </template>
+
+          <template #[`item.active`]="{ item }">
+            <span
+              class="status-badge"
+              :class="isActive(item.active) ? 'status-badge--active' : 'status-badge--inactive'"
+            >
+              <span class="status-dot" />
+              {{ isActive(item.active) ? "Activa" : "Inactiva" }}
+            </span>
+          </template>
+
+          <template #[`item.actions`]="{ item }">
+            <div class="action-buttons">
+              <v-tooltip text="Editar ubicación" location="top">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-pencil-outline"
+                    variant="text"
+                    size="small"
+                    class="action-button action-button--edit"
+                    @click="editItem(item)"
+                  />
+                </template>
+              </v-tooltip>
+
+              <v-tooltip text="Eliminar ubicación" location="top">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-trash-can-outline"
+                    variant="text"
+                    size="small"
+                    class="action-button action-button--delete"
+                    @click="deleteItem(item)"
+                  />
+                </template>
+              </v-tooltip>
+            </div>
+          </template>
+        </v-data-table>
+
+        <div class="table-footer-note">
+          <v-icon size="15">mdi-information-outline</v-icon>
+          Las ubicaciones activas estarán disponibles para la configuración de rutas y servicios.
+        </div>
+      </v-card>
+    </v-container>
+
+    <!-- Diálogo interno: crear o editar -->
+    <v-dialog v-model="dialog" max-width="760" persistent>
+      <v-form
+        ref="form"
+        v-model="valid"
+        enctype="multipart/form-data"
+        @submit.prevent="save"
+      >
+        <v-card class="form-dialog" elevation="0">
+          <div class="dialog-header">
+            <div class="dialog-heading">
+              <div class="dialog-icon">
+                <v-icon class="dialog-icon-main" size="20">mdi-map-marker-outline</v-icon>
+                <v-icon class="dialog-icon-action" size="11">
+                  {{ editedIndex === -1 ? "mdi-plus" : "mdi-pencil" }}
+                </v-icon>
+              </div>
+
+              <div>
+                <div class="dialog-title">{{ formTitle }}</div>
+                <div class="dialog-subtitle">
+                  {{ editedIndex === -1
+                    ? "Registra un nuevo lugar para la operación"
+                    : "Actualiza los datos de la ubicación" }}
+                </div>
+              </div>
+            </div>
+
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              size="small"
+              class="dialog-close"
+              :disabled="loading"
+              @click="close"
+            />
+          </div>
+
+          <v-divider />
+
+          <v-card-text class="dialog-body">
+            <div class="form-section-label">Información general</div>
+
+            <v-row dense>
+              <v-col cols="12">
+                <v-text-field
+                  v-model.trim="editedItem.address"
+                  label="Nombre o dirección"
+                  placeholder="Ej.: Terminal de buses Puerto Montt"
+                  prepend-inner-icon="mdi-map-marker-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="addressRules"
+                  maxlength="250"
+                  counter="250"
+                  clearable
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.trim="editedItem.country"
+                  label="País"
+                  placeholder="Ej.: Chile"
+                  prepend-inner-icon="mdi-earth"
+                  variant="outlined"
+                  density="comfortable"
+                  maxlength="80"
+                  clearable
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.trim="editedItem.city"
+                  label="Ciudad"
+                  placeholder="Ej.: Puerto Montt"
+                  prepend-inner-icon="mdi-city-variant-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  maxlength="80"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+
+            <div class="form-section-label form-section-label--spaced">Coordenadas</div>
+
+            <v-row dense>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.trim="editedItem.longitude"
+                  label="Longitud"
+                  placeholder="Ej.: -72.9425"
+                  prepend-inner-icon="mdi-longitude"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="longitudeRules"
+                  clearable
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.trim="editedItem.latitude"
+                  label="Latitud"
+                  placeholder="Ej.: -41.4693"
+                  prepend-inner-icon="mdi-latitude"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="latitudeRules"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+
+            <div class="status-control">
+              <div>
+                <div class="status-control-title">Estado de la ubicación</div>
+                <div class="status-control-description">
+                  Las ubicaciones inactivas no estarán disponibles para nuevas configuraciones.
+                </div>
+              </div>
+
+              <div
+                class="status-switch"
+                :class="isActive(editedItem.active) ? 'is-active' : 'is-inactive'"
+              >
+                <span>{{ isActive(editedItem.active) ? "Activa" : "Inactiva" }}</span>
+                <v-switch
+                  v-model="editedItem.active"
+                  :true-value="true"
+                  :false-value="false"
+                  color="success"
+                  hide-details
+                  inset
+                />
+              </div>
+            </div>
+
+            <div class="form-section-label form-section-label--spaced">Imagen de la ubicación</div>
+
+            <div class="image-upload-area">
+              <div class="image-preview">
+                <v-img v-if="imgedit" :src="imgedit" class="preview-image" cover>
+                  <template #error>
+                    <div class="preview-placeholder">
+                      <v-icon size="28">mdi-image-off-outline</v-icon>
+                    </div>
+                  </template>
+                </v-img>
+
+                <div v-else class="preview-placeholder">
+                  <v-icon size="28">mdi-image-marker-outline</v-icon>
+                </div>
+              </div>
+
+              <div class="upload-copy">
+                <div class="upload-title">Fotografía del lugar</div>
+                <div class="upload-description">
+                  Formatos JPG, JPEG o PNG. Tamaño máximo: 500 KB.
+                </div>
+
+                <v-file-input
+                  ref="fileInput"
+                  v-model="file"
+                  class="file-field"
+                  label="Seleccionar imagen"
+                  prepend-inner-icon="mdi-upload-outline"
+                  prepend-icon=""
+                  variant="outlined"
+                  density="compact"
+                  accept=".png,.jpg,.jpeg"
+                  hide-details
+                  clearable
+                  @change="onFileSelected"
+                  @update:model-value="onFileModelUpdate"
+                />
+              </div>
+            </div>
+          </v-card-text>
+
+          <v-divider />
+
+          <v-card-actions class="dialog-actions">
+            <v-btn
+              variant="text"
+              class="cancel-button"
+              :disabled="loading"
+              @click="close"
+            >
+              Cancelar
+            </v-btn>
+
+            <v-btn
+              type="submit"
+              class="save-button"
+              elevation="0"
+              :loading="loading"
+              :disabled="!valid"
+            >
+              {{ editedIndex === -1 ? "Crear ubicación" : "Guardar cambios" }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
+
+    <!-- Diálogo interno: confirmar eliminación -->
+    <v-dialog v-model="dialogDelete" max-width="430" persistent>
+      <v-card class="delete-dialog" elevation="0">
+        <div class="delete-icon">
+          <v-icon size="27">mdi-trash-can-outline</v-icon>
+        </div>
+
+        <div class="delete-title">Eliminar ubicación</div>
+        <div class="delete-message">
+          ¿Deseas eliminar <strong>{{ editedItem.address || "esta ubicación" }}</strong>?
+          Esta acción no se puede deshacer.
+        </div>
+
+        <div class="delete-actions">
           <v-btn
-            :color="paleteColors.gris"
-            variant="flat"
-            @click="close"
+            variant="text"
+            class="cancel-button"
+            :disabled="loading"
+            @click="closeDelete"
           >
             Cancelar
           </v-btn>
 
           <v-btn
-            :color="paleteColors.primary"
-            variant="flat"
-            @click="save"
-            :disabled="!valid"
+            class="delete-button"
+            elevation="0"
             :loading="loading"
+            @click="deleteItemConfirm"
           >
-            Aceptar
+            Eliminar
           </v-btn>
-        </v-card-actions>
+        </div>
       </v-card>
-    </v-form>
-  </v-dialog>
-
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card class="busgo-dialog-card">
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4">
-          Eliminar ubicación
-        </span>
-      </v-toolbar>
-
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar la ubicación seleccionada?
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="busgo-dialog-actions">
-        <v-spacer />
-
-        <v-btn
-          :color="paleteColors.gris"
-          variant="flat"
-          @click="closeDelete"
-        >
-          Cancelar
-        </v-btn>
-
-        <v-btn
-          :color="paleteColors.error"
-          variant="flat"
-          @click="deleteItemConfirm"
-        >
-          Aceptar
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    </v-dialog>
+  </div>
 </template>
 
 <script>
-import { paleteColors } from "@/assets/colors";
-import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { handleRequest } from "@/utils/api";
+
 export default {
+  name: "LocationsView",
+
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -407,27 +467,30 @@ export default {
     sb_timeout: 2000,
     sb_title: "",
     sb_icon: "",
-    paleteColors: paleteColors,
-    valid: true,
+    valid: false,
     loading: false,
-    mostrar: false,
     file: null,
     imgMiniatura: "",
     dialog: false,
     dialogDelete: false,
-    showPassword: false,
     locations: [],
-    data: {},
+    editedIndex: -1,
+    search: "",
+    page: 1,
+    itemsPerPage: 10,
+    sortBy: [],
+    imageVersion: 0,
+
     headers: [
-      //{ title: 'Sucursal', value: 'branchName', width: '20%' },
-      { title: "Dirección", value: "address", width: "40%" },
-      { title: "Longitud", value: "longitude", width: "10%" },
-      { title: "Latitud", value: "latitude", width: "10%" },
-      { title: "País", value: "country", width: "10%" },
-      { title: "Ciudad", value: "city", width: "10%" },
-      { title: "Estado", value: "active", width: "10%" },
-      { title: "Acciones", value: "actions", sortable: false, width: "10%" },
+      { title: "Ubicación", key: "address", sortable: true, width: "31%" },
+      { title: "Longitud", key: "longitude", sortable: true, width: "13%" },
+      { title: "Latitud", key: "latitude", sortable: true, width: "13%" },
+      { title: "País", key: "country", sortable: true, width: "13%" },
+      { title: "Ciudad", key: "city", sortable: true, width: "14%" },
+      { title: "Estado", key: "active", sortable: true, width: "10%" },
+      { title: "", key: "actions", sortable: false, align: "end", width: "6%" },
     ],
+
     editedItem: {
       id: "",
       longitude: "",
@@ -438,16 +501,7 @@ export default {
       address: "",
       active: true,
     },
-    originalItem: {
-      id: "",
-      longitude: "",
-      latitude: "",
-      country: "",
-      city: "",
-      image: "",
-      address: "",
-      active: true,
-    },
+
     defaultItem: {
       id: "",
       longitude: "",
@@ -458,866 +512,1081 @@ export default {
       address: "",
       active: true,
     },
-    editedIndex: -1,
-    search: "",
-    imageVersion: 0,
-    nameRules: [
-      (v) => !!v || "El campo es requerido",
-      (v) => (v && v.length <= 250) || "El campo debe tener menos de 51 caracteres",
-      (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
-    ],
-    selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    requiredRules: [(v) => !!v || "El campo es requerido"],
+
+    originalItem: {},
+
     addressRules: [
-      (v) => !!v || "El campo es requerido", // Verifica que el campo no esté vacío
-      (v) => (v && v.length <= 30) || "El campo debe tener 30 caracteres máximo", // Verifica que tenga máximo 30 caracteres
-      (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres", // Verifica que tenga al menos 3 caracteres
+      (value) => !!value || "El nombre o dirección es requerido",
+      (value) => !value || value.length >= 3 || "Debe tener al menos 3 caracteres",
+      (value) => !value || value.length <= 250 || "No puede superar los 250 caracteres",
+    ],
+
+    longitudeRules: [
+      (value) => value === "" || value === null || value === undefined || !Number.isNaN(Number(value)) || "Ingresa una longitud válida",
+      (value) => value === "" || value === null || value === undefined || (Number(value) >= -180 && Number(value) <= 180) || "La longitud debe estar entre -180 y 180",
+    ],
+
+    latitudeRules: [
+      (value) => value === "" || value === null || value === undefined || !Number.isNaN(Number(value)) || "Ingresa una latitud válida",
+      (value) => value === "" || value === null || value === undefined || (Number(value) >= -90 && Number(value) <= 90) || "La latitud debe estar entre -90 y 90",
     ],
   }),
+
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Agregar Ubicación" : "Editar Ubicación";
+      return this.editedIndex === -1 ? "Agregar ubicación" : "Editar ubicación";
     },
+
     imgedit() {
       return this.imgMiniatura;
     },
-    switchColor() {
-      return this.editedItem.active ? paleteColors.green : paleteColors.grey;
+
+    activeLocations() {
+      return this.locations.filter((location) => this.isActive(location.active)).length;
+    },
+
+    inactiveLocations() {
+      return this.locations.length - this.activeLocations;
+    },
+
+    registeredCountText() {
+      return this.locations.length === 1
+        ? "1 ubicación registrada"
+        : `${this.locations.length} ubicaciones registradas`;
     },
   },
+
+  watch: {
+    search() {
+      this.page = 1;
+    },
+  },
+
   mounted() {
     this.initialize();
   },
+
   methods: {
-    async showAdd() {
-      this.close();
-      this.editedIndex === -1;
-      this.dialog = true;
+    cloneItem(item) {
+      return { ...item };
     },
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.originalItem = Object.assign({}, this.defaultItem);
-      });
+
+    unwrapItem(item) {
+      return item?.raw ?? item ?? {};
+    },
+
+    isActive(value) {
+      return value === true || value === 1 || value === "1";
+    },
+
+    normalizeLocation(location) {
+      return {
+        ...location,
+        active: location.active === undefined || location.active === null
+          ? true
+          : this.isActive(location.active),
+      };
+    },
+
+    resolveImageValue(source) {
+      if (!source) return "";
+      if (typeof source === "string") return source.trim();
+      return String(
+        source.image ??
+        source.image_url ??
+        source.imageUrl ??
+        source.url ??
+        source.path ??
+        ""
+      ).trim();
+    },
+
+    baseImageUrl(source) {
+      const image = this.resolveImageValue(source);
+      if (!image) return "";
+      if (/^(https?:|data:|blob:)/i.test(image)) return image;
+
+      const baseURL = String(this.$axios.defaults.baseURL || "");
+      const cleanImage = image.replace(/^\/+/, "");
+
+      if (cleanImage.startsWith("images/")) return `${baseURL}${cleanImage}`;
+      return `${baseURL}images/${cleanImage}`;
+    },
+
+    hasLocationImage(location) {
+      return Boolean(this.resolveImageValue(location));
+    },
+
+    locationImage(location) {
+      const url = this.baseImageUrl(location);
+      if (!url || /^(data:|blob:)/i.test(url)) return url;
+      return `${url}${url.includes("?") ? "&" : "?"}v=${this.imageVersion}`;
+    },
+
+    locationArea(location) {
+      const area = [location.city, location.country].filter(Boolean).join(", ");
+      return area || "Sin localidad definida";
+    },
+
+    displayCoordinate(value) {
+      if (value === "" || value === null || value === undefined) return "Sin dato";
+      return String(value);
+    },
+
+    resetEditor() {
+      this.editedItem = this.cloneItem(this.defaultItem);
+      this.originalItem = this.cloneItem(this.defaultItem);
       this.editedIndex = -1;
       this.file = null;
       this.imgMiniatura = "";
+      this.valid = false;
     },
+
+    showAdd() {
+      this.resetEditor();
+      this.dialog = true;
+      this.$nextTick(() => this.$refs.form?.resetValidation());
+    },
+
+    close() {
+      if (this.loading) return;
+      this.dialog = false;
+      this.$nextTick(() => {
+        this.resetEditor();
+        this.$refs.form?.resetValidation();
+      });
+    },
+
     async initialize() {
+      this.loading = true;
+
       try {
-        //this.data = {};
-        //this.data.branch_id = this.editedItem.branch_id;
-        this.loading = true;
         const result = await handleRequest({
           endpoint: "location",
           method: "GET",
         });
 
         if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
           const rawLocations = Array.isArray(result.data?.locations)
             ? result.data.locations
             : Object.values(result.data?.locations || {});
-          this.locations = rawLocations.map((location) => ({
-            ...location,
-            active: location.active ?? true,
-          }));
+
+          this.locations = rawLocations.map((location) => this.normalizeLocation(location));
           this.imageVersion += 1;
+
+          const pageCount = Math.max(1, Math.ceil(this.locations.length / this.itemsPerPage));
+          if (this.page > pageCount) this.page = pageCount;
         } else {
-          // Si no hay datos, asignamos un array vacío
           this.locations = [];
+          this.showAlert("warning", result.message || "No fue posible cargar las ubicaciones.", 3000);
         }
       } catch (error) {
-        this.loading = false;
-        // Captura de errores no controlados
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
+        this.locations = [];
+        this.showAlert("error", "Ocurrió un error al cargar las ubicaciones.", 3000);
       } finally {
         this.loading = false;
       }
     },
+
+    getChangedFields(creating) {
+      const fields = [
+        "address",
+        "longitude",
+        "latitude",
+        "country",
+        "city",
+        "active",
+      ];
+
+      const payload = fields.reduce((changes, key) => {
+        if (creating || this.editedItem[key] !== this.originalItem[key]) {
+          changes[key] = this.editedItem[key];
+        }
+        return changes;
+      }, {});
+
+      if (this.file) payload.image = this.file;
+      return payload;
+    },
+
     async save() {
-      if (this.editedIndex === -1) {
-        this.loading = true;
-        this.valid = false;
-        const fieldsToUpdate = [
-          "address",
-          "longitude",
-          "latitude",
-          "image",
-          "country",
-          "city",
-          "active",
-        ];
+      const validation = await this.$refs.form?.validate();
+      if (!validation?.valid) return;
 
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
-            return obj;
-          }, {});
-        if (Object.keys(updatedFields).length > 0) {
-          if (this.file) {
-            updatedFields.image = this.editedItem.image;
-          }
-          const formData = new FormData();
-          for (let key in updatedFields) {
-            formData.append(key, updatedFields[key]);
-          }
+      const creating = this.editedIndex === -1;
+      const payload = this.getChangedFields(creating);
 
-          try {
-            const result = await handleRequest({
-              endpoint: "location",
-              method: "POST",
-              data: formData,
-            });
-
-            // Manejo de la respuesta según el resultado
-            if (result.success) {
-              this.loading = false;
-              this.showAlert("success", result.message, 3000);
-              this.initialize();
-            } else {
-              this.loading = false;
-              this.showAlert("warning", result.message, 3000);
-            }
-          } catch (error) {
-            this.loading = false;
-            // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-          }
-        } else {
-          this.loading = false;
-          this.showAlert("success", "Debe completar los datos.", 3000);
-        }
-      } else {
-        this.valid = false;
-        const fieldsToUpdate = [
-          "address",
-          "longitude",
-          "latitude",
-          "image",
-          "country",
-          "city",
-          "active",
-        ];
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
-            return obj;
-          }, {});
-        if (Object.keys(updatedFields).length > 0) {
-          updatedFields.id = this.editedItem.id;
-          if (this.file) {
-            updatedFields.image = this.editedItem.image;
-          }
-          const formData = new FormData();
-          for (let key in updatedFields) {
-            formData.append(key, updatedFields[key]);
-          }
-          try {
-            const result = await handleRequest({
-              endpoint: "location-update",
-              method: "POST",
-              data: formData,
-            });
-
-            // Manejo de la respuesta según el resultado
-            if (result.success) {
-              this.loading = false;
-              this.showAlert("success", result.message, 3000);
-              this.initialize();
-            } else {
-              this.loading = false;
-              this.showAlert("warning", result.message, 3000);
-            }
-          } catch (error) {
-            this.loading = false;
-            // Este bloque captura errores inesperados fuera del manejo estándar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-          }
-        } else {
-          this.loading = false;
-          this.showAlert("success", "No se realizaron cambios.", 3000);
-        }
+      if (!creating && Object.keys(payload).length === 0) {
+        this.showAlert("warning", "No se realizaron cambios.", 3000);
+        return;
       }
-      this.close();
-    },
-    editItem(item) {
-      this.editedIndex = 1;
-      this.originalItem = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item);
-      this.file = null;
-      // Crear la imagen y configurar el src
-      const img = new Image();
-      img.src = `${this.$axios.defaults.baseURL}images/${item.image}`; // Se asume que item.image_url es la URL de la imagen
 
-      // Usar una función asíncrona para manejar la carga de la imagen
-      img.onload = async () => {
-        try {
-          // Asignar la imagen cargada a imgMiniatura
-          this.imgMiniatura = `${this.$axios.defaults.baseURL}images/${item.image}`;
-        } catch (error) {
-          console.error("Error al cargar la imagen", error);
-          this.showAlert("error", "Error al cargar la imagen.", 3000);
+      if (!creating) payload.id = this.editedItem.id;
+
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        formData.append(key, value ?? "");
+      });
+
+      this.loading = true;
+
+      try {
+        const result = await handleRequest({
+          endpoint: creating ? "location" : "location-update",
+          method: "POST",
+          data: formData,
+        });
+
+        if (result.success) {
+          this.dialog = false;
+          this.showAlert(
+            "success",
+            result.message || (creating
+              ? "Ubicación creada correctamente."
+              : "Ubicación actualizada correctamente."),
+            3000
+          );
+          await this.initialize();
+          this.resetEditor();
+        } else {
+          this.showAlert("warning", result.message || "No fue posible guardar la ubicación.", 3000);
         }
-      };
-      this.dialog = true;
+      } catch (error) {
+        this.showAlert("error", "Ocurrió un error al guardar la ubicación.", 3000);
+      } finally {
+        this.loading = false;
+      }
     },
+
+    editItem(item) {
+      const location = this.unwrapItem(item);
+      this.editedIndex = this.locations.findIndex(
+        (current) => String(current.id) === String(location.id)
+      );
+      this.originalItem = this.cloneItem(location);
+      this.editedItem = this.cloneItem(location);
+      this.file = null;
+      this.imgMiniatura = this.baseImageUrl(location);
+      this.dialog = true;
+      this.$nextTick(() => this.$refs.form?.resetValidation());
+    },
+
     deleteItem(item) {
-      this.editedIndex = 1;
-      this.editedItem.id = item.id;
+      const location = this.unwrapItem(item);
+      this.editedItem = {
+        ...this.cloneItem(this.defaultItem),
+        ...this.cloneItem(location),
+      };
       this.dialogDelete = true;
     },
+
     closeDelete() {
+      if (this.loading) return;
       this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-      });
+      this.editedItem = this.cloneItem(this.defaultItem);
     },
+
     async deleteItemConfirm() {
+      this.loading = true;
+
       try {
-        let request = {
-          id: this.editedItem.id,
-        };
         const result = await handleRequest({
           endpoint: "location-destroy",
           method: "POST",
-          data: request,
+          data: { id: this.editedItem.id },
         });
 
-        // Manejo de la respuesta según el resultado
         if (result.success) {
-          this.showAlert("success", result.message, 3000);
-          this.initialize();
+          this.dialogDelete = false;
+          this.showAlert("success", result.message || "Ubicación eliminada correctamente.", 3000);
+          await this.initialize();
+          this.editedItem = this.cloneItem(this.defaultItem);
         } else {
-          this.showAlert("warning", result.message, 3000);
+          this.showAlert("warning", result.message || "No fue posible eliminar la ubicación.", 3000);
         }
       } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estándar
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
+        this.showAlert("error", "Ocurrió un error al eliminar la ubicación.", 3000);
       } finally {
-        this.closeDelete();
+        this.loading = false;
       }
     },
-    showAlert(sb_type, sb_message, sb_timeout) {
-      this.sb_type = sb_type;
 
-      if (sb_type == "success") {
-        this.sb_title = "Éxito";
-        this.sb_icon = "mdi-check-circle";
-      }
-
-      if (sb_type == "info") {
-        this.sb_title = "Información";
-        this.sb_icon = "mdi-alert-circle";
-      }
-
-      if (sb_type == "error") {
-        this.sb_title = "Error";
-        this.sb_icon = "mdi-check-circle";
-      }
-
-      if (sb_type == "warning") {
-        this.sb_title = "Advertencia";
-        this.sb_icon = "mdi-alert-circle";
-      }
-      this.sb_message = sb_message;
-      this.sb_timeout = sb_timeout;
-      this.snackbar = true;
-    },
-    imagenDisponible() {
-      if (this.imgedit !== undefined && this.imgedit !== "") {
-        // Intenta cargar la imagen en un elemento oculto para verificar si está disponible
-        let img = new Image();
-        img.src = this.imgedit;
-        return true; // Devuelve true si la imagen está disponible
-      }
-      return false; // Si la URL de la imagen no está definida o está vacía, devuelve false
-    },
     onFileSelected(event) {
-      let file = event.target.files[0];
-      // Validar el tamaño del archivo (500 KB máximo)
-      const maxSize = 500 * 1024; // 500 KB en bytes
-      if (file && file.size > maxSize) {
-        this.valid = false;
-        this.showAlert("warning", "El archivo de imagen debe ser de máximo 500 KB", 3000);
-        return; // Detener el proceso si el archivo es demasiado grande
-      }
-      this.valid = true;
-      this.editedItem.image = file;
-      //console.log(this.editedItem.image_cardgift);
-      this.cargarImage(file);
+      const selected = event?.target?.files?.[0];
+      if (selected) this.processSelectedFile(selected);
     },
-    cargarImage(file) {
-      let reader = new FileReader();
-      reader.onload = (e) => {
-        this.imgMiniatura = e.target.result;
+
+    onFileModelUpdate(value) {
+      const selected = Array.isArray(value) ? value[0] : value;
+
+      if (!selected) {
+        this.file = null;
+        this.imgMiniatura = this.baseImageUrl(this.editedItem);
+        return;
+      }
+
+      this.processSelectedFile(selected);
+    },
+
+    processSelectedFile(selected) {
+      if (!selected) return;
+
+      if (selected.size > 500 * 1024) {
+        this.file = null;
+        this.showAlert("warning", "La imagen debe tener un tamaño máximo de 500 KB.", 3000);
+        return;
+      }
+
+      this.file = selected;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.imgMiniatura = event.target.result;
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selected);
+    },
+
+    showAlert(type, message, timeout = 3000) {
+      const config = {
+        success: { title: "Éxito", icon: "mdi-check-circle" },
+        error: { title: "Error", icon: "mdi-close-circle" },
+        warning: { title: "Advertencia", icon: "mdi-alert-circle" },
+        info: { title: "Información", icon: "mdi-information" },
+      }[type] || { title: "Advertencia", icon: "mdi-alert-circle" };
+
+      this.sb_type = type;
+      this.sb_title = config.title;
+      this.sb_icon = config.icon;
+      this.sb_message = message;
+      this.sb_timeout = timeout;
+      this.snackbar = true;
     },
   },
 };
 </script>
+
 <style scoped>
-.icono-concavo {
-  width: 45px;
-  height: 45px;
+.locations-page {
+  --blue: #2454d6;
+  --blue-light: #3266e4;
+  min-height: 100%;
+  color: #1e293b;
+  background: #f6f8fb;
+}
+
+.page-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  color: white;
-  /* Mantenemos solo el efecto cóncavo en el ícono 
-  box-shadow: inset;*/
-  position: relative;
-  overflow: hidden;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 70px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8edf5;
 }
 
-.icono-concavo::after {
-  content: "";
+.page-heading,
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.page-icon,
+.dialog-icon {
+  position: relative;
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #fff;
+  background:
+    radial-gradient(circle at 90% 5%, rgba(53, 184, 232, 0.5), transparent 28px),
+    linear-gradient(135deg, #0e1f46, #2454d6);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.17);
+}
+
+.dialog-icon-main {
+  transform: translate(-2px, 1px);
+}
+
+.dialog-icon-action {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  border-radius: 8px;
+  right: 5px;
+  bottom: 5px;
+  padding: 1px;
+  color: #0e1f46;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.22);
+}
+
+.page-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  margin: 3px 0 0;
+  color: #526176;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.add-button,
+.save-button {
+  min-height: 40px;
+  color: #fff !important;
+  background: linear-gradient(100deg, #2454d6, #3266e4) !important;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.2) !important;
+}
+
+.page-content {
+  padding: 18px 24px 28px;
+}
+
+.summary-row {
+  margin-bottom: 4px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 72px;
+  padding: 13px 15px;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.035);
+}
+
+.summary-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 9px;
+}
+
+.summary-icon--blue {
+  color: #2454d6;
+  background: #eef3ff;
+}
+
+.summary-icon--green {
+  color: #16875a;
+  background: #eaf8f1;
+}
+
+.summary-icon--slate {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.summary-value {
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.summary-label {
+  margin-top: 4px;
+  color: #526176;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.table-panel {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 13px !important;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 69px;
+  padding: 12px 17px;
+}
+
+.section-title {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.section-subtitle {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.search-field {
+  flex: 0 1 320px;
+}
+
+.search-field :deep(.v-field) {
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.search-field :deep(.v-field__outline) {
+  color: #dce3ed;
+}
+
+.locations-table {
+  color: #1e293b;
   background: transparent;
 }
-.text-truncate {
-  white-space: nowrap;
+
+.locations-table :deep(thead th) {
+  height: 40px !important;
+  color: #334155 !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e8edf5 !important;
+}
+
+.locations-table :deep(tbody td) {
+  height: 62px !important;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #eef2f6 !important;
+}
+
+.locations-table :deep(tbody tr:hover) {
+  background: #f8faff !important;
+}
+
+.locations-table :deep(.v-data-table-footer) {
+  min-height: 52px;
+  padding: 6px 16px;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.locations-table :deep(.v-data-table__th--sortable) {
+  cursor: pointer;
+  user-select: none;
+}
+
+.locations-table :deep(.v-data-table__th--sortable:hover),
+.locations-table :deep(.v-data-table__th--sorted) {
+  color: #2454d6 !important;
+  background: #f4f7ff !important;
+}
+
+.location-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.location-avatar {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
   overflow: hidden;
+  place-items: center;
+  color: #2454d6;
+  background: #eef3ff;
+  border: 1px solid #dce6ff;
+  border-radius: 9px;
+}
+
+.location-photo,
+.preview-image {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.location-photo :deep(.v-img__img),
+.preview-image :deep(.v-img__img) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.image-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.cell-copy {
+  min-width: 0;
+}
+
+.location-name {
+  max-width: 320px;
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 13.5px;
+  font-weight: 850;
   text-overflow: ellipsis;
-}
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* Máxima especificidad para ocultar el thead */
-.v-data-table > .v-data-table__wrapper > table > thead,
-.v-data-table > .v-data-table__wrapper > .v-table > table > thead,
-.v-data-table__content > table > thead,
-.v-data-table__content > thead,
-table.v-table > thead,
-.v-table > .v-table__wrapper > table > thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
-.hidden-header .v-data-table__content > table > thead {
-  display: none !important;
+  white-space: nowrap;
 }
 
-
-
-.location-col-address {
-  width: 45%;
-  min-width: 0;
-}
-
-.location-col-longitude,
-.location-col-latitude,
-.location-col-country,
-.location-col-city {
-  width: 10%;
-  min-width: 0;
-}
-
-.location-col-actions {
-  width: 15%;
-  min-width: 0;
-}
-
-
-/* =======================================================
-   BUSGO DESIGN SYSTEM
-   ======================================================= */
-
-:root{
-
---busgo-border:#E5E7EB;
-
---busgo-border-soft:#EEF2F7;
-
---busgo-surface:#FFFFFF;
-
---busgo-surface-alt:#F8FAFC;
-
---busgo-text:#111827;
-
---busgo-text-soft:#64748B;
-
---busgo-radius-lg:18px;
-
---busgo-radius-md:12px;
-
---busgo-shadow:
-
-0 1px 2px rgba(15,23,42,.04),
-
-0 4px 12px rgba(15,23,42,.05);
-
-}
-
-
-/* =======================================================
-   LAYOUT
-   ======================================================= */
-
-.busgo-page{
-
-padding:24px;
-
-}
-
-.busgo-card{
-
-background:var(--busgo-surface);
-
-border:1px solid var(--busgo-border);
-
-border-radius:var(--busgo-radius-lg);
-
-overflow:hidden;
-
-box-shadow:var(--busgo-shadow);
-
-}
-
-.busgo-section{
-
-padding:24px;
-
-}
-
-
-/* =======================================================
-   HEADER
-   ======================================================= */
-
-.busgo-page-header{
-
-display:flex;
-
-align-items:center;
-
-gap:16px;
-
-padding:18px 24px;
-
-background:var(--busgo-surface-alt);
-
-border-bottom:1px solid var(--busgo-border);
-
-}
-
-.busgo-page-icon{
-
-border-radius:14px;
-
-}
-
-.busgo-page-title{
-
-font-size:22px;
-
-font-weight:700;
-
-color:var(--busgo-text);
-
-}
-
-.busgo-page-subtitle{
-
-font-size:13px;
-
-color:var(--busgo-text-soft);
-
-margin-top:2px;
-
-}
-
-.busgo-page-actions{
-
-margin-left:auto;
-
-display:flex;
-
-gap:8px;
-
-}
-
-
-/* =======================================================
-   SEARCH
-   ======================================================= */
-
-.busgo-search{
-
-max-width:380px;
-
-min-width:280px;
-
-}
-
-
-/* =======================================================
-   CARD HEADER
-   ======================================================= */
-
-.busgo-card-header{
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-gap:24px;
-
-padding:20px 24px;
-
-}
-
-.busgo-card-title{
-
-font-size:16px;
-
-font-weight:700;
-
-color:var(--busgo-text);
-
-}
-
-.busgo-card-subtitle{
-
-font-size:13px;
-
-color:var(--busgo-text-soft);
-
-}
-
-
-/* =======================================================
-   TABLE
-   ======================================================= */
-
-.busgo-table{
-
-background:transparent;
-
-max-height:68vh;
-
-overflow:auto;
-
-}
-
-.busgo-table-head{
-
-display:flex;
-
-align-items:center;
-
-padding:0 20px;
-
-height:42px;
-
-margin:0 16px 6px;
-
-border-radius:12px;
-
-background:var(--busgo-surface-alt);
-
-font-size:12px;
-
-font-weight:700;
-
-text-transform:uppercase;
-
-color:var(--busgo-text-soft);
-
-}
-
-.busgo-row{
-
-display:flex;
-
-align-items:center;
-
-min-height:58px;
-
-padding:8px 20px;
-
-margin:0 16px 6px;
-
-border:1px solid var(--busgo-border-soft);
-
-border-radius:12px;
-
-background:white;
-
-transition:all .15s ease;
-
-}
-
-.busgo-row:hover{
-
-background:#fafafa;
-
-border-color:#dbeafe;
-
-}
-
-
-/* =======================================================
-   CELLS
-   ======================================================= */
-
-.busgo-name-cell{
-
-display:flex;
-
-align-items:center;
-
-gap:12px;
-
-}
-
-.busgo-avatar{
-
-border:1px solid var(--busgo-border);
-
-}
-
-.busgo-name{
-
-font-size:14px;
-
-font-weight:600;
-
-overflow:hidden;
-
-white-space:nowrap;
-
-text-overflow:ellipsis;
-
-}
-
-.busgo-meta{
-
-display:flex;
-
-align-items:center;
-
-gap:6px;
-
-font-size:13px;
-
-color:#374151;
-
-}
-
-
-/* =======================================================
-   BUTTONS
-   ======================================================= */
-
-.busgo-actions{
-
-display:flex;
-
-justify-content:flex-end;
-
-gap:5px;
-
-}
-
-.busgo-action{
-
-width:30px;
-
-height:30px;
-
-}
-
-
-/* =======================================================
-   FOOTER
-   ======================================================= */
-
-.busgo-footer{
-
-padding:14px 24px;
-
-border-top:1px solid var(--busgo-border-soft);
-
-}
-
-
-/* =======================================================
-   SCROLL
-   ======================================================= */
-
-.busgo-table::-webkit-scrollbar{
-
-width:8px;
-
-}
-
-.busgo-table::-webkit-scrollbar-thumb{
-
-background:#CBD5E1;
-
-border-radius:30px;
-
-}
-
-
-/* =======================================================
-   RESPONSIVE
-   ======================================================= */
-
-@media(max-width:960px){
-
-.busgo-card-header{
-
-flex-direction:column;
-
-align-items:stretch;
-
-}
-
-.busgo-search{
-
-max-width:100%;
-
-min-width:100%;
-
-}
-
-.busgo-table-head{
-
-display:none;
-
-}
-
-.busgo-row{
-
-flex-direction:column;
-
-align-items:stretch;
-
-gap:12px;
-
-}
-
-.busgo-actions{
-
-justify-content:flex-start;
-
-}
-
-}
-
-.location-list-col-address {
-  width: 34%;
-  min-width: 0;
-}
-
-.location-list-col-longitude {
-  width: 10%;
-  min-width: 0;
-}
-
-.location-list-col-latitude {
-  width: 10%;
-  min-width: 0;
-}
-
-.location-list-col-country {
-  width: 10%;
-  min-width: 0;
-}
-
-.location-list-col-city {
-  width: 10%;
-  min-width: 0;
-}
-
-.location-list-col-status {
-  width: 12%;
-  min-width: 0;
-}
-
-.location-list-col-actions {
-  width: 14%;
-  min-width: 0;
-}
-
-.location-list-row {
-  min-height: 62px;
-}
-
-.location-preview-card {
+.location-area {
+  margin-top: 2px;
   overflow: hidden;
-  border-radius: 14px;
+  color: #526176;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.compact-switch-line {
-  gap: 8px;
+.coordinate-value {
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.compact-switch-label {
+.table-value {
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: 7px;
+}
+
+.status-badge--active {
+  color: #116b49;
+  background: #eaf8f1;
+}
+
+.status-badge--inactive {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.action-button {
+  border-radius: 8px !important;
+}
+
+.action-button--edit {
+  color: #2454d6 !important;
+}
+
+.action-button--edit:hover {
+  background: #eef3ff;
+}
+
+.action-button--delete {
+  color: #dc2626 !important;
+}
+
+.action-button--delete:hover {
+  background: #fff1f2;
+}
+
+.table-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 9px 16px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 650;
+  border-top: 1px solid #edf1f5;
+}
+
+.form-dialog,
+.delete-dialog {
+  overflow: hidden;
+  color: #1e293b;
+  background: #fff;
+  border: 1px solid #dfe6ef;
+  border-radius: 14px !important;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.2) !important;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px 20px;
+}
+
+.dialog-title {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.dialog-subtitle {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 11.5px;
   font-weight: 600;
 }
 
-.busgo-dialog-card {
-  border-radius: 18px;
-  overflow: hidden;
+.dialog-close {
+  color: #64748b !important;
 }
 
-.busgo-dialog-actions {
-  padding: 14px 18px;
+.dialog-body {
+  max-height: 70vh;
+  padding: 21px 22px 16px !important;
+  overflow-y: auto;
+}
+
+.form-section-label {
+  margin-bottom: 13px;
+  color: #475569;
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+
+.form-section-label--spaced {
+  margin-top: 7px;
+}
+
+.dialog-body :deep(.v-field) {
+  border-radius: 9px;
+}
+
+.dialog-body :deep(.v-field__outline) {
+  color: #d6dee9;
+}
+
+.dialog-body :deep(.v-label) {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 650;
+  opacity: 1;
+}
+
+.dialog-body :deep(.v-field__input) {
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.status-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 13px;
   background: #f8fafc;
+  border: 1px solid #e8edf5;
+  border-radius: 10px;
 }
 
-@media (max-width: 960px) {
-  .location-list-col-address,
-  .location-list-col-longitude,
-  .location-list-col-latitude,
-  .location-list-col-country,
-  .location-list-col-city,
-  .location-list-col-status,
-  .location-list-col-actions {
+.status-control-title {
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.status-control-description {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.status-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.is-active {
+  color: #16875a;
+}
+
+.is-inactive {
+  color: #64748b;
+}
+
+.image-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e8edf5;
+  border-radius: 10px;
+}
+
+.image-preview {
+  flex: 0 0 112px;
+  width: 112px;
+  height: 76px;
+  overflow: hidden;
+  background: #eef3ff;
+  border: 1px solid #dce6ff;
+  border-radius: 9px;
+}
+
+.preview-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #2454d6;
+}
+
+.upload-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-title {
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.upload-description {
+  margin: 3px 0 8px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.file-field {
+  max-width: 350px;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 14px 20px !important;
+}
+
+.cancel-button {
+  min-width: 94px;
+  min-height: 39px;
+  color: #475569 !important;
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 9px !important;
+}
+
+.cancel-button:hover {
+  background: #f1f5f9;
+}
+
+.save-button {
+  min-width: 150px;
+  padding-inline: 18px !important;
+}
+
+.delete-dialog {
+  padding: 29px 27px 24px;
+  text-align: center;
+}
+
+.delete-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  place-items: center;
+  color: #dc2626;
+  background: #fff1f2;
+  border: 1px solid #ffe0e4;
+  border-radius: 15px;
+}
+
+.delete-title {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.delete-message {
+  max-width: 350px;
+  margin: 10px auto 22px;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.delete-message strong {
+  color: #334155;
+  font-weight: 800;
+}
+
+.delete-actions {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.delete-button {
+  min-width: 112px;
+  min-height: 40px;
+  color: #fff !important;
+  background: #dc2626 !important;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.snackbar-title {
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.snackbar-message {
+  margin-top: 2px;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.busgo-snackbar :deep(.v-snackbar__wrapper) {
+  border-radius: 11px;
+}
+
+@media (max-width: 1100px) {
+  .locations-table {
+    overflow-x: auto;
+  }
+
+  .locations-table :deep(.v-table__wrapper) {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 959px) {
+  .page-header {
+    padding-inline: 17px;
+  }
+
+  .page-content {
+    padding: 15px 17px 24px;
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-field {
     width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    align-items: flex-start;
+    padding: 11px 12px;
+  }
+
+  .page-subtitle {
+    max-width: 210px;
+  }
+
+  .add-button {
+    min-width: 42px !important;
+    padding-inline: 10px !important;
+  }
+
+  .add-button :deep(.v-btn__content) {
+    font-size: 0;
+  }
+
+  .add-button :deep(.v-icon) {
+    margin: 0 !important;
+  }
+
+  .page-content {
+    padding: 11px 12px 20px;
+  }
+
+  .dialog-header {
+    padding: 14px;
+  }
+
+  .dialog-body {
+    padding: 17px 14px 12px !important;
+  }
+
+  .status-control,
+  .image-upload-area {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .status-switch {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dialog-actions {
+    padding-inline: 13px !important;
   }
 }
 </style>
-

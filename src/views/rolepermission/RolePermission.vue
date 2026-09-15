@@ -1,533 +1,210 @@
 <template>
-    <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-        :multi-line="true" vertical v-model="snackbar">
-        <v-row>
-            <v-col md="2">
-                <v-avatar :icon="sb_icon" color="sb_type" size="40"></v-avatar>
-            </v-col>
-            <v-col md="10">
-                <h4>{{ sb_title }}</h4>
-                {{ sb_message }}
-            </v-col>
-        </v-row>
+  <div class="permission-page">
+    <v-snackbar v-model="snackbar" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="10">
+      <div class="notice"><v-icon :icon="sb_icon" /><div><strong>{{ sb_title }}</strong><div>{{ sb_message }}</div></div></div>
     </v-snackbar>
-    <v-card class="d-flex align-center pa-3" elevation="0" style="background-color: #f9f9f9">
-        <!-- Icono -->
-        <v-avatar :color="paleteColors.primary" class="icono-concavo">
-            <v-icon :icon="paleteColors.primary" color="sb_type" size="40">mdi-account-cog-outline</v-icon>
-        </v-avatar>
 
-        <!-- Texto -->
-        <div class="ml-4">
-            <div class="text-h6 font-weight-medium">{{ this.role.name }}</div>
-            <div class="text-body-2 text-grey">Gestionar Permisos</div>
-        </div>
+    <div class="permission-toolbar">
+      <div>
+        <div class="content-title">Permisos asignados</div>
+        <div class="content-subtitle">{{ rolepermissions.length }} permisos habilitados para {{ role.name }}</div>
+      </div>
+      <div class="toolbar-actions">
+        <v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar permiso..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable />
+        <v-btn class="add-button" prepend-icon="mdi-plus" elevation="0" @click="showAdd">Asignar permiso</v-btn>
+      </div>
+    </div>
 
-        <!-- Botones -->
-        <v-spacer></v-spacer>
-
-        <v-btn class="text-subtitle-1 ml-12" :color="paleteColors.primary" variant="tonal" elevation="2"
-            prepend-icon="mdi-plus-circle" @click="showAdd()">
-            Agregar Permiso
-        </v-btn>
-    </v-card>
-    <!--<v-container style="min-width: 100%; min-height: 100%">
-        <v-card elevation="6" class="mx-2">
-            <v-toolbar :color="paleteColors.primary">
-                <span class="text-subtitle-2 ml-4"> Permisos del rol: {{ this.roleName }}</span>
-                <v-spacer></v-spacer>
-                <v-btn class="text-subtitle-1 ml-12" prepend-icon="mdi-plus-circle" :color="paleteColors.white"
-                    variant="tonal" @click="showAdd()">
-                    Asignar Permiso
-                </v-btn>
-            </v-toolbar>
-
-            <v-card-text>
-                <v-text-field class="mt-1 mb-1" v-model="search" append-icon="mdi-magnify" label="Buscar" single-line
-                    hide-details>
-                </v-text-field>
-                <v-data-table :headers="headers" :search="search" :items="rolepermissions" class="elevation-1"
-                    style="max-height: 65vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-                    no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos...">
-                    <template v-slot:item.actions="{ item }">
-                        <v-btn density="comfortable" icon="mdi-delete" @click="deleteItem(item)"
-                            :color="paleteColors.error" variant="tonal" elevation="1" title="Eliminar Permiso"></v-btn>
-                    </template>
-                </v-data-table>
-            </v-card-text>
-        </v-card>
-    </v-container>-->
-    <v-card flat>
-    <v-card-title class="d-flex align-center text-body-1">
-      Listado de permisos
-
-      <v-spacer></v-spacer>
-
-      <v-text-field v-model="search" density="compact" label="Buscar permiso" prepend-inner-icon="mdi-magnify"
-        variant="solo-filled" hide-details single-line flat></v-text-field>
-    </v-card-title>
-
-    <v-data-table :headers="headers" :items="rolepermissions" :search="search"
-      :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-      loading-text="Cargando datos..." :hide-default-header="true" class="elevation-1"
-      style="max-height: 68vh; overflow-y: auto; background: transparent">
-      <template v-slot:top>
-  <!-- Tarjeta de encabezado con alto fijo -->
-  <v-card
-    flat
-    color="blue-grey-lighten-5"
-    class="mb-2 mx-1 rounded-lg"
-    elevation="1"
-    style="border: 1px solid #ECEFF1; height: 40px; min-height: 40px; display: flex; align-items: center"
-  >
-    <v-card-text
-      class="d-flex pa-2"
-      style="width: 100%; min-width: 0; height: 100%; padding: 0 16px !important; display: flex; align-items: center"
-    >
-              <!-- Negocio (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Nombre
-              </div>
-
-              <!-- Nombre (20%) -->
-              <div style="width: 15%; min-width: 0" class="text-left font-weight-bold">
-                Módulo
-              </div>
-
-              <!-- Teléfono (10%) -->
-              <div style="width: 55%; min-width: 0" class="text-left font-weight-bold">
-                Descripción
-              </div>
-
-              <!-- Acciones (25%) -->
-              <div style="width: 15%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                
-              </div>
-            </v-card-text>
-          </v-card>
+    <v-card class="permission-panel" elevation="0">
+      <v-data-table :headers="headers" :items="rolepermissions" :search="search" :loading="loading" :items-per-page="10"
+        items-per-page-text="Elementos por página" no-data-text="Este rol no tiene permisos asignados"
+        loading-text="Cargando permisos..." class="permission-table">
+        <template #loading><v-skeleton-loader type="table-row@5" /></template>
+        <template #[`item.name`]="{ item }">
+          <div class="permission-name"><span class="permission-icon"><v-icon size="17">mdi-shield-check-outline</v-icon></span><div><strong>{{ item.name }}</strong></div></div>
         </template>
-      <!-- Slot personalizado para cada fila -->
-      <template v-slot:item="slotProps">
-        <tr>
-          <td colspan="100%" style="padding: 0; border: none">
-            <v-card class="mb-2 mx-1 rounded-lg" elevation="1" density="comfortable" flat>
-              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
+        <template #[`item.module`]="{ item }"><span class="module-badge"><v-icon size="14">mdi-view-grid-outline</v-icon>{{ item.module || "General" }}</span></template>
+        <template #[`item.description`]="{ item }"><div class="description" :title="item.description">{{ item.description || "Sin descripción" }}</div></template>
+        <template #[`item.actions`]="{ item }">
+          <v-tooltip text="Quitar permiso" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="delete-action" @click="deleteItem(item)" /></template></v-tooltip>
+        </template>
+      </v-data-table>
+      <div class="panel-note"><v-icon size="15">mdi-information-outline</v-icon>Los cambios se aplican al rol inmediatamente.</div>
+    </v-card>
 
-                <!-- Columna 1: Nombre de la ruta -->
-                <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate font-weight-medium">{{ slotProps.item.name }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Nombre: {{ slotProps.item.name }}
+    <v-dialog v-model="dialog" max-width="560" persistent>
+      <v-form ref="form" v-model="valid" @submit.prevent="save">
+        <v-card class="form-dialog" elevation="0">
+          <div class="dialog-header">
+            <div class="dialog-heading"><span class="dialog-icon"><v-icon>mdi-shield-plus-outline</v-icon></span><div><h3>Asignar permiso</h3><p>Selecciona un permiso disponible para {{ role.name }}</p></div></div>
+            <v-btn icon="mdi-close" variant="text" :disabled="loading" @click="close" />
+          </div>
+          <v-divider />
+          <v-card-text class="dialog-body">
+            <v-autocomplete v-model="editedItem.permission_ids" :items="permissions" item-title="name" item-value="id"
+              label="Permiso" placeholder="Busca por nombre o módulo" prepend-inner-icon="mdi-shield-search-outline"
+              variant="outlined" density="comfortable" :rules="selectRules" no-data-text="No hay permisos disponibles"
+              multiple chips closable-chips
+              :menu-props="{ maxHeight: 420, minWidth: 540, contentClass: 'permission-menu' }">
+              <template #item="{ props, item }">
+                <v-list-item
+                  v-bind="props"
+                  :title="undefined"
+                  :subtitle="undefined"
+                  class="permission-option"
+                >
+                  <template #prepend>
+                    <span class="option-icon">
+                      <v-icon size="18">mdi-shield-outline</v-icon>
                     </span>
-                  </v-tooltip>
-                </div>
+                  </template>
 
-                <!-- Columna 3: Destino (con avatar) -->
-                <div class="d-flex align-center" style="width: 15%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.module }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Módulo: {{ slotProps.item.module }}
-                    </span>
-                  </v-tooltip>
-                </div>
+                  <template #title>
+                    <div class="option-header">
+                      <span class="option-name">{{ item.raw.name }}</span>
+                      <span class="option-module">
+                        {{ item.raw.module || "General" }}
+                      </span>
+                    </div>
+                  </template>
 
-                <div class="d-flex align-center" style="width: 55%; min-width: 0">
-                  <span class="text-truncate">{{ slotProps.item.description }}</span>
-                  <v-tooltip activator="parent" location="top" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Descripción: {{ slotProps.item.description }}
-                    </span>
-                  </v-tooltip>
-                </div>
+                  <template #subtitle>
+                    <div class="option-description">
+                      {{ item.raw.description || "Sin descripción" }}
+                    </div>
+                  </template>
+                </v-list-item>
+              </template>
 
-                <!-- Columna 5: Acciones -->
-                <div class="d-flex flex-column align-end" style="width: 15%; min-width: 0; text-align: right">
-                  <div class="d-flex gap-1 mt-1" style="flex-wrap: nowrap">
-                       <v-btn size="35" icon variant="outlined" :style="{ 'border-width': '1px', 'border-style': 'solid' }"
-                      :color="paleteColors.error" @click="deleteItem(slotProps.item)" class="flex-shrink-0"
-                      title="Eliminar Permiso">
-                      <v-icon size="20">mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                </div>
-              </v-card-text>
-            </v-card>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
-  </v-card>
-    <v-dialog v-model="dialog" max-width="450px">
-        <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-            <v-card>
-                <v-toolbar :color="paleteColors.primary">
-                    <span class="text-subtitle-2 ml-4">{{ formTitle }}</span>
-                </v-toolbar>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-col cols="12" md="12">
-                                <v-autocomplete :no-data-text="'No hay datos disponibles'"
-                                    v-model="editedItem.permission_id" :items="permissions" label="Permisos"
-                                    prepend-icon="mdi-shield-check" item-title="name" item-value="id"
-                                    variant="underlined" :rules="selectRules" :menu-props="{
-                                        maxWidth: '100%',
-                                        minWidth: '500px',
-                                        contentClass: 'permission-menu'
-                                    }">
-                                    <template v-slot:item="{ props, item }">
-                                    <v-list-item v-bind="props">
-                                        <v-list-item-subtitle class="d-flex flex-column">
-                                        <div><strong>Módulo:</strong> {{ item.raw.module }}</div>
-                                        <v-tooltip location="bottom">
-                                            <template v-slot:activator="{ props: tooltipProps }">
-                                            <div
-                                                v-bind="tooltipProps"
-                                                class="two-line-clamp"
-                                            >
-                                                <strong>Descripción:</strong> {{ item.raw.description }}
-                                            </div>
-                                            </template>
-                                            <span>{{ item.raw.description }}</span>
-                                        </v-tooltip>
-                                        </v-list-item-subtitle>
-                                    </v-list-item>
-                                    </template>
-                                </v-autocomplete>
-                            </v-col>
-                        </v-row>
-                    </v-container>
-                </v-card-text>
-                <v-divider></v-divider>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn :color="paleteColors.gris" variant="flat" @click="close">Cancelar</v-btn>
-                    <v-btn :color="paleteColors.primary" variant="flat" @click="save" :disabled="!valid"
-                        :loading="loading">Aceptar</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-form>
-    </v-dialog>
-    <v-dialog v-model="dialogDelete" max-width="500px">
-        <v-card>
-            <v-toolbar :color="paleteColors.error">
-                <span class="text-subtitle-2 ml-4"> Eliminar Permiso</span>
-            </v-toolbar>
+            </v-autocomplete>
 
-            <v-card-text class="mt-2 mb-2"> ¿Desea eliminar el permiso al rol?</v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete"> Cancelar </v-btn>
-                <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm"> Aceptar </v-btn>
-            </v-card-actions>
+            <div v-if="editedItem.permission_ids.length" class="selection-summary">
+              <v-icon size="16">mdi-shield-check-outline</v-icon>
+              {{ editedItem.permission_ids.length }}
+              {{ editedItem.permission_ids.length === 1 ? "permiso seleccionado" : "permisos seleccionados" }}
+            </div>
+          </v-card-text>
+          <v-divider />
+            <v-card-actions class="dialog-actions"><v-btn variant="text" class="cancel-button" :disabled="loading" @click="close">Cancelar</v-btn><v-btn type="submit" class="save-button" elevation="0" :loading="loading">Asignar permisos</v-btn></v-card-actions>
         </v-card>
+      </v-form>
     </v-dialog>
+
+    <v-dialog v-model="dialogDelete" max-width="430" persistent>
+      <v-card class="delete-dialog" elevation="0">
+        <span class="delete-icon"><v-icon size="27">mdi-shield-remove-outline</v-icon></span>
+        <h3>Quitar permiso</h3>
+        <p>¿Deseas quitar <strong>{{ editedItem.name || "este permiso" }}</strong> del rol <strong>{{ role.name }}</strong>?</p>
+        <div><v-btn variant="text" class="cancel-button" :disabled="loading" @click="closeDelete">Cancelar</v-btn><v-btn class="remove-button" elevation="0" :loading="loading" @click="deleteItemConfirm">Quitar permiso</v-btn></div>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script>
-import { paleteColors } from "@/assets/colors";
-import { handleRequest } from "@/utils/api"; // Ruta al archivo
+import { handleRequest } from "@/utils/api";
+
 export default {
-    props: {
-        role: {
-            type: Object,
-            required: true,
-            default: () => ({}), // Objeto vacío por defecto
-        },
+  name: "RolePermission",
+  props: { role: { type: Object, required: true, default: () => ({}) } },
+  data: () => ({
+    snackbar:false, sb_type:"", sb_message:"", sb_timeout:2000, sb_title:"", sb_icon:"",
+    valid:false, loading:false, dialog:false, dialogDelete:false, rolepermissions:[], permissions:[],
+    editedItem:{ id:"", role_id:"", permission_ids:[], name:"" }, defaultItem:{ id:"", role_id:"", permission_ids:[], name:"" }, search:"",
+    headers:[
+      { title:"Permiso", key:"name", value:"name", width:"25%" },
+      { title:"Módulo", key:"module", value:"module", width:"20%" },
+      { title:"Descripción", key:"description", value:"description", width:"45%" },
+      { title:"", key:"actions", value:"actions", sortable:false, align:"end", width:"10%" },
+    ],
+    selectRules:[(v) => Array.isArray(v) && v.length > 0 || "Debes seleccionar al menos un permiso"],
+  }),
+  mounted(){ this.initialize(); },
+  methods:{
+    unwrap(item){ return item?.raw ?? item ?? {}; },
+    resetEditor(){ this.editedItem={...this.defaultItem,permission_ids:[]}; this.valid=false; },
+    async initialize(){
+      this.loading=true;
+      try{
+        const result=await handleRequest({ endpoint:"role-permissions", method:"POST", data:{ role_id:this.role.id } });
+        this.rolepermissions=result.success ? (result.data?.permissionroles || []) : [];
+      }catch(error){ this.rolepermissions=[]; this.showAlert("error","Ocurrió un error al cargar los permisos.",3000); }
+      finally{ this.loading=false; }
     },
-    data: () => ({
-        snackbar: false,
-        sb_type: "",
-        sb_message: "",
-        sb_timeout: 2000,
-        sb_title: "",
-        sb_icon: "",
-        paleteColors: paleteColors,
-        valid: true,
-        loading: false,
-        mostrar: false,
-
-        dialog: false,
-        dialogDelete: false,
-        rolepermissions: [],
-        permissions: [],
-        role_id: "",
-        roleName: '',
-        data: {},
-        headers: [
-            { title: "Nombre", value: "name", },
-            { title: "Módulo", value: "module", },
-            { title: "Descripción", value: "description", },
-            { title: "Acciones", value: "actions", sortable: false, },
-        ],
-
-        editedItem: {
-            id: "",
-            role_id: "",
-            permission_id: "",
-        },
-        originalItem: {
-            id: "",
-            role_id: "",
-            permission_id: "",
-        },
-        defaultItem: {
-            id: "",
-            role_id: "",
-            permission_id: "",
-        },
-        editedIndex: -1,
-        search: "",
-        selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    }),
-    computed: {
-        formTitle() {
-            return this.editedIndex === -1 ? "Agregar Permiso" : "Editar Permiso";
-        },
+    async showAdd(){
+      this.loading=true;
+      try{
+        const result=await handleRequest({ endpoint:"permission", method:"GET" });
+        const assigned=new Set(this.rolepermissions.map((item)=>Number(item.permission_id)));
+        this.permissions=result.success ? (result.data?.permissions || []).filter((item)=>!assigned.has(Number(item.id))) : [];
+        this.resetEditor(); this.dialog=true;
+        this.$nextTick(()=>this.$refs.form?.resetValidation());
+      }catch(error){ this.showAlert("error","Ocurrió un error al cargar los permisos disponibles.",3000); }
+      finally{ this.loading=false; }
     },
-    mounted() {
-        this.role_id = this.role.id;
-        this.roleName = this.role.name;
-        this.initialize();
-    },
-    methods: {
-        async showAdd() {
-            try {
-                const result = await handleRequest({
-                    endpoint: 'permission',
-                    method: 'GET'
-                });
+    close(){ if(this.loading)return; this.dialog=false; this.resetEditor(); },
+    async save(){
+      const validation=await this.$refs.form?.validate();
+      if(!validation?.valid)return;
 
-                if (result.success) {
-                    this.permissions = result.data?.permissions.filter((permission) =>
-                        !this.rolepermissions.some((rolepermission) => rolepermission.permission_id === permission.id)
-                    ) || [];
-                } else {
-                    this.permissions = [];
-                }
-            } catch (error) {
-                this.showAlert('error', 'Ocurrió un error inesperado al cargar los datos.', 3000);
-            } finally {
-                this.dialog = true;
-            }
-        },
-        close() {
-            this.dialog = false;
-            this.$nextTick(() => {
-                this.editedItem = Object.assign({}, this.defaultItem);
-                this.originalItem = Object.assign({}, this.defaultItem);
+      const selectedIds=[...this.editedItem.permission_ids];
+      const assigned=[];
+      const failed=[];
+      this.loading=true;
+
+      try{
+        for(const permissionId of selectedIds){
+          try{
+            const result=await handleRequest({
+              endpoint:"permission-role",
+              method:"POST",
+              data:{ role_id:this.role.id, permission_id:permissionId },
             });
-            this.editedIndex = -1;
-        },
-        async initialize() {
-            try {
-                this.loading = true;
-                this.data = {};
-                this.data.role_id = this.role_id;
-                const result = await handleRequest({
-                    endpoint: "role-permissions",
-                    method: "POST",
-                    data: this.data,
-                });
 
-                if (result.success) {
-                    // Si la solicitud es exitosa, asignamos las sucursales
-                    this.rolepermissions = result.data?.permissionroles || [];
-                    this.loading = false;
-                } else {
-                    // Si no hay datos, asignamos un array vacío
-                    this.rolepermissions = [];
-                    this.loading = false;
-                }
-            } catch (error) {
-                this.loading = false;
-                // Captura de errores no controlados
-                this.showAlert(
-                    "error",
-                    "Ocurrió un error inesperado al procesar la solicitud.",
-                    3000
-                );
-            } finally {
-                this.loading = false;
-            }
-        },
-        async save() {
-            this.loading = true;
-            if (this.editedIndex === -1) {
-                this.valid = false;
-                this.data = {};
-                this.data.role_id = this.role_id;
-                this.data.permission_id = this.editedItem.permission_id;
+            if(result.success) assigned.push(permissionId);
+            else failed.push(permissionId);
+          }catch(error){
+            failed.push(permissionId);
+          }
+        }
 
-                try {
-                    const result = await handleRequest({
-                        endpoint: "permission-role",
-                        method: "POST",
-                        data: this.data,
-                    });
+        await this.initialize();
 
-                    // Manejo de la respuesta según el resultado
-                    if (result.success) {
-                        this.showAlert("success", result.message, 3000);
-                        this.initialize();
-                        this.loading = false;
-                    } else {
-                        this.showAlert("warning", result.message, 3000);
-                        this.loading = false;
-                    }
-                } catch (error) {
-                    // Este bloque captura errores inesperados fuera del manejo estándar
-                    this.showAlert(
-                        "error",
-                        "Ocurrió un error inesperado al procesar la solicitud.",
-                        3000
-                    );
-                    this.loading = false;
-                }
-            } else {
-                this.valid = false;
-                const fieldsToUpdate = ["id", "permission_id", "role_id"];
-                let updatedFields = Object.keys(this.editedItem)
-                    .filter(
-                        (key) =>
-                            fieldsToUpdate.includes(key) &&
-                            this.editedItem[key] !== this.originalItem[key]
-                    )
-                    .reduce((obj, key) => {
-                        obj[key] = this.editedItem[key];
-                        return obj;
-                    }, {});
-                if (Object.keys(updatedFields).length > 0) {
-                    updatedFields.id = this.editedItem.id;
-                    try {
-                        const result = await handleRequest({
-                            endpoint: "permission-role",
-                            method: "PUT",
-                            data: updatedFields,
-                        });
-
-                        // Manejo de la respuesta según el resultado
-                        if (result.success) {
-                            this.showAlert("success", result.message, 3000);
-                            this.initialize();
-                            this.loading = false;
-                        } else {
-                            this.showAlert("warning", result.message, 3000);
-                            this.loading = false;
-                        }
-                    } catch (error) {
-                        // Este bloque captura errores inesperados fuera del manejo estándar
-                        this.showAlert(
-                            "error",
-                            "Ocurrió un error inesperado al procesar la solicitud.",
-                            3000
-                        );
-                        this.loading = false;
-                    }
-                } else {
-                    this.showAlert("success", "No se realizaron cambios.", 3000);
-                    this.loading = false;
-                }
-            }
-            this.close();
-        },
-        async editItem(item) {
-            this.editedIndex = 1;
-            this.originalItem = Object.assign({}, item);
-            this.editedItem = Object.assign({}, item);
-            try {
-                const result = await handleRequest({
-                    endpoint: 'permission',
-                    method: 'GET'
-                });
-
-                if (result.success) {
-                    this.permissions = result.data?.permissions.filter((permission) =>
-                        !this.rolepermissions.some((rolepermission) => rolepermission.permission_id === permission.id)
-                    ) || [];
-                }
-            } catch (error) {
-                this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
-            } finally {
-                this.dialog = true;
-            }
-        },
-        deleteItem(item) {
-            this.editedIndex = 1;
-            this.editedItem.id = item.id;
-            this.dialogDelete = true;
-        },
-        closeDelete() {
-            this.dialogDelete = false;
-            this.$nextTick(() => {
-                this.editedItem = Object.assign({}, this.defaultItem);
-            });
-        },
-        async deleteItemConfirm() {
-            try {
-                let request = {
-                    id: this.editedItem.id,
-                };
-                const result = await handleRequest({
-                    endpoint: "permission-role-destroy",
-                    method: "POST",
-                    data: request,
-                });
-
-                // Manejo de la respuesta según el resultado
-                if (result.success) {
-                    this.showAlert("success", result.message, 3000);
-                    this.initialize();
-                } else {
-                    this.showAlert("warning", result.message, 3000);
-                }
-            } catch (error) {
-                // Este bloque captura errores inesperados fuera del manejo estándar
-                this.showAlert(
-                    "error",
-                    "Ocurrió un error inesperado al procesar la solicitud.",
-                    3000
-                );
-            } finally {
-                this.closeDelete();
-            }
-        },
-        showAlert(sb_type, sb_message, sb_timeout) {
-            this.sb_type = sb_type;
-
-            if (sb_type == "success") {
-                this.sb_title = "Éxito";
-                this.sb_icon = "mdi-check-circle";
-            }
-
-            if (sb_type == "error") {
-                this.sb_title = "Error";
-                this.sb_icon = "mdi-check-circle";
-            }
-
-            if (sb_type == "warning") {
-                this.sb_title = "Advertencia";
-                this.sb_icon = "mdi-alert-circle";
-            }
-            this.sb_message = sb_message;
-            this.sb_timeout = sb_timeout;
-            this.snackbar = true;
-        },
+        if(failed.length===0){
+          this.dialog=false;
+          this.showAlert("success",assigned.length===1 ? "Permiso asignado correctamente." : `${assigned.length} permisos asignados correctamente.`,3000);
+          this.resetEditor();
+        }else{
+          this.editedItem.permission_ids=failed;
+          this.permissions=this.permissions.filter((permission)=>!assigned.includes(permission.id));
+          this.showAlert("warning",`Se asignaron ${assigned.length} permisos y ${failed.length} no pudieron asignarse.`,4000);
+        }
+      }finally{
+        this.loading=false;
+      }
     },
+    deleteItem(item){ const permission=this.unwrap(item); this.editedItem={...this.defaultItem,...permission}; this.dialogDelete=true; },
+    closeDelete(){ if(!this.loading){ this.dialogDelete=false; this.resetEditor(); } },
+    async deleteItemConfirm(){
+      this.loading=true;
+      try{
+        const result=await handleRequest({ endpoint:"permission-role-destroy", method:"POST", data:{ id:this.editedItem.id } });
+        if(result.success){ this.dialogDelete=false; this.showAlert("success",result.message || "Permiso eliminado correctamente.",3000); await this.initialize(); this.resetEditor(); }
+        else this.showAlert("warning",result.message || "No fue posible quitar el permiso.",3000);
+      }catch(error){ this.showAlert("error","Ocurrió un error al quitar el permiso.",3000); }
+      finally{ this.loading=false; }
+    },
+    showAlert(type,message,timeout=3000){
+      const config={ success:{title:"Éxito",icon:"mdi-check-circle"}, error:{title:"Error",icon:"mdi-close-circle"}, warning:{title:"Advertencia",icon:"mdi-alert-circle"} }[type];
+      this.sb_type=type; this.sb_title=config.title; this.sb_icon=config.icon; this.sb_message=message; this.sb_timeout=timeout; this.snackbar=true;
+    },
+  },
 };
 </script>
+
 <style scoped>
-.two-line-clamp {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;        /* Máximo 2 líneas */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;          /* Permite saltos de línea */
-  line-height: 1.4em;           /* Ajusta según tu diseño */
-  max-height: 2.8em;            /* 2 líneas × line-height */
-}
+.permission-page{min-height:100%;color:#1e293b}.permission-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}.content-title{color:#0f172a;font-size:16px;font-weight:850}.content-subtitle{margin-top:3px;color:#64748b;font-size:11.5px;font-weight:650}.toolbar-actions{display:flex;align-items:center;gap:10px}.search-field{width:280px}.search-field :deep(.v-field){border-radius:9px;font-size:12px}.add-button,.save-button{min-height:40px;color:#fff!important;background:linear-gradient(100deg,#2454d6,#3266e4)!important;border-radius:9px!important;font-size:12px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:0 5px 12px rgba(36,84,214,.2)!important}.permission-panel{overflow:hidden;border:1px solid #e8edf5;border-radius:13px!important}.permission-table :deep(thead th){height:40px!important;color:#475569!important;font-size:10.5px!important;font-weight:850!important;background:#f8fafc!important}.permission-table :deep(tbody td){height:58px!important;color:#334155;font-size:12px;border-bottom:1px solid #eef2f6!important}.permission-name{display:flex;align-items:center;gap:9px}.permission-name>div{display:flex;flex-direction:column}.permission-name strong{font-size:12.5px}.permission-name small{color:#64748b;font-size:9.5px}.permission-icon{display:grid;width:31px;height:31px;place-items:center;color:#2454d6;background:#eef3ff;border-radius:8px}.module-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;color:#7c3aed;background:#f3efff;border-radius:7px;font-size:10.5px;font-weight:750}.description{max-width:520px;overflow:hidden;color:#475569;font-size:11.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.delete-action{color:#dc2626!important}.delete-action:hover{background:#fff1f2}.panel-note{display:flex;align-items:center;gap:6px;padding:10px 16px;color:#64748b;font-size:10.5px;font-weight:650;border-top:1px solid #edf1f5}.form-dialog,.delete-dialog{overflow:hidden;background:#fff;border-radius:14px!important}.dialog-header{display:flex;align-items:center;justify-content:space-between;padding:17px 20px}.dialog-heading{display:flex;align-items:center;gap:11px}.dialog-icon{display:grid;width:38px;height:38px;place-items:center;color:#fff;background:linear-gradient(135deg,#0e1f46,#2454d6);border-radius:10px}.dialog-heading h3,.delete-dialog h3{margin:0;color:#0f172a;font-size:16px;font-weight:850}.dialog-heading p{margin:4px 0 0;color:#64748b;font-size:11.5px}.dialog-body{padding:22px!important}.dialog-body :deep(.v-field){border-radius:9px}.dialog-actions{justify-content:flex-end;gap:9px;padding:14px 20px!important}.cancel-button{min-height:39px;color:#475569!important;font-size:12.5px;font-weight:750;text-transform:none}.save-button{min-width:140px}.delete-dialog{padding:29px 27px 24px;text-align:center}.delete-icon{display:grid;width:56px;height:56px;margin:0 auto 16px;place-items:center;color:#dc2626;background:#fff1f2;border-radius:15px}.delete-dialog p{max-width:350px;margin:10px auto 22px;color:#64748b;font-size:12.5px;line-height:1.55}.delete-dialog strong{color:#334155}.remove-button{min-height:40px;margin-left:8px;color:#fff!important;background:#dc2626!important;border-radius:9px!important;font-size:12px;font-weight:800;text-transform:none}.notice{display:flex;align-items:center;gap:10px}.notice strong{font-size:11px}.notice div div{font-size:9.5px}.option-module{color:#2454d6;font-size:10px;font-weight:750}.option-description{margin-top:2px;overflow:hidden;color:#64748b;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.permission-option{min-height:72px!important;margin:4px 6px;padding:8px 10px!important;border:1px solid transparent;border-radius:10px!important;transition:background-color .15s ease,border-color .15s ease}.permission-option:hover{background:#f5f8ff!important;border-color:#dfe7f5}.permission-option :deep(.v-list-item__prepend){margin-right:10px}.permission-option :deep(.v-list-item__content){min-width:0;overflow:visible}.option-icon{display:grid;width:34px;height:34px;place-items:center;color:#2454d6;background:#eef3ff;border-radius:8px}.option-header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.option-name{overflow:hidden;color:#172033;font-size:12.5px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.option-module{flex:0 0 auto;padding:3px 7px;color:#2454d6;background:#eef3ff;font-size:9px;font-weight:800;line-height:1;border-radius:6px}.option-description{display:-webkit-box;margin-top:5px;overflow:hidden;color:#64748b;font-size:10.5px;font-weight:600;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal}.selected-permission{display:flex;align-items:center;gap:6px;min-width:0;color:#1e293b;font-size:12.5px;font-weight:750}.selected-permission span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.selection-summary{display:flex;align-items:center;gap:6px;margin-top:-8px;padding:8px 10px;color:#2454d6;background:#eef3ff;border-radius:8px;font-size:10.5px;font-weight:750}.dialog-body :deep(.v-chip){color:#2454d6;background:#eef3ff;font-size:10.5px;font-weight:750}.dialog-body :deep(.v-field__input){row-gap:5px}
+@media(max-width:700px){.permission-toolbar{align-items:stretch;flex-direction:column}.toolbar-actions{align-items:stretch;flex-direction:column}.search-field{width:100%}.add-button{width:100%}.permission-table{overflow-x:auto}.permission-table :deep(.v-table__wrapper){min-width:760px}}
 </style>

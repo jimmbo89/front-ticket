@@ -1,240 +1,46 @@
-﻿<template>
-  <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
-    :multi-line="true" vertical v-model="snackbar">
-    <v-row>
-      <v-col md="2">
-        <v-avatar :icon="sb_icon" color="sb_type" size="40" />
-      </v-col>
-
-      <v-col md="10">
-        <h4>{{ sb_title }}</h4>
-        {{ sb_message }}
-      </v-col>
-    </v-row>
+<template>
+<div class="ticket-view sales-view">
+  <v-snackbar class="ticket-snackbar" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="10" v-model="snackbar">
+    <div class="ticket-alert-content"><v-icon :icon="sb_icon" size="22" /><div><strong>{{ sb_title }}</strong><div>{{ sb_message }}</div></div></div>
   </v-snackbar>
-
   <v-card class="busgo-page-header" elevation="0">
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
-      <v-icon>mdi-ticket</v-icon>
-    </v-avatar>
-
+    <v-avatar :color="paleteColors.primary" class="busgo-page-icon"><v-icon>mdi-point-of-sale</v-icon></v-avatar>
     <div>
-      <div class="busgo-page-title">Tickets</div>
-      <div class="busgo-page-subtitle">Gestionar tickets vendidos</div>
-    </div>
-
-    <v-spacer />
-
-    <div class="ticket-header-actions">
-      <v-btn v-if="hasPermission('view_traditional_sales_web')" :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
-        @click="showAdd()">
-        Venta Full
-      </v-btn>
-
-      <v-btn v-if="hasPermission('view_express_sales_web')" color="success" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
-        class="busgo-add-btn mr-1" @click="dialogExpressSale = true">
-        Venta Express
-      </v-btn>
+      <div class="busgo-page-title">Ventas</div>
+      <div class="busgo-page-subtitle">Venta de pasajes Full y Express</div>
     </div>
   </v-card>
-
-  <v-container fluid class="busgo-container">
-    <v-card class="busgo-card" elevation="0">
-      <div class="busgo-card-header">
-        <div>
-          <div class="busgo-card-title">
-            Listado de tickets vendidos
-          </div>
-
-          <div class="busgo-card-subtitle">
-            Consulta ventas, rutas, asientos, métodos de pago y reimpresiones.
-          </div>
-        </div>
+  <main class="sales-workspace">
+    <section class="sales-context-panel" aria-label="Configuración de venta">
+      <div class="sales-context-copy">
+        <h2>Nueva venta</h2>
+        <p>Selecciona la modalidad y comienza a emitir pasajes.</p>
       </div>
-
-      <div class="ticket-toolbar px-6 pb-4">
-        <v-autocomplete v-if="mostrarFila" :no-data-text="'No hay datos disponibles'" v-model="branch_id"
-          :items="branches" placeholder="Seleccione una sucursal" prepend-inner-icon="mdi-store" item-title="name"
-          item-value="id" variant="outlined" hide-details single-line density="compact" class="ticket-filter"
-          :rules="selectRules" @update:modelValue="initialize">
-          <template #item="{ props, item }">
-            <v-list-item v-bind="props"
-              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`" />
-          </template>
-        </v-autocomplete>
-
-        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y
-          min-width="290px">
-          <template #activator="{ props }">
-            <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar"
-              placeholder="Fecha" density="compact" variant="outlined" hide-details single-line
-              class="ticket-date-filter" />
-          </template>
-
-          <v-locale-provider locale="es">
-            <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-              :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
-              :min="new Date().toISOString().split('T')[0]" />
-          </v-locale-provider>
-        </v-menu>
-
-        <v-spacer />
-
-        <v-text-field v-model="search" density="compact" placeholder="Buscar ticket..." prepend-inner-icon="mdi-magnify"
-          variant="outlined" hide-details single-line class="ticket-search" />
+      <div class="sales-branch-control">
+        <label v-if="mostrarFila" class="sales-field-label">Sucursal de venta</label>
+        <v-autocomplete v-if="mostrarFila" v-model="branch_id" :items="branches" item-title="name" item-value="id"
+          aria-label="Sucursal de venta" placeholder="Seleccionar sucursal" prepend-inner-icon="mdi-store-outline" variant="outlined" density="compact"
+          :loading="loading" :disabled="loading" hide-details="auto" no-data-text="No hay sucursales disponibles" />
+        <div v-else class="sales-assigned-branch"><span class="sales-branch-icon"><v-icon size="21">mdi-store-outline</v-icon></span><div><span>Sucursal de venta</span><strong>{{ hasSelectedBranch ? 'Sucursal asignada' : 'Sin sucursal asignada' }}</strong></div></div>
       </div>
+    </section>
 
-      <v-data-table :headers="headers" :items="sortedTickets" :search="search"
-        :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-        loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table">
-        <template #top>
-          <div class="busgo-table-head">
-            <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')">
-              <span>Código</span>
-              <v-icon size="14">{{ ticketSortIcon('code') }}</v-icon>
-            </div>
-            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('tripName')">
-              <span>Tramos</span>
-              <v-icon size="14">{{ ticketSortIcon('tripName') }}</v-icon>
-            </div>
-            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('date')">
-              <span>Fecha</span>
-              <v-icon size="14">{{ ticketSortIcon('date') }}</v-icon>
-            </div>
-            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('schedule')">
-              <span>Horario</span>
-              <v-icon size="14">{{ ticketSortIcon('schedule') }}</v-icon>
-            </div>
-            <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')">
-              <span>Método</span>
-              <v-icon size="14">{{ ticketSortIcon('method') }}</v-icon>
-            </div>
-            <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')">
-              <span>Pasajes</span>
-              <v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon>
-            </div>
-            <div class="ticket-col-seats ticket-sortable-header" @click="toggleTicketSort('seats')">
-              <span>Asientos</span>
-              <v-icon size="14">{{ ticketSortIcon('seats') }}</v-icon>
-            </div>
-            <div class="ticket-col-price ticket-sortable-header" @click="toggleTicketSort('price')">
-              <span>Precio</span>
-              <v-icon size="14">{{ ticketSortIcon('price') }}</v-icon>
-            </div>
-            <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')">
-              <span>Total</span>
-              <v-icon size="14">{{ ticketSortIcon('total') }}</v-icon>
-            </div>
-            <div class="ticket-col-actions"></div>
-          </div>
-        </template>
-
-        <template #item="slotProps">
-          <tr>
-            <td class="pa-0 border-0">
-              <div class="busgo-row ticket-row">
-                <div class="ticket-col-code busgo-meta ticket-code-cell">
-                  <span class="ticket-code-value text-truncate">
-                    {{ slotProps.item.code || "-" }}
-                  </span>
-                </div>
-
-                <div class="ticket-col-route">
-                  <div class="ticket-route-title-row">
-                    <div class="ticket-route-main text-truncate">
-                      {{ slotProps.item.routeCode || "-" }}
-                    </div>
-
-                    <v-chip v-if="getTicketFareSegment(slotProps.item)" size="x-small" :color="paleteColors.primary"
-                      variant="tonal" class="flex-shrink-0">
-                      Tramo
-                    </v-chip>
-
-                    <v-chip
-                      size="x-small"
-                      :color="getSaleModeColor(slotProps.item)"
-                      variant="tonal"
-                      class="flex-shrink-0"
-                    >
-                      {{ getSaleModeLabel(slotProps.item) }}
-                    </v-chip>
-                  </div>
-
-                  <div class="ticket-route-meta">
-                    <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
-
-                    <span class="text-truncate">
-                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
-                    </span>
-
-                    <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-
-                    <span class="text-truncate">
-                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                    </span>
-                  </div>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="420px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Código viaje: {{ slotProps.item.code || "-" }}<br />
-                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
-                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
-                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="ticket-col-date busgo-meta">
-                  <v-icon size="16" color="primary">mdi-calendar</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.date }}</span>
-                </div>
-
-                <div class="ticket-col-schedule busgo-meta">
-                  <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.schedule }}</span>
-                </div>
-
-                <div class="ticket-col-method busgo-meta">
-                  <span class="ticket-method-chip">
-                    {{ slotProps.item.method }}
-                  </span>
-                </div>
-
-                <div class="ticket-col-quantity busgo-meta">
-                  <span>{{ slotProps.item.quantity }}</span>
-                </div>
-
-                <div class="ticket-col-seats busgo-meta">
-                  <v-icon size="16" color="primary">mdi-seat</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.seats }}</span>
-                </div>
-
-                <div class="ticket-col-price ticket-money">
-                  ${{ formatNumber(Number(slotProps.item.price)) }}
-                </div>
-
-                <div class="ticket-col-total ticket-money ticket-money-total">
-                  ${{ formatNumber(Number(slotProps.item.total)) }}
-                </div>
-
-                <div class="ticket-col-actions busgo-actions">
-                  <v-btn size="30" icon variant="tonal" :color="paleteColors.green" @click="printerItem(slotProps.item)"
-                    title="Reimprimir Ticket">
-                    <v-icon size="17">mdi-printer</v-icon>
-                  </v-btn>
-
-                  <v-btn size="30" icon variant="tonal" :color="paleteColors.error" @click="deleteItem(slotProps.item)"
-                    title="Eliminar Ticket">
-                    <v-icon size="17">mdi-delete</v-icon>
-                  </v-btn>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </v-data-table>
-    </v-card>
-  </v-container>
+    <div class="sales-modes">
+      <article v-if="hasPermission('view_traditional_sales_web')" class="sales-mode-card sales-mode-card--full">
+        <div class="sales-mode-top"><span class="sales-mode-icon"><v-icon size="29">mdi-seat-passenger</v-icon></span><span class="sales-mode-tag">Con selección de asientos</span></div>
+        <div class="sales-mode-copy"><h3>Venta Full</h3><p>Selecciona tramo, pasajeros y asientos.</p></div>
+        <div class="sales-mode-footer"><span class="sales-mode-note"><v-icon size="16">mdi-ticket-outline</v-icon>Comprobante con QR</span><v-btn class="sales-launch-button sales-launch-button--full" variant="flat" append-icon="mdi-arrow-right" :disabled="loading || !hasSelectedBranch" @click="showAdd">Iniciar venta Full</v-btn></div>
+      </article>
+      <article v-if="hasPermission('view_express_sales_web')" class="sales-mode-card sales-mode-card--express">
+        <div class="sales-mode-top"><span class="sales-mode-icon"><v-icon size="29">mdi-lightning-bolt-outline</v-icon></span><span class="sales-mode-tag">Venta rápida</span></div>
+        <div class="sales-mode-copy"><h3>Venta Express</h3><p>Registra pasajes con el flujo de venta rápida.</p></div>
+        <div class="sales-mode-footer"><span class="sales-mode-note"><v-icon size="16">mdi-ticket-outline</v-icon>Comprobante con QR</span><v-btn class="sales-launch-button sales-launch-button--express" variant="flat" append-icon="mdi-arrow-right" :disabled="loading || !hasSelectedBranch" @click="openExpressSale">Iniciar venta Express</v-btn></div>
+      </article>
+    </div>
+    <v-alert v-if="!hasPermission(['view_traditional_sales_web', 'view_express_sales_web'])" type="info" variant="tonal" class="mt-5">No tienes permisos para realizar ventas.</v-alert>
+    <v-alert v-else-if="!loading && !hasSelectedBranch" type="info" variant="tonal" class="mt-5">Selecciona una sucursal para comenzar. Si no hay sucursales disponibles, revisa tu asignación con el administrador.</v-alert>
+    <div class="sales-workspace-footnote"><v-icon size="17">mdi-information-outline</v-icon><span>Consulta y reimprime las ventas realizadas desde el reporte de Tickets.</span></div>
+  </main>
   <ExpressTicketSale
     v-model="dialogExpressSale"
     :branches="branches"
@@ -244,14 +50,9 @@
     @saved="handleExpressSaleSaved"
   />
 
-  <v-dialog
-    v-model="dialog"
-    fullscreen
-    transition="dialog-bottom-transition"
-    :persistent="Boolean(pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked)"
-  >
-    <v-form ref="form" v-model="valid" enctype="multipart/form-data">
-      <v-card class="ticket-sale-dialog-pro">
+  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" content-class="busgo-full-sale-overlay">
+    <v-form ref="form" v-model="valid" enctype="multipart/form-data" class="busgo-full-sale-form">
+      <v-card class="ticket-sale-dialog-pro busgo-full-sale" elevation="0">
 
         <!-- HEADER -->
         <div class="ticket-sale-topbar">
@@ -280,7 +81,7 @@
             Paso 2 · Pasajes y pago
           </v-chip>
 
-          <v-btn icon="mdi-close" variant="text" size="small" class="ticket-sale-close" @click="close" />
+          <v-btn icon="mdi-close" variant="text" size="small" class="ticket-sale-close" aria-label="Cerrar venta Full" @click="close" />
         </div>
 
         <!-- BODY -->
@@ -320,9 +121,9 @@
                         item-title="address" item-value="id" variant="outlined" density="comfortable" rounded="lg"
                         clearable hide-details="auto" :no-data-text="'No hay ubicaciones disponibles'"
                         @update:model-value="handleLocationSelectionChange"
-                        :menu-props="{ maxHeight: 360, maxWidth: 520 }">
+                        :menu-props="{ maxHeight: 360, maxWidth: 520, contentClass: 'busgo-full-location-menu' }">
                         <template #item="{ props, item }">
-                          <v-list-item v-bind="props" title="" class="ticket-location-option">
+                          <v-list-item v-bind="{ ...props, title: undefined, subtitle: undefined }" class="ticket-location-option">
                             <div class="ticket-location-option__title">
                               {{ getTableRowItem(item).address }}
                             </div>
@@ -341,9 +142,9 @@
                         item-title="address" item-value="id" variant="outlined" density="comfortable" rounded="lg"
                         clearable hide-details="auto" :no-data-text="'No hay ubicaciones disponibles'"
                         @update:model-value="handleLocationSelectionChange"
-                        :menu-props="{ maxHeight: 360, maxWidth: 520 }">
+                        :menu-props="{ maxHeight: 360, maxWidth: 520, contentClass: 'busgo-full-location-menu' }">
                         <template #item="{ props, item }">
-                          <v-list-item v-bind="props" title="" class="ticket-location-option">
+                          <v-list-item v-bind="{ ...props, title: undefined, subtitle: undefined }" class="ticket-location-option">
                             <div class="ticket-location-option__title">
                               {{ getTableRowItem(item).address }}
                             </div>
@@ -441,12 +242,12 @@
 
                         <div>
                           <div class="trip-sale-strong">{{ tripRow.schedule || "-" }}</div>
-
+                          
                         </div>
 
                         <div>
                           <div class="trip-sale-strong">{{ tripRow.arrival || "-" }}</div>
-
+                         
                         </div>
 
                         <div>
@@ -559,7 +360,7 @@
                 </div>
 
                 <v-row dense class="mt-4">
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="5" lg="4">
                     <div class="ticket-sale-section-card ticket-sale-fill">
                       <div class="ticket-sale-section-header">
                         <div>
@@ -615,7 +416,7 @@
                     </div>
                   </v-col>
 
-                  <v-col cols="12" md="6">
+                  <v-col cols="12" md="7" lg="6">
                     <div class="ticket-sale-section-card ticket-sale-fill">
                       <div class="ticket-sale-section-header">
                         <div>
@@ -628,12 +429,19 @@
                         </div>
                       </div>
 
-                      <div class="seat-map-shell">
+                      <div class="ticket-seat-legend"><span><i class="legend-free"></i>Disponible</span><span><i class="legend-selected"></i>Seleccionado</span><span><i class="legend-reserved"></i>Reservado</span><span><i class="legend-disabled"></i>No disponible</span></div><div class="seat-map-shell">
                         <div class="seat-map-scroll">
-                          <div class="seat-map-preview">
+                          <div class="seat-map-preview ticket-structure-bus">
+                            <div class="ticket-structure-windshield" aria-hidden="true"></div>
+                            <i class="ticket-structure-wheel front-top" aria-hidden="true"></i>
+                            <i class="ticket-structure-wheel front-bottom" aria-hidden="true"></i>
+                            <i class="ticket-structure-wheel rear-top" aria-hidden="true"></i>
+                            <i class="ticket-structure-wheel rear-bottom" aria-hidden="true"></i>
+                            <div class="ticket-structure-front"><div><v-icon size="25">mdi-steering</v-icon></div><span>Frente</span></div>
+                            <div class="ticket-structure-grid">
                             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
                               <template v-for="(seat, seatIndex) in row" :key="seatIndex">
-                                <div v-if="seat.type" :class="[
+                                <div :class="[
                                   'seat-container',
                                   {
                                     'seat-available': isSeatAvailable(seat),
@@ -647,10 +455,8 @@
                                       !selectedSeats.includes(Number(seat.label)),
                                     'seat-aisle': seat.type === 'aisle'
                                   }
-                                ]" @click="toggleSeat(seat)">
-                                  <v-icon v-if="seat.type === 'seat'" class="seat-icon" size="44">
-                                    mdi-seat
-                                  </v-icon>
+                                ]" @click="seat.type && toggleSeat(seat)">
+                                  <v-icon v-if="seat.type === 'seat'" size="46" class="ticket-structure-seat">mdi-car-seat</v-icon>
 
                                   <v-icon v-else-if="seat.type === 'aisle'" class="aisle-icon" size="44">
                                     mdi-minus
@@ -664,6 +470,7 @@
                                 </div>
                               </template>
                             </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -674,7 +481,7 @@
                     </div>
                   </v-col>
 
-                  <v-col cols="12" md="2">
+                  <v-col cols="12" lg="2">
                     <div class="ticket-sale-section-card ticket-sale-fill ticket-payment-panel">
                       <div class="ticket-sale-section-header ticket-payment-header">
                         <div>
@@ -692,7 +499,7 @@
                           :class="[
                             getCardClass(method),
                             { 'payment-method-disabled': method.disabled }
-                          ]" @click="!method.disabled && !pendingPaymentKey && !pendingPaymentStartPayload && !paymentSubmissionBlocked && (editedItem.method = method.value)">
+                          ]" @click="!method.disabled && (editedItem.method = method.value)">
                           <v-card-text class="payment-method-content-pro">
                             <v-icon size="24" :color="getMethodColor(method.value)">
                               {{ method.icon }}
@@ -709,32 +516,13 @@
                         <span>Total</span>
                         <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
                       </div>
-
-                      <div
-                        v-if="(pendingPaymentKey && !paymentStatusQuerying) || (pendingPaymentStartPayload && !loading)"
-                        class="d-flex justify-end mt-2"
-                      >
-                        <v-btn
-                          v-if="pendingPaymentKey && !paymentStatusQuerying"
-                          size="small"
-                          variant="text"
-                          :disabled="loading"
-                          @click="retryPendingPaymentStatus"
-                        >Consultar estado</v-btn>
-                        <v-btn
-                          v-if="pendingPaymentStartPayload && !loading"
-                          size="small"
-                          variant="text"
-                          @click="retryCardPaymentStart"
-                        >Reintentar envío</v-btn>
-                      </div>
                     </div>
                   </v-col>
                 </v-row>
 
                 <div class="ticket-sale-footer-actions">
                   <v-btn class="ticket-sale-btn-secondary" variant="flat" prepend-icon="mdi-arrow-left"
-                    @click="prevStep" :disabled="Boolean(pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked)">
+                    @click="prevStep">
                     Volver
                   </v-btn>
 
@@ -743,7 +531,7 @@
                   <v-btn class="ticket-sale-btn-primary" variant="flat" prepend-icon="mdi-content-save-outline"
                     @click="save" :disabled="!valid ||
                       Number(selectedSeats.length) !== Number(editedItem.quantity) ||
-                      !editedItem.method || pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked
+                      !editedItem.method
                       " :loading="loading">
                     Guardar venta
                   </v-btn>
@@ -756,67 +544,14 @@
     </v-form>
   </v-dialog>
 
-  <v-dialog v-model="paymentRecoveryDialog" max-width="500" persistent>
-    <v-card class="busgo-dialog-card">
-      <v-card-title>Pago con tarjeta pendiente</v-card-title>
-      <v-card-text>
-        <v-alert :type="paymentStatusType" variant="tonal" density="compact">
-          {{ paymentStatusMessage }}
-        </v-alert>
-        <div v-if="pendingPaymentMethod" class="mt-3">Método: {{ pendingPaymentMethod }}</div>
-        <div v-if="pendingPaymentAmount !== null" class="mt-1">
-          Total: {{ formatNumber(Number(pendingPaymentAmount)) }} CLP
-        </div>
-      </v-card-text>
-      <v-card-actions class="busgo-dialog-actions">
-        <v-spacer />
-        <v-btn
-          v-if="pendingPaymentKey && !paymentStatusQuerying"
-          color="primary"
-          variant="flat"
-          :disabled="loading"
-          @click="retryPendingPaymentStatus"
-        >Consultar estado</v-btn>
-        <v-btn
-          v-if="pendingPaymentStartPayload && !loading"
-          color="primary"
-          variant="flat"
-          @click="retryCardPaymentStart"
-        >Reintentar misma solicitud</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <v-dialog v-model="dialogDelete" max-width="500px">
-    <v-card class="busgo-dialog-card">
-      <v-toolbar :color="paleteColors.error">
-        <span class="text-subtitle-2 ml-4">
-          Eliminar un Ticket
-        </span>
-      </v-toolbar>
-
-      <v-card-text class="mt-2 mb-2">
-        ¿Desea eliminar el ticket seleccionado?
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="busgo-dialog-actions">
-        <v-spacer />
-
-        <v-btn :color="paleteColors.gris" variant="flat" @click="closeDelete">
-          Cancelar
-        </v-btn>
-
-        <v-btn :color="paleteColors.error" variant="flat" @click="deleteItemConfirm" :loading="loading">
-          Aceptar
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
   <v-dialog v-model="showTicketDialog" max-width="500" persistent>
-    <v-card class="ticket-print-card">
+    <v-card class="ticket-preview-dialog ticket-print-card">
+      <div class="ticket-confirm-heading">
+        <span class="ticket-confirm-icon ticket-confirm-icon--preview"><v-icon size="22">mdi-ticket-confirmation-outline</v-icon></span>
+        <div><strong>Vista previa del ticket</strong><span>Revisa el comprobante antes de imprimir</span></div>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" size="small" aria-label="Cerrar vista previa" @click="showTicketDialog = false" />
+      </div>
       <v-card-title class="ticket-print-header">
         <div class="d-flex flex-column align-center" style="width: 100%">
           <div v-if="ticketCompanyImage" class="ticket-branch-logo-preview mb-3">
@@ -981,26 +716,20 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+</div>
 </template>
 
+
 <script>
-import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
 import LocalStorageService from "@/LocalStorageService";
-import { handleRequest } from "@/utils/api"; // Ruta al archivo
-import _ from "lodash";
+import { handleRequest } from "@/utils/api";
 import { paleteColors } from "@/assets/colors";
 import QRCode from "qrcode";
-
-const CARD_PAYMENT_DEVICE = "TJ44243320217";
-const PAYMENT_STATUS_POLL_INTERVAL_MS = 2000;
-const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
-
+import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
 export default {
-  components: {
-    ExpressTicketSale,
-  },
-  data: () => ({
-    snackbar: false,
+  name: 'SalesView',
+  components: { ExpressTicketSale },
+  data: () => ({ snackbar: false,
     sb_type: "",
     sb_message: "",
     sb_timeout: 2000,
@@ -1009,12 +738,10 @@ export default {
     paleteColors: paleteColors,
     valid: true,
     loading: false,
-    mostrar: false,
     mostrarFila: false,
     permissions: "",
     dialog: false,
     dialogExpressSale: false,
-    dialogDelete: false,
     branch_id: "",
     seatError: null,
     currentlyEditing: null,
@@ -1024,64 +751,22 @@ export default {
     selectedDestinationLocationId: null,
     tripSearchLoading: false,
     tripSearchText: "",
-    routes: [],
-    vehicles: [],
-    workers: [],
-    tickets: [],
     promotions: [],
     tickettypes: [],
     currentTicket: {},
-    nameBranch: "",
-    imageBranch: "",
     nameUser: "",
     selectedBranch: {},
     data: {},
-    hasStartedSelecting: false,
-    seats: 0, // Ejemplo de asientos disponibles
-    selectedSeats: [], // AquÃ­ se almacenan los asientos seleccionados
+    seats: 0,
+    selectedSeats: [],
     reservedSeats: [],
     availableSeats: [],
     availableSeatNumbers: [],
     aviable: "",
     branches: [],
-    showSeatsMenu: false,
     showTicketDialog: false,
-    pendingPaymentKey: "",
-    pendingPaymentStartPayload: null,
-    paymentSubmissionBlocked: false,
-    paymentRecoveryDialog: false,
-    pendingPaymentAmount: null,
-    pendingPaymentMethod: "",
-    paymentStatusMessage: "",
-    paymentStatusType: "info",
-    paymentStatusQuerying: false,
     step: 1,
     items: ["Trayecto", "Venta"],
-    tripSearchHeaders: [
-      { title: "Ruta", key: "routeCode" },
-      { title: "Salida", key: "schedule" },
-      { title: "Llegada", key: "arrival" },
-      { title: "Vehículo", key: "plate" },
-      { title: "Precio", key: "price" },
-      { title: "Acciones", key: "actions", sortable: false, width: "120px" },
-    ],
-    headers: [
-      { title: "Código", key: "code" },
-      { title: "Ruta", key: "routeCode" },
-      { title: "Origen", key: "tripOrigin" },
-      { title: "Destino", key: "tripDestination" },
-      { title: "Fecha", key: "date" },
-      { title: "Horario", key: "schedule" },
-      { title: "Metodo", key: "method" },
-      { title: "Pasajes", key: "quantity" },
-      //{ title: "Adultos", key: "adults", },
-      //{ title: "Menores", key: "minors", },
-      { title: "Asientos", key: "seats" },
-      { title: "Precio", key: "price" },
-      { title: "Total", key: "total" },
-      { title: "Acciones", key: "actions", sortable: false, width: "15%" },
-    ],
-
     editedItem: {
       id: "",
       trip_id: "",
@@ -1142,47 +827,21 @@ export default {
         text: "Crédito",
         value: "Credito",
         icon: "mdi-credit-card-outline",
+        disabled: true,
       },
-      { text: "Débito", value: "Debito", icon: "mdi-bank-outline" },
+      { text: "Débito", value: "Debito", icon: "mdi-bank-outline", disabled: true },
     ],
     editedIndex: -1,
-    search: "",
     menu: false,
-    menu2: false,
-    input: null,
-    input2: null,
-    tab: null,
-    route: "",
     seatMap: [],
-    appliedPromotions: [],
-    selectedPromotionAdults: null,
-    selectedPromotionMinors: null,
     selectedPromotion: null,
-    showPromotion: false,
-    showPromotionAdults: false,
-    showPromotionMinors: false,
     normal: "",
-    nameRules: [
-      (v) => !!v || "El campo es requerido",
-      (v) => (v && v.length <= 50) || "El campo debe tener menos de 51 caracteres",
-      (v) => (v && v.length >= 3) || "El campo debe tener al menos de 3 caracteres",
-    ],
-    selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
-    //prueba borrar
-    fareSegmentRules: [(v) => !!v || "Seleccione un tramo"],
-    currentPage: 1, // Página actual
-    itemsPerPage: 6, // Elementos por página
     quantityErrors: {},
     isRecalculatingTickettypes: false,
-    ticketSortBy: "date",
-    ticketSortOrder: "desc",
     tripSaleSortBy: "schedule",
     tripSaleSortOrder: "asc",
-  }),
-  computed: {
-    formTitle() {
-      return this.editedIndex === -1 ? "Venta de Ticket" : "Editar Ticket";
-    },
+    role: null }),
+  computed: { formTitle() { return "Venta Full"; },
     ticketCompanyImage() {
       return (
         this.getLocalStorageValue("imageBusiness") ||
@@ -1201,59 +860,6 @@ export default {
         this.selectedBranch?.name ||
         "Empresa"
       );
-    },
-    dateFormatted() {
-      const date = this.input ? new Date(this.input) : new Date();
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${year}-${month}-${day}`;
-    },
-    getDate() {
-      return this.input ? new Date(this.input) : new Date();
-    },
-    dateFormattedSearch() {
-      const date = this.input2 ? new Date(this.input2) : new Date();
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${year}-${month}-${day}`;
-    },
-    getDateSearch() {
-      return this.input2 ? new Date(this.input2) : new Date();
-    },
-    evenSeats() {
-      return this.availableSeats.filter((seat, index) => index % 2 === 0);
-    },
-    oddSeat() {
-      return this.availableSeats.length % 2 !== 0
-        ? this.availableSeats[this.availableSeats.length - 1]
-        : null;
-    },
-    quantityAndPassengerRules() {
-      return [
-        () => {
-          // Calcular la cantidad actual sumando todos los tickets
-          const currentQuantity =
-            this.editedItem.tickettypes?.reduce(
-              (sum, t) => sum + (Number(t.cant ?? t.quantity) || 0),
-              0
-            ) || 0;
-          const availableSeats = this.availableSeats.length;
-
-          // ValidaciÃ³n 1: Debe haber al menos un pasaje
-          if (currentQuantity <= 0) {
-            return "Debe haber al menos un pasaje seleccionado.";
-          }
-
-          // ValidaciÃ³n 2: La suma total no puede superar los asientos disponibles
-          if (currentQuantity > availableSeats) {
-            return `La cantidad total de pasajes (${currentQuantity}) no puede ser mayor a los asientos disponibles (${availableSeats}).`;
-          }
-
-          return true;
-        },
-      ];
     },
     mergedTicketTypes() {
       const editedTickets = this.normalizeEditedTickettypes();
@@ -1298,17 +904,6 @@ export default {
     selectedFareSegmentRecord() {
       return this.getSelectedFareSegmentRecord();
     },
-    tripHasStarted() {
-      return this.isTripStarted(this.selectedTripRecord);
-    },
-    fareSegmentOptions() {
-      const trip = this.selectedTripRecord;
-      if (!trip) {
-        return [];
-      }
-
-      return this.getFareSegmentOptions(trip);
-    },
     originLocationOptions() {
       return (Array.isArray(this.locations) ? this.locations : []).filter(
         (location) => Number(location.id) !== Number(this.selectedDestinationLocationId)
@@ -1321,11 +916,6 @@ export default {
     },
     tripSaleRows() {
       return this.buildTripSaleRows(this.trips);
-    },
-    sortedTickets() {
-      return this.sortRows(this.tickets, this.ticketSortBy, this.ticketSortOrder, (row, field) =>
-        this.getTicketSortValue(row, field)
-      );
     },
     filteredTripSaleRows() {
       const query = (this.tripSearchText || "").toString().trim().toLowerCase();
@@ -1355,7 +945,7 @@ export default {
         (row, field) => this.getTripSaleSortValue(row, field)
       );
     },
-  },
+    hasSelectedBranch() { return Number(this.branch_id) > 0; } },
   watch: {
     selectedSeats(newValue) {
       if (typeof newValue === "string") {
@@ -1381,12 +971,10 @@ export default {
       this.mostrarFila = true;
     } else {
       this.branch_id = LocalStorageService.getItem("branch_id");
-      this.initialize();
+      
     }
-    this.restorePendingCardPayment();
   },
-  methods: {
-    getLocalStorageValue(key) {
+  methods: { getLocalStorageValue(key) {
       const value = LocalStorageService.getItem(key);
 
       if (value === null || value === undefined || value === "") {
@@ -1400,20 +988,13 @@ export default {
       }
     },
     hasPermission(requiredPermissions) {
-      // Si es un string, lo convertimos a array
-      const perms = Array.isArray(requiredPermissions)
-        ? requiredPermissions
-        : [requiredPermissions];
-
-      // Retorna true si al menos uno coincide
-      return perms.some((p) => this.permissions.includes(p));
-    },
-    getCacheTimestamp() {
-      // Usamos medianoche (00:00:00) del dÃ­a actual
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al dÃ­a)
-    },
+    const requested = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
+    let permissions = this.permissions || [];
+    if (typeof permissions === 'string') {
+      try { permissions = JSON.parse(permissions); } catch { permissions = permissions.split(',').map(value => value.trim()); }
+    }
+    return Array.isArray(permissions) && requested.some(permission => permissions.includes(permission));
+  },
     getTripInternalNumber(trip) {
       return trip?.internal_number ?? trip?.internalNumber ?? "No asignado";
     },
@@ -1450,28 +1031,12 @@ export default {
           }) * direction;
       });
     },
-    ticketSortIcon(field) {
-      if (this.ticketSortBy !== field) {
-        return "mdi-swap-vertical";
-      }
-
-      return this.ticketSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
-    },
     tripSaleSortIcon(field) {
       if (this.tripSaleSortBy !== field) {
         return "mdi-swap-vertical";
       }
 
       return this.tripSaleSortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
-    },
-    toggleTicketSort(field) {
-      if (this.ticketSortBy === field) {
-        this.ticketSortOrder = this.ticketSortOrder === "asc" ? "desc" : "asc";
-        return;
-      }
-
-      this.ticketSortBy = field;
-      this.ticketSortOrder = "asc";
     },
     toggleTripSaleSort(field) {
       if (this.tripSaleSortBy === field) {
@@ -1481,30 +1046,6 @@ export default {
 
       this.tripSaleSortBy = field;
       this.tripSaleSortOrder = "asc";
-    },
-    getTicketSortValue(row, field) {
-      switch (field) {
-        case "code":
-          return row?.code ?? "";
-        case "tripName":
-          return row?.tripName ?? "";
-        case "date":
-          return row?.date ?? "";
-        case "schedule":
-          return row?.schedule ?? "";
-        case "method":
-          return row?.method ?? "";
-        case "quantity":
-          return Number(row?.quantity ?? 0);
-        case "seats":
-          return Number(row?.seats ?? 0);
-        case "price":
-          return Number(row?.price ?? 0);
-        case "total":
-          return Number(row?.total ?? 0);
-        default:
-          return row?.[field] ?? "";
-      }
     },
     getTripSaleSortValue(row, field) {
       switch (field) {
@@ -1567,25 +1108,6 @@ export default {
 
       return rows;
     },
-    getTicketFareSegment(ticket) {
-      const directSegment =
-        ticket?.fareSegment ?? ticket?.fare_segment ?? ticket?.fareSegmentData ?? null;
-      if (directSegment) {
-        return directSegment;
-      }
-
-      const ticketItems = Array.isArray(ticket?.ticketItems) ? ticket.ticketItems : [];
-      const firstItem = ticketItems[0] || null;
-      const tripFare = firstItem?.tripFare || null;
-
-      return (
-        tripFare?.fareSegment ??
-        tripFare?.fareSegmentTicketType?.fareSegment ??
-        tripFare?.fare_segment?.fareSegment ??
-        tripFare?.fareSegmentData ??
-        null
-      );
-    },
     getFareSegmentRouteStopLabel(routeStop) {
       if (!routeStop) {
         return "No especificado";
@@ -1607,39 +1129,13 @@ export default {
     getRouteStopLabel(routeStop) {
       return this.getFareSegmentRouteStopLabel(routeStop);
     },
-    getTicketRouteOriginLabel(ticket) {
-      const fareSegment = this.getTicketFareSegment(ticket);
-      if (fareSegment) {
-        return this.getFareSegmentRouteStopLabel(
-          fareSegment.originRouteStop ??
-          fareSegment.origin_route_stop ??
-          fareSegment.originStop ??
-          fareSegment.origin
-        );
-      }
-
-      return ticket?.tripOrigin ?? ticket?.origin ?? "No especificado";
-    },
-    getTicketRouteDestinationLabel(ticket) {
-      const fareSegment = this.getTicketFareSegment(ticket);
-      if (fareSegment) {
-        return this.getFareSegmentRouteStopLabel(
-          fareSegment.destinationRouteStop ??
-          fareSegment.destination_route_stop ??
-          fareSegment.destinationStop ??
-          fareSegment.destination
-        );
-      }
-
-      return ticket?.tripDestination ?? ticket?.destination ?? "No especificado";
-    },
     getSaleModeLabel(ticket = {}) {
       const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
       return saleMode === "express" ? "Express" : "Full";
     },
     getSaleModeColor(ticket = {}) {
       const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "success" : "primary";
+      return saleMode === "express" ? "secondary" : "primary";
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -1688,39 +1184,12 @@ export default {
         ) || null
       );
     },
-    normalizeLocationText(value) {
-      return String(value || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim()
-        .toLowerCase();
-    },
     getLocationSubtitle(location) {
       if (!location) {
         return "";
       }
 
       return [location.city, location.country].filter(Boolean).join(" · ") || "Ubicación";
-    },
-    findLocationIdByText(value) {
-      const normalizedValue = this.normalizeLocationText(value);
-      if (!normalizedValue) {
-        return null;
-      }
-
-      const match = (this.locations || []).find((location) => {
-        const candidates = [
-          location.address,
-          location.name,
-          location.city,
-          location.country,
-        ];
-        return candidates.some(
-          (candidate) => this.normalizeLocationText(candidate) === normalizedValue
-        );
-      });
-
-      return match?.id ?? null;
     },
     resetTripSelectionState(keepLocations = true) {
       this.editedItem.trip_id = "";
@@ -2346,26 +1815,6 @@ export default {
           return Number(a.id) - Number(b.id);
         });
     },
-    isTripStarted(trip = this.selectedTripRecord) {
-      if (!trip?.date || !trip?.schedule) {
-        return false;
-      }
-
-      const tripDate = String(trip.date).split("T")[0];
-      const currentDate = this.getChileDate();
-
-      if (tripDate < currentDate) {
-        return true;
-      }
-
-      if (tripDate > currentDate) {
-        return false;
-      }
-
-      const currentMinutes = this.timeToMinutes(this.obtenerHoraChile());
-      const scheduleMinutes = this.timeToMinutes(String(trip.schedule).slice(0, 5));
-      return scheduleMinutes <= currentMinutes;
-    },
     normalizeSeatNumbers(seats = []) {
       return (Array.isArray(seats) ? seats : [])
         .map((seat) => Number(seat?.label ?? seat?.seat ?? seat?.number ?? seat))
@@ -2626,33 +2075,6 @@ export default {
     getSelectedTripBasePrice() {
       return Number(this.editedItem.price) || 0;
     },
-    getPromotionAdjustment(ticket, promotion, basePrice = null) {
-      const unitPrice =
-        Number(
-          ticket.unit_price ??
-          ticket.unitPrice ??
-          basePrice ??
-          this.getSelectedTripBasePrice()
-        ) || 0;
-      const cant = Math.max(0, Number(ticket.cant) || 0);
-      const discountType = this.getPromotionDiscountType(promotion);
-      const percentage = Number(promotion?.percentage) || 0;
-      const discountPerUnit =
-        discountType === "porcentaje" ? (unitPrice * percentage) / 100 : percentage;
-      const discount = discountPerUnit * cant;
-
-      return {
-        promotion_discount_type: discountType,
-        promotionDiscountType: discountType,
-        promotion_base_price: unitPrice,
-        promotionBasePrice: unitPrice,
-        promotion_unit_discount: discountPerUnit,
-        promotionUnitDiscount: discountPerUnit,
-        promotion_discount: discount,
-        promotionDiscount: discount,
-        percentage,
-      };
-    },
     normalizePromotions(promotions = []) {
       return (Array.isArray(promotions)
         ? promotions
@@ -2661,32 +2083,6 @@ export default {
         ...promotion,
         discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
       }));
-    },
-    getPromotionDiscountType(promotion) {
-      return (
-        promotion?.discount_type ??
-        promotion?.discountType ??
-        promotion?.promotion_discount_type ??
-        promotion?.promotionDiscountType ??
-        promotion?.promotion_details?.discount_type ??
-        promotion?.promotion_details?.discountType ??
-        promotion?.promotionDetails?.discount_type ??
-        promotion?.promotionDetails?.discountType ??
-        "monto"
-      );
-    },
-    getPromotionDiscountIcon(promotion) {
-      return this.getPromotionDiscountType(promotion) === "porcentaje"
-        ? "mdi-percent"
-        : "mdi-cash-minus";
-    },
-    formatPromotionDiscount(promotion) {
-      const discountType = this.getPromotionDiscountType(promotion);
-      const value = Number(promotion?.percentage) || 0;
-      const formattedValue = value.toLocaleString("es-CL");
-      return discountType === "porcentaje"
-        ? `${formattedValue}%`
-        : `${formattedValue} CLP`;
     },
     getTicketTypePayableAmount(ticket) {
       const cant = Math.max(0, Number(ticket?.cant) || 0);
@@ -2701,55 +2097,21 @@ export default {
       );
     },
     async showBranches() {
-      try {
-        const result = await handleRequest({
-          endpoint: "branch",
-          method: "GET",
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.branches = result.data?.branches || [];
-          this.editedItem.branch_id = this.branches[0].id;
-          this.branch_id = this.branches[0].id;
-        } else {
-          this.mostrarFila = false;
-          // Si no hay datos, asignamos un array vacÃ­o
-          this.branches = [];
-        }
-      } catch (error) {
-        this.mostrarFila = false;
-        // Captura de errores no controlados
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.mostrarFila = true;
-        this.loading = false;
-        this.initialize();
-      }
-    },
-    getSeatColor(seat) {
-      if (!seat.label) return this.paleteColors.gris; // Para elementos sin label
-
-      const seatNumber = Number(seat.label);
-
-      if (this.isSeatReserved(seatNumber)) {
-        return this.paleteColors.error; // Asiento reservado (rojo)
-      }
-      if (this.selectedSeats.includes(seatNumber)) {
-        return this.paleteColors.primary; // Asiento seleccionado (azul)
-      }
-      if (seat.type === "aisle") {
-        return this.paleteColors.gris; // Pasillo (gris)
-      }
-      if (!this.isSeatAvailable(seat)) {
-        return this.paleteColors.gris; // Asiento deshabilitado
-      }
-      return this.paleteColors.green; // Asiento disponible (verde)
-    },
+    this.loading = true;
+    try {
+      const result = await handleRequest({ endpoint: 'branch', method: 'GET' });
+      this.branches = result.success && Array.isArray(result.data?.branches) ? result.data.branches : [];
+      this.branch_id = this.branches[0]?.id ?? '';
+      if (!result.success) this.showAlert('warning', result.message || 'No se pudieron cargar las sucursales.', 3000);
+    } catch (error) {
+      this.branches = [];
+      this.branch_id = '';
+      this.showAlert('error', 'No se pudieron cargar las sucursales.', 3000);
+    } finally {
+      this.loading = false;
+    }
+    
+  },
     isSeatAvailable(seat) {
       return (
         seat.type === "seat" &&
@@ -2813,34 +2175,6 @@ export default {
 
       this.recalculateTicketTotals();
     },
-    updateFareSegment(fareSegmentId) {
-      this.editedItem.fare_segment_id = fareSegmentId || null;
-      this.editedItem.tickettypes = [];
-      const selectedTrip = this.selectedTripRecord;
-      if (!selectedTrip) {
-        this.editedItem.price = 0;
-        this.editedItem.tickettypes = [];
-        return;
-      }
-
-      const selectedFareSegment = this.selectedFareSegmentRecord;
-      this.editedItem.price = 0;
-      this.selectedSeats = [];
-      const fareAvailability = this.getTripFareAvailabilityForSegment(
-        selectedTrip,
-        selectedFareSegment
-      );
-      this.availableSeatNumbers = [...fareAvailability.availableSeatNumbers];
-      this.reservedSeats = this.getReservedSeatNumbersForSegment(
-        selectedTrip,
-        selectedFareSegment
-      );
-      this.availableSeats = this.availableSeatNumbers.length
-        ? [...this.availableSeatNumbers]
-        : this.generateAvailableSeats(this.seatMap, this.reservedSeats);
-      this.aviable = this.availableSeats.length;
-      this.recalculateTicketTotals();
-    },
     generateAvailableSeats(seatMap, reservedSeats) {
       if (Array.isArray(this.availableSeatNumbers) && this.availableSeatNumbers.length) {
         return [...new Set(this.availableSeatNumbers.map(Number))];
@@ -2889,33 +2223,6 @@ export default {
 
       // Forzar actualizaciÃ³n si es necesario
       this.$forceUpdate();
-    },
-    calculateTotal() {
-      this.recalculateTicketTotals();
-    },
-
-    updateDate(val) {
-      this.input = val;
-      this.editedItem.date = this.dateFormatted;
-      this.menu = false;
-    },
-    updateDateSearch(val) {
-      this.input2 = val;
-      //this.editedItem.date = this.dateFormatted;
-      this.menu2 = false;
-      this.initialize();
-    },
-    obtenerHoraChile() {
-      return new Date().toLocaleTimeString("en-GB", {
-        timeZone: "America/Santiago",
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
-    timeToMinutes(timeStr) {
-      const [h, m] = timeStr.split(":").map(Number);
-      return h * 60 + m;
     },
     getChileDateTime() {
       return new Intl.DateTimeFormat("sv-SE", {
@@ -2979,6 +2286,7 @@ export default {
       });
     },
     async showAdd() {
+      if (!this.hasPermission('view_traditional_sales_web') || !this.hasSelectedBranch) return;
       this.close();
       await this.$nextTick();
       this.step = 1;
@@ -3019,53 +2327,6 @@ export default {
       this.seatMap = [];
       this.aviable = 0;
     },
-    async initialize() {
-      if (this.branch_id === "null") {
-        this.tickets = [];
-        this.loading = false;
-        return;
-      }
-      try {
-        this.loading = true;
-        this.data = {};
-        const today = new Date();
-        const formattedDate = today
-          .toLocaleDateString("es-CL", {
-            timeZone: "America/Santiago",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          })
-          .split("-")
-          .reverse()
-          .join("-"); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
-        this.data.date = this.dateFormattedSearch;
-        this.data.branch_id = Number(this.branch_id);
-        const result = await handleRequest({
-          endpoint: "get-tickets-date",
-          method: "POST",
-          data: this.data,
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.tickets = result.data?.tickets || [];
-        } else {
-          // Si no hay datos, asignamos un array vacÃ­o
-          this.tickets = [];
-        }
-      } catch (error) {
-        this.loading = false;
-        // Captura de errores no controlados
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.loading = false;
-      }
-    },
     areSeatsDifferent(originalSeats, editedSeats) {
       // Convertir ambos arrays en cadenas de texto para una comparaciÃ³n profunda
       const originalSeatsString = JSON.stringify(originalSeats);
@@ -3103,314 +2364,13 @@ export default {
         JSON.stringify(normalize(editedItems))
       );
     },
-    isCardPaymentMethod(method) {
-      return method === "Credito" || method === "Debito";
-    },
-    getTicketWebResponseMessage(responseData, fallback) {
-      const message = [responseData?.message, responseData?.msg].find(
-        (value) => typeof value === "string" && value.trim()
-      );
-      return message || fallback;
-    },
-    persistPendingCardPayment() {
-      try {
-        if (
-          !this.pendingPaymentKey &&
-          !this.pendingPaymentStartPayload &&
-          !this.paymentSubmissionBlocked
-        ) {
-          sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
-          return;
-        }
-
-        sessionStorage.setItem(
-          PENDING_CARD_PAYMENT_STORAGE_KEY,
-          JSON.stringify({
-            idempotencyKey: this.pendingPaymentKey || null,
-            requestPayload: this.pendingPaymentStartPayload,
-            blocked: this.paymentSubmissionBlocked,
-            amount: this.pendingPaymentAmount,
-            method: this.pendingPaymentMethod,
-            message: this.paymentStatusMessage,
-            messageType: this.paymentStatusType,
-          })
-        );
-      } catch (error) {
-        console.error("No se pudo guardar el estado del pago pendiente.", error);
-      }
-    },
-    clearPendingCardPayment() {
-      try {
-        sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
-      } catch (error) {
-        console.error("No se pudo limpiar el estado del pago pendiente.", error);
-      }
-
-      this.pendingPaymentKey = "";
-      this.pendingPaymentStartPayload = null;
-      this.paymentSubmissionBlocked = false;
-      this.paymentRecoveryDialog = false;
-      this.pendingPaymentAmount = null;
-      this.pendingPaymentMethod = "";
-    },
-    restorePendingCardPayment() {
-      let savedPayment;
-      try {
-        savedPayment = JSON.parse(
-          sessionStorage.getItem(PENDING_CARD_PAYMENT_STORAGE_KEY) || "null"
-        );
-      } catch (error) {
-        console.error("No se pudo leer el estado del pago pendiente.", error);
-        sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
-        return;
-      }
-
-      if (!savedPayment) {
-        return;
-      }
-
-      this.pendingPaymentKey = savedPayment.idempotencyKey || "";
-      this.pendingPaymentStartPayload = savedPayment.requestPayload || null;
-      this.paymentSubmissionBlocked = Boolean(savedPayment.blocked);
-      this.pendingPaymentAmount = savedPayment.amount ?? null;
-      this.pendingPaymentMethod = savedPayment.method || "";
-      this.paymentStatusMessage =
-        savedPayment.message || "Se recuperó una operación pendiente; verificando su estado.";
-      this.paymentStatusType = savedPayment.messageType || "info";
-      this.paymentRecoveryDialog = true;
-
-      if (this.pendingPaymentKey) {
-        this.paymentStatusMessage = "Pago pendiente recuperado. Consultando el mismo estado de pago.";
-        this.pollPendingPaymentStatus();
-      } else if (this.pendingPaymentStartPayload) {
-        this.paymentStatusMessage = "La solicitud quedó pendiente de confirmación. Reintenta usando el mismo cuerpo guardado.";
-      } else if (this.paymentSubmissionBlocked) {
-        this.paymentStatusMessage = savedPayment.message || "No se puede reenviar esta venta de forma segura. Contacta soporte.";
-      } else {
-        this.clearPendingCardPayment();
-      }
-    },
-    async showGeneratedTicket(ticket) {
-      this.currentTicket = ticket;
-      this.showTicketDialog = true;
-      this.selectedBranch =
-        this.branches.find((branch) => branch.id === ticket.branch_id) || null;
-      await this.$nextTick();
-      await this.generateQRCode();
-    },
-    async completeCardTicket(ticket, message = "El pago fue confirmado y el ticket está emitido.") {
-      this.clearPendingCardPayment();
-      this.paymentStatusMessage = "";
-      this.paymentStatusType = "info";
-      await this.showGeneratedTicket(ticket);
-      this.showAlert("success", message, 3000);
-      this.branch_id = this.editedItem.branch_id || ticket.branch_id || this.branch_id;
-      this.initialize();
-      this.close();
-    },
-    getCardPaymentErrorMessage(result = {}) {
-      const backendMessage = [
-        result.data?.message,
-        result.data?.msg,
-        result.data?.payment?.message,
-      ].find((message) => typeof message === "string" && message.trim());
-      if (backendMessage) {
-        return backendMessage;
-      }
-
-      if (result.status === 402) {
-        if (
-          typeof result.message === "string" &&
-          result.message.trim() &&
-          result.message !== `Error inesperado: ${result.status}`
-        ) {
-          return result.message;
-        }
-
-        const providerStatus = String(result.data?.payment?.providerStatus || "").toLowerCase();
-        if (providerStatus === "failed") {
-          return "TUU confirmó que el pago fue rechazado. No se emitió el ticket.";
-        }
-        if (providerStatus === "canceled" || providerStatus === "cancelled") {
-          return "TUU confirmó que el pago fue cancelado. No se emitió el ticket.";
-        }
-        return "No se pudo iniciar la solicitud de pago. No se emitió el ticket.";
-      }
-      if (result.status === 409) {
-        return "La venta entra en conflicto. Revisa tarifa, monto y asientos antes de intentar de nuevo.";
-      }
-      if (result.status === 429) {
-        return "El POS alcanzó su límite. Espera antes de volver a intentar el cobro.";
-      }
-      return result.message || "No se pudo iniciar el pago con tarjeta.";
-    },
-    async createCardPayment(payload) {
-      const requestPayload = this.pendingPaymentStartPayload || JSON.parse(JSON.stringify(payload));
-      this.pendingPaymentStartPayload = requestPayload;
-      this.pendingPaymentAmount = requestPayload.total ?? null;
-      this.pendingPaymentMethod = requestPayload.method || "";
-      this.paymentStatusMessage = "";
-      this.persistPendingCardPayment();
-
-      let result = await handleRequest({
-        endpoint: "ticket-web",
-        method: "POST",
-        data: requestPayload,
-      });
-
-      // Si se perdió la respuesta inicial, repetir exactamente el mismo cuerpo y sin clave.
-      if (result.networkError) {
-        result = await handleRequest({
-          endpoint: "ticket-web",
-          method: "POST",
-          data: requestPayload,
-        });
-      }
-
-      if (result.networkError) {
-        this.paymentStatusType = "warning";
-        this.paymentStatusMessage = "No llegó respuesta del POS. Reintenta el envío para repetir exactamente la misma solicitud.";
-        this.persistPendingCardPayment();
-        this.showAlert("warning", this.paymentStatusMessage, 5000);
-        return;
-      }
-
-      if (result.status === 202) {
-        const paymentKey = result.data?.payment?.idempotencyKey;
-        if (!paymentKey) {
-          this.pendingPaymentStartPayload = null;
-          this.paymentSubmissionBlocked = true;
-          this.paymentStatusType = "error";
-          this.paymentStatusMessage = "El servidor indicó un pago pendiente, pero no devolvió su clave. No vuelvas a enviar la venta; contacta soporte.";
-          this.persistPendingCardPayment();
-          return;
-        }
-
-        this.pendingPaymentStartPayload = null;
-        this.pendingPaymentKey = paymentKey;
-        this.paymentStatusType = "info";
-        this.paymentStatusMessage = this.getTicketWebResponseMessage(
-          result.data,
-          "Pago pendiente en el POS. Esperando confirmación; no entregues el ticket todavía."
-        );
-        this.persistPendingCardPayment();
-        this.showAlert("warning", this.paymentStatusMessage, 5000);
-        await this.pollPendingPaymentStatus();
-        return;
-      }
-
-      if (result.success && result.data?.ticket) {
-        const message = this.getTicketWebResponseMessage(
-          result.data,
-          "La venta se registró correctamente."
-        );
-        await this.completeCardTicket(result.data.ticket, message);
-        return;
-      }
-
-      this.paymentStatusType = result.success || result.status === 402 ? "warning" : "error";
-      this.paymentStatusMessage = this.getCardPaymentErrorMessage(result);
-      if (result.success) {
-        this.pendingPaymentStartPayload = null;
-        this.paymentSubmissionBlocked = true;
-      } else if ([400, 401, 402, 404, 409, 429].includes(result.status)) {
-        this.clearPendingCardPayment();
-      }
-      this.persistPendingCardPayment();
-      this.showAlert("warning", this.paymentStatusMessage, 5000);
-    },
-    async retryCardPaymentStart() {
-      if (!this.pendingPaymentStartPayload || this.loading) {
-        return;
-      }
-
-      this.loading = true;
-      try {
-        await this.createCardPayment(this.pendingPaymentStartPayload);
-      } finally {
-        this.loading = false;
-      }
-    },
-    waitForPaymentStatus() {
-      return new Promise((resolve) => {
-        setTimeout(resolve, PAYMENT_STATUS_POLL_INTERVAL_MS);
-      });
-    },
-    async pollPendingPaymentStatus() {
-      if (!this.pendingPaymentKey || this.paymentStatusQuerying) {
-        return;
-      }
-
-      this.paymentStatusQuerying = true;
-      try {
-        while (this.pendingPaymentKey) {
-          const result = await handleRequest({
-            endpoint: "ticket-web/payment-status",
-            method: "POST",
-            data: { idempotencyKey: this.pendingPaymentKey },
-          });
-
-          if (result.status === 202) {
-            const status =
-              result.data?.payment?.status ||
-              result.data?.payment?.providerStatus ||
-              "Unknown";
-            this.paymentStatusType = "info";
-            this.paymentStatusMessage = this.getTicketWebResponseMessage(
-              result.data,
-              `Pago ${status}. Mantén abierta esta venta; el ticket solo se mostrará al confirmarse.`
-            );
-            await this.waitForPaymentStatus();
-            continue;
-          }
-
-          if (result.status === 402) {
-            this.clearPendingCardPayment();
-            this.paymentStatusType = "warning";
-            this.paymentStatusMessage = this.getCardPaymentErrorMessage(result);
-            this.showAlert("warning", this.paymentStatusMessage, 5000);
-            return;
-          }
-
-          if (result.success && result.status === 200 && result.data?.ticket) {
-            const message = this.getTicketWebResponseMessage(
-              result.data,
-              "El pago fue confirmado y el ticket está emitido."
-            );
-            await this.completeCardTicket(result.data.ticket, message);
-            return;
-          }
-
-          this.paymentStatusType = "error";
-          this.paymentStatusMessage = this.getTicketWebResponseMessage(
-            result.data,
-            result.message || `No se pudo consultar el pago (${result.status || "sin respuesta"}). La clave se conservó; corrige el problema y vuelve a consultar.`
-          );
-          this.showAlert("warning", this.paymentStatusMessage, 5000);
-          return;
-        }
-      } finally {
-        this.paymentStatusQuerying = false;
-      }
-    },
-    async retryPendingPaymentStatus() {
-      if (!this.pendingPaymentKey || this.paymentStatusQuerying || this.loading) {
-        return;
-      }
-
-      this.paymentStatusMessage = "Consultando el estado del pago…";
-      this.paymentStatusType = "info";
-      this.loading = true;
-      try {
-        await this.pollPendingPaymentStatus();
-      } finally {
-        this.loading = false;
-      }
-    },
     async save() {
+      if (this.loading || !this.hasPermission('view_traditional_sales_web')) return;
       this.loading = true;
       let shouldClose = false;
-      if (this.editedIndex === -1) {
+      try {
+        
+        this.valid = false;
         const fieldsToUpdate = [
           "trip_id",
           "branch_id",
@@ -3457,10 +2417,6 @@ export default {
           updatedFields.method = this.editedItem.method || "Efectivo";
           updatedFields.price = this.getSelectedTripBasePrice();
           try {
-            if (this.isCardPaymentMethod(updatedFields.method)) {
-              updatedFields.device = CARD_PAYMENT_DEVICE;
-              await this.createCardPayment(updatedFields);
-            } else {
             const result = await handleRequest({
               endpoint: "ticket-web",
               method: "POST",
@@ -3490,91 +2446,8 @@ export default {
                 await this.generateQRCode();
                 //this.printTicket(result.data.ticket);
               }
-              this.showAlert(
-                "success",
-                this.getTicketWebResponseMessage(
-                  result.data,
-                  "La venta se registró correctamente."
-                ),
-                3000
-              );
-              this.branch_id = this.editedItem.branch_id ?? this.branch_id;
-              this.initialize();
-              shouldClose = true;
-            } else {
-              this.showAlert(
-                "warning",
-                this.getTicketWebResponseMessage(result.data, result.message),
-                3000
-              );
-            }
-            }
-          } catch (error) {
-            // Este bloque captura errores inesperados fuera del manejo estÃ¡ndar
-            this.showAlert(
-              "error",
-              "Ocurrió un error inesperado al procesar la solicitud.",
-              3000
-            );
-          }
-        }
-      } else {
-        const fieldsToUpdate = [
-          "trip_id",
-          "branch_id",
-          "status",
-          "date",
-          "method",
-          "quantity",
-          "price",
-          "fare_segment_id",
-          "total",
-          "seats",
-          "adults",
-          "minors",
-          "promotions",
-          "ticketItems",
-        ];
-        let updatedFields = Object.keys(this.editedItem)
-          .filter(
-            (key) =>
-              fieldsToUpdate.includes(key) &&
-              this.editedItem[key] !== this.originalItem[key]
-          )
-          .reduce((obj, key) => {
-            obj[key] = this.editedItem[key];
-            return obj;
-          }, {});
-
-        if (this.areSeatsDifferent(this.originalItem.seats, this.selectedSeats)) {
-          updatedFields.seats = _.cloneDeep(this.selectedSeats);
-        }
-        if (
-          this.areTicketItemsDifferent(
-            this.originalItem.tickettypes || this.originalItem.ticketItems || [],
-            this.editedItem.tickettypes
-          )
-        ) {
-          updatedFields.ticketItems = this.normalizeTicketItemsPayload(
-            this.editedItem.tickettypes
-          );
-        }
-        if (Object.keys(updatedFields).length > 0) {
-          updatedFields.id = this.editedItem.id;
-          updatedFields.trip_id = this.editedItem.trip_id;
-          updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
-          updatedFields.price = this.getSelectedTripBasePrice();
-          try {
-            const result = await handleRequest({
-              endpoint: "ticket",
-              method: "PUT",
-              data: updatedFields,
-            });
-
-            // Manejo de la respuesta segÃºn el resultado
-            if (result.success) {
               this.showAlert("success", result.message, 3000);
-              this.initialize();
+              this.branch_id = this.editedItem.branch_id ?? this.branch_id;
               shouldClose = true;
             } else {
               this.showAlert("warning", result.message, 3000);
@@ -3587,17 +2460,14 @@ export default {
               3000
             );
           }
-        } else {
-          this.showAlert("success", "No se realizaron cambios.", 3000);
-          shouldClose = true;
         }
+      
+      } finally {
+        this.loading = false;
+        this.valid = true;
       }
-      this.loading = false;
-      if (shouldClose) {
-        this.close();
-      }
+      if (shouldClose) this.close();
     },
-
     async generateQRCode() {
       try {
         const qrData = this.currentTicket.qr;
@@ -3625,69 +2495,17 @@ export default {
         }
       } catch (error) {
         console.error("Error generando QR codes:", error);
-        this.showError("Error al generar códigos QR");
-      }
-    },
-    formatDate(dateString) {
-      if (!dateString) return "";
-      const options = { year: "numeric", month: "long", day: "numeric" };
-      return new Date(dateString).toLocaleDateString("es-ES", options);
-    },
-    async printerItem(item) {
-      this.currentTicket = {};
-
-      this.data = {};
-      this.data.id = Number(item.id);
-      //this.data.date = formattedDate;
-      try {
-        const result = await handleRequest({
-          endpoint: "ticket-show",
-          method: "POST",
-          data: this.data,
-        });
-
-        if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.currentTicket = result.data?.ticket || {};
-        } else {
-          // Si no hay datos, asignamos un array vacÃ­o
-          this.currentTicket = {};
-        }
-      } catch (error) {
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.showTicketDialog = true;
-        const branchIdBuscado = this.currentTicket.branch_id; // o el ID que necesitas comparar
-
-        // Encuentra la branch que coincide
-        const branchEncontrada = this.branches.find(
-          (branch) => branch.id === branchIdBuscado
-        );
-
-        // Si necesitas la branch en this para usarla en el template
-        this.selectedBranch = branchEncontrada || null;
-        // Genera el QR despuÃ©s de que el componente se haya renderizado
-        await this.$nextTick();
-        await this.generateQRCode();
+        this.showAlert("error", "Error al generar códigos QR", 3000);
       }
     },
     async handleExpressSaleSaved(ticket = null) {
-      await this.initialize();
+      
 
       if (!ticket) {
         return;
       }
 
-      // El endpoint de venta express puede no incluir el modo en la respuesta.
-      // En este flujo el origen de la operación es inequívocamente express.
-      this.currentTicket = {
-        ...ticket,
-        sale_mode: "express",
-      };
+      this.currentTicket = ticket;
       this.showTicketDialog = true;
 
       const branchIdBuscado = this.currentTicket.branch_id ?? this.currentTicket.branchId;
@@ -3821,7 +2639,8 @@ export default {
                     padding: 5px;
                     }
                 }
-                </style>
+                
+</style>
             </head>
             <body>
                 <div class="ticket-container">
@@ -3829,40 +2648,40 @@ export default {
                 <div class="header">
                     ${ticketCompanyImage
             ? `
-                    <img src="${this.$axios.defaults.baseURL}images/${ticketCompanyImage}"
-                        class="branch-logo"
+                    <img src="${this.$axios.defaults.baseURL}images/${ticketCompanyImage}" 
+                        class="branch-logo" 
                         alt="${ticketCompanyName}">
                     `
             : ""
           }
-
+                    
                     <div class="branch-name">${this.selectedBranch?.name || "Nombre Sucursal"
           }</div>
-
+                    
                     ${this.selectedBranch?.rut
             ? `
                     <div class="branch-info">RUT: ${this.selectedBranch.rut}</div>
                     `
             : ""
           }
-
+                    
                     ${this.selectedBranch?.address
             ? `
                     <div class="branch-info">Dirección: ${this.selectedBranch.address}</div>
                     `
             : ""
           }
-
+                    
                     ${this.selectedBranch?.phone
             ? `
                     <div class="branch-info">Teléfono: ${this.selectedBranch.phone}</div>
                     `
             : ""
           }
-
+                    
                     <div class="branch-info">Folio N° ${this.currentTicket.id}</div>
                 </div>
-
+                
                 <!-- Ticket original -->
                 <div class="detail-row">
                     <div class="font-weight-medium">Fecha: ${this.currentTicket.date
@@ -3870,7 +2689,7 @@ export default {
                     <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
           }</div>
                 </div>
-
+                
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
@@ -3886,7 +2705,7 @@ export default {
           }</span>
                     </div>
                 </div>
-
+                
                 <div class="ticket-details">
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Precio:</span>
@@ -3897,9 +2716,9 @@ export default {
                     <span>${this.currentTicket.method}</span>
                     </div>
                 </div>
-
+                
                 <br>
-
+                
                 ${qrImageOriginal
             ? `
                     <div class="text-center">
@@ -3908,25 +2727,25 @@ export default {
                 `
             : ""
           }
-
+                
                 <br>
-
+                
                 <!-- LÃ­nea divisoria -->
                 <div class="dashed-divider"></div>
-
+                
                 <!-- Copia de control -->
                 <div class="text-center caption control-copy-title">
                     -Copia de control-
                     <div class="branch-info">Folio N° ${this.currentTicket.id}</div>
                 </div>
-
+                
                 <div class="detail-row">
                     <div class="font-weight-medium">Fecha: ${this.currentTicket.date
           }</div>
                     <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
           }</div>
                 </div>
-
+                
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
@@ -3942,7 +2761,7 @@ export default {
           }</span>
                     </div>
                 </div>
-
+                
                 <div class="ticket-details">
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Precio:</span>
@@ -3953,9 +2772,9 @@ export default {
                     <span>${this.currentTicket.method}</span>
                     </div>
                 </div>
-
+                
                 <br>
-
+                
                 ${qrImageControl
             ? `
                     <div class="text-center">
@@ -3964,12 +2783,12 @@ export default {
                 `
             : ""
           }
-
+                
                 <br>
-
+                
                 <!-- Nota de impresiÃ³n -->
-
-
+                
+                
                 ${this.currentTicket.print >= 1
             ? `
                     <div class="text-center caption mt-2 uppercase-text">
@@ -3979,7 +2798,7 @@ export default {
             : ""
           }
                 </div>
-
+                
                 <script>
                 setTimeout(() => {
                     window.print();
@@ -3996,92 +2815,6 @@ export default {
       } catch (error) {
         console.error("Error al imprimir:", error);
         this.showAlert("error", "Error al imprimir el ticket", 3000);
-      }
-    },
-    async editItem(item) {
-      this.editedIndex = 1;
-      this.aviable = "";
-      this.originalItem = _.cloneDeep(item);
-      this.editedItem = _.cloneDeep(item);
-      this.editedItem.fare_segment_id =
-        item.fare_segment_id ?? item.fareSegmentId ?? null;
-      this.originalItem.tickettypes = _.cloneDeep(
-        item.ticketItems || item.tickettypes || []
-      );
-      this.editedItem.tickettypes = _.cloneDeep(
-        item.ticketItems || item.tickettypes || []
-      );
-      this.selectedSeats = item.seats;
-      this.selectedOriginLocationId = null;
-      this.selectedDestinationLocationId = null;
-      this.selectedPromotion = null;
-      try {
-        this.editedItem.branch_id = item.branch_id ?? this.branch_id;
-        await this.loadTripLocations(this.editedItem.branch_id);
-        this.tickettypes = [];
-
-        const originLabel = item.tripOrigin || item.origin || item.origin_label || "";
-        const destinationLabel =
-          item.tripDestination || item.destination || item.destination_label || "";
-        this.selectedOriginLocationId = this.findLocationIdByText(originLabel);
-        this.selectedDestinationLocationId = this.findLocationIdByText(destinationLabel);
-
-        if (this.selectedOriginLocationId && this.selectedDestinationLocationId) {
-          await this.loadTripsBySelectedLocations(item.trip_id);
-        }
-      } catch (error) {
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-      } finally {
-        this.updateSeats(item.trip_id, true);
-        this.step = this.editedItem.trip_id ? 2 : 1;
-        this.dialog = true;
-      }
-    },
-    deleteItem(item) {
-      this.editedIndex = -1;
-      this.editedItem.id = item.id;
-      this.dialogDelete = true;
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-      });
-    },
-    async deleteItemConfirm() {
-      this.loading = true;
-      try {
-        let request = {
-          id: this.editedItem.id,
-        };
-        const result = await handleRequest({
-          endpoint: "ticket-destroy",
-          method: "POST",
-          data: request,
-        });
-
-        // Manejo de la respuesta segÃƒÂºn el resultado
-        if (result.success) {
-          this.showAlert("success", result.message, 3000);
-          this.initialize();
-        } else {
-          this.showAlert("warning", result.message, 3000);
-          this.loading = false;
-        }
-      } catch (error) {
-        // Este bloque captura errores inesperados fuera del manejo estÃƒÂ¡ndar
-        this.showAlert(
-          "error",
-          "Ocurrió un error inesperado al procesar la solicitud.",
-          3000
-        );
-        this.loading = false;
-      } finally {
-        this.closeDelete();
       }
     },
     showAlert(sb_type, sb_message, sb_timeout) {
@@ -4104,27 +2837,6 @@ export default {
       this.sb_message = sb_message;
       this.sb_timeout = sb_timeout;
       this.snackbar = true;
-    },
-    calculateTotalSelected() {
-      return (
-        this.normalizeEditedTickettypes().reduce(
-          (total, ticket) => total + (Number(ticket.cant) || 0),
-          0
-        ) || 0
-      );
-    },
-    validateSeatAvailability() {
-      this.currentlyEditing = null;
-      const totalSelected = this.calculateTotalSelected();
-      const available = this.availableSeats.length;
-
-      if (totalSelected > available) {
-        this.seatError = `Excedes la capacidad. Máximo: ${available} asientos`;
-        return false;
-      }
-
-      this.seatError = null;
-      return true;
     },
     getTicketTypeDefinitions(collection = null) {
       const trip = this.selectedTripRecord;
@@ -4221,12 +2933,6 @@ export default {
       );
       return ticket ? Number(ticket.cant ?? ticket.quantity) || 0 : 0;
     },
-    getMaxQuantity(ticket) {
-      return (
-        this.availableSeats.length -
-        (this.totalSelected - this.getCurrentQuantity(ticket.trip_fare_id || ticket.id))
-      );
-    },
     getTicketTypeDefinition(ticketOrId) {
       const ticketId =
         typeof ticketOrId === "object"
@@ -4245,23 +2951,6 @@ export default {
         trip_fare_id:
           sourceTicket.trip_fare_id ?? currentTicket.trip_fare_id ?? ticketId ?? null,
         id: currentTicket.id ?? sourceTicket.id ?? null,
-      };
-    },
-    getTicketTypeAdjustment(ticket) {
-      const basePrice = Number(ticket.base_price ?? ticket.price ?? 0) || 0;
-      return {
-        base_price: basePrice,
-        basePrice,
-        unit_price: basePrice,
-        unitPrice: basePrice,
-        line_total: basePrice,
-        lineTotal: basePrice,
-        line_subtotal: basePrice,
-        lineSubtotal: basePrice,
-        adjustment_amount: 0,
-        adjustmentAmount: 0,
-        signed_adjustment: 0,
-        signedAdjustment: 0,
       };
     },
     buildTicketTypeRecord(ticketOrId, quantity, existing = {}) {
@@ -4411,146 +3100,12 @@ export default {
         this.isRecalculatingTickettypes = false;
       });
     },
-    updateTicketWithPromotion(ticket) {
-      const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
-        if (
-          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !==
-          Number(ticket.trip_fare_id || ticket.id)
-        ) {
-          return item;
-        }
-
-        return this.buildTicketTypeRecord(item.id, item.cant, item);
-      });
-
-      this.isRecalculatingTickettypes = true;
-      this.editedItem.tickettypes = updatedTickets;
-      this.recalculateTicketTotals();
-      this.$nextTick(() => {
-        this.isRecalculatingTickettypes = false;
-      });
-    },
-    showPromotionSelect(ticket) {
-      const updatedTickets = [...this.normalizeEditedTickettypes()];
-      const existingIndex = updatedTickets.findIndex(
-        (item) =>
-          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
-          Number(ticket.trip_fare_id || ticket.id)
-      );
-
-      if (existingIndex !== -1) {
-        updatedTickets[existingIndex] = {
-          ...updatedTickets[existingIndex],
-          showPromotionSelect: true,
-          selectedPromotion: null,
-        };
-      } else {
-        updatedTickets.push(
-          this.buildTicketTypeRecord(ticket, Number(ticket.cant) || 0, {
-            showPromotionSelect: true,
-            selectedPromotion: null,
-          })
-        );
-      }
-
-      this.editedItem.tickettypes = updatedTickets;
-      this.$forceUpdate();
-
-      if (this.promotions.length === 0) {
-        this.loadPromotions();
-      }
-    },
-    applyPromotion(ticket, promotionId) {
-      const promotion = (this.promotions || []).find(
-        (item) => Number(item.id) === Number(promotionId)
-      );
-      if (!promotion) {
-        return;
-      }
-
-      const updatedTickets = this.normalizeEditedTickettypes();
-      const existingIndex = updatedTickets.findIndex(
-        (item) =>
-          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) ===
-          Number(ticket.trip_fare_id || ticket.id)
-      );
-      const currentTicket =
-        existingIndex !== -1
-          ? updatedTickets[existingIndex]
-          : this.buildTicketTypeRecord(ticket, ticket.cant, ticket);
-      const updatedTicket = this.attachPromotionDetails(
-        {
-          ...currentTicket,
-          showPromotionSelect: false,
-          selectedPromotion: null,
-        },
-        promotion
-      );
-
-      if (existingIndex !== -1) {
-        updatedTickets[existingIndex] = updatedTicket;
-      } else {
-        updatedTickets.push(updatedTicket);
-      }
-
-      this.isRecalculatingTickettypes = true;
-      this.editedItem.tickettypes = updatedTickets;
-      this.recalculateTicketTotals();
-      this.$nextTick(() => {
-        this.isRecalculatingTickettypes = false;
-      });
-    },
-    removePromotion(ticket) {
-      const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
-        if (
-          Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !==
-          Number(ticket.trip_fare_id || ticket.id)
-        ) {
-          return item;
-        }
-
-        const normalizedRecord = this.buildTicketTypeRecord(item.id, item.cant, {
-          ...item,
-          promotion_id: null,
-          namePromotion: "",
-          percentage: 0,
-          discount: 0,
-          showPromotionSelect: false,
-          selectedPromotion: null,
-        });
-
-        const {
-          promotion_base_price,
-          promotionBasePrice,
-          promotion_unit_discount,
-          promotionUnitDiscount,
-          promotion_discount,
-          promotionDiscount,
-          promotion_details,
-          promotionDetails,
-          ...cleanRecord
-        } = normalizedRecord;
-
-        return cleanRecord;
-      });
-
-      this.isRecalculatingTickettypes = true;
-      this.editedItem.tickettypes = updatedTickets;
-      this.recalculateTicketTotals();
-      this.$nextTick(() => {
-        this.isRecalculatingTickettypes = false;
-      });
-    },
-    onlyNumbers(evt) {
-      const charCode = evt.which ? evt.which : evt.keyCode;
-      if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-        evt.preventDefault();
-      }
-    },
-  },
+    openExpressSale() {
+      if (this.hasPermission('view_express_sales_web') && this.hasSelectedBranch) this.dialogExpressSale = true;
+    } }
 };
 </script>
-<style>
+<style scoped>
 .payment-method-disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -4888,7 +3443,7 @@ export default {
   justify-content: center;
   border-radius: 10px;
   color: white;
-  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono
+  /* Mantenemos solo el efecto cÃ³ncavo en el Ã­cono 
   box-shadow: inset;*/
   position: relative;
   overflow: hidden;
@@ -4911,27 +3466,7 @@ export default {
   text-overflow: ellipsis;
 }
 
-/* OCULTAR HEADER DE v-data-table - Vuetify 3.4.7 */
-/* MÃ¡xima especificidad para ocultar el thead */
-.v-data-table>.v-data-table__wrapper>table>thead,
-.v-data-table>.v-data-table__wrapper>.v-table>table>thead,
-.v-data-table__content>table>thead,
-.v-data-table__content>thead,
-table.v-table>thead,
-.v-table>.v-table__wrapper>table>thead {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-spacing: 0 !important;
-  border-collapse: collapse !important;
-}
 
-.hidden-header .v-data-table__content>table>thead {
-  display: none !important;
-}
 
 .ticket-toolbar {
   display: flex;
@@ -5161,13 +3696,13 @@ table.v-table>thead,
 }
 
 .ticket-sale-mode--express {
-  background: #dcfce7;
-  color: #15803d;
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .ticket-sale-mode--normal {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .busgo-dialog-card {
@@ -5820,6 +4355,134 @@ table.v-table>thead,
   align-items: center;
 }
 
+/* Identidad BusGo: mismas medidas, tipografía y acciones que Vehículos. */
+.ticket-view { min-height:100%; color:#1e293b; background:#f6f8fb; }
+.busgo-page-header { display:flex; align-items:center; gap:11px; min-height:70px; padding:12px 24px; background:#fff; border-bottom:1px solid #e8edf5; border-radius:0!important; }
+.busgo-page-icon { flex:0 0 38px; width:38px!important; height:38px!important; color:#fff!important; background:linear-gradient(135deg,#0e1f46,#2454d6)!important; border-radius:10px!important; box-shadow:0 5px 12px #2454d62b; }
+.busgo-page-title { color:#0f172a; font-size:19px; font-weight:850; line-height:1.2; }
+.busgo-page-subtitle { margin-top:3px; color:#526176; font-size:12px; font-weight:650; }
+.busgo-add-btn,.ticket-sale-btn-primary { min-height:40px; color:#fff!important; background:linear-gradient(100deg,#2454d6,#3266e4)!important; border-radius:9px!important; font-size:12.5px; font-weight:800; letter-spacing:0; text-transform:none; box-shadow:0 5px 12px #2454d633!important; }
+.ticket-header-actions .busgo-add-btn:last-child:not(:first-child) { background:#eef3ff!important; color:#2454d6!important; box-shadow:none!important; border:1px solid #dce6ff; }
+.busgo-container { padding:18px 24px 28px!important; }
+.busgo-card { overflow:hidden; background:#fff; border:1px solid #e8edf5; border-radius:13px!important; box-shadow:0 5px 18px #0f172a0a!important; }
+.busgo-card-header { display:flex; align-items:center; min-height:69px; padding:12px 17px; }
+.busgo-card-title { color:#0f172a; font-size:15px; font-weight:850; }
+.busgo-card-subtitle { margin-top:3px; color:#64748b; font-size:11px; font-weight:650; }
+.ticket-toolbar { padding:0 17px 13px!important; gap:9px; }
+.ticket-toolbar :deep(.v-field) { border-radius:9px; color:#1e293b; font-size:12px; background:#fff; }
+.ticket-toolbar :deep(.v-field__outline) { color:#dce3ed; }
+.ticket-toolbar :deep(.v-field__input) { font-size:13px; font-weight:600; }
+.ticket-toolbar :deep(.v-field__prepend-inner) { color:#64748b; opacity:1; }
+.ticket-list-table { color:#1e293b; background:#fff; }
+.ticket-list-table :deep(.v-table__wrapper > table) { min-width:1240px; }
+.ticket-list-table :deep(thead) { display:table-header-group!important; }
+.ticket-list-table :deep(th.ticket-header-shell) { padding:0!important; height:40px!important; border:0!important; }
+.busgo-table-head,.ticket-row { display:grid!important; grid-template-columns:1.05fr 2.5fr 1fr .8fr 1fr .6fr 1fr .85fr .95fr 86px; align-items:center!important; gap:12px!important; min-width:1240px; margin:0!important; padding:10px 17px!important; border-radius:0!important; }
+.busgo-table-head > div,.ticket-row > div { width:auto!important; min-width:0; }
+.busgo-table-head { min-height:40px; color:#334155; font-size:11px; font-weight:850; letter-spacing:.04em; text-transform:uppercase; background:#f8fafc; border-bottom:1px solid #e8edf5; }
+.ticket-row { min-height:66px; background:#fff; border:0; border-bottom:1px solid #eef2f6; color:#1e293b; font-size:13px; font-weight:600; }
+.ticket-row:hover { background:#f8faff; }
+.ticket-list-table :deep(tbody td) { padding:0!important; border:0!important; }
+.ticket-list-table :deep(.v-data-table-footer) { min-height:52px; padding:6px 16px; color:#334155; font-size:11.5px; font-weight:700; }
+.ticket-sortable-header:hover { color:#2454d6; }
+.busgo-meta { display:flex; align-items:center; gap:6px; color:#334155; font-size:13px; }
+.ticket-code-value,.ticket-route-main { color:#0f172a; font-size:13px; font-weight:800; }
+.ticket-route-meta { display:grid; grid-template-columns:14px minmax(0,1fr); gap:3px 5px; align-items:center; margin-top:5px; color:#526176; font-size:12px; }
+.ticket-route-meta :deep(.mx-2) { margin:0!important; }
+.ticket-route-meta > span { white-space:normal; overflow-wrap:anywhere; }
+.ticket-route-title-row { flex-wrap:wrap; gap:5px; }
+.ticket-method-chip { display:inline-flex; padding:4px 7px; color:#475569; background:#f1f5f9; border-radius:7px; font-size:11.5px; font-weight:750; }
+.ticket-money { color:#334155; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+.ticket-money-total { color:#183d9c; font-weight:850; }
+.busgo-actions { display:flex; justify-content:flex-end; gap:2px; }
+.ticket-action { border-radius:8px!important; }
+.ticket-action--print { color:#2454d6!important; }
+.ticket-action--print:hover { background:#eef3ff; }
+.ticket-action--delete { color:#dc2626!important; }
+.ticket-action--delete:hover { background:#fff1f2; }
+.ticket-sale-dialog-pro { height:100dvh; min-height:0; display:flex; flex-direction:column; color:#1e293b; background:#f6f8fb; }
+.ticket-sale-topbar { flex-shrink:0; min-height:72px; padding:11px 22px; background:linear-gradient(110deg,#0e1f46,#173b8f 58%,#2454d6); }
+.ticket-sale-topbar__icon { width:40px; height:40px; border-radius:10px; }
+.ticket-sale-topbar__title { font-size:17px; font-weight:850; }
+.ticket-sale-topbar__subtitle { color:#dbe7ff; font-size:12px; opacity:1; }
+.ticket-sale-body { flex:1; min-height:0; overflow-y:auto; padding:0 22px 20px!important; }
+.ticket-sale-stepper-pro :deep(.v-stepper-header) { position:sticky; top:0; z-index:4; min-height:64px; background:#f6f8fb; box-shadow:none; border-bottom:1px solid #e1e8f1; }
+.ticket-sale-stepper-pro :deep(.v-stepper-item) { padding:14px 18px; }
+.ticket-sale-stepper-pro :deep(.v-stepper-item__title) { font-size:13px; color:#475569; font-weight:750; }
+.ticket-sale-stepper-pro :deep(.v-stepper-item--selected .v-stepper-item__avatar) { color:#fff; background:#2454d6; }
+.ticket-sale-stepper-pro :deep(.v-stepper-window) { margin:18px 0 0; }
+.ticket-sale-section-card,.ticket-sale-summary-pro { border:1px solid #e4eaf2; border-radius:13px; padding:18px; box-shadow:0 5px 18px #0f172a0a; }
+.ticket-sale-section-header { margin-bottom:16px; }
+.ticket-sale-section-title { color:#0f172a; font-size:15px; font-weight:850; }
+.ticket-sale-section-subtitle { color:#526176; font-size:12px; line-height:1.5; }
+.ticket-sale-mini-icon { width:36px; height:36px; border-radius:9px; background:#eef3ff; color:#2454d6; }
+.ticket-sale-label { color:#475569; font-size:12px; font-weight:750; }
+.ticket-sale-dialog-pro :deep(.v-field) { background:#fff; border-radius:9px!important; }
+.ticket-sale-dialog-pro :deep(.v-field__outline) { color:#d6dee9; }
+.ticket-sale-dialog-pro :deep(.v-field__input),.ticket-sale-dialog-pro :deep(.v-label) { color:#1e293b; font-size:14px; font-weight:600; opacity:1; }
+.ticket-sale-dialog-pro :deep(.v-field__prepend-inner .v-icon) { color:#64748b; opacity:1; }
+:global(.busgo-full-location-menu .v-list) { padding:6px; border:1px solid #e2e8f0; border-radius:11px; background:#fff; }
+:global(.busgo-full-location-menu .v-list-item) { margin:3px 0; padding:11px 12px!important; border-radius:8px; }
+:global(.busgo-full-location-menu .v-list-item--active) { background:#eef3ff; color:#2454d6; }
+.ticket-location-option__title { white-space:normal; overflow-wrap:anywhere; color:#1e293b; font-size:14px; line-height:1.45; }
+.ticket-location-option__subtitle { white-space:normal; color:#526176; font-size:12px; line-height:1.5; }
+.trip-sale-panel-pro { border:1px solid #e8edf5; border-radius:10px; overflow-x:auto; }
+.trip-sale-panel-pro__header,.trip-sale-row-pro { display:grid!important; grid-template-columns:1fr 2.2fr .8fr .8fr 1fr .8fr 1fr 1fr; min-width:1000px; gap:12px; padding:12px 16px; }
+.trip-sale-panel-pro__header { min-height:40px; align-items:center; color:#334155; background:#f8fafc; font-size:11px; font-weight:850; letter-spacing:.04em; }
+.trip-sale-row-pro { min-height:66px; border:0; border-bottom:1px solid #eef2f6; }
+.trip-sale-row-pro--selected { background:#eef3ff; box-shadow:inset 3px 0 #2454d6; }
+.trip-sale-code,.trip-sale-route__name,.trip-sale-strong { font-size:13px; color:#1e293b; font-weight:750; }
+.trip-sale-route__meta,.trip-sale-muted { color:#526176; font-size:12px; }
+.trip-sale-price { color:#183d9c; font-size:13px; font-variant-numeric:tabular-nums; }
+.ticket-sale-summary-grid { grid-template-columns:1.7fr 1fr 1fr 1fr; }
+.ticket-sale-summary-grid > div { padding:12px; border-radius:9px; border-color:#e8edf5; }
+.ticket-sale-summary-grid strong { white-space:normal; font-size:14px; }
+.ticket-sale-summary-grid > div:last-child { background:#eef3ff; border-color:#dce6ff; }
+.ticket-sale-summary-grid > div:last-child strong { color:#2454d6; }
+.ticket-sale-footer-actions { padding:14px 0; margin-top:16px; background:#f6f8fb; border-top:1px solid #e1e8f1; }
+.ticket-sale-btn-secondary { min-height:40px; background:#fff!important; border:1px solid #dce3ed; border-radius:9px!important; color:#475569!important; font-size:12.5px; }
+.ticket-sale-btn-primary.v-btn--disabled { background:#dce3ed!important; color:#64748b!important; box-shadow:none!important; }
+.ticket-type-card { padding:13px; margin-bottom:9px; border-radius:10px; border-color:#e4eaf2; }
+.ticket-type-card__total { border-radius:7px; background:#eef3ff; color:#183d9c; }
+.ticket-type-card__input { flex:0 0 85px; }
+.payment-method-card-pro { border-radius:10px!important; box-shadow:none!important; }
+.payment-method-content-pro { min-height:62px; gap:8px; padding:10px!important; }
+.payment-method-label { font-size:12px; font-weight:750; }
+.ticket-total-box { border-radius:11px; background:#183d9c; padding:14px; }
+.ticket-total-box strong { font-size:18px; overflow-wrap:anywhere; }
+.ticket-seat-legend { display:flex; flex-wrap:wrap; gap:7px 13px; margin-bottom:12px; color:#526176; font-size:11px; }
+.ticket-seat-legend > span { display:flex; align-items:center; gap:5px; }
+.ticket-seat-legend i { width:9px; height:9px; border-radius:3px; }
+.legend-free { background:#c7d9f9; }.legend-selected { background:#2454d6; }.legend-reserved { background:#efacac; }.legend-disabled { background:#cbd5e1; }
+.seat-map-shell { border-radius:11px; padding:12px; }
+.seat-map-preview { min-width:0; padding:14px 12px; border:2px solid #d9e2ef; border-radius:36px 36px 18px 18px; background:#fff; }
+.ticket-bus-front { display:flex; align-items:center; justify-content:space-between; gap:25px; align-self:stretch; margin:0 4px 15px; padding:6px 9px 12px; border-bottom:3px solid #dce6f5; color:#64748b; font-size:10px; font-weight:700; }
+.seat-container { flex:0 0 42px; width:42px; height:44px; margin:3px; border-radius:7px; background:transparent; }
+.seat-container:hover,.seat-available:hover { transform:none; box-shadow:none; }
+.ticket-seat-shape { width:42px; height:44px; }
+.seat-available { color:#426bb7; background:transparent; }
+.seat-selected { color:#2454d6!important; background:#eef3ff!important; box-shadow:0 0 0 2px #2454d6; }
+.seat-reserved { color:#b94c4c!important; background:#fff1f2!important; }
+.seat-disabled { color:#64748b!important; background:#f1f5f9!important; }
+.seat-number,.seat-available .seat-number,.seat-selected .seat-number,.seat-reserved .seat-number { position:absolute; top:18px; left:50%; right:auto; bottom:auto; transform:translate(-50%,-50%); padding:0; color:#1e293b; -webkit-text-stroke:0; font-size:12px; font-weight:850; line-height:1; pointer-events:none; }
+.seat-selected .seat-number { color:#183d9c; }
+.aisle-icon { visibility:hidden; }
+.ticket-delete-dialog,.ticket-preview-dialog { color:#1e293b; background:#fff; border:1px solid #dfe6ef; border-radius:14px!important; }
+.ticket-confirm-heading { display:flex; align-items:center; gap:11px; padding:17px 20px; border-bottom:1px solid #e8edf5; }
+.ticket-confirm-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; color:#dc2626; background:#fff1f2; }
+.ticket-confirm-icon--preview { color:#2454d6; background:#eef3ff; }
+.ticket-confirm-heading strong { display:block; color:#0f172a; font-size:16px; font-weight:850; }
+.ticket-confirm-heading span:not(.ticket-confirm-icon) { display:block; margin-top:4px; color:#64748b; font-size:11.5px; }
+.ticket-delete-dialog :deep(.v-card-text) { color:#334155; font-size:14px; padding:22px!important; }
+.busgo-dialog-actions { gap:9px; padding:14px 20px!important; }
+.ticket-cancel-button { color:#475569!important; border-radius:9px!important; font-size:12.5px; font-weight:750; text-transform:none; }
+.ticket-delete-button { color:#fff!important; background:#dc2626!important; border-radius:9px!important; min-height:40px; font-size:12.5px; font-weight:750; text-transform:none; }
+.ticket-preview-dialog :deep(.v-card-text) { color:#334155; font-size:13px; }
+.ticket-alert-content { display:flex; align-items:center; gap:10px; font-size:12px; }
+.ticket-alert-content strong { display:block; margin-bottom:3px; font-size:13px; }
+@media(max-width:959px) { .busgo-container { padding:15px 17px 24px!important; }.busgo-page-header { padding-inline:17px; }.ticket-sale-summary-grid { grid-template-columns:1fr 1fr; }.ticket-toolbar { align-items:stretch; }.ticket-sale-body { padding-inline:14px!important; } }
+@media(max-width:600px) { .busgo-page-header { flex-wrap:wrap; padding:12px; }.ticket-header-actions { width:100%; justify-content:flex-start; gap:8px; }.busgo-container { padding:12px!important; }.ticket-sale-summary-grid { grid-template-columns:1fr; }.ticket-sale-section-card { padding:14px; }.ticket-sale-topbar { padding:11px 14px; }.ticket-sale-topbar__title { font-size:16px; }.seat-container { flex-basis:38px; width:38px; margin:2px; } }
+
 .seat-row {
   display: flex;
   flex-direction: row;
@@ -5831,5 +4494,144 @@ table.v-table>thead,
   .seat-map-scroll {
     max-height: 360px;
   }
+}
+/* Representación compartida con Estructura: frente a la izquierda. */
+.seat-map-scroll { padding:16px!important; max-height:340px; overflow:auto; }
+.ticket-structure-bus { position:relative; display:flex!important; flex-direction:row!important; align-items:center!important; gap:12px!important; width:max-content!important; min-width:500px!important; min-height:214px; padding:22px 42px 22px 30px!important; margin:auto; overflow:visible!important; background:linear-gradient(90deg,#2454d609,transparent 18%),#fff; border:2px solid #bfcbd9!important; border-radius:64px 25px 25px 64px!important; box-shadow:inset 0 0 0 6px #f4f7fa,inset -15px 0 0 #e2e8f073,0 12px 28px #0f172a1c; }
+.ticket-structure-windshield { position:absolute; top:23px; bottom:23px; left:15px; width:24px; z-index:1; background:linear-gradient(180deg,#d9eff9,#b9d9e9); border:1px solid #9bbccd; border-radius:38px 8px 8px 38px; box-shadow:inset -4px 0 7px #33415517; pointer-events:none; }
+.ticket-structure-wheel { position:absolute; width:31px; height:9px; background:#334155; border:2px solid #1e293b; border-radius:5px; box-shadow:inset 0 0 0 1px #64748b; pointer-events:none; }
+.ticket-structure-wheel.front-top { top:-6px; left:60px; }.ticket-structure-wheel.front-bottom { bottom:-6px; left:60px; }.ticket-structure-wheel.rear-top { top:-6px; right:54px; }.ticket-structure-wheel.rear-bottom { bottom:-6px; right:54px; }
+.ticket-structure-front { position:relative; z-index:2; display:flex; flex:0 0 62px; flex-direction:column; align-items:center; gap:5px; padding-left:8px; color:#2454d6; }
+.ticket-structure-front > div { display:grid; place-items:center; width:35px; height:35px; color:#334155; background:#eef2f6; border:1px solid #cbd5e1; border-radius:50%; }
+.ticket-structure-front > span { font-size:10px; font-weight:850; text-transform:uppercase; }
+.ticket-structure-grid { display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+.ticket-structure-grid .seat-row { display:flex!important; flex-wrap:nowrap!important; justify-content:flex-start!important; gap:6px!important; margin:0!important; }
+.ticket-structure-grid .seat-container { position:relative; display:grid!important; place-items:center!important; flex:0 0 55px!important; width:55px!important; height:55px!important; margin:1px!important; background:transparent!important; border-radius:9px; transform:none!important; box-shadow:none; }
+.ticket-structure-grid .ticket-structure-seat,.ticket-structure-grid .seat-container:hover .ticket-structure-seat { position:relative; z-index:1; width:46px!important; height:46px!important; font-size:46px!important; transform:scaleX(-1)!important; transition:filter .16s ease!important; }
+.ticket-structure-grid .seat-available { color:#2454d6!important; }
+.ticket-structure-grid .seat-selected { color:#16875a!important; background:#eaf8f1!important; box-shadow:0 0 0 2px #16875a!important; }
+.ticket-structure-grid .seat-reserved { color:#bd5555!important; opacity:1!important; }
+.ticket-structure-grid .seat-disabled { color:#94a3b8!important; opacity:1!important; }
+.ticket-structure-grid .seat-number { position:absolute!important; z-index:3!important; top:50%!important; left:50%!important; right:auto!important; bottom:auto!important; display:grid!important; place-items:center; min-width:21px; height:19px; padding:0 4px!important; color:#17377f!important; background:#fff!important; border:1px solid #2454d638; border-radius:6px; font-size:11px!important; font-weight:900!important; line-height:1!important; transform:translate(-50%,-50%)!important; -webkit-text-stroke:0!important; }
+.ticket-structure-grid .seat-selected .seat-number { color:#116b49!important; border-color:#16875a66; }
+.ticket-structure-grid .seat-aisle { color:#94a3b8!important; cursor:default; background:repeating-linear-gradient(135deg,#f8fafc,#f8fafc 5px,#eef2f6 5px,#eef2f6 10px)!important; border:1px dashed #cbd5e1; }
+.ticket-structure-grid .seat-aisle .aisle-indicator::after { content:'P'; color:#64748b; font-size:10px; font-weight:850; }
+.ticket-seat-legend .legend-free { background:#2454d6; }.ticket-seat-legend .legend-selected { background:#16875a; }
+
+/* Compact launcher aligned with TicketView dimensions. */
+.sales-view { background:#f6f8fb; color:#1e293b; min-height:100%; }
+.sales-workspace { width:100%; padding:18px 24px 28px; }
+.sales-context-panel { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:16px 18px; background:#fff; border:1px solid #e4eaf2; border-radius:12px; }
+.sales-context-copy h2 { color:#0f172a; font-size:15px; font-weight:750; line-height:1.3; }
+.sales-context-copy p { color:#526176; font-size:12px; line-height:1.5; margin-top:4px; }
+.sales-branch-control { width:280px; flex:0 0 280px; }
+.sales-field-label { display:block; color:#475569; font-size:11px; font-weight:700; margin-bottom:5px; }
+.sales-branch-control :deep(.v-field) { border-radius:8px; color:#233654; background:#fff; font-size:13px; }
+.sales-branch-control :deep(.v-field__outline) { color:#ccd5e2; opacity:1; }
+.sales-assigned-branch { display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid #e5eaf2; border-radius:8px; background:#f8faff; }
+.sales-branch-icon { color:#2454d6; }
+.sales-assigned-branch span:not(.sales-branch-icon) { display:block; font-size:11px; color:#64748b; }
+.sales-assigned-branch strong { display:block; margin-top:2px; font-size:12px; font-weight:650; }
+.sales-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; max-width:1000px; }
+.sales-mode-card { min-width:0; display:flex; flex-direction:column; padding:18px; border-radius:12px; border:1px solid #e0e6ef; background:#fff; color:#162641; box-shadow:0 3px 12px #15264b05; }
+.sales-mode-card--full { border-top:3px solid #173b8f; }
+.sales-mode-card--express { border-top:3px solid #2454d6; }
+.sales-mode-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.sales-mode-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; flex-shrink:0; background:#eef3ff; color:#2454d6; }
+.sales-mode-icon :deep(.v-icon) { font-size:23px!important; }
+.sales-mode-tag { padding:4px 7px; border-radius:6px; font-size:10px; line-height:1.4; font-weight:650; color:#526784; background:#f3f6fb; }
+.sales-mode-copy { margin-top:12px; }
+.sales-mode-copy h3 { font-size:17px; font-weight:750; line-height:1.25; letter-spacing:-.2px; }
+.sales-mode-copy p { margin-top:5px; font-size:12px; line-height:1.5; color:#526176; }
+.sales-mode-footer { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid #e8edf5; }
+.sales-mode-note { display:flex; align-items:center; gap:5px; color:#64748b; font-size:10px; }
+.sales-launch-button.v-btn { min-height:38px; border-radius:8px; font-size:12px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
+.sales-launch-button--full.v-btn { background:#173b8f; color:#fff; }
+.sales-launch-button--express.v-btn { background:#eef3ff; color:#2454d6; }
+.sales-launch-button:focus-visible { outline:3px solid #6e9bff; outline-offset:3px; }
+.sales-workspace-footnote { display:flex; align-items:center; gap:7px; margin-top:16px; color:#64748b; font-size:11px; line-height:1.5; }
+/* Full dialog: explicit background, type and controls independent of the page. */
+.busgo-full-sale-form { height:100%; min-height:0; }
+.busgo-full-sale.ticket-sale-dialog-pro { height:100vh; height:100dvh; width:100%; border-radius:0; background:#f4f6fa; color:#182942; font-family:inherit; }
+.busgo-full-sale .ticket-sale-topbar { min-height:78px; padding:15px 26px; background:#142b55; color:#fff; border-bottom:1px solid #2b4269; }
+.busgo-full-sale .ticket-sale-topbar__icon { width:44px; height:44px; border-radius:12px; background:#294777; color:#fff; }
+.busgo-full-sale .ticket-sale-topbar__title { font-size:21px; font-weight:750; letter-spacing:-.35px; color:#fff; }
+.busgo-full-sale .ticket-sale-topbar__subtitle { font-size:13px; line-height:1.5; color:#c7d5ed; }
+.busgo-full-sale .ticket-sale-step-chip { background:#294777; color:#e6edff; font-size:12px; }
+.busgo-full-sale .ticket-sale-close { background:#294777; color:#fff; border-radius:10px; flex-shrink:0; }
+.busgo-full-sale .ticket-sale-body { background:#f4f6fa; padding:0 26px 22px!important; }
+.busgo-full-sale .ticket-sale-stepper-pro { background:transparent!important; border-radius:0; box-shadow:none!important; }
+.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-header) { background:#f4f6fa; min-height:76px; border-bottom:1px solid #dfe6f0; box-shadow:none; }
+.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-item__title) { color:#465772; font-size:14px; font-weight:650; }
+.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-item--selected .v-stepper-item__title) { color:#173c84; }
+.busgo-full-sale .ticket-sale-section-card,.busgo-full-sale .ticket-sale-summary-pro { background:#fff; border:1px solid #dfe6f0; border-radius:15px; padding:22px; box-shadow:0 4px 16px #172a4806; }
+.busgo-full-sale .ticket-sale-section-title { color:#162641; font-size:17px; font-weight:750; white-space:normal; letter-spacing:-.25px; }
+.busgo-full-sale .ticket-sale-section-subtitle { color:#61718a; font-size:13px; line-height:1.6; margin-top:4px; }
+.busgo-full-sale .ticket-sale-label { display:block; color:#344761; font-size:13px; font-weight:650; margin-bottom:8px; }
+.busgo-full-sale :deep(.v-field) { background:#fbfcfe; color:#1e3351; border-radius:10px!important; }
+.busgo-full-sale :deep(.v-field__outline) { color:#becadb; opacity:1; }
+.busgo-full-sale :deep(.v-field--focused .v-field__outline) { color:#2454d6; }
+.busgo-full-sale :deep(.v-field__input),.busgo-full-sale :deep(.v-label) { color:#233654; font-size:14px; font-weight:550; opacity:1; }
+.busgo-full-sale :deep(.v-field__input::placeholder) { color:#66768c; opacity:1; }
+.busgo-full-sale .trip-sale-panel-pro__header { background:#f1f5fb; color:#445773; font-size:12px; text-transform:none; letter-spacing:0; min-height:46px; }
+.busgo-full-sale .trip-sale-row-pro { background:#fff; min-height:76px; }
+.busgo-full-sale .trip-sale-row-pro:hover { background:#f7faff; }
+.busgo-full-sale .trip-sale-row-pro--selected { background:#edf3ff; box-shadow:inset 3px 0 #2454d6; }
+.busgo-full-sale .trip-sale-code,.busgo-full-sale .trip-sale-route__name,.busgo-full-sale .trip-sale-strong { font-size:14px; color:#233654; }
+.busgo-full-sale .ticket-sale-footer-actions { background:#f4f6fa; padding:16px 0; gap:12px; }
+.busgo-full-sale .ticket-sale-btn-primary { background:#2454d6!important; color:#fff!important; min-height:44px; border-radius:10px!important; box-shadow:none!important; font-size:14px; font-weight:700!important; }
+.busgo-full-sale .ticket-sale-btn-primary.v-btn--disabled { background:#dce3ed!important; color:#61718a!important; }
+.busgo-full-sale .ticket-sale-btn-secondary { background:#fff!important; color:#334761!important; min-height:44px; border:1px solid #cfd8e6; border-radius:10px!important; font-size:14px; }
+.busgo-full-sale .ticket-type-card__title { color:#233654; font-size:14px; }
+.busgo-full-sale .ticket-seat-legend { font-size:12px; gap:9px 15px; }
+.busgo-full-sale .ticket-total-box { background:#142b55; color:#fff; border-radius:12px; }
+.busgo-full-sale .payment-method-label { font-size:13px; }
+@media (max-width:767px) {
+  .busgo-full-sale .ticket-sale-topbar { padding:13px 16px; gap:10px; flex-wrap:wrap; }.busgo-full-sale .ticket-sale-topbar__left { flex:1; }.busgo-full-sale .ticket-sale-topbar__subtitle { font-size:12px; }.busgo-full-sale .ticket-sale-topbar__title { font-size:19px; }.busgo-full-sale .ticket-sale-step-chip { display:none; }.busgo-full-sale .ticket-sale-body { padding:0 12px 16px!important; }.busgo-full-sale .ticket-sale-section-card,.busgo-full-sale .ticket-sale-summary-pro { padding:16px; }.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-item) { padding:16px 10px; }.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-item__title) { font-size:12px; }
+}
+@media(max-width:959px) {
+  .sales-workspace { padding:15px 17px 24px; }
+  .sales-mode-footer { align-items:stretch; }
+  .sales-launch-button.v-btn { width:100%; }
+}
+@media(max-width:600px) {
+  .sales-workspace { padding:12px; }
+  .sales-context-panel { flex-direction:column; align-items:stretch; gap:12px; padding:14px; }
+  .sales-branch-control { width:100%; flex-basis:auto; }
+  .sales-modes { grid-template-columns:1fr; gap:12px; margin-top:12px; }
+  .sales-mode-card { padding:14px; }
+  .sales-workspace-footnote { align-items:flex-start; }
+}
+
+
+/* Shared compact dimensions for Full and Express headers. */
+.busgo-full-sale .ticket-sale-topbar { min-height:70px; padding:12px 24px; gap:12px; flex-wrap:nowrap; background:#142b55; }
+.busgo-full-sale .ticket-sale-topbar__left { gap:11px; }
+.busgo-full-sale .ticket-sale-topbar__icon { flex:0 0 38px; width:38px; height:38px; border-radius:10px; }
+.busgo-full-sale .ticket-sale-topbar__icon :deep(.v-icon) { font-size:23px!important; }
+.busgo-full-sale .ticket-sale-topbar__title { font-size:19px; font-weight:800; line-height:1.2; letter-spacing:normal; }
+.busgo-full-sale .ticket-sale-topbar__subtitle { font-size:12px; line-height:1.4; margin-top:4px; }
+.busgo-full-sale .ticket-sale-step-chip { display:inline-flex; font-size:11px; font-weight:650; }
+.busgo-full-sale .ticket-sale-close { border-radius:9px; }
+.busgo-full-sale .ticket-sale-section-card,.busgo-full-sale .ticket-sale-summary-pro { padding:18px; border-radius:12px; }
+.busgo-full-sale .ticket-sale-section-header { gap:12px; margin-bottom:16px; }
+.busgo-full-sale .ticket-sale-section-title { font-size:15px; font-weight:800; line-height:1.4; letter-spacing:normal; }
+.busgo-full-sale .ticket-sale-section-subtitle { font-size:12px; line-height:1.5; margin-top:3px; }
+.busgo-full-sale .ticket-sale-label { font-size:12px; margin-bottom:6px; }
+.busgo-full-sale .trip-sale-panel-pro__header { min-height:42px; font-size:11px; font-weight:800; }
+.busgo-full-sale .ticket-sale-stepper-pro :deep(.v-stepper-header) { min-height:64px; }
+.sales-mode-card--express { border-top-color:#16845b; }
+.sales-mode-card--express .sales-mode-icon { color:#16845b; background:#edf8f2; }
+.sales-mode-card--express .sales-mode-tag { color:#116546; background:#edf8f2; }
+.sales-launch-button--express.v-btn { color:#116546; background:#edf8f2; }
+.sales-launch-button--express:focus-visible { outline-color:#78c9a2; }
+@media(max-width:959px) { .busgo-full-sale .ticket-sale-topbar { padding-inline:17px; } }
+@media(max-width:600px) {
+  .busgo-full-sale .ticket-sale-topbar { padding:12px; gap:9px; }
+  .busgo-full-sale .ticket-sale-topbar__left { flex:1; gap:9px; }
+  .busgo-full-sale .ticket-sale-topbar__title { font-size:17px; }
+  .busgo-full-sale .ticket-sale-topbar__subtitle { font-size:11px; }
+  .busgo-full-sale .ticket-sale-step-chip { display:none; }
+  .busgo-full-sale .ticket-sale-section-card,.busgo-full-sale .ticket-sale-summary-pro { padding:14px; }
 }
 </style>

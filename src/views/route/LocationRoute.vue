@@ -8,7 +8,7 @@
         <!-- Texto -->
         <div class="ml-4">
             <div class="text-h6 font-weight-medium">Ubicaciones y Rutas</div>
-            <div class="text-body-2 text-grey">Gestionar Ubicaciones y Rutas de las Sucursal</div>
+            <div class="text-body-2 text-grey"> y Rutas de las Sucursal</div>
         </div>
     </v-card>
     <v-card flat>
