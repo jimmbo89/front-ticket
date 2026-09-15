@@ -474,7 +474,8 @@ export default {
   margin: 0;
   padding: 5px 8px 12px;
   overflow-x: hidden;
-  overflow-y: auto;
+  /* Vuetify aplica overflow:hidden a cualquier v-list dentro del drawer. */
+  overflow-y: auto !important;
 
   color: var(--drawer-text);
   overscroll-behavior: contain;
