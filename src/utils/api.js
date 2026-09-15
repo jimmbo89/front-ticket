@@ -14,7 +14,19 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
     const response = await axiosInstance(config);
 
     if (response.status === 200 || response.status === 201) {
-      return { success: true, message: "Operación realizada correctamente", data: response.data  };
+      return {
+        success: true,
+        message: "Operación realizada correctamente",
+        data: response.data,
+        status: response.status,
+      };
+    } else if (response.status === 202) {
+      return {
+        success: false,
+        message: 'La solicitud fue aceptada y está pendiente.',
+        data: response.data,
+        status: 202,
+      };
     } else if (response.status === 204) {
       return { success: false, message: 'No encontrado.', data: null  };
     }
@@ -84,7 +96,11 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
           return { success: false, message: getMessage(responseData, `Error inesperado: ${status}`), data: responseData, status };
       }
     } else if (error.request) {
-      return { success: false, message: 'No se recibió respuesta del servidor.' };
+      return {
+        success: false,
+        message: 'No se recibió respuesta del servidor.',
+        networkError: true,
+      };
     } else {
       return { success: false, message: 'Error al enviar la solicitud.' };
     }
