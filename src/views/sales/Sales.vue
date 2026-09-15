@@ -50,7 +50,13 @@
     @saved="handleExpressSaleSaved"
   />
 
-  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" content-class="busgo-full-sale-overlay">
+  <v-dialog
+    v-model="dialog"
+    fullscreen
+    transition="dialog-bottom-transition"
+    content-class="busgo-full-sale-overlay"
+    :persistent="Boolean(pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked)"
+  >
     <v-form ref="form" v-model="valid" enctype="multipart/form-data" class="busgo-full-sale-form">
       <v-card class="ticket-sale-dialog-pro busgo-full-sale" elevation="0">
 
@@ -499,7 +505,7 @@
                           :class="[
                             getCardClass(method),
                             { 'payment-method-disabled': method.disabled }
-                          ]" @click="!method.disabled && (editedItem.method = method.value)">
+                          ]" @click="!method.disabled && !pendingPaymentKey && !pendingPaymentStartPayload && !paymentSubmissionBlocked && (editedItem.method = method.value)">
                           <v-card-text class="payment-method-content-pro">
                             <v-icon size="24" :color="getMethodColor(method.value)">
                               {{ method.icon }}
@@ -516,13 +522,32 @@
                         <span>Total</span>
                         <strong>{{ formatNumber(Number(editedItem.total || 0)) }} CLP</strong>
                       </div>
+
+                      <div
+                        v-if="(pendingPaymentKey && !paymentStatusQuerying) || (pendingPaymentStartPayload && !loading)"
+                        class="d-flex justify-end mt-2"
+                      >
+                        <v-btn
+                          v-if="pendingPaymentKey && !paymentStatusQuerying"
+                          size="small"
+                          variant="text"
+                          :disabled="loading"
+                          @click="retryPendingPaymentStatus"
+                        >Consultar estado</v-btn>
+                        <v-btn
+                          v-if="pendingPaymentStartPayload && !loading"
+                          size="small"
+                          variant="text"
+                          @click="retryCardPaymentStart"
+                        >Reintentar envío</v-btn>
+                      </div>
                     </div>
                   </v-col>
                 </v-row>
 
                 <div class="ticket-sale-footer-actions">
                   <v-btn class="ticket-sale-btn-secondary" variant="flat" prepend-icon="mdi-arrow-left"
-                    @click="prevStep">
+                    @click="prevStep" :disabled="Boolean(pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked)">
                     Volver
                   </v-btn>
 
@@ -531,7 +556,7 @@
                   <v-btn class="ticket-sale-btn-primary" variant="flat" prepend-icon="mdi-content-save-outline"
                     @click="save" :disabled="!valid ||
                       Number(selectedSeats.length) !== Number(editedItem.quantity) ||
-                      !editedItem.method
+                      !editedItem.method || pendingPaymentKey || pendingPaymentStartPayload || paymentSubmissionBlocked
                       " :loading="loading">
                     Guardar venta
                   </v-btn>
@@ -542,6 +567,37 @@
         </v-card-text>
       </v-card>
     </v-form>
+  </v-dialog>
+
+  <v-dialog v-model="paymentRecoveryDialog" max-width="500" persistent>
+    <v-card class="busgo-dialog-card">
+      <v-card-title>Pago con tarjeta pendiente</v-card-title>
+      <v-card-text>
+        <v-alert :type="paymentStatusType" variant="tonal" density="compact">
+          {{ paymentStatusMessage }}
+        </v-alert>
+        <div v-if="pendingPaymentMethod" class="mt-3">Método: {{ pendingPaymentMethod }}</div>
+        <div v-if="pendingPaymentAmount !== null" class="mt-1">
+          Total: {{ formatNumber(Number(pendingPaymentAmount)) }} CLP
+        </div>
+      </v-card-text>
+      <v-card-actions class="busgo-dialog-actions">
+        <v-spacer />
+        <v-btn
+          v-if="pendingPaymentKey && !paymentStatusQuerying"
+          color="primary"
+          variant="flat"
+          :disabled="loading"
+          @click="retryPendingPaymentStatus"
+        >Consultar estado</v-btn>
+        <v-btn
+          v-if="pendingPaymentStartPayload && !loading"
+          color="primary"
+          variant="flat"
+          @click="retryCardPaymentStart"
+        >Reintentar misma solicitud</v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 
   <v-dialog v-model="showTicketDialog" max-width="500" persistent>
@@ -726,6 +782,11 @@ import { handleRequest } from "@/utils/api";
 import { paleteColors } from "@/assets/colors";
 import QRCode from "qrcode";
 import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
+
+const CARD_PAYMENT_DEVICE = "TJ44243320217";
+const PAYMENT_STATUS_POLL_INTERVAL_MS = 2000;
+const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
+
 export default {
   name: 'SalesView',
   components: { ExpressTicketSale },
@@ -765,6 +826,15 @@ export default {
     aviable: "",
     branches: [],
     showTicketDialog: false,
+    pendingPaymentKey: "",
+    pendingPaymentStartPayload: null,
+    paymentSubmissionBlocked: false,
+    paymentRecoveryDialog: false,
+    pendingPaymentAmount: null,
+    pendingPaymentMethod: "",
+    paymentStatusMessage: "",
+    paymentStatusType: "info",
+    paymentStatusQuerying: false,
     step: 1,
     items: ["Trayecto", "Venta"],
     editedItem: {
@@ -827,9 +897,8 @@ export default {
         text: "Crédito",
         value: "Credito",
         icon: "mdi-credit-card-outline",
-        disabled: true,
       },
-      { text: "Débito", value: "Debito", icon: "mdi-bank-outline", disabled: true },
+      { text: "Débito", value: "Debito", icon: "mdi-bank-outline" },
     ],
     editedIndex: -1,
     menu: false,
@@ -973,6 +1042,7 @@ export default {
       this.branch_id = LocalStorageService.getItem("branch_id");
       
     }
+    this.restorePendingCardPayment();
   },
   methods: { getLocalStorageValue(key) {
       const value = LocalStorageService.getItem(key);
@@ -2364,13 +2434,315 @@ export default {
         JSON.stringify(normalize(editedItems))
       );
     },
+    isCardPaymentMethod(method) {
+      return method === "Credito" || method === "Debito";
+    },
+    getTicketWebResponseMessage(responseData, fallback) {
+      const message = [responseData?.message, responseData?.msg].find(
+        (value) => typeof value === "string" && value.trim()
+      );
+      return message || fallback;
+    },
+    persistPendingCardPayment() {
+      try {
+        if (
+          !this.pendingPaymentKey &&
+          !this.pendingPaymentStartPayload &&
+          !this.paymentSubmissionBlocked
+        ) {
+          sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
+          return;
+        }
+
+        sessionStorage.setItem(
+          PENDING_CARD_PAYMENT_STORAGE_KEY,
+          JSON.stringify({
+            idempotencyKey: this.pendingPaymentKey || null,
+            requestPayload: this.pendingPaymentStartPayload,
+            blocked: this.paymentSubmissionBlocked,
+            amount: this.pendingPaymentAmount,
+            method: this.pendingPaymentMethod,
+            message: this.paymentStatusMessage,
+            messageType: this.paymentStatusType,
+          })
+        );
+      } catch (error) {
+        console.error("No se pudo guardar el estado del pago pendiente.", error);
+      }
+    },
+    clearPendingCardPayment() {
+      try {
+        sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
+      } catch (error) {
+        console.error("No se pudo limpiar el estado del pago pendiente.", error);
+      }
+
+      this.pendingPaymentKey = "";
+      this.pendingPaymentStartPayload = null;
+      this.paymentSubmissionBlocked = false;
+      this.paymentRecoveryDialog = false;
+      this.pendingPaymentAmount = null;
+      this.pendingPaymentMethod = "";
+    },
+    restorePendingCardPayment() {
+      let savedPayment;
+      try {
+        savedPayment = JSON.parse(
+          sessionStorage.getItem(PENDING_CARD_PAYMENT_STORAGE_KEY) || "null"
+        );
+      } catch (error) {
+        console.error("No se pudo leer el estado del pago pendiente.", error);
+        sessionStorage.removeItem(PENDING_CARD_PAYMENT_STORAGE_KEY);
+        return;
+      }
+
+      if (!savedPayment) {
+        return;
+      }
+
+      this.pendingPaymentKey = savedPayment.idempotencyKey || "";
+      this.pendingPaymentStartPayload = savedPayment.requestPayload || null;
+      this.paymentSubmissionBlocked = Boolean(savedPayment.blocked);
+      this.pendingPaymentAmount = savedPayment.amount ?? null;
+      this.pendingPaymentMethod = savedPayment.method || "";
+      this.paymentStatusMessage =
+        savedPayment.message || "Se recuperó una operación pendiente; verificando su estado.";
+      this.paymentStatusType = savedPayment.messageType || "info";
+      this.paymentRecoveryDialog = true;
+
+      if (this.pendingPaymentKey) {
+        this.paymentStatusMessage = "Pago pendiente recuperado. Consultando el mismo estado de pago.";
+        this.pollPendingPaymentStatus();
+      } else if (this.pendingPaymentStartPayload) {
+        this.paymentStatusMessage = "La solicitud quedó pendiente de confirmación. Reintenta usando el mismo cuerpo guardado.";
+      } else if (this.paymentSubmissionBlocked) {
+        this.paymentStatusMessage = savedPayment.message || "No se puede reenviar esta venta de forma segura. Contacta soporte.";
+      } else {
+        this.clearPendingCardPayment();
+      }
+    },
+    async showGeneratedTicket(ticket) {
+      this.currentTicket = ticket;
+      this.showTicketDialog = true;
+      this.selectedBranch =
+        this.branches.find((branch) => branch.id === ticket.branch_id) || null;
+      await this.$nextTick();
+      await this.generateQRCode();
+    },
+    async completeCardTicket(ticket, message = "El pago fue confirmado y el ticket está emitido.") {
+      this.clearPendingCardPayment();
+      this.paymentStatusMessage = "";
+      this.paymentStatusType = "info";
+      await this.showGeneratedTicket(ticket);
+      this.showAlert("success", message, 3000);
+      this.branch_id = this.editedItem.branch_id || ticket.branch_id || this.branch_id;
+      this.close();
+    },
+    getCardPaymentErrorMessage(result = {}) {
+      const backendMessage = [
+        result.data?.message,
+        result.data?.msg,
+        result.data?.payment?.message,
+      ].find((message) => typeof message === "string" && message.trim());
+      if (backendMessage) {
+        return backendMessage;
+      }
+
+      if (result.status === 402) {
+        if (
+          typeof result.message === "string" &&
+          result.message.trim() &&
+          result.message !== `Error inesperado: ${result.status}`
+        ) {
+          return result.message;
+        }
+
+        const providerStatus = String(result.data?.payment?.providerStatus || "").toLowerCase();
+        if (providerStatus === "failed") {
+          return "TUU confirmó que el pago fue rechazado. No se emitió el ticket.";
+        }
+        if (providerStatus === "canceled" || providerStatus === "cancelled") {
+          return "TUU confirmó que el pago fue cancelado. No se emitió el ticket.";
+        }
+        return "No se pudo iniciar la solicitud de pago. No se emitió el ticket.";
+      }
+      if (result.status === 409) {
+        return "La venta entra en conflicto. Revisa tarifa, monto y asientos antes de intentar de nuevo.";
+      }
+      if (result.status === 429) {
+        return "El POS alcanzó su límite. Espera antes de volver a intentar el cobro.";
+      }
+      return result.message || "No se pudo iniciar el pago con tarjeta.";
+    },
+    async createCardPayment(payload) {
+      const requestPayload = this.pendingPaymentStartPayload || JSON.parse(JSON.stringify(payload));
+      this.pendingPaymentStartPayload = requestPayload;
+      this.pendingPaymentAmount = requestPayload.total ?? null;
+      this.pendingPaymentMethod = requestPayload.method || "";
+      this.paymentStatusMessage = "";
+      this.persistPendingCardPayment();
+
+      let result = await handleRequest({
+        endpoint: "ticket-web",
+        method: "POST",
+        data: requestPayload,
+      });
+
+      // Si se perdió la respuesta inicial, repetir exactamente el mismo cuerpo y sin clave.
+      if (result.networkError) {
+        result = await handleRequest({
+          endpoint: "ticket-web",
+          method: "POST",
+          data: requestPayload,
+        });
+      }
+
+      if (result.networkError) {
+        this.paymentStatusType = "warning";
+        this.paymentStatusMessage = "No llegó respuesta del POS. Reintenta el envío para repetir exactamente la misma solicitud.";
+        this.persistPendingCardPayment();
+        this.showAlert("warning", this.paymentStatusMessage, 5000);
+        return;
+      }
+
+      if (result.status === 202) {
+        const paymentKey = result.data?.payment?.idempotencyKey;
+        if (!paymentKey) {
+          this.pendingPaymentStartPayload = null;
+          this.paymentSubmissionBlocked = true;
+          this.paymentStatusType = "error";
+          this.paymentStatusMessage = "El servidor indicó un pago pendiente, pero no devolvió su clave. No vuelvas a enviar la venta; contacta soporte.";
+          this.persistPendingCardPayment();
+          return;
+        }
+
+        this.pendingPaymentStartPayload = null;
+        this.pendingPaymentKey = paymentKey;
+        this.paymentStatusType = "info";
+        this.paymentStatusMessage = this.getTicketWebResponseMessage(
+          result.data,
+          "Pago pendiente en el POS. Esperando confirmación; no entregues el ticket todavía."
+        );
+        this.persistPendingCardPayment();
+        this.showAlert("warning", this.paymentStatusMessage, 5000);
+        await this.pollPendingPaymentStatus();
+        return;
+      }
+
+      if (result.success && result.data?.ticket) {
+        const message = this.getTicketWebResponseMessage(
+          result.data,
+          "La venta se registró correctamente."
+        );
+        await this.completeCardTicket(result.data.ticket, message);
+        return;
+      }
+
+      this.paymentStatusType = result.success || result.status === 402 ? "warning" : "error";
+      this.paymentStatusMessage = this.getCardPaymentErrorMessage(result);
+      if (result.success) {
+        this.pendingPaymentStartPayload = null;
+        this.paymentSubmissionBlocked = true;
+      } else if ([400, 401, 402, 404, 409, 429].includes(result.status)) {
+        this.clearPendingCardPayment();
+      }
+      this.persistPendingCardPayment();
+      this.showAlert("warning", this.paymentStatusMessage, 5000);
+    },
+    async retryCardPaymentStart() {
+      if (!this.pendingPaymentStartPayload || this.loading) {
+        return;
+      }
+
+      this.loading = true;
+      try {
+        await this.createCardPayment(this.pendingPaymentStartPayload);
+      } finally {
+        this.loading = false;
+      }
+    },
+    waitForPaymentStatus() {
+      return new Promise((resolve) => {
+        setTimeout(resolve, PAYMENT_STATUS_POLL_INTERVAL_MS);
+      });
+    },
+    async pollPendingPaymentStatus() {
+      if (!this.pendingPaymentKey || this.paymentStatusQuerying) {
+        return;
+      }
+
+      this.paymentStatusQuerying = true;
+      try {
+        while (this.pendingPaymentKey) {
+          const result = await handleRequest({
+            endpoint: "ticket-web/payment-status",
+            method: "POST",
+            data: { idempotencyKey: this.pendingPaymentKey },
+          });
+
+          if (result.status === 202) {
+            const status =
+              result.data?.payment?.status ||
+              result.data?.payment?.providerStatus ||
+              "Unknown";
+            this.paymentStatusType = "info";
+            this.paymentStatusMessage = this.getTicketWebResponseMessage(
+              result.data,
+              `Pago ${status}. Mantén abierta esta venta; el ticket solo se mostrará al confirmarse.`
+            );
+            await this.waitForPaymentStatus();
+            continue;
+          }
+
+          if (result.status === 402) {
+            this.clearPendingCardPayment();
+            this.paymentStatusType = "warning";
+            this.paymentStatusMessage = this.getCardPaymentErrorMessage(result);
+            this.showAlert("warning", this.paymentStatusMessage, 5000);
+            return;
+          }
+
+          if (result.success && result.status === 200 && result.data?.ticket) {
+            const message = this.getTicketWebResponseMessage(
+              result.data,
+              "El pago fue confirmado y el ticket está emitido."
+            );
+            await this.completeCardTicket(result.data.ticket, message);
+            return;
+          }
+
+          this.paymentStatusType = "error";
+          this.paymentStatusMessage = this.getTicketWebResponseMessage(
+            result.data,
+            result.message || `No se pudo consultar el pago (${result.status || "sin respuesta"}). La clave se conservó; corrige el problema y vuelve a consultar.`
+          );
+          this.showAlert("warning", this.paymentStatusMessage, 5000);
+          return;
+        }
+      } finally {
+        this.paymentStatusQuerying = false;
+      }
+    },
+    async retryPendingPaymentStatus() {
+      if (!this.pendingPaymentKey || this.paymentStatusQuerying || this.loading) {
+        return;
+      }
+
+      this.paymentStatusMessage = "Consultando el estado del pago…";
+      this.paymentStatusType = "info";
+      this.loading = true;
+      try {
+        await this.pollPendingPaymentStatus();
+      } finally {
+        this.loading = false;
+      }
+    },
     async save() {
       if (this.loading || !this.hasPermission('view_traditional_sales_web')) return;
       this.loading = true;
       let shouldClose = false;
       try {
         
-        this.valid = false;
         const fieldsToUpdate = [
           "trip_id",
           "branch_id",
@@ -2416,6 +2788,10 @@ export default {
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
           updatedFields.method = this.editedItem.method || "Efectivo";
           updatedFields.price = this.getSelectedTripBasePrice();
+          if (this.isCardPaymentMethod(updatedFields.method)) {
+            updatedFields.device = CARD_PAYMENT_DEVICE;
+            await this.createCardPayment(updatedFields);
+          } else {
           try {
             const result = await handleRequest({
               endpoint: "ticket-web",
@@ -2459,6 +2835,7 @@ export default {
               "Ocurrió un error inesperado al procesar la solicitud.",
               3000
             );
+          }
           }
         }
       
