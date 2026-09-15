@@ -519,7 +519,7 @@
 
               loading-text="Consultando recaudación..."
 
-              class="busgo-table collection-route-table"
+              class="busgo-table collection-route-table collection-methods-empty-table"
 
             >
 
@@ -2175,6 +2175,12 @@ export default {
 
 }
 
+.collection-methods-empty-table {
+  color: #64748b;
+  font-size: 14px;
+  border-bottom: 1px solid #eef2f7;
+}
+
 .collection-table-total {
 
   padding: 12px 16px;
@@ -3138,4 +3144,3 @@ export default {
   }
 }
 </style>
-  

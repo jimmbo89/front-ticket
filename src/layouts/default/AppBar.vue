@@ -4,11 +4,12 @@
     location="right top"
     :timeout="sb_timeout"
     :color="sb_type"
+    variant="flat"
     elevation="10"
     class="busgo-snackbar"
   >
     <div class="d-flex align-center ga-3">
-      <v-icon :icon="sb_icon" />
+      <v-icon :icon="sb_icon" size="20" />
       <div>
         <div class="font-weight-bold">{{ sb_title }}</div>
         <div class="text-caption">{{ sb_message }}</div>
@@ -16,196 +17,212 @@
     </div>
   </v-snackbar>
 
-  <v-app-bar class="busgo-appbar" elevation="0">
-  <!-- Menú móvil -->
-  <v-app-bar-nav-icon
-    v-if="!$vuetify.display.mdAndUp"
-    class="drawer-toggle"
-    aria-label="Abrir menú"
-    @click.stop="$emit('toggle-drawer')"
-  />
+  <v-app-bar class="busgo-appbar" :height="mobile ? 56 : 64" elevation="0">
+    <!-- Menú móvil -->
+    <v-app-bar-nav-icon
+      v-if="!$vuetify.display.mdAndUp"
+      class="drawer-toggle"
+      aria-label="Abrir menú"
+      @click.stop="$emit('toggle-drawer')"
+    >
+      <v-icon icon="mdi-menu-2" />
+    </v-app-bar-nav-icon>
 
-  <!-- Identidad -->
-  <v-app-bar-title class="busgo-brand">
-    <div class="brand-container">
-      <div class="brand-symbol">
-        <v-icon size="20">mdi-bus</v-icon>
-      </div>
+    <!-- Identidad BusGo -->
+    <v-app-bar-title class="busgo-brand">
+      <div class="brand-container">
+        <div class="brand-symbol" aria-hidden="true">
+          <span class="brand-symbol-letter">B</span>
+        </div>
 
-      <div class="brand-wordmark">
-        <span class="brand-bus">Bus</span>
-        <span class="brand-go">GO</span>
+        <div class="brand-wordmark" aria-label="BusGO">
+          <span class="brand-bus">Bus</span>
+          <span class="brand-go">GO</span>
+        </div>
       </div>
+    </v-app-bar-title>
+
+    <v-spacer />
+
+    <!-- Estado operativo -->
+    <div v-if="!mobile" class="appbar-status" aria-label="Operación en línea">
+      <span class="appbar-status-dot"></span>
+      <span>Operación en línea</span>
     </div>
-  </v-app-bar-title>
 
-  <v-spacer />
+    <div v-if="!mobile" class="appbar-divider"></div>
 
-  <!-- Estado del sistema -->
-  <div v-if="!mobile" class="appbar-status">
-    <span class="appbar-status-dot"></span>
-    <span>Sistema en línea</span>
-  </div>
+    <!-- Menú del usuario -->
+    <v-menu
+      :max-width="mobile ? 280 : 320"
+      location="bottom end"
+      offset="8"
+      :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
+    >
+      <template #activator="{ props: menuProps }">
+        <!-- Móvil -->
+        <button
+          v-if="mobile"
+          v-bind="menuProps"
+          type="button"
+          class="user-chip-mobile"
+          aria-label="Abrir menú de usuario"
+        >
+          <v-avatar size="36" class="user-avatar">
+            <v-img v-if="hasProfileImage" :src="profileImageSrc" cover />
+            <v-icon v-else icon="mdi-account-outline" size="20" />
+            <span class="avatar-status"></span>
+          </v-avatar>
 
-  <div v-if="!mobile" class="appbar-divider"></div>
+          <v-icon icon="mdi-dots-vertical" size="20" />
+        </button>
 
-  <!-- Menú del usuario -->
-  <v-menu
-    :max-width="mobile ? 280 : 320"
-    location="bottom end"
-    offset="8"
-    :transition="mobile ? 'slide-y-transition' : 'scale-transition'"
-  >
-    <template #activator="{ props: menuProps }">
-      <!-- Móvil -->
-      <button
-        v-if="mobile"
-        v-bind="menuProps"
-        type="button"
-        class="user-chip-mobile"
-        aria-label="Abrir menú de usuario"
-      >
-        <v-avatar size="36" class="user-avatar">
-          <v-img
-            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
-            cover
-          />
+        <!-- Escritorio -->
+        <button
+          v-else
+          v-bind="menuProps"
+          type="button"
+          class="user-chip"
+          aria-label="Abrir menú de usuario"
+        >
+          <v-avatar size="36" class="user-avatar">
+            <v-img v-if="hasProfileImage" :src="profileImageSrc" cover />
+            <v-icon v-else icon="mdi-account-outline" size="20" />
+            <span class="avatar-status"></span>
+          </v-avatar>
 
-          <span class="avatar-status"></span>
-        </v-avatar>
-
-        <v-icon size="20">mdi-dots-vertical</v-icon>
-      </button>
-
-      <!-- Escritorio -->
-      <button
-        v-else
-        v-bind="menuProps"
-        type="button"
-        class="user-chip"
-      >
-        <v-avatar size="36" class="user-avatar">
-          <v-img
-            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
-            cover
-          />
-
-          <span class="avatar-status"></span>
-        </v-avatar>
-
-        <div class="user-info">
-          <div class="user-name">
-            {{ name }}
+          <div class="user-info">
+            <div class="user-name">{{ displayName }}</div>
+            <div class="user-role">{{ displayRole }}</div>
           </div>
 
-          <div class="user-role">
-            {{ role }}
+          <v-icon class="user-chevron" icon="mdi-chevron-down" size="18" />
+        </button>
+      </template>
+
+      <!-- Menú desplegable -->
+      <v-list density="compact" class="user-menu">
+        <div class="menu-header">
+          <v-avatar size="42" class="menu-avatar">
+            <v-img v-if="hasProfileImage" :src="profileImageSrc" cover />
+            <v-icon v-else icon="mdi-account-outline" size="22" />
+          </v-avatar>
+
+          <div class="menu-user-information">
+            <div class="menu-user-kicker">CUENTA ACTIVA</div>
+            <div class="menu-user-name">{{ displayName }}</div>
+            <div class="menu-user-role">{{ displayRole }}</div>
+          </div>
+        </div>
+
+        <v-divider class="menu-divider" />
+
+        <v-list-item
+          v-for="(item, i) in items"
+          :key="i"
+          class="menu-item"
+          :class="{ 'menu-item--logout': item.title === 'Cerrar Sesión' }"
+          @click="handleItemClick(item)"
+        >
+          <template #prepend>
+            <div class="menu-icon">
+              <v-icon :icon="item.icon" size="18" />
+            </div>
+          </template>
+
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+  </v-app-bar>
+
+  <!-- DIALOG PASSWORD -->
+  <v-dialog v-model="dialogChangePass" max-width="460px">
+    <v-card class="password-dialog">
+      <div class="password-dialog__header">
+        <div class="password-dialog__heading">
+          <div class="password-dialog__icon">
+            <v-icon icon="mdi-shield-lock-outline" size="20" />
+          </div>
+
+          <div>
+            <div class="password-dialog__eyebrow">SEGURIDAD DE LA CUENTA</div>
+            <div class="password-dialog__title">Actualizar contraseña</div>
           </div>
         </div>
 
-        <v-icon class="user-chevron" size="18">
-          mdi-chevron-down
-        </v-icon>
-      </button>
-    </template>
-
-    <!-- Menú desplegable -->
-    <v-list density="compact" class="user-menu">
-      <div class="menu-header">
-        <v-avatar size="40" class="menu-avatar">
-          <v-img
-            :src="`${this.$axios.defaults.baseURL}images/${imageUrl}`"
-            cover
-          />
-        </v-avatar>
-
-        <div class="menu-user-information">
-          <div class="menu-user-name">
-            {{ name }}
-          </div>
-
-          <div class="menu-user-role">
-            {{ role }}
-          </div>
-        </div>
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="34"
+          aria-label="Cerrar diálogo"
+          @click="close"
+        />
       </div>
 
-      <v-divider class="menu-divider" />
+      <v-card-text class="password-dialog__body">
+        <p class="password-dialog__intro">
+          Actualiza tu contraseña para mantener protegida tu cuenta BusGo.
+        </p>
 
-      <v-list-item
-        v-for="(item, i) in items"
-        :key="i"
-        class="menu-item"
-        :class="{ 'menu-item--logout': item.title === 'Cerrar Sesión' }"
-        @click="handleItemClick(item)"
-      >
-        <template #prepend>
-          <div class="menu-icon">
-            <v-icon :icon="item.icon" size="18" />
-          </div>
-        </template>
-
-        <v-list-item-title>
-          {{ item.title }}
-        </v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
-</v-app-bar>
-
-  <!-- DIALOG PASSWORD (sin cambios de lógica) -->
-  <v-dialog v-model="dialogChangePass" max-width="420px">
-    <v-card class="password-dialog">
-
-      <v-toolbar color="#0f172a">
-        <span class="text-subtitle-2 ml-4">Actualizar contraseña</span>
-      </v-toolbar>
-
-      <v-card-text>
         <v-text-field
           v-model="editedItem.currentPassword"
-          type="password"
+          :type="visible ? 'text' : 'password'"
           label="Contraseña actual"
           variant="outlined"
+          density="comfortable"
+          autocomplete="current-password"
+          :append-inner-icon="visible ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+          @click:append-inner="visible = !visible"
         />
 
         <v-text-field
           v-model="editedItem.newPassword"
-          type="password"
+          :type="visible1 ? 'text' : 'password'"
           label="Nueva contraseña"
           variant="outlined"
+          density="comfortable"
+          autocomplete="new-password"
           :rules="[passwordRule]"
+          :append-inner-icon="visible1 ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+          @click:append-inner="visible1 = !visible1"
         />
 
         <v-text-field
           v-model="editedItem.newPassword1"
-          type="password"
+          :type="visible2 ? 'text' : 'password'"
           label="Repetir contraseña"
           variant="outlined"
+          density="comfortable"
+          autocomplete="new-password"
+          :append-inner-icon="visible2 ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+          @click:append-inner="visible2 = !visible2"
         />
 
         <v-alert
           v-if="editedItem.newPassword !== editedItem.newPassword1 && editedItem.newPassword1 !== ''"
+          class="password-dialog__alert"
           type="error"
           variant="tonal"
-        >
-          Las contraseñas no coinciden
-        </v-alert>
+          density="compact"
+          text="Las contraseñas no coinciden."
+        />
       </v-card-text>
 
-      <v-card-actions>
+      <v-card-actions class="password-dialog__actions">
         <v-spacer />
-        <v-btn variant="text" @click="close">Cancelar</v-btn>
+        <v-btn variant="text" class="password-dialog__cancel" @click="close">Cancelar</v-btn>
         <v-btn
           color="primary"
+          variant="flat"
+          class="password-dialog__save"
           :loading="loading"
           :disabled="editedItem.newPassword !== editedItem.newPassword1 || editedItem.newPassword === ''"
           @click="save"
         >
-          Guardar
+          Guardar contraseña
         </v-btn>
       </v-card-actions>
-
     </v-card>
   </v-dialog>
 
@@ -263,33 +280,60 @@ export default {
     const { mobile } = useDisplay()
     return { mobile }
   },
+  computed: {
+    displayName() {
+      return this.name || 'Usuario BusGo'
+    },
+    displayRole() {
+      return this.role || 'Cuenta activa'
+    },
+    hasProfileImage() {
+      return Boolean(this.imageUrl && this.imageUrl !== 'null' && this.imageUrl !== 'undefined')
+    },
+    profileImageSrc() {
+      const baseUrl = this.$axios?.defaults?.baseURL || ''
+      const normalizedBaseUrl = `${String(baseUrl).replace(/\/?$/, '/')}`
+      return `${normalizedBaseUrl}images/${this.imageUrl}`
+    },
+  },
   mounted() {
-    this.name = JSON.parse(LocalStorageService.getItem('name'));
-    this.user = JSON.parse(LocalStorageService.getItem('user'));
-    this.user_id = JSON.parse(LocalStorageService.getItem('user_id'));
-    this.rol_id = LocalStorageService.getItem('role_id');
-    this.role = JSON.parse(LocalStorageService.getItem('role'));
-    this.imageUrl = LocalStorageService.getItem('image').replace(/['"]+/g, '');
-    this.$router.push({ path: 'home' });
+    this.name = this.readStorageValue('name');
+    this.user = this.readStorageValue('user');
+    this.user_id = this.readStorageValue('user_id');
+    this.rol_id = this.readStorageValue('role_id');
+    this.role = this.readStorageValue('role');
+    this.imageUrl = String(this.readStorageValue('image') || '')
+      .replace(/['"]+/g, '')
+      .trim();
   },
   methods: {
+    readStorageValue(key) {
+      const rawValue = LocalStorageService.getItem(key)
+
+      if (rawValue === null || rawValue === undefined || rawValue === '') {
+        return ''
+      }
+
+      if (typeof rawValue !== 'string') {
+        return rawValue
+      }
+
+      try {
+        return JSON.parse(rawValue)
+      } catch {
+        return rawValue.replace(/^\"(.*)\"$/, '$1')
+      }
+    },
     showAlert(sb_type, sb_message, sb_timeout) {
+      const alertConfig = {
+        success: { title: 'Éxito', icon: 'mdi-check-circle' },
+        error: { title: 'Error', icon: 'mdi-alert-circle' },
+        warning: { title: 'Advertencia', icon: 'mdi-alert-circle' },
+      }[sb_type] || { title: 'Aviso', icon: 'mdi-information-outline' }
+
       this.sb_type = sb_type
-
-      if (sb_type == "success") {
-        this.sb_title = 'Éxito'
-        this.sb_icon = 'mdi-check-circle'
-      }
-
-      if (sb_type == "error") {
-        this.sb_title = 'Error'
-        this.sb_icon = 'mdi-check-circle'
-      }
-
-      if (sb_type == "warning") {
-        this.sb_title = 'Advertencia'
-        this.sb_icon = 'mdi-alert-circle'
-      }
+      this.sb_title = alertConfig.title
+      this.sb_icon = alertConfig.icon
       this.sb_message = sb_message
       this.sb_timeout = sb_timeout
       this.snackbar = true
@@ -297,6 +341,7 @@ export default {
     async handleItemClick(item) {
       if (item.title === 'Cambiar Contraseña') {
         this.editedItem = Object.assign({}, this.defaultItem);
+        this.resetPasswordVisibility();
         this.dialogChangePass = true;
       }
       if (item.title === 'Cerrar Sesión') {
@@ -336,7 +381,13 @@ export default {
     },
     close(){
       this.editedItem = Object.assign({}, this.defaultItem);
+      this.resetPasswordVisibility();
       this.dialogChangePass = false;
+    },
+    resetPasswordVisibility() {
+      this.visible = false;
+      this.visible1 = false;
+      this.visible2 = false;
     },
     async save(){
       this.loading = true; // Iniciar loader
@@ -367,6 +418,7 @@ export default {
         this.showAlert('error', 'Ocurrió un error inesperado al iniciar sesión.', 3000);
       } finally {
         this.loading = false; // Detener el loader
+        this.resetPasswordVisibility();
         this.dialogChangePass = false;
       }
     },
@@ -378,30 +430,29 @@ export default {
    VARIABLES
 ======================================== */
 
-.busgo-appbar {
+.busgo-appbar,
+.password-dialog {
+  --busgo-navy: #142b55;
   --busgo-blue: #2454d6;
-  --busgo-blue-light: #3266e4;
-  --busgo-blue-dark: #132d6b;
-  --busgo-blue-deep: #0e1f46;
-  --busgo-cyan: #35b8e8;
+  --busgo-blue-dark: #1b3d91;
 
-  --appbar-text: #1e293b;
+  --appbar-text: #111827;
   --appbar-muted: #64748b;
-  --appbar-border: #e8edf5;
-  --appbar-hover: #f2f5fb;
+  --appbar-border: #e5eaf2;
+  --appbar-hover: #f5f7fb;
+}
 
+.busgo-appbar {
   color: var(--appbar-text) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: #ffffff !important;
   border-bottom: 1px solid var(--appbar-border);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.035) !important;
 }
 
 /* Corrige el contenido interno de Vuetify */
 
 .busgo-appbar :deep(.v-toolbar__content) {
-  min-height: 60px;
+  min-height: inherit;
   padding: 0 18px;
 }
 
@@ -411,7 +462,7 @@ export default {
 
 .drawer-toggle {
   margin-right: 6px;
-  color: var(--busgo-blue-dark) !important;
+  color: var(--busgo-navy) !important;
   border-radius: 9px;
 }
 
@@ -444,6 +495,7 @@ export default {
 }
 
 .brand-symbol {
+  position: relative;
   display: grid;
   flex: 0 0 34px;
   width: 34px;
@@ -451,32 +503,40 @@ export default {
   place-items: center;
 
   color: #ffffff;
-  background:
-    radial-gradient(
-      circle at 90% 5%,
-      rgba(53, 184, 232, 0.5),
-      transparent 24px
-    ),
-    linear-gradient(
-      135deg,
-      var(--busgo-blue-deep),
-      var(--busgo-blue)
-    );
+  background: var(--busgo-navy);
 
   border-radius: 9px;
-  box-shadow: 0 4px 10px rgba(36, 84, 214, 0.18);
+  box-shadow: 0 4px 10px rgba(20, 43, 85, 0.16);
 }
 
-.brand-symbol :deep(.v-icon) {
-  color: #ffffff !important;
-  opacity: 1 !important;
+.brand-symbol::after {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 4px;
+  height: 21px;
+  content: '';
+  background: var(--busgo-blue);
+  border-radius: 4px;
+  transform: rotate(12deg);
+}
+
+.brand-symbol-letter {
+  position: relative;
+  z-index: 1;
+  margin-left: -2px;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.08em;
 }
 
 .brand-wordmark {
   display: flex;
   align-items: baseline;
   font-size: 18px;
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
 }
@@ -504,6 +564,7 @@ export default {
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
+  white-space: nowrap;
 
   background: #f8fafc;
   border: 1px solid #edf1f5;
@@ -567,7 +628,8 @@ export default {
 .user-avatar {
   position: relative;
   overflow: visible !important;
-  background: #e8edf5;
+  color: var(--busgo-navy);
+  background: #eef2f8;
   border: 2px solid #ffffff;
   box-shadow: 0 0 0 1px #dce3ed;
 }
@@ -575,6 +637,11 @@ export default {
 .user-avatar :deep(.v-img) {
   overflow: hidden;
   border-radius: 50%;
+}
+
+.user-avatar :deep(.v-icon) {
+  color: var(--busgo-navy) !important;
+  opacity: 1 !important;
 }
 
 .avatar-status {
@@ -653,6 +720,10 @@ export default {
   background: var(--appbar-hover);
 }
 
+.user-chip-mobile:focus-visible {
+  box-shadow: 0 0 0 3px rgba(36, 84, 214, 0.1);
+}
+
 .user-chip-mobile :deep(.v-icon) {
   color: #64748b !important;
   opacity: 1 !important;
@@ -682,12 +753,27 @@ export default {
 
 .menu-avatar {
   flex: 0 0 auto;
-  background: #e8edf5;
+  color: var(--busgo-navy);
+  background: #eef2f8;
   border: 1px solid #dce3ed;
+}
+
+.menu-avatar :deep(.v-icon) {
+  color: var(--busgo-navy) !important;
+  opacity: 1 !important;
 }
 
 .menu-user-information {
   min-width: 0;
+}
+
+.menu-user-kicker {
+  margin-bottom: 3px;
+  color: var(--busgo-blue);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
 }
 
 .menu-user-name {
@@ -797,23 +883,117 @@ export default {
 .password-dialog {
   overflow: hidden;
   border: 1px solid var(--appbar-border);
-  border-radius: 14px !important;
-  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.2);
+  border-radius: 18px !important;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
 }
 
-.password-dialog :deep(.v-toolbar) {
-  color: #ffffff;
-  background:
-    radial-gradient(
-      circle at 100% 0,
-      rgba(53, 184, 232, 0.25),
-      transparent 110px
-    ),
-    linear-gradient(
-      135deg,
-      var(--busgo-blue-deep),
-      var(--busgo-blue-dark)
-    ) !important;
+.password-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px 15px;
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.password-dialog__heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.password-dialog__icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: var(--busgo-blue);
+  background: #edf2ff;
+  border: 1px solid #dce5ff;
+  border-radius: 11px;
+}
+
+.password-dialog__icon :deep(.v-icon) {
+  color: inherit !important;
+}
+
+.password-dialog__eyebrow {
+  margin-bottom: 4px;
+  color: var(--busgo-blue);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+.password-dialog__title {
+  overflow: hidden;
+  color: var(--appbar-text);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.password-dialog__header :deep(.v-btn) {
+  flex: 0 0 auto;
+  color: #64748b !important;
+  border-radius: 9px;
+}
+
+.password-dialog__header :deep(.v-btn:hover) {
+  color: var(--busgo-blue) !important;
+  background: #f3f6fb;
+}
+
+.password-dialog__body {
+  padding: 18px 20px 6px;
+}
+
+.password-dialog__intro {
+  margin: 0 0 17px;
+  color: var(--appbar-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.password-dialog__body :deep(.v-text-field) {
+  margin-bottom: 2px;
+}
+
+.password-dialog__body :deep(.v-field) {
+  border-radius: 10px;
+}
+
+.password-dialog__body :deep(.v-field__append-inner .v-icon) {
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.password-dialog__alert {
+  margin-top: 3px;
+  border-radius: 10px;
+}
+
+.password-dialog__actions {
+  gap: 5px;
+  padding: 10px 20px 18px;
+}
+
+.password-dialog__cancel {
+  color: #64748b !important;
+  font-weight: 700;
+}
+
+.password-dialog__save {
+  min-width: 150px;
+  border-radius: 9px;
+  font-weight: 750;
+  letter-spacing: 0;
 }
 
 /* ========================================
@@ -856,8 +1036,8 @@ export default {
     height: 30px;
   }
 
-  .brand-symbol :deep(.v-icon) {
-    font-size: 18px !important;
+  .brand-symbol-letter {
+    font-size: 17px;
   }
 
   .brand-wordmark {
@@ -866,6 +1046,22 @@ export default {
 
   .user-menu {
     min-width: 260px;
+  }
+
+  .password-dialog__header {
+    padding: 16px 16px 14px;
+  }
+
+  .password-dialog__body {
+    padding: 16px 16px 4px;
+  }
+
+  .password-dialog__actions {
+    padding: 9px 16px 16px;
+  }
+
+  .password-dialog__save {
+    min-width: 0;
   }
 }
 </style>
