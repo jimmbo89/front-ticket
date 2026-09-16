@@ -1,5 +1,7 @@
 ﻿<template>
 
+  <div class="ticket-report-page revenue-report-page">
+
   <v-snackbar
     v-model="snackbar"
     location="right top"
@@ -17,20 +19,14 @@
     </div>
   </v-snackbar>
 
-  <v-card class="busgo-page-header revenue-page-header" elevation="0">
+  <header class="page-header revenue-page-header">
 
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon revenue-page-icon">
-
-      <v-icon>mdi-finance</v-icon>
-
-    </v-avatar>
-
-    <div>
-
-      <div class="busgo-page-title">Recaudación</div>
-
-      <div class="busgo-page-subtitle">Analiza los ingresos y la operación por período</div>
-
+    <div class="page-heading">
+      <div class="page-icon"><v-icon size="21">mdi-finance</v-icon></div>
+      <div>
+        <h1 class="page-title">Recaudación</h1>
+        <p class="page-subtitle">Analiza los ingresos y la operación por período</p>
+      </div>
     </div>
 
     <v-spacer />
@@ -45,7 +41,7 @@
 
       prepend-icon="mdi-file-excel"
 
-      class="busgo-add-btn revenue-export-button"
+      class="ticket-report-export-button revenue-export-button"
       :disabled="loading"
 
       @click="exportToExcel"
@@ -56,11 +52,11 @@
 
     </v-btn>
 
-  </v-card>
+  </header>
 
-  <v-container fluid class="busgo-container revenue-container">
+  <v-container fluid class="page-content revenue-container">
 
-    <v-card class="busgo-card revenue-report-shell" elevation="0">
+    <v-card class="revenue-report-shell" elevation="0">
 
       <v-progress-linear
         v-if="loading"
@@ -99,9 +95,11 @@
           <v-icon size="18">mdi-tune-variant</v-icon>
           <div>
             <strong>Filtros del reporte</strong>
-            <span>Define el período y el alcance de la consulta</span>
+            <span>Selecciona el período y el alcance de la consulta</span>
           </div>
         </div>
+
+        <div class="ticket-report-filter-controls">
 
         <ReportDateRangeFilter
 
@@ -109,6 +107,7 @@
 
           v-model:end-date="endDate"
 
+          class="ticket-report-date-filter"
         />
 
         <v-select
@@ -134,6 +133,8 @@
           hide-details
 
           class="collection-filter"
+
+          :menu-props="{ contentClass: 'incidents-select-menu' }"
 
         >
 
@@ -179,6 +180,8 @@
 
           class="collection-filter"
 
+          :menu-props="{ contentClass: 'incidents-select-menu' }"
+
           :rules="selectRules"
 
         >
@@ -205,7 +208,7 @@
 
           prepend-icon="mdi-magnify"
 
-          class="collection-search-button"
+          class="collection-search-button incidents-query-button"
 
           :loading="loading"
 
@@ -217,101 +220,13 @@
 
         </v-btn>
 
-      </div>
-
-      <div class="collection-kpi-grid px-6 pb-4">
-
-        <v-card class="collection-kpi-card collection-kpi-card--tickets" elevation="0">
-
-          <v-avatar :color="paleteColors.green" class="collection-kpi-icon">
-
-            <v-icon>mdi-ticket-confirmation</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="collection-kpi-label">Pasajes emitidos</div>
-
-            <div class="collection-kpi-value">
-
-              {{ response.pasajesEmitidos || 0 }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="collection-kpi-card collection-kpi-card--passengers" elevation="0">
-
-          <v-avatar color="indigo-lighten-1" class="collection-kpi-icon">
-
-            <v-icon>mdi-account-group</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="collection-kpi-label">Pasajeros</div>
-
-            <div class="collection-kpi-value">
-
-              {{ response.asientosComprados || 0 }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="collection-kpi-card collection-kpi-card--prints" elevation="0">
-
-          <v-avatar color="orange-lighten-1" class="collection-kpi-icon">
-
-            <v-icon>mdi-printer</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="collection-kpi-label">Reimpresiones</div>
-
-            <div class="collection-kpi-value">
-
-              {{ response.reimpresiones || 0 }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="collection-kpi-card collection-kpi-card--revenue" elevation="0">
-
-          <v-avatar color="primary" class="collection-kpi-icon">
-
-            <v-icon>mdi-cash-multiple</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="collection-kpi-label">Total general</div>
-
-            <div class="collection-kpi-value">
-
-              ${{ formatNumber(Number(response.totales)) }}
-
-            </div>
-
-          </div>
-
-        </v-card>
+        </div>
 
       </div>
 
-      <div class="px-6 pb-4">
+      <ReportKpiCards :items="revenueKpiCards" />
+
+      <div class="px-6 pb-4 collection-methods-section-wrapper">
 
         <v-card class="collection-section-card" elevation="0">
 
@@ -459,7 +374,7 @@
 
       </div>
 
-      <div class="px-6 pb-6">
+      <div class="px-6 pb-6 collection-routes-section-wrapper">
 
         <v-card class="collection-section-card" elevation="0">
 
@@ -693,21 +608,9 @@
 
                       <div class="collection-route-col-sale-mode">
 
-                        <v-chip
-
-                          size="x-small"
-
-                          :color="getSaleModeColor(item)"
-
-                          variant="tonal"
-
-                          class="collection-route-sale-mode-chip"
-
-                        >
-
-                          {{ getSaleModeLabel(item) }}
-
-                        </v-chip>
+                        <SaleModeChip
+                          :value="item"
+                        />
 
                       </div>
 
@@ -981,6 +884,8 @@
 
   </v-container>
 
+  </div>
+
 </template>
 
 <script>
@@ -992,16 +897,26 @@ import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 
 import { formatLocalDate } from "@/utils/date";
+import {
+  getSaleModeLabel as getSharedSaleModeLabel,
+} from "@/utils/saleMode";
 
 import * as XLSX from "xlsx";
 
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
+
+import ReportKpiCards from "@/components/ReportKpiCards.vue";
+import SaleModeChip from "@/components/SaleModeChip.vue";
 
 export default {
 
   components: {
 
     ReportDateRangeFilter,
+
+    ReportKpiCards,
+
+    SaleModeChip,
 
   },
 
@@ -1154,6 +1069,43 @@ export default {
   }),
 
   computed: {
+
+    revenueKpiCards() {
+      return [
+        {
+          key: "tickets",
+          variant: "tickets",
+          icon: "mdi-ticket-confirmation",
+          color: this.paleteColors.green,
+          label: "Pasajes emitidos",
+          value: this.response.pasajesEmitidos || 0,
+        },
+        {
+          key: "passengers",
+          variant: "passengers",
+          icon: "mdi-account-group",
+          color: "indigo-lighten-1",
+          label: "Pasajeros",
+          value: this.response.asientosComprados || 0,
+        },
+        {
+          key: "prints",
+          variant: "prints",
+          icon: "mdi-printer",
+          color: "orange-lighten-1",
+          label: "Reimpresiones",
+          value: this.response.reimpresiones || 0,
+        },
+        {
+          key: "revenue",
+          variant: "revenue",
+          icon: "mdi-cash-multiple",
+          color: "primary",
+          label: "Total general",
+          value: `$${this.formatNumber(Number(this.response.totales || 0))}`,
+        },
+      ];
+    },
 
     dateFormatted() {
 
@@ -1460,26 +1412,7 @@ export default {
     },
 
     getSaleModeLabel(tramo = {}) {
-
-      const saleMode = String(tramo?.sale_mode || tramo?.saleMode || "normal")
-
-        .toLowerCase()
-
-        .trim();
-
-      return saleMode === "express" ? "Express" : "Full";
-
-    },
-
-    getSaleModeColor(tramo = {}) {
-
-      const saleMode = String(tramo?.sale_mode || tramo?.saleMode || "normal")
-
-        .toLowerCase()
-
-        .trim();
-
-      return saleMode === "express" ? "success" : "primary";
+      return getSharedSaleModeLabel(tramo);
 
     },
 
@@ -2489,18 +2422,6 @@ export default {
 
 }
 
-.collection-route-sale-mode-chip {
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  letter-spacing: 0;
-
-  text-transform: uppercase;
-
-}
-
 .collection-route-meta {
 
   display: flex;
@@ -3108,6 +3029,266 @@ export default {
   .collection-methods-body,
   .collection-methods-section-header {
     overflow-x: auto;
+  }
+}
+
+/* Estandarización visual compartida con Ventas e Incidentes. */
+.revenue-report-page {
+  min-height: 100%;
+  color: #1e293b;
+  background: #f6f8fb;
+}
+
+.revenue-report-page .revenue-page-header {
+  display: flex !important;
+  min-height: 70px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 12px 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e8edf5 !important;
+  border-radius: 0 !important;
+}
+
+.revenue-report-page .page-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.revenue-report-page .page-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  background: radial-gradient(circle at 90% 5%, rgba(53, 184, 232, 0.5), transparent 28px), linear-gradient(135deg, #0e1f46, #2454d6);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.17);
+  place-items: center;
+}
+
+.revenue-report-page .page-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.revenue-report-page .page-subtitle {
+  margin: 3px 0 0;
+  color: #526176;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.revenue-report-page .revenue-export-button {
+  min-width: 145px;
+  min-height: 40px;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 5px 12px rgba(22, 135, 90, 0.18) !important;
+}
+
+.revenue-report-page .revenue-container {
+  min-height: calc(100vh - 70px);
+  padding: 18px 24px 28px !important;
+  background: #f6f8fb !important;
+}
+
+.revenue-report-page .revenue-report-shell {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.revenue-report-page .report-loading-bar {
+  position: fixed !important;
+  top: 70px;
+  left: 0;
+  z-index: 8;
+}
+
+.revenue-report-page .revenue-summary-header {
+  display: none !important;
+}
+
+.revenue-report-page .collection-kpi-grid {
+  order: 1;
+  gap: 12px !important;
+  padding: 0 0 16px !important;
+}
+
+.revenue-report-page .collection-kpi-card {
+  min-height: 72px;
+  gap: 11px;
+  padding: 13px 15px !important;
+  border: 1px solid #e8edf5 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.035) !important;
+}
+
+.revenue-report-page .collection-kpi-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 9px !important;
+}
+
+.revenue-report-page .collection-kpi-label {
+  color: #526176 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.revenue-report-page .collection-kpi-value {
+  margin-top: 4px !important;
+  color: #0f172a !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+}
+
+.revenue-report-page .collection-methods-section-wrapper {
+  order: 2;
+  padding: 0 0 16px !important;
+}
+
+.revenue-report-page .collection-toolbar {
+  order: 3;
+  display: block !important;
+  margin: 0 0 16px !important;
+  padding: 14px !important;
+  background: #f8fafc;
+  border: 1px solid #e7ecf3;
+  border-radius: 11px;
+}
+
+.revenue-report-page .collection-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.revenue-report-page .ticket-report-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.revenue-report-page .ticket-report-filter-controls > :not(.incidents-query-button) {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.revenue-report-page .ticket-report-filter-controls :deep(.report-date-range-trigger) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.revenue-report-page .ticket-report-filter-controls > .incidents-query-button {
+  flex: 0 0 112px !important;
+  width: 112px !important;
+  min-width: 112px !important;
+}
+
+.revenue-report-page .collection-toolbar :deep(.v-field),
+.revenue-report-page .collection-route-search :deep(.v-field) {
+  min-height: 40px !important;
+  color: #334155 !important;
+  background: #ffffff !important;
+  border-radius: 9px !important;
+}
+
+.revenue-report-page .collection-toolbar :deep(.v-field__input),
+.revenue-report-page .collection-toolbar :deep(.v-label),
+.revenue-report-page .collection-route-search :deep(.v-field__input) {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.revenue-report-page .collection-routes-section-wrapper {
+  order: 4;
+  padding: 0 !important;
+}
+
+.revenue-report-page .collection-section-card {
+  border-color: #e4eaf2 !important;
+  border-radius: 11px !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.025) !important;
+}
+
+.revenue-report-page .collection-section-header {
+  min-height: 52px !important;
+  padding: 10px 16px !important;
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  border-bottom-color: #e7ecf3 !important;
+  font-size: 13.5px !important;
+  font-weight: 850 !important;
+}
+
+.revenue-report-page .collection-route-search {
+  width: 360px !important;
+  max-width: 42%;
+}
+
+@media (max-width: 960px) {
+  .revenue-report-page .revenue-container {
+    padding: 14px !important;
+  }
+
+  .revenue-report-page .ticket-report-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .revenue-report-page .ticket-report-filter-controls > :not(.incidents-query-button),
+  .revenue-report-page .ticket-report-filter-controls > .incidents-query-button {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+
+  .revenue-report-page .collection-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .revenue-report-page .revenue-page-header {
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    padding: 13px 14px !important;
+  }
+
+  .revenue-report-page .revenue-export-button {
+    width: 100%;
+  }
+
+  .revenue-report-page .collection-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .revenue-report-page .collection-route-search {
+    width: 100% !important;
+    max-width: 100%;
   }
 }
 

@@ -659,9 +659,7 @@
             <div class="d-flex align-center justify-space-between mb-1">
               <div class="font-weight-bold">Recorrido:</div>
 
-              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
-                {{ getSaleModeLabel(currentTicket) }}
-              </v-chip>
+              <SaleModeChip :value="currentTicket" />
             </div>
 
             <div>
@@ -719,9 +717,7 @@
             <div class="d-flex align-center justify-space-between mb-1">
               <div class="font-weight-bold">Recorrido:</div>
 
-              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
-                {{ getSaleModeLabel(currentTicket) }}
-              </v-chip>
+              <SaleModeChip :value="currentTicket" />
             </div>
 
             <div>
@@ -780,6 +776,11 @@
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api";
 import { paleteColors } from "@/assets/colors";
+import SaleModeChip from "@/components/SaleModeChip.vue";
+import {
+  getSaleModeLabel as getSharedSaleModeLabel,
+  normalizeSaleMode as normalizeSharedSaleMode,
+} from "@/utils/saleMode";
 import QRCode from "qrcode";
 import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
 
@@ -789,7 +790,7 @@ const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
 
 export default {
   name: 'SalesView',
-  components: { ExpressTicketSale },
+  components: { ExpressTicketSale, SaleModeChip },
   data: () => ({ snackbar: false,
     sb_type: "",
     sb_message: "",
@@ -1200,12 +1201,10 @@ export default {
       return this.getFareSegmentRouteStopLabel(routeStop);
     },
     getSaleModeLabel(ticket = {}) {
-      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "Express" : "Full";
+      return getSharedSaleModeLabel(ticket);
     },
-    getSaleModeColor(ticket = {}) {
-      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "secondary" : "primary";
+    getSaleModeKey(ticket = {}) {
+      return normalizeSharedSaleMode(ticket);
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -3070,7 +3069,7 @@ export default {
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
-                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${this.getSaleModeKey(this.currentTicket)}">${this.getSaleModeLabel(this.currentTicket)}</div>
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
@@ -3126,7 +3125,7 @@ export default {
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
-                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${this.getSaleModeKey(this.currentTicket)}">${this.getSaleModeLabel(this.currentTicket)}</div>
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
@@ -4064,22 +4063,32 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 2px 8px;
+  min-height: 23px;
+  border-radius: 6px;
+  padding: 0 8px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .ticket-sale-mode--express {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #eaf8f1;
+  color: #16845b;
 }
 
 .ticket-sale-mode--normal {
-  background: #dcfce7;
-  color: #166534;
+  background: #eef3ff;
+  color: #2454d6;
+}
+
+.ticket-sale-mode--aboard {
+  background: #fff7e6;
+  color: #b45309;
+}
+
+.ticket-sale-mode--web {
+  background: #eaf5ff;
+  color: #0369a1;
 }
 
 .busgo-dialog-card {
@@ -4911,7 +4920,7 @@ export default {
 .sales-assigned-branch strong { display:block; margin-top:2px; font-size:12px; font-weight:650; }
 .sales-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; max-width:1000px; }
 .sales-mode-card { min-width:0; display:flex; flex-direction:column; padding:18px; border-radius:12px; border:1px solid #e0e6ef; background:#fff; color:#162641; box-shadow:0 3px 12px #15264b05; }
-.sales-mode-card--full { border-top:3px solid #173b8f; }
+.sales-mode-card--full { border-top:3px solid #2454d6; }
 .sales-mode-card--express { border-top:3px solid #2454d6; }
 .sales-mode-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .sales-mode-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; flex-shrink:0; background:#eef3ff; color:#2454d6; }
@@ -4923,7 +4932,7 @@ export default {
 .sales-mode-footer { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid #e8edf5; }
 .sales-mode-note { display:flex; align-items:center; gap:5px; color:#64748b; font-size:10px; }
 .sales-launch-button.v-btn { min-height:38px; border-radius:8px; font-size:12px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
-.sales-launch-button--full.v-btn { background:#173b8f; color:#fff; }
+.sales-launch-button--full.v-btn { background:#2454d6; color:#fff; }
 .sales-launch-button--express.v-btn { background:#eef3ff; color:#2454d6; }
 .sales-launch-button:focus-visible { outline:3px solid #6e9bff; outline-offset:3px; }
 .sales-workspace-footnote { display:flex; align-items:center; gap:7px; margin-top:16px; color:#64748b; font-size:11px; line-height:1.5; }

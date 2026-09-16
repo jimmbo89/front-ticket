@@ -303,15 +303,7 @@
                 <div class="trip-col-sale-mode">
                   <v-tooltip location="bottom">
                     <template #activator="{ props }">
-                      <v-chip
-                        v-bind="props"
-                        :color="getSaleModeColor(slotProps.item)"
-                        size="small"
-                        variant="tonal"
-                        class="trip-sale-mode-chip"
-                      >
-                        {{ getSaleModeShortName(slotProps.item) }}
-                      </v-chip>
+                      <SaleModeChip v-bind="props" :value="slotProps.item" />
                     </template>
 
                     <span>{{ getSaleModeName(slotProps.item) }}</span>
@@ -584,43 +576,90 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-clock-outline</v-icon><span>Programación y venta</span></div>
                 <v-row>
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="editedItem.saleMode"
+                      :items="saleModes"
+                      label="Tipo de venta"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      item-title="name"
+                      item-value="id"
+                      variant="outlined"
+                      :rules="selectRules"
+                      density="compact"
+                    >
+                      <template #selection="{ item }">
+                        <SaleModeChip :value="item.raw?.id || editedItem.saleMode" />
+                      </template>
+                    </v-select>
+                  </v-col>
+
                   <v-col cols="12">
                     <section class="trip-time-panel" aria-label="Horario del viaje">
                       <div class="trip-time-panel-heading"><v-icon size="18">mdi-clock-outline</v-icon><strong>Horario del viaje</strong><span>Formato 24 horas</span></div>
                       <div class="trip-time-journey">
-                        <v-input
-                          :model-value="editedItem.schedule"
-                          :rules="selectRules"
+                        <v-menu
+                          v-model="timeMenu"
+                          location="bottom start"
+                          :offset="8"
+                          :close-on-content-click="false"
                           :disabled="!editedItem.route_id"
-                          hide-details="auto"
-                          class="trip-departure-input"
+                          content-class="trip-time-menu"
                         >
-                          <v-menu location="bottom start" :close-on-content-click="true" :disabled="!editedItem.route_id" content-class="trip-time-menu">
-                            <template #activator="{ props }">
-                              <button v-bind="props" type="button" class="trip-time-trigger" :disabled="!editedItem.route_id" aria-label="Seleccionar hora de salida">
-                                <span class="trip-time-label"><v-icon size="17">mdi-clock-start</v-icon>Salida</span>
-                                <span class="trip-time-value">{{ editedItem.schedule || '— : —' }}</span>
-                                <span class="trip-time-trigger-caption">{{ editedItem.schedule ? 'Cambiar horario' : 'Elegir horario' }}<v-icon size="17">mdi-chevron-down</v-icon></span>
-                              </button>
-                            </template>
-                            <v-card class="trip-time-picker" elevation="8">
-                              <div class="trip-time-picker-heading"><strong>Selecciona la salida</strong><span>{{ dateFormatted }} · Horarios disponibles</span></div>
-                              <div v-if="filteredTimeSlots.length" class="trip-time-grid" role="group" aria-label="Horarios disponibles">
-                                <button
-                                  v-for="time in filteredTimeSlots"
-                                  :key="time"
-                                  type="button"
-                                  class="trip-time-option"
-                                  :class="{ 'trip-time-option--selected': editedItem.schedule === time }"
-                                  :aria-pressed="editedItem.schedule === time"
-                                  @click="editedItem.schedule = time; updateArrival()"
-                                >{{ time }}</button>
-                              </div>
-                              <div v-else class="trip-time-empty"><v-icon size="24">mdi-clock-alert-outline</v-icon>No hay horarios disponibles para esta fecha.</div>
-                              <div class="trip-time-picker-note"><v-icon size="14">mdi-information-outline</v-icon>Solo se muestran los horarios permitidos para el viaje.</div>
-                            </v-card>
-                          </v-menu>
-                        </v-input>
+                          <template #activator="{ props }">
+                            <v-text-field
+                              v-bind="props"
+                              :model-value="editedItem.schedule || '— : —'"
+                              label="Hora de salida"
+                              prepend-inner-icon="mdi-clock-start"
+                              variant="outlined"
+                              density="comfortable"
+                              :rules="timeRules"
+                              :disabled="!editedItem.route_id"
+                              readonly
+                              hide-details="auto"
+                              class="trip-departure-input"
+                              aria-label="Seleccionar hora de salida"
+                            />
+                          </template>
+
+                          <v-card class="trip-time-picker" elevation="8">
+                            <div class="trip-time-picker-heading">
+                              <strong>Selecciona la salida</strong>
+                              <span>Elige hora y minutos · Formato 24 horas</span>
+                            </div>
+                            <div class="trip-time-selectors">
+                              <v-select
+                                :model-value="scheduleHour"
+                                :items="timeHours"
+                                label="Hora"
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                class="trip-time-part-select"
+                                :menu-props="{ contentClass: 'trip-time-part-menu' }"
+                                @update:model-value="updateScheduleHour"
+                              />
+                              <span class="trip-time-separator">:</span>
+                              <v-select
+                                :model-value="scheduleMinute"
+                                :items="timeMinutes"
+                                label="Minutos"
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                class="trip-time-part-select"
+                                :menu-props="{ contentClass: 'trip-time-part-menu' }"
+                                @update:model-value="updateScheduleMinute"
+                              />
+                            </div>
+                            <div class="trip-time-picker-footer">
+                              <span><v-icon size="14">mdi-information-outline</v-icon>Se permiten todos los minutos.</span>
+                              <v-btn color="primary" variant="flat" size="small" @click="timeMenu = false">Aplicar hora</v-btn>
+                            </div>
+                          </v-card>
+                        </v-menu>
                         <div class="trip-time-duration"><span>{{ selectedRouteRecord ? formatDuration(selectedRouteRecord.estimated) : 'Duración estimada' }}</span><div><span></span><v-icon size="20">mdi-arrow-right</v-icon></div></div>
                         <div class="trip-time-arrival" aria-live="polite">
                           <span class="trip-time-label"><v-icon size="17">mdi-clock-end</v-icon>Llegada estimada</span>
@@ -630,21 +669,6 @@
                       </div>
                       <div v-if="!editedItem.route_id" class="trip-time-hint"><v-icon size="16">mdi-map-marker-path</v-icon>Selecciona una ruta para consultar los horarios.</div>
                     </section>
-                  </v-col>
-
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="editedItem.saleMode"
-                      :items="saleModes"
-                      label="Modo de venta"
-                      :menu-props="{ contentClass: 'trip-standard-menu' }"
-                      prepend-inner-icon="mdi-ticket-confirmation-outline"
-                      item-title="name"
-                      item-value="id"
-                      variant="outlined"
-                      :rules="selectRules"
-                      density="compact"
-                    />
                   </v-col>
                 </v-row>
                 </div>
@@ -700,7 +724,7 @@
                       :headers="tripStopsHeaders"
                       :items="tripStopRows"
                       class="elevation-1 trip-step-table"
-                      style="max-height: 68vh; overflow-y: auto"
+                      height="100%"
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
@@ -996,7 +1020,7 @@
                       :headers="tripFaresHeaders"
                       :items="tripFareRows"
                       class="elevation-1 trip-step-table"
-                      style="max-height: 68vh; overflow-y: auto"
+                      height="100%"
                       :items-per-page-text="'Elementos por página'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
@@ -1271,11 +1295,12 @@
                       :headers="headersWorkers"
                       :items="filteredWorkers"
                       class="elevation-1 trip-step-table"
-                      style="max-height: 68vh; overflow-y: auto"
+                      height="100%"
                       :items-per-page-text="'Elementos por páginas'"
                       no-data-text="No hay datos disponibles"
                       :loading="loading"
                       loading-text="Cargando datos..."
+                      fixed-header
                     >
                       <template #item.workerName="{ item }">
                         <v-avatar
@@ -1390,6 +1415,13 @@
               </template>
               <div v-else class="trip-preview-empty"><v-icon size="26">mdi-bus</v-icon><span>Selecciona el vehículo del viaje.</span></div>
             </section>
+            <section class="trip-sale-mode-preview">
+              <div class="trip-preview-eyebrow">Tipo de venta</div>
+              <div class="trip-preview-sale-mode">
+                <span>Tipo de Venta:</span>
+                <SaleModeChip :value="editedItem.saleMode" size="small" density="standard" />
+              </div>
+            </section>
             <section class="trip-schedule-preview">
               <div class="trip-preview-eyebrow">Programación</div>
               <div class="trip-preview-date"><v-icon size="17">mdi-calendar-outline</v-icon>{{ dateFormatted || 'Fecha pendiente' }}</div>
@@ -1489,7 +1521,12 @@ import { paleteColors } from "@/assets/colors";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
+import SaleModeChip from "@/components/SaleModeChip.vue";
+import {
+  getSaleModeLabel as getSharedSaleModeLabel,
+} from "@/utils/saleMode";
 export default {
+  components: { SaleModeChip },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -1502,11 +1539,9 @@ export default {
     loading: false,
     mostrar: false,
     dialog: false,
-    timeSlots: [], // Array para almacenar los slots ordenados
-    currentTimeSlots: [], // Array para los slots filtrados segÃºn fecha
+    timeMenu: false,
     dialogDelete: false,
     estimated: 0,
-    timeSlotsKey: 0,
     mostrarFila: false,
     permissions: "",
     trips: [],
@@ -1629,6 +1664,12 @@ export default {
       (v) => (v && v.length >= 3) || "El campo debe tener al menos 3 caracteres",
     ],
     selectRules: [(v) => !!v || "Seleccionar al menos un elemento"],
+    timeRules: [
+      (v) => !!v || "Selecciona la hora de salida",
+      (v) =>
+        !v || /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(v) ||
+        "Ingresa una hora válida en formato 24 horas",
+    ],
   }),
   computed: {
     sortedTrips() {
@@ -1657,8 +1698,25 @@ export default {
     getDateSearch() {
       return this.input2 ? new Date(this.input2) : new Date();
     },
-    filteredTimeSlots() {
-      return this.generateTimeSlots();
+    timeHours() {
+      return Array.from({ length: 24 }, (_, hour) =>
+        String(hour).padStart(2, "0")
+      );
+    },
+    timeMinutes() {
+      return Array.from({ length: 60 }, (_, minute) =>
+        String(minute).padStart(2, "0")
+      );
+    },
+    scheduleHour() {
+      return /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(this.editedItem.schedule || "")
+        ? this.editedItem.schedule.slice(0, 2)
+        : "00";
+    },
+    scheduleMinute() {
+      return /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(this.editedItem.schedule || "")
+        ? this.editedItem.schedule.slice(3, 5)
+        : "00";
     },
     vehicleWorkers() {
       const selectedVehicleId = Number(this.editedItem.vehicle_id);
@@ -1703,8 +1761,10 @@ export default {
   watch: {
     // Observar cambios en la fecha para resetear selecciÃ³n
     "editedItem.date"(newDate) {
-      this.generateTimeSlots();
       this.syncTripStopTimes();
+      if (newDate && this.editedItem.schedule) {
+        this.updateArrival();
+      }
     },
   },
   methods: {
@@ -1767,21 +1827,7 @@ export default {
       return source.map((mode) => this.normalizeSaleModeOption(mode));
     },
     getSaleModeName(trip = {}) {
-      const saleMode = this.normalizeTripSaleMode(trip);
-      const fallbackNames = {
-        normal: "Venta Full",
-        express: "Venta Express",
-      };
-      if (saleMode === "normal") {
-        return fallbackNames.normal;
-      }
-      return this.saleModes.find((mode) => mode.id === saleMode)?.name || fallbackNames[saleMode] || saleMode;
-    },
-    getSaleModeShortName(trip = {}) {
-      return this.getSaleModeName(trip).replace(/^Venta\s+/i, "");
-    },
-    getSaleModeColor(trip = {}) {
-      return this.normalizeTripSaleMode(trip) === "express" ? "green" : "primary";
+      return `Venta ${getSharedSaleModeLabel(trip)}`;
     },
     ensureTripSaleMode({ useDefault = false } = {}) {
       if (useDefault || !this.editedItem.saleMode) {
@@ -2015,45 +2061,33 @@ export default {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return startOfDay.getTime(); // Ej: 1714003200000 (cambia una vez al dÃ­a)
     },
-    generateTimeSlots() {
+    getCurrentTime() {
       const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const isToday = this.today(
-        this.editedItem.date || new Date().toISOString().split("T")[0]
-      );
-      const slots = [];
+      return `${String(now.getHours()).padStart(2, "0")}:${String(
+        now.getMinutes()
+      ).padStart(2, "0")}`;
+    },
+    updateScheduleHour(value) {
+      this.updateSchedulePart(value, this.scheduleMinute);
+    },
+    updateScheduleMinute(value) {
+      this.updateSchedulePart(this.scheduleHour, value);
+    },
+    updateSchedulePart(hour, minute) {
+      const normalizePart = (value, max) => {
+        const numericValue = Number(value);
+        const boundedValue = Number.isFinite(numericValue)
+          ? Math.min(Math.max(numericValue, 0), max)
+          : 0;
 
-      // Generar todos los slots posibles
-      for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 5) {
-          const slotMinutes = hour * 60 + minute;
-          const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(
-            2,
-            "0"
-          )}`;
+        return String(boundedValue).padStart(2, "0");
+      };
 
-          slots.push({
-            time: timeStr,
-            minutes: slotMinutes,
-          });
-        }
-      }
-
-      // Si estamos editando, incluir el slot actual aunque estÃ© en el pasado
-      if (this.editedIndex !== -1 && this.editedItem.schedule) {
-        const currentSlot = slots.find((s) => s.time === this.editedItem.schedule);
-        if (currentSlot && isToday && currentSlot.minutes <= currentMinutes) {
-          return [
-            this.editedItem.schedule,
-            ...slots.filter((s) => s.minutes > currentMinutes).map((s) => s.time),
-          ];
-        }
-      }
-
-      // Para creaciÃ³n o slots futuros
-      return isToday
-        ? slots.filter((s) => s.minutes > currentMinutes).map((s) => s.time)
-        : slots.map((s) => s.time);
+      this.editedItem.schedule = `${normalizePart(hour, 23)}:${normalizePart(
+        minute,
+        59
+      )}`;
+      this.updateArrival();
     },
     // MÃ©todo para verificar si un trabajador ya estÃ¡ asociado al viaje
     isWorkerAssociated(worker) {
@@ -2317,19 +2351,6 @@ export default {
       }
     },
 
-    today(date) {
-      // Obtener la fecha actual
-      const hoy = new Date();
-
-      // Formatear la fecha actual al mismo formato YYYY-MM-DD
-      const ano = hoy.getFullYear();
-      const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoy.getDate()).padStart(2, "0");
-      const hoyFormateado = `${ano}-${mes}-${dia}`;
-
-      // Comparar con la fecha proporcionada
-      return date === hoyFormateado;
-    },
     updateDate(val) {
       this.input = val;
       this.editedItem.date = this.dateFormatted;
@@ -2403,10 +2424,11 @@ export default {
       this.dialog = false;
       this.file = null;
       this.imgMiniatura = "";
-      this.editedItem = Object.assign({}, this.defaultItem);
+      this.editedItem = Object.assign({}, this.defaultItem, {
+        schedule: this.getCurrentTime(),
+      });
       this.originalItem = Object.assign({}, this.defaultItem);
       this.editedItem.branch_id = this.branch_id;
-      this.timeSlotsKey = Date.now();
       await this.loadTripFormData(this.editedItem.branch_id, {
         resetSelections: true,
       });
@@ -2705,7 +2727,6 @@ export default {
       this.close();
     },
     async editItem(item) {
-      this.timeSlotsKey = Date.now();
       this.editedIndex = 1;
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
@@ -3122,10 +3143,6 @@ export default {
   min-width: 0;
 }
 
-.trip-sale-mode-chip {
-  max-width: 100%;
-}
-
 .trip-row {
   min-height: 70px;
 }
@@ -3280,8 +3297,7 @@ export default {
 }
 
 .trip-step-table {
-  max-height: 52vh !important;
-  overflow-y: auto !important;
+  min-height: 0;
 }
 
 .busgo-submeta {
@@ -3741,12 +3757,12 @@ body { color:#1e293b; }
 .busgo-card { overflow:hidden; background:#fff; border:1px solid #e8edf5; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04)!important; }.busgo-card-header { min-height:67px; padding:13px 17px; }.busgo-card-title { color:#0f172a; font-size:15px; font-weight:850; }.busgo-card-subtitle { margin-top:3px; color:#64748b; font-size:11px; font-weight:650; }
 .trip-toolbar { gap:9px; padding:10px 17px 13px; border-top:1px solid #f1f4f8; }.trip-filter,.trip-date-filter,.trip-search { min-width:0; }.trip-filter { width:260px; }.trip-date-filter { width:170px; }.trip-search { width:285px; }.trip-toolbar .v-field { min-height:40px; color:#1e293b; border-radius:9px!important; font-size:12px; }.trip-toolbar .v-field__outline { color:#dce3ed; }.trip-toolbar .v-field__input { color:#1e293b; font-size:12px; font-weight:650; }.trip-toolbar .v-icon { color:#64748b; }
 .busgo-table { max-height:none; color:#1e293b; background:transparent; }.busgo-table .v-data-table__wrapper { overflow-x:auto; }.busgo-table-head { min-width:1120px; height:40px; margin:0; padding:0 17px; color:#334155; background:#f8fafc; border-top:1px solid #e8edf5; border-bottom:1px solid #e8edf5; border-radius:0; font-size:10px; font-weight:850; letter-spacing:.04em; }.busgo-row { min-width:1120px; min-height:66px; margin:0; padding:7px 17px; background:#fff; border:0; border-bottom:1px solid #eef2f6; border-radius:0; }.busgo-row:hover { background:#f8faff; border-color:#eef2f6; }.busgo-table .v-data-table-footer { min-height:52px; padding:6px 16px; color:#334155; font-size:11.5px; font-weight:700; border-top:1px solid #edf1f5; }
-.trip-sortable { cursor:pointer; transition:color .15s ease; }.trip-sortable:hover { color:#2454d6; }.trip-code-value,.trip-route-title,.busgo-name { color:#0f172a; font-size:12px; font-weight:850; }.trip-route-meta,.busgo-submeta { color:#64748b; font-size:10px; font-weight:650; }.trip-vehicle-icon { display:grid; flex:0 0 32px; width:32px; height:32px; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:8px; }.trip-worker-avatar { width:30px!important; height:30px!important; border:2px solid #fff; box-shadow:0 2px 7px rgba(15,23,42,.13); }.trip-sale-mode-chip { font-size:9.5px!important; font-weight:800!important; }.trip-datetime-value { color:#334155; font-size:10px; font-weight:700; }.trip-datetime-time { color:#2454d6; font-weight:850; }.busgo-actions .v-btn { border-radius:8px!important; }
+.trip-sortable { cursor:pointer; transition:color .15s ease; }.trip-sortable:hover { color:#2454d6; }.trip-code-value,.trip-route-title,.busgo-name { color:#0f172a; font-size:12px; font-weight:850; }.trip-route-meta,.busgo-submeta { color:#64748b; font-size:10px; font-weight:650; }.trip-vehicle-icon { display:grid; flex:0 0 32px; width:32px; height:32px; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:8px; }.trip-worker-avatar { width:30px!important; height:30px!important; border:2px solid #fff; box-shadow:0 2px 7px rgba(15,23,42,.13); }.trip-datetime-value { color:#334155; font-size:10px; font-weight:700; }.trip-datetime-time { color:#2454d6; font-weight:850; }.busgo-actions .v-btn { border-radius:8px!important; }
 
 .trip-dialog { min-height:100vh; color:#1e293b; background:#f6f8fb; }.trip-dialog-header { z-index:5; display:grid; grid-template-columns:minmax(0,1fr) auto 42px; align-items:center; gap:18px; min-height:72px; padding:11px 22px; color:#fff; background:radial-gradient(circle at 88% -40%,rgba(53,184,232,.38),transparent 230px),linear-gradient(110deg,#0e1f46,#173b8f 58%,#2454d6); box-shadow:0 5px 18px rgba(15,23,42,.18); }.trip-dialog-heading { display:flex; align-items:center; gap:11px; min-width:0; }.trip-dialog-icon { display:grid; flex:0 0 40px; width:40px; height:40px; place-items:center; color:#fff; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.17); border-radius:10px; }.trip-dialog-title { font-size:17px; font-weight:850; line-height:1.2; }.trip-dialog-subtitle { margin-top:3px; overflow:hidden; color:#dbe7ff; font-size:11px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }.trip-dialog-progress { display:flex; align-items:flex-end; flex-direction:column; }.trip-dialog-progress span { color:#b8cbf5; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }.trip-dialog-progress strong { margin-top:2px; font-size:12px; font-weight:800; }.trip-dialog-close { color:#fff!important; border-radius:9px!important; }
 .trip-dialog-body { background:#f6f8fb; }.trip-stepper { background:transparent!important; box-shadow:none!important; }.trip-stepper .v-stepper-header { min-height:66px; padding:4px 18px; background:#fff; border-bottom:1px solid #e7ecf3; box-shadow:none!important; }.trip-stepper .v-stepper-item { padding:11px 14px; }.trip-stepper .v-stepper-item__avatar { width:30px; height:30px; color:#526176; background:#eef2f7; font-size:11px; font-weight:850; }.trip-stepper .v-stepper-item--selected .v-stepper-item__avatar,.trip-stepper .v-stepper-item--complete .v-stepper-item__avatar { color:#fff; background:#2454d6; }.trip-stepper .v-stepper-item__title { color:#526176; font-size:11px; font-weight:750; }.trip-stepper .v-stepper-item--selected .v-stepper-item__title { color:#0f172a; font-weight:850; }.trip-stepper .v-divider { color:#dfe6ef; }
 .trip-step-pane { padding:18px 24px 14px; }.trip-step-pane--summary .trip-step-content { max-width:1120px; width:100%; margin:0 auto; padding:18px 20px 8px; background:#fff; border:1px solid #e4eaf2; border-radius:13px; box-shadow:0 5px 18px rgba(15,23,42,.04); }.trip-step-pane--summary .v-row { margin-top:0!important; }.trip-step-pane--summary .v-col { padding:8px 10px; }.trip-step-pane--summary .v-field { min-height:51px; padding-inline:4px; background:#fff; border:1px solid #dce3ed; border-radius:9px 9px 0 0; }.trip-step-pane--summary .v-field--variant-underlined .v-field__outline::before { border-color:#dce3ed; }.trip-step-pane--summary .v-field__input { color:#1e293b; font-size:12.5px; font-weight:650; }.trip-step-pane--summary .v-label { color:#526176; font-size:12px; font-weight:700; opacity:1; }.trip-step-pane--summary .v-input__prepend .v-icon { color:#2454d6; }
-.trip-config-section { overflow:hidden; background:#fff; border:1px solid #e1e8f1!important; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04); }.trip-config-toolbar { min-height:62px!important; color:#0f172a!important; background:#f8fafc!important; border-bottom:1px solid #e6ebf2; box-shadow:none!important; }.trip-config-toolbar .text-subtitle-1 { font-size:14px!important; font-weight:850!important; }.trip-config-toolbar .text-caption { color:#64748b!important; font-size:10.5px!important; font-weight:600; opacity:1!important; }.trip-config-section > .v-card-text { padding:13px!important; }.trip-step-table { max-height:54vh!important; background:transparent!important; box-shadow:none!important; }.trip-step-table .v-data-table-footer { min-height:48px; color:#475569; font-size:11px; }.trip-step-table .v-data-table__th { color:#334155!important; background:#f8fafc!important; font-size:10.5px!important; font-weight:850!important; text-transform:uppercase; }.trip-step-table .v-data-table__td { color:#334155; font-size:12px; font-weight:600; }
+ .trip-config-section { overflow:hidden; background:#fff; border:1px solid #e1e8f1!important; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04); }.trip-config-toolbar { min-height:62px!important; color:#0f172a!important; background:#f8fafc!important; border-bottom:1px solid #e6ebf2; box-shadow:none!important; }.trip-config-toolbar .text-subtitle-1 { font-size:14px!important; font-weight:850!important; }.trip-config-toolbar .text-caption { color:#64748b!important; font-size:10.5px!important; font-weight:600; opacity:1!important; }.trip-config-section > .v-card-text { padding:13px!important; }.trip-step-table { min-height:0; background:transparent!important; box-shadow:none!important; }.trip-step-table .v-data-table-footer { min-height:48px; color:#475569; font-size:11px; }.trip-step-table .v-data-table__th { color:#334155!important; background:#f8fafc!important; font-size:10.5px!important; font-weight:850!important; text-transform:uppercase; }.trip-step-table .v-data-table__td { color:#334155; font-size:12px; font-weight:600; }
 .trip-step-actions { max-width:1120px; width:100%; margin:12px auto 0; padding:12px 0 calc(8px + env(safe-area-inset-bottom)); border-top:1px solid #dfe5ed; }.trip-step-actions .v-row { align-items:center; margin:0!important; }.trip-step-actions .v-btn { min-width:108px; min-height:39px; border-radius:9px!important; font-size:12px; font-weight:800; letter-spacing:0; text-transform:none; }.trip-step-actions .v-btn:first-child { color:#475569!important; background:#fff!important; border:1px solid #dce3ed; }.trip-step-actions .v-btn:last-child { color:#fff!important; background:linear-gradient(100deg,#2454d6,#3266e4)!important; box-shadow:0 5px 12px rgba(36,84,214,.18)!important; }.trip-step-actions .v-btn--disabled { color:#94a3b8!important; background:#e8edf4!important; box-shadow:none!important; }
 .trip-fare-ticket-types-panel { border-color:#dfe6ef!important; border-radius:10px!important; }.trip-fare-ticket-types-header { color:#334155; background:#f8fafc; border-color:#e7ecf3; font-size:11px; font-weight:850; text-transform:uppercase; }.trip-fare-ticket-types-row { border-color:#edf1f5; font-size:12px; }
 
@@ -3846,6 +3862,11 @@ body { color:#1e293b; }
 .trip-dialog .trip-stepper .v-stepper-window-item { height:100%; min-height:0; }
 .trip-dialog .trip-step-pane { height:100%; padding:20px 22px 0; overflow:hidden; }
 .trip-dialog .trip-step-content { min-height:0; height:auto; overflow:auto; overscroll-behavior:contain; flex:1 1 auto; }
+.trip-dialog .trip-step-pane:not(.trip-step-pane--summary) .trip-step-content { overflow:hidden; }
+.trip-dialog .trip-step-pane:not(.trip-step-pane--summary) .trip-config-section { display:flex; flex:1 1 auto; flex-direction:column; min-height:0; }
+.trip-dialog .trip-step-pane:not(.trip-step-pane--summary) .trip-config-section > .v-card-text { display:flex; flex:1 1 auto; flex-direction:column; min-height:0; overflow:hidden; }
+.trip-dialog .trip-step-pane:not(.trip-step-pane--summary) .trip-step-table { display:flex; flex:1 1 auto; height:100%; min-height:0; max-height:none!important; overflow:visible!important; }
+.trip-dialog .trip-step-pane:not(.trip-step-pane--summary) .trip-step-table > .v-table__wrapper { min-height:0; overflow-y:auto; }
 .trip-dialog .trip-step-pane--summary .trip-step-content { max-width:none; }
 .trip-dialog .trip-step-actions { position:relative; z-index:2; flex:0 0 auto; max-width:none; margin:14px 0 0; padding:14px 0 calc(14px + env(safe-area-inset-bottom)); background:#f6f8fb; box-shadow:0 -8px 16px #f6f8fb; }
 .trip-dialog .trip-step-actions .v-btn { min-height:42px; font-size:13px; }
@@ -3906,14 +3927,11 @@ body { color:#1e293b; }
 .trip-time-journey { display:grid; grid-template-columns:minmax(0,1fr) minmax(80px,.65fr) minmax(0,1fr); align-items:start; gap:16px; }
 .trip-departure-input { min-width:0; }
 .trip-departure-input .v-input__control { display:block; width:100%; }
-.trip-time-trigger { display:flex; flex-direction:column; align-items:flex-start; gap:8px; width:100%; padding:14px 16px; border:1px solid #b6cafa; border-radius:11px; background:#fff; text-align:left; cursor:pointer; transition:background .15s,border-color .15s; }
-.trip-time-trigger:hover:not(:disabled) { background:#f0f5ff; border-color:#2454d6; }
-.trip-time-trigger:focus-visible,.trip-time-option:focus-visible { outline:3px solid #7396eb; outline-offset:3px; }
-.trip-time-trigger:disabled { cursor:not-allowed; background:#f1f5f9; border-color:#dce3ed; }
+.trip-departure-input .v-field { min-height:74px; border:1px solid #b6cafa; border-radius:11px!important; background:#fff; }
+.trip-departure-input .v-field:focus-within { border-color:#2454d6; box-shadow:0 0 0 3px #2454d61c; }
+.trip-departure-input .v-field__input { color:#183d9c; font-size:32px; font-weight:800; line-height:1.15; font-variant-numeric:tabular-nums; }
 .trip-time-label { display:flex; align-items:center; gap:6px; color:#475569; font-size:12px; font-weight:700; }
 .trip-time-value { display:block; color:#183d9c; font-size:32px; font-weight:800; line-height:1.15; letter-spacing:.015em; font-variant-numeric:tabular-nums; }
-.trip-time-trigger:disabled .trip-time-value { color:#64748b; }
-.trip-time-trigger-caption { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; color:#2454d6; font-size:11px; font-weight:650; }
 .trip-time-duration { align-self:center; text-align:center; color:#526176; font-size:11px; font-weight:650; }
 .trip-time-duration > div { display:flex; align-items:center; margin-top:8px; color:#8da8d8; }
 .trip-time-duration > div > span { flex:1; height:1px; background:#c7d7f1; }
@@ -3922,23 +3940,30 @@ body { color:#1e293b; }
 .trip-time-arrival-caption { color:#526176; font-size:11px; line-height:1.5; }
 .trip-time-hint { display:flex; align-items:center; gap:7px; margin-top:14px; color:#526176; font-size:12px; }
 .trip-time-menu { max-width:calc(100vw - 24px)!important; }
-.trip-time-picker { width:360px; max-width:100%; color:#1e293b; background:#fff; border:1px solid #dce6f5; border-radius:13px!important; }
+.trip-time-picker { width:360px; max-width:calc(100vw - 24px); color:#1e293b; background:#fff; border:1px solid #dce6f5; border-radius:13px!important; }
 .trip-time-picker-heading { display:flex; flex-direction:column; gap:4px; padding:16px; border-bottom:1px solid #e8edf5; }
 .trip-time-picker-heading strong { color:#0f172a; font-size:14px; }
 .trip-time-picker-heading span { color:#526176; font-size:12px; }
-.trip-time-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-height:min(320px,45vh); padding:14px; overflow-y:auto; overscroll-behavior:contain; }
-.trip-time-option { min-height:42px; padding:7px; color:#334155; background:#f8fafc; border:1px solid #dce3ed; border-radius:8px; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer; }
-.trip-time-option:hover { color:#2454d6; background:#eef3ff; border-color:#a8bff8; }
-.trip-time-option--selected,.trip-time-option--selected:hover { color:#fff; background:#2454d6; border-color:#2454d6; box-shadow:0 3px 7px #2454d62b; }
-.trip-time-picker-note { display:flex; align-items:flex-start; gap:6px; padding:12px 14px; border-top:1px solid #e8edf5; color:#64748b; font-size:11px; line-height:1.5; }
-.trip-time-empty { display:flex; align-items:center; gap:10px; padding:24px 16px; color:#526176; font-size:13px; }
+.trip-time-selectors { display:grid; grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr); align-items:center; gap:8px; padding:16px; }
+.trip-time-part-select .v-field { min-height:50px; border-radius:9px!important; }
+.trip-time-part-select .v-field__input { font-size:15px; font-weight:750; }
+.trip-time-separator { color:#2454d6; font-size:25px; font-weight:850; text-align:center; }
+.trip-time-picker-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px 14px; border-top:1px solid #e8edf5; }
+.trip-time-picker-footer > span { display:flex; align-items:center; gap:5px; color:#64748b; font-size:10.5px; line-height:1.4; }
+.trip-time-picker-footer .v-btn { min-height:34px; border-radius:8px!important; font-size:11px; font-weight:800; text-transform:none; }
+.trip-time-part-menu .v-list { max-height:260px; padding:6px; border:1px solid #e2e8f0; border-radius:10px; }
+.trip-time-part-menu .v-list-item { min-height:38px; border-radius:7px; font-size:13px; font-weight:700; }
+.trip-time-part-menu .v-list-item--active { color:#2454d6; background:#eef3ff; }
+.trip-sale-mode-preview { padding:15px; margin-bottom:14px; border:1px solid #e4eaf3; border-radius:12px; background:#fff; }
+.trip-preview-sale-mode { display:flex; align-items:center; justify-content:space-between; gap:9px; }
+.trip-preview-sale-mode > span { color:#334155; font-size:13px; font-weight:700; }
 @media(max-width:600px) {
  .trip-time-panel { padding:12px; }
  .trip-time-journey { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
  .trip-time-duration { grid-column:1 / -1; grid-row:2; display:flex; justify-content:center; gap:8px; }
  .trip-time-duration > div { margin:0; }
  .trip-time-value { font-size:27px; }
- .trip-time-trigger { padding:12px; }
- .trip-time-panel-heading > span { font-size:10px; }
+   .trip-departure-input .v-field__input { font-size:27px; }
+  .trip-time-panel-heading > span { font-size:10px; }
 }
 </style>

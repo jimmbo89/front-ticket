@@ -49,26 +49,7 @@
         class="incidents-loading-bar"
       />
 
-      <v-row class="summary-row">
-        <v-col cols="12" sm="4">
-          <div class="summary-card">
-            <div class="summary-icon summary-icon--blue"><v-icon size="19">mdi-alert-circle-outline</v-icon></div>
-            <div><div class="summary-value">{{ incidents.length }}</div><div class="summary-label">Incidentes registrados</div></div>
-          </div>
-        </v-col>
-        <v-col cols="12" sm="4">
-          <div class="summary-card">
-            <div class="summary-icon summary-icon--amber"><v-icon size="19">mdi-clock-alert-outline</v-icon></div>
-            <div><div class="summary-value">{{ delayIncidentCount }}</div><div class="summary-label">Eventos de retraso</div></div>
-          </div>
-        </v-col>
-        <v-col cols="12" sm="4">
-          <div class="summary-card">
-            <div class="summary-icon summary-icon--green"><v-icon size="19">mdi-qrcode-scan</v-icon></div>
-            <div><div class="summary-value">{{ scanIncidentCount }}</div><div class="summary-label">Eventos de escaneo</div></div>
-          </div>
-        </v-col>
-      </v-row>
+      <ReportKpiCards :items="incidentKpiCards" />
 
       <div class="incident-toolbar">
 
@@ -80,11 +61,15 @@
           </div>
         </div>
 
+        <div class="incident-filter-controls">
+
         <ReportDateRangeFilter
 
           v-model:start-date="editedItem.startDate"
 
           v-model:end-date="editedItem.endDate"
+
+          class="incident-date-filter"
 
         />
 
@@ -197,6 +182,8 @@
           Consultar
 
         </v-btn>
+
+        </div>
 
       </div>
 
@@ -724,12 +711,14 @@ import _ from "lodash";
 import QRCode from "qrcode";
 
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
+import ReportKpiCards from "@/components/ReportKpiCards.vue";
 
 export default {
 
   components: {
 
     ReportDateRangeFilter,
+    ReportKpiCards,
 
   },
 
@@ -770,6 +759,13 @@ export default {
     permissions: "",
 
     incidents: [],
+
+    summary: {
+      reimpresiones: 0,
+      reescaneos: 0,
+      retrasos: 0,
+      cambiosVehiculo: 0,
+    },
 
     incidentSortBy: "date",
 
@@ -885,24 +881,41 @@ export default {
 
     },
 
-    delayIncidentCount() {
-
-      return this.incidents.filter((item) =>
-
-        String(item?.title || "").toLowerCase().includes("retraso")
-
-      ).length;
-
-    },
-
-    scanIncidentCount() {
-
-      return this.incidents.filter((item) =>
-
-        String(item?.title || "").toLowerCase().includes("escaneo")
-
-      ).length;
-
+    incidentKpiCards() {
+      return [
+        {
+          key: "reimpresiones",
+          label: "Reimpresiones",
+          value: this.summary.reimpresiones ?? 0,
+          icon: "mdi-printer",
+          color: "orange-lighten-1",
+          variant: "prints",
+        },
+        {
+          key: "reescaneos",
+          label: "Reescaneos",
+          value: this.summary.reescaneos ?? 0,
+          icon: "mdi-qrcode-scan",
+          color: "teal",
+          variant: "scan",
+        },
+        {
+          key: "retrasos",
+          label: "Retrasos",
+          value: this.summary.retrasos ?? 0,
+          icon: "mdi-clock-alert-outline",
+          color: "amber",
+          variant: "delay",
+        },
+        {
+          key: "cambiosVehiculo",
+          label: "Cambios de vehículo",
+          value: this.summary.cambiosVehiculo ?? 0,
+          icon: "mdi-bus-alert",
+          color: this.paleteColors.primary,
+          variant: "vehicle",
+        },
+      ];
     },
 
     sortedIncidents() {
@@ -1230,6 +1243,7 @@ export default {
       if (this.type === "Sucursal" && this.branch_id === "null") {
 
         this.incidents = [];
+        this.summary = {};
 
         this.loading = false;
 
@@ -1258,18 +1272,21 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
 
           this.incidents = result.data?.incidents || [];
+          this.summary = result.data?.summary || {};
 
         } else {
 
           // Si no hay datos, asignamos un array vacío
 
           this.incidents = [];
+          this.summary = {};
 
         }
 
       } catch (error) {
 
         this.loading = false;
+        this.summary = {};
 
         // Captura de errores no controlados
 
@@ -1314,18 +1331,21 @@ export default {
           // Si la solicitud es exitosa, asignamos las sucursales
 
           this.incidents = result.data?.incidents || [];
+          this.summary = result.data?.summary || {};
 
         } else {
 
           // Si no hay datos, asignamos un array vacío
 
           this.incidents = [];
+          this.summary = {};
 
         }
 
       } catch (error) {
 
         this.loading = false;
+        this.summary = {};
 
         // Captura de errores no controlados
 
@@ -2651,6 +2671,126 @@ export default {
 @media (max-width:600px) {
   .incidents-page-header { align-items:flex-start!important; padding:13px 14px!important; }
   .incident-detail-key { width:120px!important; }
+}
+
+/* Estructura compartida con Ventas y los reportes de recaudación. */
+.incidents-page .incident-toolbar {
+  display: block !important;
+  margin: 0 0 16px !important;
+  padding: 14px !important;
+  background: #f8fafc;
+  border: 1px solid #e7ecf3;
+  border-radius: 11px;
+}
+
+.incidents-page .incidents-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.incidents-page .incident-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.incidents-page .incident-filter-controls > :not(.incidents-query-button) {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.incidents-page .incident-filter-controls :deep(.report-date-range-trigger) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.incidents-page .incident-filter-controls > .incidents-query-button {
+  flex: 0 0 112px !important;
+  width: 112px !important;
+  min-width: 112px !important;
+}
+
+.incidents-page .table-panel {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e8edf5;
+  border-radius: 13px !important;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+.incidents-page .incident-expanded {
+  margin: 4px 12px 8px !important;
+  padding: 10px 12px !important;
+  border-left-width: 3px !important;
+  border-radius: 9px !important;
+}
+
+.incidents-page .incident-expanded > .d-flex {
+  min-height: 24px;
+  margin-bottom: 8px !important;
+  gap: 6px;
+}
+
+.incidents-page .incident-expanded-description {
+  margin-bottom: 8px;
+}
+
+.incidents-page .incident-expanded-description .incident-detail-key {
+  width: auto !important;
+  margin-bottom: 3px !important;
+  padding: 0 !important;
+  background: transparent;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.incidents-page .incident-expanded-description .incident-detail-value {
+  padding: 0 !important;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.incidents-page .incident-detail-table {
+  margin-top: 6px;
+}
+
+.incidents-page .incident-detail-table td {
+  height: auto !important;
+  padding: 6px 10px !important;
+  line-height: 1.25;
+  vertical-align: middle;
+}
+
+.incidents-page .incident-detail-table .incident-detail-key {
+  width: 180px !important;
+  font-size: 11px !important;
+}
+
+.incidents-page .incident-detail-table .incident-detail-value {
+  font-size: 11.5px !important;
+}
+
+@media (max-width: 960px) {
+  .incidents-page .incident-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .incidents-page .incident-filter-controls > :not(.incidents-query-button),
+  .incidents-page .incident-filter-controls > .incidents-query-button {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
 }
 </style>
 

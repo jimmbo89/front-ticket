@@ -13,118 +13,198 @@
     </v-row>
   </v-snackbar>
 
-  <v-card class="busgo-page-header" elevation="0">
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
-      <v-icon>mdi-ticket</v-icon>
-    </v-avatar>
-
-    <div>
-      <div class="busgo-page-title">Tickets</div>
-      <div class="busgo-page-subtitle">Gestionar tickets vendidos</div>
+  <div class="ticket-report-page incidents-page">
+  <header class="page-header ticket-report-page-header">
+    <div class="page-heading">
+      <div class="page-icon"><v-icon size="21">mdi-ticket</v-icon></div>
+      <div>
+        <h1 class="page-title">Reporte de Ventas</h1>
+        <p class="page-subtitle">Consulta las ventas, pasajes y recaudación por período</p>
+      </div>
     </div>
 
-    <v-spacer />
+    <v-btn
+      :color="paleteColors.green"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-file-excel"
+      class="busgo-add-btn ticket-report-export-button"
+      :disabled="loading"
+      @click="exportToExcel"
+    >
+      Exportar a Excel
+    </v-btn>
+  </header>
 
-    <div class="ticket-header-actions">
-      <v-btn v-if="hasPermission('view_traditional_sales_web')" :color="paleteColors.primary" variant="flat" elevation="0" prepend-icon="mdi-plus" class="busgo-add-btn"
-        @click="showAdd()">
-        Venta Full
-      </v-btn>
+  <v-container fluid class="page-content ticket-report-container">
+    <div class="incidents-content">
+    <v-progress-linear
+      v-if="loading"
+      indeterminate
+      :color="paleteColors.primary"
+      class="ticket-report-loading-bar"
+    />
 
-      <v-btn v-if="hasPermission('view_express_sales_web')" color="success" variant="tonal" elevation="0" prepend-icon="mdi-lightning-bolt-outline"
-        class="busgo-add-btn mr-1" @click="dialogExpressSale = true">
-        Venta Express
-      </v-btn>
-    </div>
-  </v-card>
+    <ReportKpiCards :items="salesKpiCards" />
 
-  <v-container fluid class="busgo-container">
-    <v-card class="busgo-card" elevation="0">
-      <div class="busgo-card-header">
+    <div class="incident-toolbar">
+      <div class="incidents-toolbar-label">
+        <v-icon size="18">mdi-tune-variant</v-icon>
         <div>
-          <div class="busgo-card-title">
-            Listado de tickets vendidos
-          </div>
-
-          <div class="busgo-card-subtitle">
-            Consulta ventas, rutas, asientos, métodos de pago y reimpresiones.
-          </div>
+          <strong>Filtros del reporte</strong>
+          <span>Selecciona el período y el alcance de la consulta</span>
         </div>
       </div>
 
-      <div class="ticket-toolbar px-6 pb-4">
-        <v-autocomplete v-if="mostrarFila" :no-data-text="'No hay datos disponibles'" v-model="branch_id"
-          :items="branches" placeholder="Seleccione una sucursal" prepend-inner-icon="mdi-store" item-title="name"
-          item-value="id" variant="outlined" hide-details single-line density="compact" class="ticket-filter"
-          :rules="selectRules" @update:modelValue="initialize">
-          <template #item="{ props, item }">
-            <v-list-item v-bind="props"
-              :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`" />
-          </template>
-        </v-autocomplete>
+      <div class="ticket-report-filter-controls">
+      <ReportDateRangeFilter
+        v-model:start-date="reportStartDate"
+        v-model:end-date="reportEndDate"
+        class="ticket-report-date-filter"
+      />
 
-        <v-menu v-model="menu2" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y
-          min-width="290px">
-          <template #activator="{ props }">
-            <v-text-field v-bind="props" :modelValue="dateFormattedSearch" prepend-inner-icon="mdi-calendar"
-              placeholder="Fecha" density="compact" variant="outlined" hide-details single-line
-              class="ticket-date-filter" />
-          </template>
+      <v-select
+        v-if="mostrarFila"
+        v-model="type"
+        :items="organizationOptions"
+        item-title="title"
+        item-value="value"
+        density="compact"
+        variant="outlined"
+        prepend-inner-icon="mdi-filter"
+        placeholder="Tipo"
+        hide-details
+        class="incident-filter ticket-report-scope-filter"
+        :menu-props="{ contentClass: 'incidents-select-menu' }"
+      >
+        <template #item="{ props, item }">
+          <v-list-item v-bind="props">
+            <template #prepend>
+              <v-icon :icon="item.raw.icon" />
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
 
-          <v-locale-provider locale="es">
-            <v-date-picker header="Calendario" title="Seleccione la fecha" :color="paleteColors.primary"
-              :modelValue="input2" @update:model-value="updateDateSearch" format="yyyy-MM-dd"
-              :min="new Date().toISOString().split('T')[0]" />
-          </v-locale-provider>
-        </v-menu>
+      <v-autocomplete
+        v-if="type === 'Sucursal' && mostrarFila"
+        v-model="branch_id"
+        :items="branches"
+        :no-data-text="'No hay datos disponibles'"
+        item-title="name"
+        item-value="id"
+        density="compact"
+        variant="outlined"
+        prepend-inner-icon="mdi-store"
+        placeholder="Sucursal"
+        hide-details
+        class="incident-filter ticket-report-scope-filter ticket-report-branch-filter"
+        :menu-props="{ contentClass: 'incidents-select-menu' }"
+        :rules="selectRules"
+      >
+        <template #item="{ props, item }">
+          <v-list-item
+            v-bind="props"
+            :prepend-avatar="`${this.$axios.defaults.baseURL}images/${getTableRowItem(item).image}`"
+          />
+        </template>
+      </v-autocomplete>
 
-        <v-spacer />
+      <v-select
+        v-model="selectedPaymentMethod"
+        :items="paymentFilterOptions"
+        item-title="title"
+        item-value="value"
+        density="compact"
+        variant="outlined"
+        prepend-inner-icon="mdi-credit-card-outline"
+        placeholder="Método de pago"
+        clearable
+        hide-details
+        class="incident-filter ticket-report-optional-filter ticket-report-payment-filter"
+        :menu-props="{ contentClass: 'incidents-select-menu' }"
+      >
+        <template #item="{ props, item }">
+          <v-list-item v-bind="props">
+            <template #prepend>
+              <v-icon :icon="item.raw.icon || 'mdi-credit-card-outline'" />
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
 
-        <v-text-field v-model="search" density="compact" placeholder="Buscar ticket..." prepend-inner-icon="mdi-magnify"
-          variant="outlined" hide-details single-line class="ticket-search" />
+      <v-select
+        v-model="selectedSaleType"
+        :items="saleTypeFilterOptions"
+        item-title="title"
+        item-value="value"
+        density="compact"
+        variant="outlined"
+        prepend-inner-icon="mdi-ticket-outline"
+        placeholder="Tipo de venta"
+        clearable
+        hide-details
+        class="incident-filter ticket-report-optional-filter ticket-report-sale-type-filter"
+        :menu-props="{ contentClass: 'incidents-select-menu' }"
+      >
+        <template #item="{ props, item }">
+          <v-list-item v-bind="props">
+            <template #prepend>
+              <v-icon :icon="item.raw.icon || 'mdi-ticket-outline'" />
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
+
+      <v-btn
+        variant="flat"
+        :color="paleteColors.primary"
+        prepend-icon="mdi-magnify"
+        class="incidents-query-button"
+        :loading="loading"
+        :disabled="type === 'Sucursal' && !branch_id"
+        @click="initialize"
+      >
+        Consultar
+      </v-btn>
       </div>
+    </div>
+
+    <v-card class="table-panel ticket-report-list-panel" elevation="0">
+      <div class="table-toolbar">
+        <div>
+          <div class="section-title">Listado de tickets vendidos</div>
+          <div class="section-subtitle">{{ ticketCountText }}</div>
+        </div>
+
+        <v-text-field
+          v-model="search"
+          density="compact"
+          placeholder="Buscar ticket..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          clearable
+          class="search-field"
+        />
+      </div>
+
+      <v-divider />
 
       <v-data-table :headers="headers" :items="sortedTickets" :search="search"
         :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
-        loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table">
+        loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table incidents-table ticket-report-table">
         <template #top>
           <div class="busgo-table-head">
-            <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')">
-              <span>Código</span>
-              <v-icon size="14">{{ ticketSortIcon('code') }}</v-icon>
-            </div>
-            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('tripName')">
-              <span>Tramos</span>
-              <v-icon size="14">{{ ticketSortIcon('tripName') }}</v-icon>
-            </div>
-            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('date')">
-              <span>Fecha</span>
-              <v-icon size="14">{{ ticketSortIcon('date') }}</v-icon>
-            </div>
-            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('schedule')">
-              <span>Horario</span>
-              <v-icon size="14">{{ ticketSortIcon('schedule') }}</v-icon>
-            </div>
-            <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')">
-              <span>Método</span>
-              <v-icon size="14">{{ ticketSortIcon('method') }}</v-icon>
-            </div>
-            <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')">
-              <span>Pasajes</span>
-              <v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon>
-            </div>
-            <div class="ticket-col-seats ticket-sortable-header" @click="toggleTicketSort('seats')">
-              <span>Asientos</span>
-              <v-icon size="14">{{ ticketSortIcon('seats') }}</v-icon>
-            </div>
-            <div class="ticket-col-price ticket-sortable-header" @click="toggleTicketSort('price')">
-              <span>Precio</span>
-              <v-icon size="14">{{ ticketSortIcon('price') }}</v-icon>
-            </div>
-            <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')">
-              <span>Total</span>
-              <v-icon size="14">{{ ticketSortIcon('total') }}</v-icon>
-            </div>
+            <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')"><span>Código</span><v-icon size="14">{{ ticketSortIcon('code') }}</v-icon></div>
+            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('tripName')"><span>Tramos</span><v-icon size="14">{{ ticketSortIcon('tripName') }}</v-icon></div>
+            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('date')"><span>Fecha</span><v-icon size="14">{{ ticketSortIcon('date') }}</v-icon></div>
+            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('schedule')"><span>Horario</span><v-icon size="14">{{ ticketSortIcon('schedule') }}</v-icon></div>
+            <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')"><span>Método</span><v-icon size="14">{{ ticketSortIcon('method') }}</v-icon></div>
+            <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')"><span>Pasajes</span><v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon></div>
+            <div class="ticket-col-seats ticket-sortable-header" @click="toggleTicketSort('seats')"><span>Asientos</span><v-icon size="14">{{ ticketSortIcon('seats') }}</v-icon></div>
+            <div class="ticket-col-price ticket-sortable-header" @click="toggleTicketSort('price')"><span>Precio</span><v-icon size="14">{{ ticketSortIcon('price') }}</v-icon></div>
+            <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')"><span>Total</span><v-icon size="14">{{ ticketSortIcon('total') }}</v-icon></div>
             <div class="ticket-col-actions"></div>
           </div>
         </template>
@@ -133,100 +213,44 @@
           <tr>
             <td class="pa-0 border-0">
               <div class="busgo-row ticket-row">
-                <div class="ticket-col-code busgo-meta ticket-code-cell">
-                  <span class="ticket-code-value text-truncate">
-                    {{ slotProps.item.code || "-" }}
-                  </span>
-                </div>
-
+                <div class="ticket-col-code busgo-meta ticket-code-cell"><span class="ticket-code-value text-truncate">{{ slotProps.item.code || "-" }}</span></div>
                 <div class="ticket-col-route">
                   <div class="ticket-route-title-row">
-                    <div class="ticket-route-main text-truncate">
-                      {{ slotProps.item.routeCode || "-" }}
-                    </div>
-
-                    <v-chip v-if="getTicketFareSegment(slotProps.item)" size="x-small" :color="paleteColors.primary"
-                      variant="tonal" class="flex-shrink-0">
-                      Tramo
-                    </v-chip>
-
-                    <v-chip
-                      size="x-small"
+                    <div class="ticket-route-main text-truncate">{{ slotProps.item.routeCode || "-" }}</div>
+                    <BusgoChip v-if="getTicketFareSegment(slotProps.item)" size="x-small" color="#2454d6" class="flex-shrink-0">Tramo</BusgoChip>
+                    <SaleModeChip
+                      :value="slotProps.item"
+                      :label="getSaleModeLabel(slotProps.item)"
                       :color="getSaleModeColor(slotProps.item)"
-                      variant="tonal"
                       class="flex-shrink-0"
-                    >
-                      {{ getSaleModeLabel(slotProps.item) }}
-                    </v-chip>
+                    />
                   </div>
-
                   <div class="ticket-route-meta">
                     <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
-
-                    <span class="text-truncate">
-                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}
-                    </span>
-
+                    <span class="text-truncate">Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}</span>
                     <v-icon size="14" class="mx-2">mdi-ray-start-arrow</v-icon>
-
-                    <span class="text-truncate">
-                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                    </span>
+                    <span class="text-truncate">Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}</span>
                   </div>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="420px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Código viaje: {{ slotProps.item.code || "-" }}<br />
-                      Código ruta: {{ slotProps.item.routeCode || "-" }}<br />
-                      Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />
-                      Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}
-                    </span>
-                  </v-tooltip>
+                  <v-tooltip activator="parent" location="bottom" max-width="420px"><span style="white-space: normal; word-break: break-word">Código viaje: {{ slotProps.item.code || "-" }}<br />Código ruta: {{ slotProps.item.routeCode || "-" }}<br />Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}</span></v-tooltip>
                 </div>
-
-                <div class="ticket-col-date busgo-meta">
-                  <v-icon size="16" color="primary">mdi-calendar</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.date }}</span>
-                </div>
-
-                <div class="ticket-col-schedule busgo-meta">
-                  <v-icon size="16" color="primary">mdi-clock-outline</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.schedule }}</span>
-                </div>
-
+                <div class="ticket-col-date busgo-meta"><v-icon size="16" color="primary">mdi-calendar</v-icon><span class="text-truncate">{{ slotProps.item.date }}</span></div>
+                <div class="ticket-col-schedule busgo-meta"><v-icon size="16" color="primary">mdi-clock-outline</v-icon><span class="text-truncate">{{ slotProps.item.schedule }}</span></div>
                 <div class="ticket-col-method busgo-meta">
-                  <span class="ticket-method-chip">
-                    {{ slotProps.item.method }}
-                  </span>
+                  <BusgoChip
+                    size="x-small"
+                    :color="getMethodColor(slotProps.item.method) || '#64748b'"
+                    class="flex-shrink-0"
+                  >
+                    {{ slotProps.item.method || "Sin método" }}
+                  </BusgoChip>
                 </div>
-
-                <div class="ticket-col-quantity busgo-meta">
-                  <span>{{ slotProps.item.quantity }}</span>
-                </div>
-
-                <div class="ticket-col-seats busgo-meta">
-                  <v-icon size="16" color="primary">mdi-seat</v-icon>
-                  <span class="text-truncate">{{ slotProps.item.seats }}</span>
-                </div>
-
-                <div class="ticket-col-price ticket-money">
-                  ${{ formatNumber(Number(slotProps.item.price)) }}
-                </div>
-
-                <div class="ticket-col-total ticket-money ticket-money-total">
-                  ${{ formatNumber(Number(slotProps.item.total)) }}
-                </div>
-
+                <div class="ticket-col-quantity busgo-meta"><span>{{ slotProps.item.quantity }}</span></div>
+                <div class="ticket-col-seats busgo-meta"><v-icon size="16" color="primary">mdi-seat</v-icon><span class="text-truncate">{{ slotProps.item.seats }}</span></div>
+                <div class="ticket-col-price ticket-money">${{ formatNumber(Number(slotProps.item.price)) }}</div>
+                <div class="ticket-col-total ticket-money ticket-money-total">${{ formatNumber(Number(slotProps.item.total)) }}</div>
                 <div class="ticket-col-actions busgo-actions">
-                  <v-btn size="30" icon variant="tonal" :color="paleteColors.green" @click="printerItem(slotProps.item)"
-                    title="Reimprimir Ticket">
-                    <v-icon size="17">mdi-printer</v-icon>
-                  </v-btn>
-
-                  <v-btn size="30" icon variant="tonal" :color="paleteColors.error" @click="deleteItem(slotProps.item)"
-                    title="Eliminar Ticket">
-                    <v-icon size="17">mdi-delete</v-icon>
-                  </v-btn>
+                  <v-btn size="30" icon variant="tonal" :color="paleteColors.green" @click="printerItem(slotProps.item)" title="Reimprimir Ticket"><v-icon size="17">mdi-printer</v-icon></v-btn>
+                  <v-btn size="30" icon variant="tonal" :color="paleteColors.error" @click="deleteItem(slotProps.item)" title="Eliminar Ticket"><v-icon size="17">mdi-delete</v-icon></v-btn>
                 </div>
               </div>
             </td>
@@ -234,7 +258,9 @@
         </template>
       </v-data-table>
     </v-card>
+  </div>
   </v-container>
+  </div>
   <ExpressTicketSale
     v-model="dialogExpressSale"
     :branches="branches"
@@ -868,9 +894,11 @@
             <div class="d-flex align-center justify-space-between mb-1">
               <div class="font-weight-bold">Recorrido:</div>
 
-              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
-                {{ getSaleModeLabel(currentTicket) }}
-              </v-chip>
+              <SaleModeChip
+                :value="currentTicket"
+                :label="getSaleModeLabel(currentTicket)"
+                :color="getSaleModeColor(currentTicket)"
+              />
             </div>
 
             <div>
@@ -928,9 +956,11 @@
             <div class="d-flex align-center justify-space-between mb-1">
               <div class="font-weight-bold">Recorrido:</div>
 
-              <v-chip size="x-small" variant="tonal" :color="getSaleModeColor(currentTicket)">
-                {{ getSaleModeLabel(currentTicket) }}
-              </v-chip>
+              <SaleModeChip
+                :value="currentTicket"
+                :label="getSaleModeLabel(currentTicket)"
+                :color="getSaleModeColor(currentTicket)"
+              />
             </div>
 
             <div>
@@ -989,7 +1019,13 @@ import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import { paleteColors } from "@/assets/colors";
+import BusgoChip from "@/components/BusgoChip.vue";
+import SaleModeChip from "@/components/SaleModeChip.vue";
+import { SALE_MODE_COLORS } from "@/utils/saleMode";
 import QRCode from "qrcode";
+import * as XLSX from "xlsx";
+import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
+import ReportKpiCards from "@/components/ReportKpiCards.vue";
 
 const CARD_PAYMENT_DEVICE = "TJ44243320217";
 const PAYMENT_STATUS_POLL_INTERVAL_MS = 2000;
@@ -998,6 +1034,10 @@ const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
 export default {
   components: {
     ExpressTicketSale,
+    ReportDateRangeFilter,
+    ReportKpiCards,
+    BusgoChip,
+    SaleModeChip,
   },
   data: () => ({
     snackbar: false,
@@ -1016,6 +1056,8 @@ export default {
     dialogExpressSale: false,
     dialogDelete: false,
     branch_id: "",
+    company_id: "",
+    type: "Sucursal",
     seatError: null,
     currentlyEditing: null,
     locations: [],
@@ -1028,6 +1070,23 @@ export default {
     vehicles: [],
     workers: [],
     tickets: [],
+    reportSummary: {
+      pasajesEmitidos: 0,
+      asientosComprados: 0,
+      reimpresiones: 0,
+      totales: 0,
+    },
+    includeMaintainers: true,
+    selectedPaymentMethod: null,
+    selectedSaleType: null,
+    reportStartDate: "",
+    reportEndDate: "",
+    organizationOptions: [
+      { title: "Empresa", value: "Company", icon: "mdi-office-building" },
+      { title: "Sucursal", value: "Sucursal", icon: "mdi-store" },
+    ],
+    paymentFilterOptions: [],
+    saleTypeFilterOptions: [],
     promotions: [],
     tickettypes: [],
     currentTicket: {},
@@ -1180,6 +1239,43 @@ export default {
     tripSaleSortOrder: "asc",
   }),
   computed: {
+    salesKpiCards() {
+      return [
+        {
+          key: "tickets",
+          variant: "tickets",
+          icon: "mdi-ticket-confirmation",
+          color: this.paleteColors.green,
+          label: "Pasajes emitidos",
+          value: this.reportSummary.pasajesEmitidos,
+        },
+        {
+          key: "passengers",
+          variant: "passengers",
+          icon: "mdi-account-group",
+          color: "indigo-lighten-1",
+          label: "Pasajeros",
+          value: this.reportSummary.asientosComprados,
+        },
+        {
+          key: "prints",
+          variant: "prints",
+          icon: "mdi-printer",
+          color: "orange-lighten-1",
+          label: "Reimpresiones",
+          value: this.reportSummary.reimpresiones,
+        },
+        {
+          key: "revenue",
+          variant: "revenue",
+          icon: "mdi-cash-multiple",
+          color: "primary",
+          label: "Total general",
+          value: `$${this.formatNumber(Number(this.reportSummary.totales || 0))}`,
+        },
+      ];
+    },
+
     formTitle() {
       return this.editedIndex === -1 ? "Venta de Ticket" : "Editar Ticket";
     },
@@ -1323,9 +1419,16 @@ export default {
       return this.buildTripSaleRows(this.trips);
     },
     sortedTickets() {
-      return this.sortRows(this.tickets, this.ticketSortBy, this.ticketSortOrder, (row, field) =>
+      return this.sortRows(this.reportTickets, this.ticketSortBy, this.ticketSortOrder, (row, field) =>
         this.getTicketSortValue(row, field)
       );
+    },
+    reportTickets() {
+      return Array.isArray(this.tickets) ? this.tickets : [];
+    },
+    ticketCountText() {
+      const count = this.reportTickets.length;
+      return `${count} ${count === 1 ? "ticket encontrado" : "tickets encontrados"}`;
     },
     filteredTripSaleRows() {
       const query = (this.tripSearchText || "").toString().trim().toLowerCase();
@@ -1376,10 +1479,14 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.nameUser = JSON.parse(LocalStorageService.getItem("name"));
     this.permissions = LocalStorageService.getItem("permissions");
+    this.company_id = LocalStorageService.getItem("business_id");
+    this.includeMaintainers = true;
     if (this.hasPermission("view_tickets_company")) {
-      this.showBranches();
+      this.type = "Company";
       this.mostrarFila = true;
+      this.showBranches();
     } else {
+      this.type = "Sucursal";
       this.branch_id = LocalStorageService.getItem("branch_id");
       this.initialize();
     }
@@ -1406,7 +1513,7 @@ export default {
         : [requiredPermissions];
 
       // Retorna true si al menos uno coincide
-      return perms.some((p) => this.permissions.includes(p));
+      return perms.some((p) => String(this.permissions || "").includes(p));
     },
     getCacheTimestamp() {
       // Usamos medianoche (00:00:00) del dÃ­a actual
@@ -1419,6 +1526,86 @@ export default {
     },
     getTableRowItem(item) {
       return item?.raw || item || {};
+    },
+    normalizeMaintainerOptions(options = []) {
+      return (Array.isArray(options) ? options : [])
+        .map((item) => {
+          if (typeof item === "string") {
+            return { title: item, value: item };
+          }
+
+          const value = item?.value ?? item?.code ?? item?.id ?? item?.name;
+          const title = item?.label ?? item?.title ?? item?.name ?? value;
+
+          return {
+            title,
+            value,
+            icon: item?.icon,
+          };
+        })
+        .filter((item) => item.value !== undefined && item.value !== null);
+    },
+    applyReportMaintainers(maintainers = {}) {
+      this.paymentFilterOptions = this.normalizeMaintainerOptions(
+        maintainers.payment_methods ?? maintainers.paymentMethods
+      );
+      this.saleTypeFilterOptions = this.normalizeMaintainerOptions(
+        maintainers.sale_types ?? maintainers.saleTypes
+      );
+    },
+    normalizeReportSummary(summary = {}) {
+      return {
+        pasajesEmitidos: Number(summary.pasajesEmitidos ?? 0) || 0,
+        asientosComprados: Number(summary.asientosComprados ?? 0) || 0,
+        reimpresiones: Number(summary.reimpresiones ?? 0) || 0,
+        totales: Number(summary.totales ?? 0) || 0,
+      };
+    },
+    normalizePaymentMethod(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+    },
+    getTicketQuantity(ticket = {}) {
+      return Number(ticket.quantity ?? ticket.pasajes ?? ticket.ticketQuantity ?? 0) || 0;
+    },
+    getTicketPassengerCount(ticket = {}) {
+      const seats = ticket.seats ?? ticket.asientosComprados ?? ticket.passengers;
+
+      if (Array.isArray(seats)) {
+        return seats.length;
+      }
+
+      const numericSeats = Number(seats);
+      return Number.isFinite(numericSeats) && numericSeats > 0
+        ? numericSeats
+        : this.getTicketQuantity(ticket);
+    },
+    getSaleModeKey(ticket = {}) {
+      const rawMode = String(
+        ticket?.sale_mode ??
+        ticket?.saleMode ??
+        ticket?.sale_mode_label ??
+        ticket?.saleModeLabel ??
+        "normal"
+      )
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[-\s]/g, "_");
+
+      if (["express", "venta_express"].includes(rawMode)) {
+        return "express";
+      }
+      if (["aboard", "a_bordo", "venta_a_bordo", "venta_aboard"].includes(rawMode)) {
+        return "aboard";
+      }
+      if (["web", "venta_web"].includes(rawMode)) {
+        return "web";
+      }
+      return "normal";
     },
     sortRows(rows = [], sortBy = "", sortOrder = "asc", valueGetter = () => null) {
       const direction = sortOrder === "desc" ? -1 : 1;
@@ -1634,12 +1821,22 @@ export default {
       return ticket?.tripDestination ?? ticket?.destination ?? "No especificado";
     },
     getSaleModeLabel(ticket = {}) {
-      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "Express" : "Full";
+      const labels = {
+        normal: "Full",
+        express: "Express",
+        aboard: "A Bordo",
+        web: "Web",
+      };
+      return labels[this.getSaleModeKey(ticket)] || "Full";
     },
     getSaleModeColor(ticket = {}) {
-      const saleMode = String(ticket?.sale_mode || ticket?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "success" : "primary";
+      const colors = {
+        normal: SALE_MODE_COLORS.full,
+        express: SALE_MODE_COLORS.express,
+        aboard: "warning",
+        web: "info",
+      };
+      return colors[this.getSaleModeKey(ticket)] || SALE_MODE_COLORS.full;
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -2710,8 +2907,10 @@ export default {
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
           this.branches = result.data?.branches || [];
-          this.editedItem.branch_id = this.branches[0].id;
-          this.branch_id = this.branches[0].id;
+          if (this.branches.length) {
+            this.editedItem.branch_id = this.branches[0].id;
+            this.branch_id = this.branch_id || this.branches[0].id;
+          }
         } else {
           this.mostrarFila = false;
           // Si no hay datos, asignamos un array vacÃ­o
@@ -3020,27 +3219,14 @@ export default {
       this.aviable = 0;
     },
     async initialize() {
-      if (this.branch_id === "null") {
+      if (this.type === "Sucursal" && (!this.branch_id || this.branch_id === "null")) {
         this.tickets = [];
         this.loading = false;
         return;
       }
       try {
         this.loading = true;
-        this.data = {};
-        const today = new Date();
-        const formattedDate = today
-          .toLocaleDateString("es-CL", {
-            timeZone: "America/Santiago",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          })
-          .split("-")
-          .reverse()
-          .join("-"); // Convierte "DD-MM-YYYY" a "YYYY-MM-DD"
-        this.data.date = this.dateFormattedSearch;
-        this.data.branch_id = Number(this.branch_id);
+        this.data = this.buildTicketReportRequest();
         const result = await handleRequest({
           endpoint: "get-tickets-date",
           method: "POST",
@@ -3048,11 +3234,17 @@ export default {
         });
 
         if (result.success) {
-          // Si la solicitud es exitosa, asignamos las sucursales
-          this.tickets = result.data?.tickets || [];
+          const reportData = result.data || {};
+          this.tickets = reportData.tickets || [];
+          this.reportSummary = this.normalizeReportSummary(reportData.summary);
+
+          if (this.includeMaintainers) {
+            this.applyReportMaintainers(reportData.maintainers);
+            this.includeMaintainers = false;
+          }
         } else {
-          // Si no hay datos, asignamos un array vacÃ­o
           this.tickets = [];
+          this.reportSummary = this.normalizeReportSummary();
         }
       } catch (error) {
         this.loading = false;
@@ -3065,6 +3257,52 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    buildTicketReportRequest() {
+      const scopeId = this.type === "Company" ? this.company_id : this.branch_id;
+      const startDate = this.reportStartDate || this.dateFormattedSearch;
+      const endDate = this.reportEndDate || startDate;
+      const request = {
+        id: Number(scopeId),
+        type: this.type,
+        date: startDate,
+        include_maintainers: this.includeMaintainers,
+      };
+
+      if (endDate && endDate !== startDate) {
+        request.endDate = endDate;
+      }
+
+      if (this.selectedPaymentMethod) {
+        request.method = this.selectedPaymentMethod;
+      }
+
+      if (this.selectedSaleType) {
+        request.sale_mode = this.selectedSaleType;
+      }
+
+      return request;
+    },
+    exportToExcel() {
+      const rows = this.reportTickets.map((ticket) => ({
+        Código: ticket.code || "",
+        Ruta: ticket.routeCode || "",
+        Origen: this.getTicketRouteOriginLabel(ticket),
+        Destino: this.getTicketRouteDestinationLabel(ticket),
+        Fecha: ticket.date || "",
+        Horario: ticket.schedule || "",
+        "Método de pago": ticket.method || "",
+        "Tipo de venta": this.getSaleModeLabel(ticket),
+        Pasajes: this.getTicketQuantity(ticket),
+        Pasajeros: this.getTicketPassengerCount(ticket),
+        Precio: Number(ticket.price || 0),
+        Total: Number(ticket.total || 0),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte de Ventas");
+      XLSX.writeFile(workbook, `reporte_ventas_${this.reportStartDate || this.dateFormattedSearch}.xlsx`);
     },
     areSeatsDifferent(originalSeats, editedSeats) {
       // Convertir ambos arrays en cadenas de texto para una comparaciÃ³n profunda
@@ -3874,7 +4112,7 @@ export default {
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
-                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${this.getSaleModeKey(this.currentTicket)}">${this.getSaleModeLabel(this.currentTicket)}</div>
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
@@ -3930,7 +4168,7 @@ export default {
                 <div class="mb-3">
                     <div class="detail-row">
                     <div class="font-weight-bold">Recorrido:</div>
-                    <div class="ticket-sale-mode ticket-sale-mode--${String(this.currentTicket.sale_mode || this.currentTicket.saleMode || "normal").toLowerCase()}">${this.getSaleModeLabel(this.currentTicket)}</div>
+                    <div class="ticket-sale-mode ticket-sale-mode--${this.getSaleModeKey(this.currentTicket)}">${this.getSaleModeLabel(this.currentTicket)}</div>
                     </div>
                     <div>
                     <span class="font-weight-medium mr-1">Origen:</span>
@@ -4933,6 +5171,516 @@ table.v-table>thead,
   display: none !important;
 }
 
+.ticket-report-page-header {
+  min-height: 74px;
+}
+
+.ticket-report-export-button {
+  min-width: 145px;
+}
+
+.ticket-report-container {
+  position: relative;
+  padding-top: 20px;
+}
+
+.ticket-report-loading-bar {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.ticket-report-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.ticket-report-kpi-card {
+  position: relative;
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3e9f1;
+  border-radius: 11px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.035);
+}
+
+.ticket-report-kpi-card::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  content: "";
+  background: #16875a;
+}
+
+.ticket-report-kpi-card--passengers::before {
+  background: #4f46e5;
+}
+
+.ticket-report-kpi-card--prints::before {
+  background: #d97706;
+}
+
+.ticket-report-kpi-card--revenue::before {
+  background: #2454d6;
+}
+
+.ticket-report-kpi-icon {
+  flex: 0 0 auto;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 10px;
+}
+
+.ticket-report-kpi-label {
+  color: #526176;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ticket-report-kpi-value {
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.ticket-report-filters {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 14px 16px 16px;
+  background: #f8fafc;
+  border: 1px solid #e1e8f1;
+  border-radius: 12px;
+}
+
+.ticket-report-filter-heading {
+  display: flex;
+  flex: 0 0 205px;
+  align-items: center;
+  gap: 9px;
+  color: #2454d6;
+}
+
+.ticket-report-filter-heading strong,
+.ticket-report-filter-heading span {
+  display: block;
+}
+
+.ticket-report-filter-heading strong {
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 850;
+}
+
+.ticket-report-filter-heading span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.ticket-report-filter-controls {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ticket-report-filter {
+  flex: 1 1 165px;
+  width: auto !important;
+  min-width: 165px;
+  max-width: 230px;
+}
+
+.ticket-report-filters .incident-filter {
+  flex: 0 1 245px;
+  width: 245px !important;
+  min-width: 210px !important;
+  max-width: none;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-field) {
+  min-height: 40px !important;
+  color: #334155 !important;
+  background: #fff !important;
+  border-radius: 9px !important;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-field__outline) {
+  color: #dce3ed;
+  opacity: 1;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-field__input),
+.ticket-report-filters .incident-filter :deep(.v-label) {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-field__prepend-inner),
+.ticket-report-filters .incident-filter :deep(.v-field__append-inner) {
+  color: #64748b;
+  opacity: 1;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-field--focused .v-field__outline),
+.ticket-report-filters .incident-filter :deep(.v-field--focused .v-field__prepend-inner) {
+  color: #2454d6 !important;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-select__selection),
+.ticket-report-filters .incident-filter :deep(.v-autocomplete__selection) {
+  min-width: 0;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ticket-report-filters .incident-filter :deep(.v-chip) {
+  height: 23px;
+  color: #2454d6;
+  background: #eef3ff;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.ticket-report-filter :deep(.v-field) {
+  min-height: 40px;
+  color: #334155;
+  background: #fff;
+  border-radius: 9px;
+}
+
+.ticket-report-filter :deep(.v-field__input),
+.ticket-report-filter :deep(.v-label) {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-filter :deep(.v-field__prepend-inner),
+.ticket-report-filter :deep(.v-field__append-inner) {
+  color: #64748b;
+  opacity: 1;
+}
+
+.ticket-report-filter :deep(.v-chip) {
+  max-width: 110px;
+  height: 23px;
+  color: #2454d6;
+  background: #eef3ff;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.ticket-report-query-button {
+  min-width: 112px !important;
+  min-height: 40px !important;
+  border-radius: 9px !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.18) !important;
+}
+
+/* Filtros estandarizados con el reporte de Incidentes. */
+.incident-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px !important;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 14px !important;
+  background: #f8fafc;
+  border: 1px solid #e7ecf3;
+  border-radius: 11px;
+}
+
+.incidents-toolbar-label {
+  display: flex;
+  flex: 1 0 100%;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 2px;
+  color: #2454d6;
+}
+
+.incidents-toolbar-label strong,
+.incidents-toolbar-label span {
+  display: block;
+}
+
+.incidents-toolbar-label strong {
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 850;
+}
+
+.incidents-toolbar-label span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.incident-toolbar .report-date-range-trigger {
+  flex: 1 1 220px;
+  width: auto !important;
+  min-width: 220px;
+}
+
+.incident-filter {
+  flex: 0 1 245px;
+  width: 245px !important;
+  min-width: 210px !important;
+}
+
+.incident-toolbar :deep(.v-field) {
+  min-height: 40px !important;
+  color: #334155 !important;
+  background: #fff !important;
+  border-radius: 9px !important;
+}
+
+.incident-toolbar :deep(.v-field__outline) {
+  color: #dce3ed;
+  opacity: 1;
+}
+
+.incident-toolbar :deep(.v-field__input),
+.incident-toolbar :deep(.v-label) {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.incident-toolbar :deep(.v-field__prepend-inner),
+.incident-toolbar :deep(.v-field__append-inner) {
+  color: #64748b;
+  opacity: 1;
+}
+
+.incident-toolbar :deep(.v-field--focused .v-field__outline),
+.incident-toolbar :deep(.v-field--focused .v-field__prepend-inner) {
+  color: #2454d6 !important;
+}
+
+.incident-toolbar :deep(.v-select__selection),
+.incident-toolbar :deep(.v-autocomplete__selection) {
+  min-width: 0;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.incident-toolbar :deep(.v-chip) {
+  height: 23px;
+  color: #2454d6;
+  background: #eef3ff;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.incidents-query-button {
+  min-width: 112px !important;
+  min-height: 40px !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.18) !important;
+}
+
+.ticket-report-list-panel {
+  overflow: hidden;
+}
+
+.ticket-report-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 22px;
+}
+
+.ticket-report-list-toolbar .ticket-search {
+  margin-left: auto;
+}
+
+@media (max-width: 1180px) {
+  .ticket-report-filters {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ticket-report-filter-heading {
+    flex-basis: auto;
+  }
+
+  .ticket-report-filter-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 960px) {
+  .ticket-report-page-header {
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 10px;
+    padding: 13px 14px !important;
+  }
+
+  .ticket-report-export-button {
+    width: 100%;
+  }
+
+  .ticket-report-container {
+    padding: 14px !important;
+  }
+
+  .ticket-report-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ticket-report-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ticket-report-filter,
+  .ticket-report-query-button,
+  .incidents-query-button {
+    width: 100% !important;
+    min-width: 100%;
+    max-width: none;
+  }
+
+  .incident-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .incident-toolbar .report-date-range-trigger,
+  .incident-filter {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .ticket-report-filters .incident-filter {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .ticket-report-list-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .ticket-report-list-toolbar .ticket-search {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .ticket-report-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Menú organizacional compartido con el reporte de Incidentes. */
+.incidents-select-menu {
+  overflow: hidden !important;
+  padding: 6px !important;
+  background: #fff !important;
+  border: 1px solid #dfe6ef !important;
+  border-radius: 11px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+}
+
+.incidents-select-menu .v-list {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.incidents-select-menu .v-list-item {
+  min-height: 48px !important;
+  margin: 2px 0 !important;
+  padding: 7px 10px !important;
+  color: #1e293b !important;
+  border-radius: 8px !important;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.incidents-select-menu .v-list-item:hover {
+  color: #2454d6 !important;
+  background: #f4f7ff !important;
+}
+
+.incidents-select-menu .v-list-item--active {
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+}
+
+.incidents-select-menu .v-list-item-title {
+  color: inherit !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+}
+
+.incidents-select-menu .v-list-item__prepend > .v-icon {
+  width: 32px !important;
+  height: 32px !important;
+  margin-inline-end: 10px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+  font-size: 17px !important;
+}
+
+.incidents-select-menu .v-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  margin-inline-end: 10px !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+}
+
+.incidents-select-menu .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
 .ticket-toolbar {
   display: flex;
   align-items: center;
@@ -5076,19 +5824,6 @@ table.v-table>thead,
   min-width: 0;
 }
 
-.ticket-method-chip {
-  max-width: 100%;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
-  font-size: 12px;
-  font-weight: 700;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .ticket-money {
   font-size: 13px;
   font-weight: 700;
@@ -5152,22 +5887,32 @@ table.v-table>thead,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 2px 8px;
+  min-height: 23px;
+  border-radius: 6px;
+  padding: 0 8px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .ticket-sale-mode--express {
-  background: #dcfce7;
-  color: #15803d;
+  background: #eaf8f1;
+  color: #16845b;
 }
 
 .ticket-sale-mode--normal {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #eef3ff;
+  color: #2454d6;
+}
+
+.ticket-sale-mode--aboard {
+  background: #fff7e6;
+  color: #b45309;
+}
+
+.ticket-sale-mode--web {
+  background: #eaf5ff;
+  color: #0369a1;
 }
 
 .busgo-dialog-card {
@@ -5830,6 +6575,413 @@ table.v-table>thead,
 @media (max-width: 600px) {
   .seat-map-scroll {
     max-height: 360px;
+  }
+}
+
+/* ============================================================
+   REPORTE DE VENTAS · MISMA COMPOSICIÓN VISUAL DE INCIDENTES
+   ============================================================ */
+.ticket-report-page {
+  min-height: 100%;
+  color: #1e293b;
+  background: #f6f8fb;
+}
+
+.ticket-report-page .page-header {
+  display: flex;
+  min-height: 70px !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px !important;
+  background: #fff;
+  border-bottom: 1px solid #e8edf5;
+}
+
+.ticket-report-page .page-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.ticket-report-page .page-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #fff;
+  background: radial-gradient(circle at 90% 5%, rgba(53, 184, 232, .5), transparent 28px), linear-gradient(135deg, #0e1f46, #2454d6);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, .17);
+  place-items: center;
+}
+
+.ticket-report-page .page-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.ticket-report-page .page-subtitle {
+  margin: 3px 0 0;
+  color: #526176;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.ticket-report-page .ticket-report-export-button {
+  min-width: 145px;
+  min-height: 40px;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 5px 12px rgba(22, 135, 90, .18) !important;
+}
+
+.ticket-report-page .page-content {
+  padding: 18px 24px 28px !important;
+}
+
+.ticket-report-page .incidents-content {
+  position: relative;
+}
+
+.ticket-report-page .ticket-report-loading-bar {
+  position: fixed !important;
+  top: 70px;
+  left: 0;
+  z-index: 8;
+}
+
+.ticket-report-page .ticket-report-summary-row {
+  margin-bottom: 0;
+}
+
+.ticket-report-page .ticket-report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.ticket-report-page .summary-card {
+  position: relative;
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 15px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .035);
+}
+
+.ticket-report-page .summary-card::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 62px;
+  height: 62px;
+  content: "";
+  background: radial-gradient(circle at 100% 0, rgba(36, 84, 214, 0.09), transparent 68%);
+  pointer-events: none;
+}
+
+.ticket-report-page .summary-card::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  content: "";
+  background: #16875a;
+}
+
+.ticket-report-page .summary-card--passengers::before { background: #4f46e5; }
+.ticket-report-page .summary-card--prints::before { background: #d97706; }
+.ticket-report-page .summary-card--revenue::before { background: #2454d6; }
+
+.ticket-report-page .summary-icon {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  place-items: center;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
+
+.ticket-report-page .summary-icon--blue { color: #2454d6; background: #eef3ff; }
+.ticket-report-page .summary-icon--green { color: #16875a; background: #eaf8f1; }
+.ticket-report-page .summary-icon--amber { color: #b86a08; background: #fff6e6; }
+.ticket-report-page .summary-value { color: #0f172a; font-size: 20px; font-weight: 900; line-height: 1; letter-spacing: -0.025em; }
+.ticket-report-page .summary-label { margin-top: 4px; color: #526176; font-size: 11px; font-weight: 700; }
+
+.ticket-report-page .incident-toolbar {
+  display: block !important;
+  margin: 0 0 16px !important;
+  padding: 14px !important;
+  background: #f8fafc;
+  border: 1px solid #e7ecf3;
+  border-radius: 11px;
+}
+
+.ticket-report-page .incidents-toolbar-label {
+  margin-bottom: 12px;
+}
+
+/* Este archivo usa estilos no encapsulados: :deep() no se transforma aquí.
+   Se aplican selectores directos para igualar los campos de Incidentes. */
+.ticket-report-page .ticket-report-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.ticket-report-page .ticket-report-filter-controls > :not(.incidents-query-button) {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.ticket-report-page .ticket-report-filter-controls .report-date-range-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.ticket-report-page .ticket-report-filter-controls > .incidents-query-button {
+  flex: 0 0 112px !important;
+  width: 112px !important;
+  min-width: 112px !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field,
+.ticket-report-page .search-field .v-field {
+  min-height: 40px !important;
+  color: #334155 !important;
+  background: #fff !important;
+  border-radius: 9px !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field__outline,
+.ticket-report-page .search-field .v-field__outline {
+  color: #dce3ed !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field__input,
+.ticket-report-page .incident-toolbar .v-label,
+.ticket-report-page .search-field .v-field__input {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field__input input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field__prepend-inner,
+.ticket-report-page .incident-toolbar .v-field__append-inner,
+.ticket-report-page .search-field .v-field__prepend-inner,
+.ticket-report-page .search-field .v-field__append-inner {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.ticket-report-page .incident-toolbar .v-field--focused .v-field__outline,
+.ticket-report-page .incident-toolbar .v-field--focused .v-field__prepend-inner,
+.ticket-report-page .search-field .v-field--focused .v-field__outline {
+  color: #2454d6 !important;
+}
+
+.ticket-report-page .incident-toolbar .v-select__selection,
+.ticket-report-page .incident-toolbar .v-autocomplete__selection {
+  min-width: 0;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ticket-report-page .table-panel {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 13px !important;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, .04) !important;
+}
+
+.ticket-report-page .table-toolbar {
+  display: flex;
+  min-height: 69px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 17px;
+}
+
+.ticket-report-page .section-title {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.ticket-report-page .section-subtitle {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ticket-report-page .search-field {
+  flex: 0 1 320px;
+  width: 320px;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.ticket-report-page .search-field .v-field {
+  min-height: 40px;
+  color: #334155;
+  background: #fff;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.ticket-report-page .search-field .v-field__outline { color: #dce3ed; opacity: 1; }
+.ticket-report-page .search-field .v-field__input { min-height: 40px; padding-block: 0; color: #1e293b; font-size: 12px; font-weight: 600; }
+.ticket-report-page .search-field .v-field__input::placeholder { color: #94a3b8; opacity: 1; }
+.ticket-report-page .search-field .v-icon { color: #64748b; opacity: 1; }
+.ticket-report-page .search-field .v-field--focused .v-field__outline { color: #2454d6; }
+
+.ticket-report-page .ticket-report-table {
+  max-height: 68vh;
+  overflow: auto;
+  color: #1e293b;
+  background: transparent;
+}
+
+.ticket-report-page .ticket-report-table :deep(thead) {
+  display: none !important;
+}
+
+.ticket-report-page .ticket-report-table :deep(tbody td) {
+  height: auto !important;
+  padding: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.ticket-report-page .ticket-report-table :deep(tbody tr:hover) {
+  background: #f8faff !important;
+}
+
+.ticket-report-page .ticket-report-table :deep(.v-data-table-footer) {
+  min-height: 52px;
+  padding: 6px 16px;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-top: 1px solid #eef2f6;
+}
+
+.ticket-report-page .ticket-report-table :deep(.busgo-table-head) {
+  display: none !important;
+}
+
+.ticket-report-page .ticket-report-table :deep(.busgo-row) {
+  min-height: 62px;
+  margin: 0 !important;
+  padding: 10px 17px;
+  color: #1e293b;
+  background: #fff;
+  border: 0 !important;
+  border-bottom: 1px solid #eef2f6 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color .16s ease;
+}
+
+.ticket-report-page .ticket-report-table :deep(.busgo-row:hover) { background: #f8faff; }
+
+.ticket-report-page .ticket-report-table .ticket-col-code { width: 12%; }
+.ticket-report-page .ticket-report-table .ticket-col-route { width: 24%; }
+.ticket-report-page .ticket-report-table .ticket-col-date { width: 10%; }
+.ticket-report-page .ticket-report-table .ticket-col-schedule { width: 9%; }
+.ticket-report-page .ticket-report-table .ticket-col-method { width: 8%; }
+.ticket-report-page .ticket-report-table .ticket-col-quantity { width: 7%; }
+.ticket-report-page .ticket-report-table .ticket-col-seats { width: 9%; }
+.ticket-report-page .ticket-report-table .ticket-col-price { width: 7%; }
+.ticket-report-page .ticket-report-table .ticket-col-total { width: 8%; }
+.ticket-report-page .ticket-report-table .ticket-col-actions { width: 6%; }
+
+.ticket-report-page .ticket-report-table .ticket-sortable-header {
+  min-width: 0;
+  overflow: hidden;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.ticket-report-page .ticket-report-table .ticket-sortable-header > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket-report-page .ticket-report-table .ticket-sortable-header > .v-icon {
+  flex: 0 0 auto;
+}
+
+.ticket-report-page .ticket-report-table .ticket-route-main { color: #172033; font-size: 12.5px; font-weight: 800; }
+.ticket-report-page .ticket-report-table .ticket-code-value { color: #172033; font-size: 12.5px; font-weight: 800; }
+.ticket-report-page .ticket-report-table .ticket-route-meta { color: #64748b; font-size: 11.5px; }
+.ticket-report-page .ticket-report-table .ticket-money { font-size: 12.5px; font-weight: 750; }
+@media (max-width: 960px) {
+  .ticket-report-page .page-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 13px 14px !important;
+  }
+
+  .ticket-report-page .ticket-report-export-button { width: 100%; }
+  .ticket-report-page .page-content { padding: 14px !important; }
+  .ticket-report-page .ticket-report-summary-row { margin-bottom: 0; }
+  .ticket-report-page .ticket-report-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ticket-report-page .table-toolbar { align-items: stretch; flex-direction: column; }
+  .ticket-report-page .search-field { width: 100%; min-width: 100%; max-width: none; }
+  .ticket-report-page .ticket-report-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ticket-report-page .ticket-report-filter-controls > :not(.incidents-query-button),
+  .ticket-report-page .ticket-report-filter-controls > .incidents-query-button {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .ticket-report-page .ticket-report-summary-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

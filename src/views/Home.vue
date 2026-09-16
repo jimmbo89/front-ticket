@@ -242,25 +242,11 @@
                 {{ item.vehiclePlate }}
               </span>
 
-              <v-chip
-
-size="small"
-label                color="primary"
-              >
+              <BusgoChip color="#2454d6">
                 N.º {{ item.internalNumber }}
-              </v-chip>
+              </BusgoChip>
 
-              <v-chip
-                size="small"
-                label
-                :color="
-                  item.saleMode === 'express'
-                    ? 'info'
-                    : 'primary'
-                "
-              >
-                {{ item.saleMode }}
-              </v-chip>
+              <SaleModeChip :value="item" />
             </div>
           </div>
 
@@ -437,12 +423,14 @@ label                color="primary"
 <script>
 import Bar from "@/components/Bar.vue";
 import Doughnut from "@/components/Doughnut.vue";
+import BusgoChip from "@/components/BusgoChip.vue";
+import SaleModeChip from "@/components/SaleModeChip.vue";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import { paleteColors } from "@/assets/colors";
 export default {
   name: "BarChart",
-  components: { Bar, Doughnut },
+  components: { Bar, Doughnut, BusgoChip, SaleModeChip },
   data() {
     return {
     tripHeaders: [
@@ -688,14 +676,6 @@ export default {
         incident?.sucursal ||
         "Sucursal sin nombre"
       );
-    },
-    getTripSaleModeLabel(trip = {}) {
-      const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "Express" : "Full";
-    },
-    getTripSaleModeColor(trip = {}) {
-      const saleMode = String(trip?.sale_mode || trip?.saleMode || "normal").toLowerCase();
-      return saleMode === "express" ? "success" : "primary";
     },
     getTripRouteTooltip(trip = {}) {
       return trip?.route || "Ruta sin información";
@@ -1034,13 +1014,6 @@ export default {
   min-width: 0;
 }
 
-.trip-sale-mode-chip {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
 .col-date {
   width: 10%;
 }
@@ -1090,13 +1063,13 @@ export default {
   display: flex;
 }
 
-.kpi-card-stat {
+.v-card.kpi-card-stat {
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 148px;
-  padding: 17px 18px 15px;
+  padding: 17px 18px 15px !important;
   overflow: hidden;
 
   color: #0f172a;
@@ -1314,9 +1287,9 @@ export default {
 }
 
 @media (max-width: 600px) {
-  .kpi-card-stat {
+  .v-card.kpi-card-stat {
     min-height: 138px;
-    padding: 15px 16px 14px;
+    padding: 15px 16px 14px !important;
   }
 
   .kpi-accent {

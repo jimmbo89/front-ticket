@@ -1,5 +1,7 @@
 <template>
 
+  <div class="ticket-report-page passenger-type-report-page">
+
   <v-snackbar
 
     class="busgo-snackbar"
@@ -26,22 +28,20 @@
 
   </v-snackbar>
 
-  <v-card class="busgo-page-header ticket-report-page-header" elevation="0">
+  <header class="page-header ticket-report-page-header">
 
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon ticket-report-page-icon">
+    <div class="page-heading">
+      <div class="page-icon">
+        <v-icon size="21">mdi-ticket-percent-outline</v-icon>
+      </div>
 
-      <v-icon>mdi-ticket-percent-outline</v-icon>
-
-    </v-avatar>
-
-    <div>
-
-      <div class="busgo-page-title">Recaudación por Tipo de Pasaje</div>
-
-      <div class="busgo-page-subtitle">
+      <div>
+        <h1 class="page-title">Recaudación por Tipo de Pasaje</h1>
+        <p class="page-subtitle">
 
         Resumen de tarifas, ajustes y montos por categoría.
 
+        </p>
       </div>
 
     </div>
@@ -69,7 +69,7 @@
 
     </v-btn>
 
-  </v-card>
+  </header>
 
   <v-container fluid class="busgo-container ticket-report-container">
 
@@ -126,11 +126,15 @@
           </div>
         </div>
 
+        <div class="ticket-report-filter-controls">
+
         <ReportDateRangeFilter
 
           v-model:start-date="date"
 
           v-model:end-date="endDate"
+
+          class="ticket-report-date-filter"
 
         />
 
@@ -360,99 +364,11 @@
 
         </v-btn>
 
-      </div>
-
-      <div class="ticket-type-report-kpi-grid px-6 pb-4">
-
-        <v-card class="ticket-type-report-kpi-card" elevation="0">
-
-          <v-avatar :color="paleteColors.green" class="ticket-type-report-kpi-icon">
-
-            <v-icon>mdi-ticket-confirmation</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="ticket-type-report-kpi-label">Pasajes emitidos</div>
-
-            <div class="ticket-type-report-kpi-value">
-
-              {{ formatCount(resumen.cantidadTickets || 0) }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="ticket-type-report-kpi-card" elevation="0">
-
-          <v-avatar color="indigo-lighten-1" class="ticket-type-report-kpi-icon">
-
-            <v-icon>mdi-seat</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="ticket-type-report-kpi-label">Pasajeros</div>
-
-            <div class="ticket-type-report-kpi-value">
-
-              {{ formatCount(resumen.asientosVendidos || 0) }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="ticket-type-report-kpi-card" elevation="0">
-
-          <v-avatar color="orange-lighten-1" class="ticket-type-report-kpi-icon">
-
-            <v-icon>mdi-receipt-text-outline</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="ticket-type-report-kpi-label">Base unitaria promedio</div>
-
-            <div class="ticket-type-report-kpi-value">
-
-              ${{ formatNumber(summaryBaseUnit) }}
-
-            </div>
-
-          </div>
-
-        </v-card>
-
-        <v-card class="ticket-type-report-kpi-card" elevation="0">
-
-          <v-avatar color="teal" class="ticket-type-report-kpi-icon">
-
-            <v-icon>mdi-cash-multiple</v-icon>
-
-          </v-avatar>
-
-          <div>
-
-            <div class="ticket-type-report-kpi-label">Total general</div>
-
-            <div class="ticket-type-report-kpi-value">
-
-              ${{ formatNumber(Number(resumen.montoRecaudado || 0)) }}
-
-            </div>
-
-          </div>
-
-        </v-card>
+        </div>
 
       </div>
+
+      <ReportKpiCards :items="passengerTypeKpiCards" />
 
       <div class="px-6 pb-4 ticket-report-totals-layout">
 
@@ -594,7 +510,7 @@
 
       </div>
 
-      <div class="px-6 pb-6">
+      <div class="px-6 pb-6 ticket-type-report-details-wrapper">
 
         <v-card class="ticket-type-report-section-card" elevation="0">
 
@@ -803,21 +719,9 @@
 
                     <div class="ticket-type-report-col-sale-mode">
 
-                      <v-chip
-
-                        size="x-small"
-
-                        :color="getSaleModeColor(item)"
-
-                        variant="tonal"
-
-                        class="ticket-type-report-sale-mode-chip"
-
-                      >
-
-                        {{ getSaleModeLabel(item) }}
-
-                      </v-chip>
+                      <SaleModeChip
+                        :value="item"
+                      />
 
                     </div>
 
@@ -869,6 +773,8 @@
 
   </v-container>
 
+  </div>
+
 </template>
 
 <script>
@@ -878,10 +784,15 @@ import { paleteColors } from "@/assets/colors";
 import LocalStorageService from "@/LocalStorageService";
 
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
+import ReportKpiCards from "@/components/ReportKpiCards.vue";
+import SaleModeChip from "@/components/SaleModeChip.vue";
 
 import { handleRequest } from "@/utils/api";
 
 import { formatLocalDate } from "@/utils/date";
+import {
+  getSaleModeLabel as getSharedSaleModeLabel,
+} from "@/utils/saleMode";
 
 import * as XLSX from "xlsx";
 
@@ -890,6 +801,8 @@ export default {
   components: {
 
     ReportDateRangeFilter,
+    ReportKpiCards,
+    SaleModeChip,
 
   },
 
@@ -1021,6 +934,43 @@ export default {
 
       return this.response?.resumen || {};
 
+    },
+
+    passengerTypeKpiCards() {
+      return [
+        {
+          key: "tickets",
+          label: "Pasajes emitidos",
+          value: this.formatCount(this.resumen.cantidadTickets || 0),
+          icon: "mdi-ticket-confirmation",
+          color: this.paleteColors.green,
+          variant: "tickets",
+        },
+        {
+          key: "passengers",
+          label: "Pasajeros",
+          value: this.formatCount(this.resumen.asientosVendidos || 0),
+          icon: "mdi-account-group",
+          color: "indigo-lighten-1",
+          variant: "passengers",
+        },
+        {
+          key: "base",
+          label: "Base unitaria promedio",
+          value: `$${this.formatNumber(this.summaryBaseUnit)}`,
+          icon: "mdi-receipt-text-outline",
+          color: "orange-lighten-1",
+          variant: "prints",
+        },
+        {
+          key: "revenue",
+          label: "Total general",
+          value: `$${this.formatNumber(Number(this.resumen.montoRecaudado || 0))}`,
+          icon: "mdi-cash-multiple",
+          color: this.paleteColors.primary,
+          variant: "revenue",
+        },
+      ];
     },
 
     totalsByCategory() {
@@ -1692,26 +1642,7 @@ export default {
     },
 
     getSaleModeLabel(item = {}) {
-
-      const saleMode = String(item?.sale_mode || item?.saleMode || "normal")
-
-        .toLowerCase()
-
-        .trim();
-
-      return saleMode === "express" ? "Express" : "Full";
-
-    },
-
-    getSaleModeColor(item = {}) {
-
-      const saleMode = String(item?.sale_mode || item?.saleMode || "normal")
-
-        .toLowerCase()
-
-        .trim();
-
-      return saleMode === "express" ? "success" : "primary";
+      return getSharedSaleModeLabel(item);
 
     },
 
@@ -2233,18 +2164,6 @@ export default {
 
 }
 
-.ticket-type-report-sale-mode-chip {
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  letter-spacing: 0;
-
-  text-transform: uppercase;
-
-}
-
 .ticket-type-report-ticket-method {
 
   display: block;
@@ -2702,4 +2621,157 @@ export default {
 .ticket-report-donut .ticket-report-revenue-total { position:absolute; inset:30% 19%; margin:0; justify-content:center; text-align:center; pointer-events:none; }
 .ticket-report-donut .ticket-report-revenue-total strong { font-size:clamp(12px,1.1vw,18px); max-width:100%; overflow-wrap:anywhere; line-height:1.25; }
 .ticket-report-donut .ticket-report-revenue-total span { font-size:12px; }
+
+/* Estructura estandarizada de reportes: cards, información específica, filtros y listado. */
+.passenger-type-report-page {
+  min-height: 100%;
+  color: #1e293b;
+  background: #f6f8fb;
+}
+
+.passenger-type-report-page .ticket-report-page-header {
+  display: flex !important;
+  min-height: 70px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 12px 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e8edf5 !important;
+  border-radius: 0 !important;
+}
+
+.passenger-type-report-page .page-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.passenger-type-report-page .page-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  background: radial-gradient(circle at 90% 5%, rgba(53, 184, 232, 0.5), transparent 28px), linear-gradient(135deg, #0e1f46, #2454d6);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.17);
+  place-items: center;
+}
+
+.passenger-type-report-page .ticket-report-shell {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.passenger-type-report-page .ticket-report-container {
+  min-height: calc(100vh - 70px);
+  padding: 18px 24px 28px !important;
+  background: #f6f8fb !important;
+}
+
+.passenger-type-report-page .ticket-report-loading-bar {
+  position: fixed !important;
+  top: 70px;
+  left: 0;
+  z-index: 8;
+}
+
+.passenger-type-report-page .ticket-report-summary-header {
+  display: none !important;
+}
+
+.passenger-type-report-page .collection-kpi-grid {
+  order: 1;
+  gap: 12px !important;
+  padding: 0 0 16px !important;
+}
+
+.passenger-type-report-page .ticket-report-totals-layout {
+  order: 2;
+  padding: 0 0 16px !important;
+}
+
+.passenger-type-report-page .ticket-type-report-toolbar {
+  order: 3;
+  display: block !important;
+  margin: 0 0 16px !important;
+  padding: 14px !important;
+  border-radius: 11px;
+}
+
+.passenger-type-report-page .ticket-report-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.passenger-type-report-page .ticket-report-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.passenger-type-report-page .ticket-report-filter-controls > :not(.ticket-report-query-button) {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.passenger-type-report-page .ticket-report-filter-controls :deep(.report-date-range-trigger) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.passenger-type-report-page .ticket-report-filter-controls > .ticket-report-query-button {
+  flex: 0 0 112px !important;
+  width: 112px !important;
+  min-width: 112px !important;
+}
+
+.passenger-type-report-page .ticket-type-report-details-wrapper {
+  order: 4;
+  padding: 0 !important;
+}
+
+.passenger-type-report-page .ticket-report-page-header .page-title {
+  margin: 0;
+  color: #0f172a !important;
+  font-size: 19px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+}
+
+.passenger-type-report-page .ticket-report-page-header .page-subtitle {
+  margin-top: 3px !important;
+  color: #526176 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+@media (max-width: 960px) {
+  .passenger-type-report-page .ticket-report-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .passenger-type-report-page .ticket-report-filter-controls > :not(.ticket-report-query-button),
+  .passenger-type-report-page .ticket-report-filter-controls > .ticket-report-query-button {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+}
+
 </style>

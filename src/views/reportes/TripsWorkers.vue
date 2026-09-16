@@ -18,52 +18,30 @@
 
   </v-snackbar>
 
-  <v-card class="busgo-page-header worker-report-page-header" elevation="0">
-
-    <v-avatar :color="paleteColors.primary" class="busgo-page-icon worker-report-page-icon">
-
-      <v-icon>mdi-account-cash-outline</v-icon>
-
-    </v-avatar>
-
-    <div>
-
-      <div class="busgo-page-title">Recaudación por Trabajador</div>
-
-      <div class="busgo-page-subtitle">
-
-        Analiza el rendimiento comercial de cada trabajador
-
+  <div class="worker-report-page">
+  <header class="page-header worker-report-page-header">
+    <div class="page-heading">
+      <div class="page-icon"><v-icon size="21">mdi-account-cash-outline</v-icon></div>
+      <div>
+        <h1 class="page-title">Recaudación por Trabajador</h1>
+        <p class="page-subtitle">Analiza el rendimiento comercial de cada trabajador</p>
       </div>
-
     </div>
 
-    <v-spacer />
-
     <v-btn
-
       :color="paleteColors.green"
-
       variant="flat"
-
       elevation="0"
-
       prepend-icon="mdi-file-excel-box"
-
       class="busgo-add-btn worker-report-export-button"
       :disabled="loading"
-
       @click="exportToExcel()"
-
     >
-
       Exportar a Excel
-
     </v-btn>
+  </header>
 
-  </v-card>
-
-  <v-container fluid class="busgo-container worker-report-container">
+  <v-container fluid class="page-content worker-report-container">
 
     <v-card class="busgo-card worker-report-shell" elevation="0">
 
@@ -119,17 +97,16 @@
           <v-icon size="18">mdi-tune-variant</v-icon>
           <div>
             <strong>Filtros del reporte</strong>
-            <span>Selecciona el período, sucursal y trabajador</span>
+            <span>Selecciona el período y el alcance de la consulta</span>
           </div>
         </div>
 
-        <ReportDateRangeFilter
-
-          v-model:start-date="date"
-
-          v-model:end-date="endDate"
-
-        />
+        <div class="worker-report-filter-controls">
+          <ReportDateRangeFilter
+            v-model:start-date="date"
+            v-model:end-date="endDate"
+            class="worker-report-date-filter"
+          />
 
         <v-autocomplete
 
@@ -254,7 +231,7 @@
 
         </v-autocomplete>
 
-        <v-btn
+          <v-btn
 
           variant="flat"
 
@@ -268,35 +245,16 @@
 
           @click="initialize"
 
-        >
+          >
 
           Consultar
 
-        </v-btn>
+          </v-btn>
+        </div>
 
       </div>
 
-      <div class="worker-kpi-grid">
-        <v-card class="worker-kpi-card worker-kpi-card--trips" elevation="0">
-          <div class="worker-kpi-icon"><v-icon>mdi-bus-clock</v-icon></div>
-          <div><span>Viajes registrados</span><strong>{{ totalTrips }}</strong></div>
-        </v-card>
-
-        <v-card class="worker-kpi-card worker-kpi-card--passengers" elevation="0">
-          <div class="worker-kpi-icon"><v-icon>mdi-account-group</v-icon></div>
-          <div><span>Pasajeros</span><strong>{{ totalPassengers }}</strong></div>
-        </v-card>
-
-        <v-card class="worker-kpi-card worker-kpi-card--tickets" elevation="0">
-          <div class="worker-kpi-icon"><v-icon>mdi-ticket-confirmation</v-icon></div>
-          <div><span>Pasajes emitidos</span><strong>{{ totalTickets }}</strong></div>
-        </v-card>
-
-        <v-card class="worker-kpi-card worker-kpi-card--revenue" elevation="0">
-          <div class="worker-kpi-icon"><v-icon>mdi-cash-multiple</v-icon></div>
-          <div><span>Recaudación</span><strong>${{ formatNumber(Number(totalGeneral || 0)) }}</strong></div>
-        </v-card>
-      </div>
+      <ReportKpiCards :items="workerKpiCards" />
 
       <div class="worker-table-panel">
         <div class="worker-table-heading">
@@ -388,9 +346,7 @@
         </template>
 
         <template #[`item.sale_mode_label`]="{ item }">
-          <span class="worker-mode-badge" :class="getSaleModeLabel(item) === 'Express' ? 'worker-mode-badge--express' : 'worker-mode-badge--full'">
-            {{ getSaleModeLabel(item) }}
-          </span>
+          <SaleModeChip :value="item" />
         </template>
 
         <template #[`item.vehicleName`]="{ item }">
@@ -432,6 +388,7 @@
     </v-card>
 
   </v-container>
+  </div>
 
 </template>
 
@@ -444,16 +401,25 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import { paleteColors } from "@/assets/colors";
 
 import { formatLocalDate } from "@/utils/date";
+import {
+  getSaleModeLabel as getSharedSaleModeLabel,
+} from "@/utils/saleMode";
 
 import * as XLSX from 'xlsx';
 
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
+
+import ReportKpiCards from "@/components/ReportKpiCards.vue";
+import SaleModeChip from "@/components/SaleModeChip.vue";
 
 export default {
 
     components: {
 
         ReportDateRangeFilter,
+
+        ReportKpiCards,
+        SaleModeChip,
 
     },
 
@@ -568,6 +534,43 @@ export default {
     }),
 
     computed: {
+
+      workerKpiCards() {
+        return [
+          {
+            key: "tickets",
+            variant: "tickets",
+            icon: "mdi-ticket-confirmation",
+            color: this.paleteColors.green,
+            label: "Pasajes emitidos",
+            value: this.totalTickets,
+          },
+          {
+            key: "passengers",
+            variant: "passengers",
+            icon: "mdi-account-group",
+            color: "indigo-lighten-1",
+            label: "Pasajeros",
+            value: this.totalPassengers,
+          },
+          {
+            key: "trips",
+            variant: "trips",
+            icon: "mdi-bus-clock",
+            color: this.paleteColors.primary,
+            label: "Viajes registrados",
+            value: this.totalTrips,
+          },
+          {
+            key: "revenue",
+            variant: "revenue",
+            icon: "mdi-cash-multiple",
+            color: "primary",
+            label: "Recaudación",
+            value: `$${this.formatNumber(Number(this.totalGeneral || 0))}`,
+          },
+        ];
+      },
 
       totalTrips() {
         return Array.isArray(this.response) ? this.response.length : 0;
@@ -817,25 +820,7 @@ export default {
 
       getSaleModeLabel(trip = {}) {
 
-        const saleMode = String(trip?.sale_mode || trip?.saleMode || 'normal')
-
-          .toLowerCase()
-
-          .trim();
-
-        return saleMode === 'express' ? 'Express' : 'Full';
-
-      },
-
-      getSaleModeColor(trip = {}) {
-
-        const saleMode = String(trip?.sale_mode || trip?.saleMode || 'normal')
-
-          .toLowerCase()
-
-          .trim();
-
-        return saleMode === 'express' ? 'success' : 'primary';
+        return getSharedSaleModeLabel(trip);
 
       },
 
@@ -1523,18 +1508,6 @@ export default {
 
 }
 
-.worker-collection-sale-mode-chip {
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  letter-spacing: 0;
-
-  text-transform: uppercase;
-
-}
-
 .min-width-0 {
 
   min-width: 0;
@@ -1758,7 +1731,6 @@ export default {
   color: #2454d6;
 }
 
-.worker-mode-badge,
 .worker-count-badge {
   display: inline-flex;
   align-items: center;
@@ -1768,16 +1740,6 @@ export default {
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
-}
-
-.worker-mode-badge--full {
-  color: #17377f;
-  background: #eef3ff;
-}
-
-.worker-mode-badge--express {
-  color: #116b49;
-  background: #eaf8f1;
 }
 
 .worker-vehicle-copy span {
@@ -2344,6 +2306,319 @@ export default {
   }
 
   .worker-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estandarización visual compartida con Ventas y Recaudación. */
+.worker-report-page {
+  min-height: 100%;
+  color: #1e293b;
+  background: #f6f8fb;
+}
+
+.worker-report-page .worker-report-page-header {
+  display: flex !important;
+  min-height: 70px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 12px 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e8edf5 !important;
+  border-radius: 0 !important;
+}
+
+.worker-report-page .page-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.worker-report-page .page-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  background: radial-gradient(circle at 90% 5%, rgba(53, 184, 232, 0.5), transparent 28px), linear-gradient(135deg, #0e1f46, #2454d6);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgba(36, 84, 214, 0.17);
+  place-items: center;
+}
+
+.worker-report-page .page-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.worker-report-page .page-subtitle {
+  margin: 3px 0 0;
+  color: #526176;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.worker-report-page .worker-report-export-button {
+  min-width: 145px;
+  min-height: 40px;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 5px 12px rgba(22, 135, 90, 0.18) !important;
+}
+
+.worker-report-page .worker-report-container {
+  min-height: calc(100vh - 70px);
+  padding: 18px 24px 28px !important;
+  background: #f6f8fb !important;
+}
+
+.worker-report-page .worker-report-shell {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.worker-report-page .worker-report-loading-bar {
+  position: fixed !important;
+  top: 70px;
+  left: 0;
+  z-index: 8;
+}
+
+.worker-report-page .worker-report-summary-header {
+  display: none !important;
+}
+
+.worker-report-page .worker-kpi-grid {
+  order: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px !important;
+  padding: 0 0 16px !important;
+}
+
+.worker-report-page .worker-report-shell > .collection-kpi-grid {
+  order: 1;
+}
+
+.worker-report-page .worker-kpi-card {
+  min-height: 72px;
+  gap: 11px;
+  padding: 13px 15px !important;
+  border: 1px solid #e8edf5 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.035) !important;
+}
+
+.worker-report-page .worker-kpi-card::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 62px;
+  height: 62px;
+  content: "";
+  background: radial-gradient(circle at 100% 0, rgba(36, 84, 214, 0.09), transparent 68%);
+  pointer-events: none;
+}
+
+.worker-report-page .worker-kpi-card::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  content: "";
+  background: #2454d6;
+}
+
+.worker-report-page .worker-kpi-card--passengers::before { background: #4f46e5; }
+.worker-report-page .worker-kpi-card--tickets::before { background: #16875a; }
+.worker-report-page .worker-kpi-card--revenue::before { background: #2454d6; }
+
+.worker-report-page .worker-kpi-icon {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12);
+}
+
+.worker-report-page .worker-kpi-card--tickets .worker-kpi-icon {
+  color: #16875a;
+  background: #eaf8f1;
+}
+
+.worker-report-page .worker-kpi-card--revenue .worker-kpi-icon {
+  color: #2454d6;
+  background: #eef3ff;
+}
+
+.worker-report-page .worker-kpi-card span {
+  color: #526176;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.worker-report-page .worker-kpi-card strong {
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.worker-report-page .worker-collection-toolbar {
+  order: 2;
+  display: block !important;
+  margin: 0 0 16px !important;
+  padding: 14px !important;
+  background: #f8fafc;
+  border: 1px solid #e7ecf3;
+  border-radius: 11px;
+}
+
+.worker-report-page .worker-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.worker-report-page .worker-report-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.worker-report-page .worker-report-filter-controls > :not(.worker-report-query-button) {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.worker-report-page .worker-report-filter-controls > .worker-report-query-button {
+  flex: 0 0 112px !important;
+  width: 112px !important;
+  min-width: 112px !important;
+}
+
+.worker-report-page .worker-collection-toolbar .v-field {
+  min-height: 40px !important;
+  color: #334155 !important;
+  background: #ffffff !important;
+  border-radius: 9px !important;
+}
+
+.worker-report-page .worker-collection-toolbar .v-field__input,
+.worker-report-page .worker-collection-toolbar .v-label {
+  min-height: 40px;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  opacity: 1 !important;
+}
+
+.worker-report-page .worker-report-filter-controls :deep(.report-date-range-trigger) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border-radius: 9px !important;
+}
+
+.worker-report-page .worker-report-query-button {
+  min-height: 40px !important;
+  border-radius: 9px !important;
+}
+
+.worker-report-page .worker-table-panel {
+  order: 3;
+  margin: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e8edf5;
+  border-radius: 13px;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04);
+}
+
+.worker-report-page .worker-table-heading {
+  min-height: 69px;
+  padding: 12px 17px;
+}
+
+.worker-report-page .worker-table-search {
+  flex: 0 1 320px;
+  width: 320px;
+  max-width: 320px;
+}
+
+@media (max-width: 1280px) {
+  .worker-report-page .worker-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .worker-report-page .worker-report-page-header {
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    padding: 13px 14px !important;
+  }
+
+  .worker-report-page .worker-report-export-button {
+    width: 100%;
+  }
+
+  .worker-report-page .worker-report-container {
+    padding: 14px !important;
+  }
+
+  .worker-report-page .worker-report-filter-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .worker-report-page .worker-report-filter-controls > :not(.worker-report-query-button),
+  .worker-report-page .worker-report-filter-controls > .worker-report-query-button {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+
+  .worker-report-page .worker-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .worker-report-page .worker-table-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .worker-report-page .worker-table-search {
+    flex-basis: auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .worker-report-page .worker-native-table {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .worker-report-page .worker-kpi-grid {
     grid-template-columns: 1fr;
   }
 }
