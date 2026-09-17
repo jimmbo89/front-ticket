@@ -103,6 +103,13 @@
                 <strong class="template-cell-title">{{ item.routeCode || 'Sin código' }}</strong>
                 <div class="template-endpoint"><v-icon size="14">mdi-map-marker-outline</v-icon><span><small>Origen</small>{{ item.origin || '—' }}</span></div>
                 <div class="template-endpoint"><v-icon size="14">mdi-map-marker-check-outline</v-icon><span><small>Destino</small>{{ item.destination || '—' }}</span></div>
+                <v-tooltip activator="parent" location="bottom" max-width="350px">
+                  <span class="trip-template-route-tooltip">
+                    Código de ruta: {{ item.routeCode || "-" }}<br />
+                    Origen: {{ item.origin || "Sin dirección" }}<br />
+                    Destino: {{ item.destination || "Sin dirección" }}
+                  </span>
+                </v-tooltip>
               </div>
               <div>
                 <strong class="template-cell-title">{{ item.vehicleName || 'Sin vehículo' }}</strong>
@@ -228,84 +235,64 @@
                       variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      :menu-props="{ contentClass: 'trip-template-route-menu' }"
                       @update:model-value="updateStimated"
                     >
+                      <template #selection="{ item }">
+                        <span class="trip-template-selected-route-label">
+                          {{ item.raw.routeCode || item.raw.name }} ·
+                          {{ item.raw.originAddress || "Sin dirección" }} →
+                          {{ item.raw.destinationAddress || "Sin dirección" }}
+                        </span>
+                      </template>
+
                       <template #item="{ props, item }">
-                        <v-card class="mx-1 my-2" elevation="2">
-                          <v-list-item v-bind="{ ...props, title: undefined }">
-                            <v-row align="center" no-gutters>
-                              <v-col cols="12" class="d-flex align-center mb-2">
-                                <div class="trip-template-route-title-row">
-                                  <div class="text-subtitle-2 font-weight-bold text-truncate">
-                                    {{ item.raw.routeCode || "-" }}
-                                  </div>
-                                </div>
-                              </v-col>
+                        <v-list-item
+                          v-bind="{ ...props, title: undefined, subtitle: undefined }"
+                          class="trip-template-route-option"
+                        >
+                          <div class="trip-template-route-option-heading">
+                            <strong>{{ item.raw.routeCode || item.raw.name || "Ruta" }}</strong>
+                          </div>
 
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img
-                                    :src="`${this.$axios.defaults.baseURL}images/${item.raw.originImage}`"
-                                    max-width="40"
-                                  />
-                                </v-avatar>
+                          <div class="trip-template-route-option-journey">
+                            <div class="trip-template-route-option-place">
+                              <v-avatar size="40" rounded="lg">
+                                <v-img :src="getImageUrl(item.raw.originImage)" cover />
+                              </v-avatar>
+                              <div class="trip-template-route-option-place-copy">
+                                <small>Origen</small>
+                                <strong class="text-truncate">
+                                  {{ item.raw.originAddress || "Sin dirección" }}
+                                </strong>
+                              </div>
+                            </div>
 
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">mdi-map-marker</v-icon>
-                                    Origen
-                                  </div>
+                            <v-icon class="trip-template-route-option-arrow" size="20">
+                              mdi-arrow-right
+                            </v-icon>
 
-                                  <v-tooltip location="top">
-                                    <template #activator="{ props: tooltipProps }">
-                                      <div
-                                        v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
-                                      >
-                                        {{ item.raw.originAddress || "Sin dirección" }}
-                                      </div>
-                                    </template>
+                            <div class="trip-template-route-option-place">
+                              <v-avatar size="40" rounded="lg">
+                                <v-img :src="getImageUrl(item.raw.destinationImage)" cover />
+                              </v-avatar>
+                              <div class="trip-template-route-option-place-copy">
+                                <small>Destino</small>
+                                <strong class="text-truncate">
+                                  {{ item.raw.destinationAddress || "Sin dirección" }}
+                                </strong>
+                              </div>
+                            </div>
+                          </div>
 
-                                    <span>{{ item.raw.originAddress || "Sin dirección" }}</span>
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
-
-                              <v-col cols="12" md="4" class="d-flex align-center">
-                                <v-avatar>
-                                  <v-img
-                                    :src="`${this.$axios.defaults.baseURL}images/${item.raw.destinationImage}`"
-                                    max-width="40"
-                                  />
-                                </v-avatar>
-
-                                <div class="ml-2">
-                                  <div class="text-caption text-grey">
-                                    <v-icon small class="mr-1">
-                                      mdi-map-marker-check
-                                    </v-icon>
-                                    Destino
-                                  </div>
-
-                                  <v-tooltip location="top">
-                                    <template #activator="{ props: tooltipProps }">
-                                      <div
-                                        v-bind="tooltipProps"
-                                        class="text-truncate"
-                                        style="max-width: 100%"
-                                      >
-                                        {{ item.raw.destinationAddress || "Sin dirección" }}
-                                      </div>
-                                    </template>
-
-                                    <span>{{ item.raw.destinationAddress || "Sin dirección" }}</span>
-                                  </v-tooltip>
-                                </div>
-                              </v-col>
-                            </v-row>
-                          </v-list-item>
-                        </v-card>
+                          <v-tooltip activator="parent" location="bottom" max-width="350px">
+                            <span class="trip-template-route-tooltip">
+                              Código de ruta: {{ item.raw.routeCode || item.raw.name || "-" }}<br />
+                              Origen: {{ item.raw.originAddress || "Sin dirección" }}<br />
+                              Destino: {{ item.raw.destinationAddress || "Sin dirección" }}
+                            </span>
+                          </v-tooltip>
+                        </v-list-item>
                       </template>
                     </v-autocomplete>
                   </v-col>
@@ -3503,5 +3490,30 @@ export default {
 :deep(.trip-template-time-part-menu .v-list-item--active) { color:#2454d6; background:#eef3ff; }
 @media(max-width:600px) {
   .trip-template-time-departure-input :deep(.v-field__input) { font-size:27px!important; }
+}
+
+/* La ruta conserva el ancho disponible y revela el texto completo mediante tooltip. */
+.trip-template-route-cell,
+.trip-template-route-option-place,
+.trip-template-route-option-place-copy { min-width:0; }
+.template-endpoint > span { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trip-template-selected-route-label { display:block; min-width:0; overflow:hidden; color:#1e293b; text-overflow:ellipsis; white-space:nowrap; }
+.trip-template-route-option-heading { display:flex; align-items:center; gap:12px; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #e8edf5; }
+.trip-template-route-option-heading strong { overflow:hidden; color:#0f172a; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.trip-template-route-option-journey { display:grid; grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr); gap:12px; align-items:center; min-width:0; }
+.trip-template-route-option-place { display:flex; align-items:center; gap:10px; }
+.trip-template-route-option-place > .v-avatar { flex:0 0 40px; }
+.trip-template-route-option-place-copy { flex:1 1 auto; max-width:100%; overflow:hidden; }
+.trip-template-route-option-place-copy small { display:block; margin-bottom:3px; color:#526176; font-size:11px; font-weight:700; }
+.trip-template-route-option-place-copy strong { display:block; max-width:100%; overflow:hidden; color:#1e293b; font-size:13px; font-weight:650; line-height:1.5; text-overflow:ellipsis; white-space:nowrap; }
+.trip-template-route-option-arrow { color:#2454d6; }
+:deep(.trip-template-route-menu) { width:640px; max-width:calc(100vw - 24px)!important; }
+:deep(.trip-template-route-menu .trip-template-route-option) { margin:4px 0; padding:13px!important; border:1px solid #e2e8f0; border-radius:10px; background:#fff; }
+:deep(.trip-template-route-menu .trip-template-route-option:hover) { background:#f5f8ff; border-color:#b5c9f7; }
+:deep(.trip-template-route-menu .v-list) { padding:6px; }
+:deep(.trip-template-route-tooltip) { white-space:normal; word-break:break-word; }
+@media(max-width:700px) {
+  .trip-template-route-option-journey { grid-template-columns:1fr; gap:10px; }
+  .trip-template-route-option-arrow { display:none; }
 }
 </style>
