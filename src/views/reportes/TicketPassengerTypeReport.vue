@@ -836,7 +836,7 @@ export default {
 
     user_id: "",
 
-    selectedWorker: "",
+    selectedWorker: null,
 
     ticket_type_id: null,
 
@@ -1121,7 +1121,7 @@ export default {
 
       if (!nextFilters.includes("Trabajador")) {
 
-        this.selectedWorker = "";
+        this.selectedWorker = null;
 
       }
 
@@ -1147,7 +1147,7 @@ export default {
 
         this.workers = [];
 
-        this.selectedWorker = "";
+        this.selectedWorker = null;
 
         return;
 
@@ -1163,7 +1163,7 @@ export default {
 
       if (!this.workers.some((worker) => Number(worker.id) === Number(this.selectedWorker))) {
 
-        this.selectedWorker = "";
+        this.selectedWorker = null;
 
       }
 
@@ -1181,7 +1181,7 @@ export default {
 
     this.user_id = this.toNumberOrEmpty(LocalStorageService.getItem("user_id"));
 
-    this.selectedWorker = this.worker_id;
+    this.selectedWorker = null;
 
     this.permissions = this.parsePermissions(LocalStorageService.getItem("permissions"));
 
@@ -1363,15 +1363,7 @@ export default {
 
           this.workers = selectedBranch?.workers || this.branches[0]?.workers || [];
 
-          this.selectedWorker = this.workers.some(
-
-            (worker) => Number(worker.id) === Number(this.worker_id)
-
-          )
-
-            ? this.worker_id
-
-            : "";
+          this.selectedWorker = null;
 
           if (this.branches.length > 1 && this.hasPermission("view_ticketsdate_company")) {
 

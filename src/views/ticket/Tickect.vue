@@ -111,7 +111,7 @@
       </v-autocomplete>
 
       <v-select
-        v-model="selectedPaymentMethod"
+        v-model="selectedPaymentMethods"
         :items="paymentFilterOptions"
         item-title="title"
         item-value="value"
@@ -119,6 +119,9 @@
         variant="outlined"
         prepend-inner-icon="mdi-credit-card-outline"
         placeholder="Método de pago"
+        multiple
+        chips
+        closable-chips
         clearable
         hide-details
         class="incident-filter ticket-report-optional-filter ticket-report-payment-filter"
@@ -134,7 +137,7 @@
       </v-select>
 
       <v-select
-        v-model="selectedSaleType"
+        v-model="selectedSaleTypes"
         :items="saleTypeFilterOptions"
         item-title="title"
         item-value="value"
@@ -142,6 +145,9 @@
         variant="outlined"
         prepend-inner-icon="mdi-ticket-outline"
         placeholder="Tipo de venta"
+        multiple
+        chips
+        closable-chips
         clearable
         hide-details
         class="incident-filter ticket-report-optional-filter ticket-report-sale-type-filter"
@@ -1077,8 +1083,8 @@ export default {
       totales: 0,
     },
     includeMaintainers: true,
-    selectedPaymentMethod: null,
-    selectedSaleType: null,
+    selectedPaymentMethods: [],
+    selectedSaleTypes: [],
     reportStartDate: "",
     reportEndDate: "",
     organizationOptions: [
@@ -1552,6 +1558,10 @@ export default {
       this.saleTypeFilterOptions = this.normalizeMaintainerOptions(
         maintainers.sale_types ?? maintainers.saleTypes
       );
+    },
+    normalizeSelectedFilterValues(value) {
+      const values = Array.isArray(value) ? value : [value];
+      return values.filter((item) => item !== null && item !== undefined && item !== "");
     },
     normalizeReportSummary(summary = {}) {
       return {
@@ -3273,12 +3283,14 @@ export default {
         request.endDate = endDate;
       }
 
-      if (this.selectedPaymentMethod) {
-        request.method = this.selectedPaymentMethod;
+      const paymentMethods = this.normalizeSelectedFilterValues(this.selectedPaymentMethods);
+      if (paymentMethods.length) {
+        request.method = paymentMethods;
       }
 
-      if (this.selectedSaleType) {
-        request.sale_mode = this.selectedSaleType;
+      const saleTypes = this.normalizeSelectedFilterValues(this.selectedSaleTypes);
+      if (saleTypes.length) {
+        request.sale_mode = saleTypes;
       }
 
       return request;
@@ -5506,6 +5518,23 @@ table.v-table>thead,
   font-weight: 750;
 }
 
+/* Alinea los chips de los filtros múltiples con el selector de nivel. */
+.ticket-report-page .incident-toolbar .ticket-report-optional-filter .v-chip {
+  min-height: 25px !important;
+  padding-inline: 8px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+.ticket-report-page .incident-toolbar .ticket-report-optional-filter .v-chip__close {
+  color: #64748b !important;
+  font-size: 14px !important;
+}
+
 .incidents-query-button {
   min-width: 112px !important;
   min-height: 40px !important;
@@ -5655,6 +5684,15 @@ table.v-table>thead,
   color: inherit !important;
   font-size: 12.5px !important;
   font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+.incidents-select-menu .v-list-item-subtitle {
+  margin-top: 3px !important;
+  color: #64748b !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 .incidents-select-menu .v-list-item__prepend > .v-icon {
@@ -5677,8 +5715,22 @@ table.v-table>thead,
   border-radius: 8px !important;
 }
 
+.incidents-select-menu .v-list-item__append .v-icon,
+.incidents-select-menu .v-selection-control__input {
+  color: #2454d6 !important;
+}
+
+.incidents-select-menu .v-list-item--active::before {
+  opacity: 0 !important;
+}
+
 .incidents-select-menu .v-list-item__overlay {
   opacity: 0 !important;
+}
+
+.incidents-select-menu .v-list-item--disabled {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
 }
 
 .ticket-toolbar {

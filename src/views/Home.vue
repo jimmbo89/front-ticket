@@ -195,7 +195,6 @@
   :loading="loading"
   loading-text="Cargando..."
   no-data-text="Sin próximos viajes"
-  hide-default-header
   hide-default-footer
   :items-per-page="-1"
   density="compact"
@@ -203,86 +202,84 @@
 >
   <template #bottom />
 
-  <template #item="{ item }">
-    <tr>
-      <td class="px-3 py-3">
-        <div class="d-flex align-center ga-3">
-          <!-- HORA -->
-          <div class="flex-shrink-0 text-center">
-            <div class="text-subtitle-1 font-weight-bold text-primary">
-              {{ getDepartureTime(item.horario) }}
-            </div>
+  <template #[`item.horario`]="{ item }">
+    <div class="dashboard-trip-time text-center">
+      <div class="text-subtitle-1 font-weight-bold text-primary">
+        {{ getDepartureTime(item.horario) }}
+      </div>
 
-            <div class="text-caption text-medium-emphasis">
-              {{ item.duration }} min
-            </div>
+      <div class="text-caption text-medium-emphasis">
+        {{ item.duration }} min
+      </div>
+    </div>
+  </template>
+
+  <template #[`item.route`]="{ item }">
+    <div class="dashboard-trip-route">
+      <v-tooltip location="top" :text="item.route">
+        <template #activator="{ props }">
+          <div
+            v-bind="props"
+            class="text-body-2 font-weight-medium text-truncate"
+          >
+            {{ item.route }}
           </div>
+        </template>
+      </v-tooltip>
 
-          <v-divider vertical />
+      <div class="d-flex align-center flex-wrap ga-1 mt-1">
+        <v-icon size="14" color="medium-emphasis">
+          mdi-bus
+        </v-icon>
 
-          <!-- INFORMACIÓN -->
-          <div class="flex-grow-1 overflow-hidden">
-            <v-tooltip location="top" :text="item.route">
-              <template #activator="{ props }">
-                <div
-                  v-bind="props"
-                  class="text-body-2 font-weight-medium text-truncate"
-                >
-                  {{ item.route }}
-                </div>
-              </template>
-            </v-tooltip>
+        <span class="text-caption text-medium-emphasis">
+          {{ item.vehiclePlate }}
+        </span>
 
-            <div class="d-flex align-center flex-wrap ga-1 mt-1">
-              <v-icon size="14" color="medium-emphasis">
-                mdi-bus
-              </v-icon>
+        <BusgoChip color="#2454d6">
+          N.º {{ item.internalNumber }}
+        </BusgoChip>
+      </div>
+    </div>
+  </template>
 
-              <span class="text-caption text-medium-emphasis">
-                {{ item.vehiclePlate }}
-              </span>
+  <template #[`item.saleMode`]="{ item }">
+    <div class="dashboard-trip-mode">
+      <SaleModeChip :value="item" />
+    </div>
+  </template>
 
-              <BusgoChip color="#2454d6">
-                N.º {{ item.internalNumber }}
-              </BusgoChip>
+  <template #[`item.occupancy`]="{ item }">
+    <div class="dashboard-trip-occupancy text-center">
+      <div class="text-body-2 font-weight-bold">
+        {{ item.asientosVendidos }}/{{ item.capacidad }}
+      </div>
 
-              <SaleModeChip :value="item" />
-            </div>
-          </div>
+      <div class="text-caption text-medium-emphasis">
+        {{ getOccupancyPercentage(item) }}%
+      </div>
 
-          <!-- OCUPACIÓN -->
-          <div class="flex-shrink-0 text-center">
-            <div class="text-body-2 font-weight-bold">
-              {{ item.asientosVendidos }}/{{ item.capacidad }}
-            </div>
+      <v-progress-linear
+        :model-value="getOccupancyPercentage(item)"
+        :color="getOccupancyColor(item)"
+        bg-color="grey-lighten-3"
+        height="4"
+        rounded
+        class="mt-2"
+      />
+    </div>
+  </template>
 
-            <div class="text-caption text-medium-emphasis">
-              {{ getOccupancyPercentage(item) }}%
-            </div>
-          </div>
+  <template #[`item.dineroGenerado`]="{ item }">
+    <div class="dashboard-trip-revenue text-right">
+      <div class="text-body-2 font-weight-bold">
+        ${{ formatNumber(item.dineroGenerado) }}
+      </div>
 
-          <!-- MONTO -->
-          <div class="flex-shrink-0 text-right">
-            <div class="text-body-2 font-weight-bold">
-              ${{ formatNumber(item.dineroGenerado) }}
-            </div>
-
-            <div class="text-caption text-medium-emphasis">
-              Ingresos
-            </div>
-          </div>
-        </div>
-
-        <v-progress-linear
-          :model-value="getOccupancyPercentage(item)"
-          :color="getOccupancyColor(item)"
-          bg-color="grey-lighten-3"
-          height="4"
-          rounded
-          class="mt-2"
-        />
-      </td>
-    </tr>
+      <div class="text-caption text-medium-emphasis">
+        Ingresos
+      </div>
+    </div>
   </template>
 
   <template #no-data>

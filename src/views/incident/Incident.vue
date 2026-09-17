@@ -36,6 +36,18 @@
         <p class="page-subtitle">Consulta y supervisa eventos operacionales de la flota</p>
       </div>
     </div>
+
+    <v-btn
+      :color="paleteColors.green"
+      variant="flat"
+      elevation="0"
+      prepend-icon="mdi-file-excel"
+      class="incident-export-button"
+      :disabled="loading"
+      @click="exportToExcel"
+    >
+      Exportar a Excel
+    </v-btn>
   </header>
 
   <v-container fluid class="page-content">
@@ -710,6 +722,8 @@ import _ from "lodash";
 
 import QRCode from "qrcode";
 
+import * as XLSX from "xlsx";
+
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 import ReportKpiCards from "@/components/ReportKpiCards.vue";
 
@@ -1365,6 +1379,72 @@ export default {
 
       }
 
+    },
+
+    exportToExcel() {
+      const incidents = Array.isArray(this.incidents) ? this.incidents : [];
+      const detailKeys = [];
+
+      incidents.forEach((incident) => {
+        Object.keys(this.getFilteredDetails(incident.details)).forEach((key) => {
+          if (!detailKeys.includes(key)) {
+            detailKeys.push(key);
+          }
+        });
+      });
+
+      const rows = incidents.map((incident) => {
+        const details = this.getFilteredDetails(incident.details);
+        const row = {
+          Sucursal: incident.nameBranch || incident.branchName || "",
+          Trabajador: incident.workerName || "",
+          Título: incident.title || "",
+          Fecha: incident.date || "",
+          Descripción: incident.description || "",
+        };
+
+        detailKeys.forEach((key) => {
+          row[`Detalle - ${this.formatDetailKey(key)}`] = this.toExcelValue(
+            this.formatDetailValue(key, details[key])
+          );
+        });
+
+        return row;
+      });
+
+      if (!rows.length) {
+        rows.push({
+          Sucursal: "",
+          Trabajador: "",
+          Título: "",
+          Fecha: "",
+          Descripción: "",
+        });
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Incidentes");
+
+      const startDate = this.editedItem.startDate || formatLocalDate();
+      const endDate = this.editedItem.endDate;
+      const dateSuffix = endDate && endDate !== startDate
+        ? `${startDate}_${endDate}`
+        : startDate;
+
+      XLSX.writeFile(workbook, `reporte_incidentes_${dateSuffix}.xlsx`);
+    },
+
+    toExcelValue(value) {
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      if (typeof value === "object") {
+        return JSON.stringify(value);
+      }
+
+      return value;
     },
 
     getDetailsButtonColor(item) {
@@ -2276,6 +2356,20 @@ export default {
   font-weight: 650;
 }
 
+.incident-export-button {
+  min-width: 145px;
+  min-height: 40px;
+  padding-inline: 16px !important;
+  color: #ffffff !important;
+  background: linear-gradient(100deg, #16875a, #20a56e) !important;
+  border-radius: 9px !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 6px 14px rgba(22, 135, 90, 0.2) !important;
+}
+
 .page-content {
   padding: 18px 24px 28px;
 }
@@ -2543,10 +2637,11 @@ export default {
 }
 
 @media (max-width: 600px) {
-  .page-header { align-items: flex-start; padding: 11px 12px; }
+  .page-header { align-items: flex-start; flex-wrap: wrap; padding: 11px 12px; }
   .page-subtitle { max-width: 250px; }
   .page-content { padding: 11px 12px 20px; }
   .incident-detail-key { width: 120px !important; }
+  .incident-export-button { width: 100%; }
 }
 </style>
 
