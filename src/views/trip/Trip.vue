@@ -157,20 +157,15 @@
               <span>Ruta</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('routeCode') }}</v-icon>
             </div>
-            <div
-              class="trip-col-vehicle trip-sortable"
-              @click="toggleTripSort('vehicleName')"
-            >
-              <span>Vehículo</span>
-              <v-icon size="16" class="ml-1">
-                {{ tripSortIcon('vehicleName') }}
-              </v-icon>
-            </div>
-            <div class="trip-col-workers trip-sortable" @click="toggleTripSort('workers')">
-              <span>Trabajadores</span>
-              <v-icon size="16" class="ml-1">
-                {{ tripSortIcon('workers') }}
-              </v-icon>
+            <div class="trip-col-vehicle trip-heading-group">
+              <button type="button" class="trip-sort-button" @click="toggleTripSort('vehicleName')">
+                <span>Vehículo</span>
+                <v-icon size="14">{{ tripSortIcon('vehicleName') }}</v-icon>
+              </button>
+              <button type="button" class="trip-sort-button trip-sort-button--secondary" @click="toggleTripSort('workers')">
+                <span>Miembros</span>
+                <v-icon size="12">{{ tripSortIcon('workers') }}</v-icon>
+              </button>
             </div>
             <div class="trip-col-date trip-sortable" @click="toggleTripSort('date')">
               <span>Fecha</span>
@@ -244,50 +239,27 @@
                   </v-tooltip>
                 </div>
 
-                <div class="trip-col-vehicle busgo-name-cell">
-                  <div class="trip-vehicle-icon"><v-icon size="18">mdi-bus</v-icon></div>
+                <div class="trip-col-vehicle trip-vehicle-members-cell">
+                  <strong class="trip-cell-title">{{ slotProps.item.vehicleName || 'Sin vehículo' }}</strong>
+                  <BusgoChip size="x-small" color="#2454d6" class="mt-2">
+                    Interno {{ vehicleInternalNumber(slotProps.item) }}
+                  </BusgoChip>
 
-                  <div class="min-width-0">
-                    <div class="busgo-name">
-                      {{ slotProps.item.vehicleName }}
-                    </div>
-
-                    <div class="busgo-submeta text-truncate">
-                      {{ vehicleInternalNumber(slotProps.item) }}
-                    </div>
-                  </div>
-
-                  <v-tooltip activator="parent" location="bottom" max-width="350px">
-                    <span style="white-space: normal; word-break: break-word">
-                      Vehículo: {{ slotProps.item.vehicleName }}<br />
-                      Número interno: {{ vehicleInternalNumber(slotProps.item) }}
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <div class="trip-col-workers">
-                  <div class="trip-worker-row">
-                    <v-tooltip
-                      v-for="person in slotProps.item.workers || []"
-                      :key="person.id"
-                      location="bottom"
-                    >
-                      <template #activator="{ props }">
-                        <v-avatar
-                          class="trip-worker-avatar"
-                          size="32"
-                          elevation="3"
-                          v-bind="props"
-                        >
-                          <v-img :src="getImageUrl(person.image)" alt="image" />
-                        </v-avatar>
-                      </template>
-
-                      <span>{{ person.name }}</span>
-                      <v-spacer />
-                      <span class="text-secondary">{{ person.roleName }}</span>
-                    </v-tooltip>
-                  </div>
+                  <v-btn
+                    v-if="slotProps.item.workers?.length"
+                    class="trip-members-button"
+                    variant="text"
+                    size="small"
+                    color="#2454d6"
+                    :aria-expanded="expandedTripWorkersId === slotProps.item.id"
+                    :aria-controls="`trip-workers-${slotProps.item.id}`"
+                    :append-icon="expandedTripWorkersId === slotProps.item.id ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                    @click="expandedTripWorkersId = expandedTripWorkersId === slotProps.item.id ? null : slotProps.item.id"
+                  >
+                    {{ expandedTripWorkersId === slotProps.item.id ? 'Ocultar miembros' : 'Ver miembros' }}
+                    ({{ slotProps.item.workers.length }})
+                  </v-btn>
+                  <span v-else class="trip-muted">Sin miembros</span>
                 </div>
 
                 <div class="trip-col-date busgo-meta">
@@ -372,6 +344,60 @@
                   </v-tooltip>
                 </div>
               </div>
+            </td>
+          </tr>
+          <tr
+            v-if="expandedTripWorkersId === slotProps.item.id && slotProps.item.workers?.length"
+            class="trip-members-expanded-row"
+          >
+            <td colspan="100" class="trip-members-expanded-cell">
+              <section
+                :id="`trip-workers-${slotProps.item.id}`"
+                class="trip-members-panel"
+                :aria-label="`Miembros del viaje ${slotProps.item.routeCode || slotProps.item.id}`"
+              >
+                <div class="trip-members-panel-heading">
+                  <div>
+                    <strong>Miembros asignados</strong>
+                    <span>
+                      {{ slotProps.item.routeCode || 'Viaje' }} ·
+                      {{ slotProps.item.workers.length }} miembro(s)
+                    </span>
+                  </div>
+                  <v-btn
+                    icon="mdi-close"
+                    variant="text"
+                    size="small"
+                    aria-label="Ocultar miembros"
+                    @click="expandedTripWorkersId = null"
+                  />
+                </div>
+
+                <div class="trip-worker-list">
+                  <div
+                    v-for="person in slotProps.item.workers || []"
+                    :key="person.id"
+                    class="trip-worker-person"
+                  >
+                    <v-avatar size="26" color="#eef3ff">
+                      <v-img
+                        v-if="person.workerImage || person.image"
+                        :src="getImageUrl(person.workerImage || person.image)"
+                        :alt="person.workerName || person.name || 'Trabajador'"
+                      >
+                        <template #error>
+                          <v-icon size="16" color="#2454d6">mdi-account-outline</v-icon>
+                        </template>
+                      </v-img>
+                      <v-icon v-else size="16" color="#2454d6">mdi-account-outline</v-icon>
+                    </v-avatar>
+                    <div>
+                      <strong>{{ person.workerName || person.name || 'Sin nombre' }}</strong>
+                      <small v-if="person.roleName">{{ person.roleName }}</small>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </td>
           </tr>
         </template>
@@ -1521,12 +1547,13 @@ import { paleteColors } from "@/assets/colors";
 import LocalStorageService from "@/LocalStorageService";
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
+import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
   getSaleModeLabel as getSharedSaleModeLabel,
 } from "@/utils/saleMode";
 export default {
-  components: { SaleModeChip },
+  components: { BusgoChip, SaleModeChip },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -1547,6 +1574,7 @@ export default {
     trips: [],
     tripSortBy: "date",
     tripSortOrder: "desc",
+    expandedTripWorkersId: null,
     routes: [],
     vehicles: [],
     workers: [],
@@ -1793,7 +1821,9 @@ export default {
       }
 
       if (field === "workers") {
-        return (trip.workers || []).map((worker) => worker?.name || "").join(" ");
+        return (trip.workers || [])
+          .map((worker) => worker?.workerName || worker?.name || "")
+          .join(" ");
       }
 
       if (field === "vehicleName") {
@@ -3036,6 +3066,116 @@ export default {
   transform: translateY(-1px) scale(1.05);
 }
 
+.trip-members-button.v-btn {
+  display: flex;
+  max-width: 100%;
+  min-height: 28px;
+  height: auto;
+  margin: 5px 0 0 -8px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.trip-members-button :deep(.v-btn__content) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-members-button:focus-visible {
+  outline: 2px solid #2454d6;
+  outline-offset: 2px;
+}
+
+.trip-members-expanded-cell {
+  padding: 0 18px 14px !important;
+  border-bottom: 1px solid #dfe7f2 !important;
+  background: #f8faff;
+}
+
+.trip-members-panel {
+  padding: 14px 16px;
+  border: 1px solid #dfe7f2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.trip-members-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.trip-members-panel-heading strong {
+  display: block;
+  color: #233654;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.trip-members-panel-heading span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.trip-worker-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.trip-worker-person {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid #e8edf5;
+  border-radius: 8px;
+  background: #f9fbfe;
+}
+
+.trip-worker-person > .v-avatar {
+  flex-shrink: 0;
+}
+
+.trip-worker-person > div {
+  min-width: 0;
+}
+
+.trip-worker-person strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.trip-worker-person small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  white-space: normal;
+}
+
+.trip-muted {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 
 
 .trip-toolbar {
@@ -3060,49 +3200,79 @@ export default {
   min-width: 260px;
 }
 
+.trip-heading-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.trip-sort-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trip-sort-button:hover {
+  color: #2454d6;
+}
+
+.trip-sort-button:focus-visible {
+  outline: 2px solid #2454d6;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.trip-sort-button--secondary {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
 .trip-col-code {
-  width: 11%;
-  min-width: 0;
-}
-
-.trip-col-route {
-  width: 22%;
-  min-width: 0;
-}
-
-.trip-col-vehicle {
   width: 10%;
   min-width: 0;
 }
 
-.trip-col-workers {
+.trip-col-route {
+  width: 24%;
+  min-width: 0;
+}
+
+.trip-col-vehicle {
   width: 12%;
   min-width: 0;
 }
 
 .trip-col-date {
-  width: 10%;
+  width: 12%;
   min-width: 0;
   white-space: nowrap;
 }
 
 .trip-col-schedule {
-  width: 9%;
+  width: 12%;
   min-width: 0;
 }
 
 .trip-col-sale-mode {
-  width: 7%;
+  width: 8%;
   min-width: 0;
 }
 
 .trip-col-start {
-  width: 5%;
+  width: 7%;
   min-width: 0;
 }
 
 .trip-col-end {
-  width: 5%;
+  width: 7%;
   min-width: 0;
 }
 
@@ -3139,8 +3309,26 @@ export default {
 }
 
 .trip-col-actions {
-  width: 9%;
+  width: 8%;
   min-width: 0;
+}
+
+.trip-vehicle-members-cell {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+.trip-cell-title {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.5;
 }
 
 .trip-row {
