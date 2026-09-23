@@ -1352,11 +1352,7 @@ export default {
         });
 
         if (result.success) {
-          this.trips = this.filterTripsForReservation(
-            result.data?.trips || [],
-            requestData.date,
-            preserveTripId
-          );
+          this.trips = Array.isArray(result.data?.trips) ? result.data.trips : [];
         } else {
           this.trips = [];
         }
