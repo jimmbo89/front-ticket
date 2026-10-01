@@ -1357,7 +1357,7 @@
                 <v-autocomplete
                   :no-data-text="'No hay datos disponibles'"
                   v-model="selectedWorker"
-                  :items="filteredWorkers"
+                  :items="dialogAssignableWorkers"
                   label="Personas"
                   prepend-inner-icon="mdi-account"
                   item-title="workerName"
@@ -1646,6 +1646,14 @@ export default {
       // Determinar si debemos preseleccionar dÃ­as
       return this.editedItem.recurrence_pattern && this.isDaySelectionDisabled;
     },
+    dialogAssignableWorkers() {
+      return (this.filteredWorkers || []).filter(
+        (worker) =>
+          !this.editedItem.workers.some(
+            (editedWorker) => Number(editedWorker.id) === Number(worker.id)
+          )
+      );
+    },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
@@ -1760,14 +1768,33 @@ export default {
       );
     },
     normalizeTemplateWorkerRecord(worker = {}) {
+      const workerId = worker.id ?? worker.workerId ?? worker.worker_id;
+
       return {
         ...worker,
+        id: workerId,
+        workerId: worker.workerId ?? worker.worker_id ?? workerId,
+        worker_id: worker.worker_id ?? worker.workerId ?? workerId,
         workerName: worker.workerName ?? worker.name ?? "",
         workerImage: worker.workerImage ?? worker.image ?? "workers/default.jpg",
+        roleId: worker.roleId ?? worker.role_id,
+        roleName: worker.roleName ?? worker.role ?? "",
       };
     },
     normalizeTemplateWorkersList(workers = []) {
-      return workers.map((worker) => this.normalizeTemplateWorkerRecord(worker));
+      return (Array.isArray(workers) ? workers : []).map((worker) =>
+        this.normalizeTemplateWorkerRecord(worker)
+      );
+    },
+    normalizeTemplateVehicles(vehicles = []) {
+      const vehicleList = Array.isArray(vehicles)
+        ? vehicles
+        : Object.values(vehicles || {});
+
+      return vehicleList.filter(Boolean).map((vehicle) => ({
+        ...vehicle,
+        workers: this.normalizeTemplateWorkersList(vehicle.workers),
+      }));
     },
     getDefaultSaleMode() {
       return this.saleModes[0]?.id || "normal";
@@ -2304,12 +2331,19 @@ export default {
     // Filtramos los trabajadores segÃºn el vehÃ­culo seleccionado
     filterWorkers() {
       const selectedVehicleId = Number(this.editedItem.vehicle_id);
-      console.log("this.editedItem.vehicle_id");
-      console.log(Number(this.editedItem.vehicle_id));
-      // Filtramos los trabajadores que estÃ¡n relacionados con el vehÃ­culo seleccionado
-      this.filteredWorkers = this.workers.filter((worker) =>
-        worker.vehicles.some((vehicle) => vehicle.id === selectedVehicleId)
+
+      if (!Number.isFinite(selectedVehicleId) || selectedVehicleId <= 0) {
+        this.filteredWorkers = [];
+        return;
+      }
+
+      const selectedVehicle = this.vehicles.find(
+        (vehicle) => Number(vehicle.id) === selectedVehicleId
       );
+
+      this.filteredWorkers = Array.isArray(selectedVehicle?.workers)
+        ? [...selectedVehicle.workers]
+        : [];
     },
     today(date) {
       // Obtener la fecha actual
@@ -2365,16 +2399,7 @@ export default {
       this.expandedTemplateFareIds = [];
     },
     async showAssiegnedWorker() {
-      // Clonar filteredWorkers para evitar referencias compartidas
-      const clonedFilteredWorkers = this.filteredWorkers.map((worker) => ({ ...worker }));
-
-      // Ahora puedes filtrar el arreglo clonado sin afectar a los objetos originales
-      this.filteredWorkers = clonedFilteredWorkers.filter((worker) => {
-        // Verificar si la persona no estÃ¡ en editedItem.workers
-        return !this.editedItem.workers.some(
-          (editedWorker) => editedWorker.id === worker.id
-        );
-      });
+      this.selectedWorker = null;
       this.dialogAssignedWorkers = true;
     },
     closeAssignedWorker() {
@@ -2382,9 +2407,18 @@ export default {
       this.selectedWorker = null;
     },
     saveAssignedWorker(worker) {
-      //if (this.selectedWorker) {
-      //const worker = this.workers.find((p) => p.id === this.selectedWorker);
-      const newWorkers = this.normalizeTemplateWorkerRecord(worker);
+      const workerSource =
+        worker ||
+        this.dialogAssignableWorkers.find(
+          (item) => Number(item.id) === Number(this.selectedWorker)
+        );
+
+      if (!workerSource || !Number.isFinite(Number(workerSource.id))) {
+        this.showAlert("warning", "Seleccione un trabajador válido.", 2500);
+        return;
+      }
+
+      const newWorkers = this.normalizeTemplateWorkerRecord(workerSource);
       // Verificar si la relaciÃ³n ya existe en editedItem.people
       const existingPersonIndex = this.editedItem.workers.findIndex(
         (p) => p.id === newWorkers.id
@@ -2501,8 +2535,8 @@ export default {
 
         if (result.success) {
           this.routes = result.data?.triproutes || [];
-          this.vehicles = result.data?.tripvehicles || [];
-          this.workers = this.normalizeTemplateWorkersList(result.data.tripworkers || []);
+          this.vehicles = this.normalizeTemplateVehicles(result.data?.tripvehicles);
+          this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTemplateSaleMode({ useDefault: resetSelections });
 
