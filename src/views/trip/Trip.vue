@@ -1753,11 +1753,13 @@ export default {
         return [];
       }
 
-      return (this.workers || []).filter((worker) =>
-        (worker.vehicles || []).some(
-          (vehicle) => Number(vehicle.id) === Number(selectedVehicleId)
-        )
+      const selectedVehicle = (this.vehicles || []).find(
+        (vehicle) => Number(vehicle.id) === selectedVehicleId
       );
+
+      return Array.isArray(selectedVehicle?.workers)
+        ? selectedVehicle.workers
+        : [];
     },
     dialogAssignableWorkers() {
       return (this.vehicleWorkers || []).filter(
@@ -1798,6 +1800,35 @@ export default {
   methods: {
     getRoutesCollection() {
       return Array.isArray(this.routes) ? this.routes : Object.values(this.routes || {});
+    },
+    normalizeTripWorkerRecord(worker = {}) {
+      const workerId = worker.id ?? worker.workerId ?? worker.worker_id;
+
+      return {
+        ...worker,
+        id: workerId,
+        workerId: worker.workerId ?? worker.worker_id ?? workerId,
+        worker_id: worker.worker_id ?? worker.workerId ?? workerId,
+        workerName: worker.workerName ?? worker.name ?? "",
+        workerImage: worker.workerImage ?? worker.image ?? "workers/default.jpg",
+        roleId: worker.roleId ?? worker.role_id,
+        roleName: worker.roleName ?? worker.role ?? "",
+      };
+    },
+    normalizeTripWorkersList(workers = []) {
+      return (Array.isArray(workers) ? workers : []).map((worker) =>
+        this.normalizeTripWorkerRecord(worker)
+      );
+    },
+    normalizeTripVehicles(vehicles = []) {
+      const vehicleList = Array.isArray(vehicles)
+        ? vehicles
+        : Object.values(vehicles || {});
+
+      return vehicleList.filter(Boolean).map((vehicle) => ({
+        ...vehicle,
+        workers: this.normalizeTripWorkersList(vehicle.workers),
+      }));
     },
     toggleTripSort(field) {
       if (this.tripSortBy === field) {
@@ -2407,21 +2438,23 @@ export default {
 
         if (result.success) {
           this.routes = result.data?.triproutes || [];
-          this.vehicles = result.data?.tripvehicles || [];
-          this.workers = result.data?.tripworkers || [];
+          this.vehicles = this.normalizeTripVehicles(result.data?.tripvehicles);
+          this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTripSaleMode({ useDefault: resetSelections });
-          this.filterWorkers();
 
           if (resetSelections) {
             this.editedItem.route_id = "";
             this.editedItem.vehicle_id = "";
             this.editedItem.workers = [];
+            this.filteredWorkers = [];
             this.tripStopRows = [];
             this.tripFareRows = [];
             this.expandedTripFareIds = [];
             this.estimated = null;
             this.editedItem.arrival = null;
+          } else {
+            this.filterWorkers();
           }
         } else {
           this.routes = [];
@@ -2490,7 +2523,7 @@ export default {
     saveAssignedWorker(worker = null) {
       const workerSource =
         worker ||
-        this.workers.find((item) => Number(item.id) === Number(this.selectedWorker)) ||
+        this.vehicleWorkers.find((item) => Number(item.id) === Number(this.selectedWorker)) ||
         this.dialogAssignableWorkers.find(
           (item) => Number(item.id) === Number(this.selectedWorker)
         );
