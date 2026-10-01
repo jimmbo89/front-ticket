@@ -44,6 +44,10 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
           return fallback;
         }
 
+        if (typeof data.details === 'string' && data.details.trim()) {
+          return data.details;
+        }
+
         if (typeof data.msg === 'string' && data.msg.trim()) {
           return data.msg;
         }

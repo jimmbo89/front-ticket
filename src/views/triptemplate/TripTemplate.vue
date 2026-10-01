@@ -1418,6 +1418,7 @@ import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
+  getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
@@ -1775,11 +1776,16 @@ export default {
       return normalizeSharedSaleMode(template);
     },
     normalizeSaleModeOption(mode = {}) {
-      const id = mode.id || mode.value || "normal";
+      const id = normalizeSharedSaleMode(mode.id || mode.value || "normal");
       return {
         ...mode,
         id,
-        name: String(id).toLowerCase() === "normal" ? "Venta Full" : mode.name,
+        name:
+          id === "on_board"
+            ? getSharedSaleModeLabel(id)
+            : String(id).toLowerCase() === "normal"
+              ? "Venta Full"
+              : mode.name,
       };
     },
     normalizeSaleModeOptions(modes = []) {

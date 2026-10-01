@@ -1,6 +1,8 @@
 export const SALE_MODE_COLORS = Object.freeze({
   express: "#16845b",
   full: "#2454d6",
+  on_board: "#b45309",
+  web: "#0369a1",
 });
 
 function getRawSaleMode(value) {
@@ -24,17 +26,50 @@ export function normalizeSaleMode(value) {
     .toLowerCase()
     .replace(/[-\s]+/g, "_");
 
-  return ["express", "venta_express"].includes(normalized)
-    ? "express"
-    : "normal";
+  if (["express", "venta_express"].includes(normalized)) {
+    return "express";
+  }
+
+  if (
+    [
+      "on_board",
+      "onboard",
+      "aboard",
+      "a_bordo",
+      "abordo",
+      "venta_a_bordo",
+      "venta_abordo",
+      "venta_aboard",
+    ].includes(normalized)
+  ) {
+    return "on_board";
+  }
+
+  if (["web", "venta_web"].includes(normalized)) {
+    return "web";
+  }
+
+  return "normal";
 }
 
 export function getSaleModeLabel(value) {
-  return normalizeSaleMode(value) === "express" ? "Express" : "Full";
+  const labels = {
+    normal: "Full",
+    express: "Express",
+    on_board: "A bordo",
+    web: "Web",
+  };
+
+  return labels[normalizeSaleMode(value)] || labels.normal;
 }
 
 export function getSaleModeColor(value) {
-  return normalizeSaleMode(value) === "express"
-    ? SALE_MODE_COLORS.express
-    : SALE_MODE_COLORS.full;
+  const colors = {
+    normal: SALE_MODE_COLORS.full,
+    express: SALE_MODE_COLORS.express,
+    on_board: SALE_MODE_COLORS.on_board,
+    web: SALE_MODE_COLORS.web,
+  };
+
+  return colors[normalizeSaleMode(value)] || SALE_MODE_COLORS.full;
 }

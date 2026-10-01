@@ -49,31 +49,15 @@
       </v-card>
     </v-container>
 
-    <v-dialog v-model="dialog" max-width="760" persistent>
-      <v-form ref="form" v-model="valid" enctype="multipart/form-data" @submit.prevent="save">
-        <v-card class="form-dialog" elevation="0">
-          <div class="dialog-header"><div class="dialog-heading"><div class="dialog-icon"><v-icon class="dialog-icon-main" size="20">mdi-account</v-icon><v-icon class="dialog-icon-action" size="11">{{ editedIndex === -1 ? "mdi-plus" : "mdi-pencil" }}</v-icon></div><div><div class="dialog-title">{{ formTitle }}</div><div class="dialog-subtitle">{{ editedIndex === -1 ? "Registra un nuevo usuario operativo" : "Actualiza la información del trabajador" }}</div></div></div><v-btn icon="mdi-close" variant="text" size="small" class="dialog-close" :disabled="loading" @click="close" /></div>
-          <v-divider />
-          <v-card-text class="dialog-body">
-            <div class="form-section-label">Información de acceso</div>
-            <v-row dense>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.name" label="Nombre completo" placeholder="Nombre y apellidos" prepend-inner-icon="mdi-account-outline" variant="outlined" density="comfortable" :rules="nameRules" maxlength="50" clearable /></v-col>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.email" label="Correo electrónico" placeholder="nombre@empresa.cl" prepend-inner-icon="mdi-email-outline" variant="outlined" density="comfortable" :rules="emailRules" clearable /></v-col>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.user" label="Usuario" placeholder="Usuario de acceso" prepend-inner-icon="mdi-account-circle-outline" variant="outlined" density="comfortable" clearable /></v-col>
-              <v-col v-if="editedIndex === -1" cols="12" md="6"><v-text-field v-model="editedItem.password" :type="showPassword ? 'text' : 'password'" label="Contraseña" placeholder="Mínimo 5 caracteres" prepend-inner-icon="mdi-lock-outline" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" variant="outlined" density="comfortable" :rules="requiredRules" @click:append-inner="showPassword = !showPassword" /></v-col>
-              <v-col cols="12" md="6"><v-autocomplete v-model="editedItem.role_id" :items="roles" item-title="name" item-value="id" label="Rol del sistema" prepend-inner-icon="mdi-account-tie-outline" variant="outlined" density="comfortable" no-data-text="No hay roles disponibles" :rules="selectRules" :menu-props="{ contentClass: 'worker-role-menu' }"><template #item="{ props, item }"><v-list-item v-bind="props" :title="item.raw.name"><template #prepend><div class="role-menu-icon"><v-icon size="18">mdi-account-tie-outline</v-icon></div></template></v-list-item></template></v-autocomplete></v-col>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.rut" label="RUT" placeholder="12.345.678-9" prepend-inner-icon="mdi-card-account-details-outline" variant="outlined" density="comfortable" :rules="rutRules" clearable /></v-col>
-            </v-row>
-            <div class="form-section-label form-section-label--spaced">Información de contacto</div>
-            <v-row dense><v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.phone" label="Teléfono" placeholder="+56912345678" prepend-inner-icon="mdi-phone-outline" variant="outlined" density="comfortable" :rules="mobileRules" clearable /></v-col><v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.address" label="Dirección" placeholder="Dirección del trabajador" prepend-inner-icon="mdi-map-marker-outline" variant="outlined" density="comfortable" clearable /></v-col></v-row>
-            <div class="form-section-label form-section-label--spaced">Imagen del trabajador</div>
-            <div class="image-upload-area"><div class="image-preview"><v-img v-if="imgedit" :src="imgedit" cover><template #error><div class="preview-placeholder"><v-icon size="28">mdi-image-off-outline</v-icon></div></template></v-img><div v-else class="preview-placeholder"><v-icon size="28">mdi-account</v-icon></div></div><div class="upload-copy"><div class="upload-title">Fotografía de perfil</div><div class="upload-description">Formatos JPG, JPEG o PNG. Tamaño máximo: 500 KB.</div><v-file-input ref="fileInput" v-model="file" class="file-field" label="Seleccionar imagen" prepend-inner-icon="mdi-upload-outline" prepend-icon="" variant="outlined" density="compact" accept=".png,.jpg,.jpeg" hide-details clearable @change="onFileSelected" /></div></div>
-          </v-card-text>
-          <v-divider />
-          <v-card-actions class="dialog-actions"><v-btn variant="text" class="cancel-button" :disabled="loading" @click="close">Cancelar</v-btn><v-btn type="submit" class="save-button" elevation="0" :loading="loading" :disabled="!valid">{{ editedIndex === -1 ? "Crear trabajador" : "Guardar cambios" }}</v-btn></v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
+    <WorkerFormDialog
+      v-model="dialog"
+      :worker="editedItem"
+      :roles="roles"
+      :branches="branches"
+      :is-creating="editedIndex === -1"
+      :loading="loading"
+      @save="save"
+    />
 
     <v-dialog v-model="dialogDelete" max-width="430" persistent><v-card class="delete-dialog" elevation="0"><div class="delete-icon"><v-icon size="27">mdi-trash-can-outline</v-icon></div><div class="delete-title">Eliminar trabajador</div><div class="delete-message">¿Deseas eliminar a <strong>{{ editedItem.name || "este trabajador" }}</strong>? Esta acción no se puede deshacer.</div><div class="delete-actions"><v-btn variant="text" class="cancel-button" :disabled="loading" @click="closeDelete">Cancelar</v-btn><v-btn class="delete-button" elevation="0" :loading="loading" @click="deleteItemConfirm">Eliminar</v-btn></div></v-card></v-dialog>
 
@@ -98,9 +82,13 @@ import { paleteColors } from "@/assets/colors";
 
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 
+import WorkerFormDialog from "./WorkerFormDialog.vue";
+
 export default {
 
   name: 'WorkersView',
+
+  components: { WorkerFormDialog },
 
   data: () => ({
 
@@ -198,7 +186,9 @@ export default {
 
       role_id: '',
 
-      user_id: ''
+      user_id: '',
+
+      branches: []
 
     },
 
@@ -224,7 +214,9 @@ export default {
 
       role_id: '',
 
-      user_id: ''
+      user_id: '',
+
+      branches: []
 
     },
 
@@ -250,7 +242,9 @@ export default {
 
       role_id: '',
 
-      user_id: ''
+      user_id: '',
+
+      branches: []
 
     },
 
@@ -378,6 +372,12 @@ export default {
 
   methods: {
 
+    toArray(value) {
+
+      return Array.isArray(value) ? value : (value && typeof value === 'object' ? Object.values(value) : []);
+
+    },
+
     workerImage(image) {
 
       return `${this.$axios.defaults.baseURL}images/${image}?t=${this.getCacheTimestamp()}`;
@@ -466,13 +466,15 @@ export default {
 
           // Si la solicitud es exitosa, asignamos las sucursales
 
-          this.roles = result.data?.roles || [];
+          this.roles = this.toArray(result.data?.roles);
+          this.branches = this.toArray(result.data?.branches);
 
         } else {
 
           // Si no hay datos, asignamos un array vacío
 
           this.roles = [];
+          this.branches = [];
 
         }
 
@@ -536,7 +538,7 @@ export default {
 
           // Si la solicitud es exitosa, asignamos las sucursales
 
-          this.workers = result.data?.workers || [];
+          this.workers = this.toArray(result.data?.workers ?? result.data);
 
           this.imageVersion += 1;
 
@@ -564,7 +566,51 @@ export default {
 
     },
 
-    async save() {
+    async save({ item = {}, file = null, branches = [] } = {}) {
+      this.editedItem = { ...this.editedItem, ...item };
+      this.file = file;
+      const creating = this.editedIndex === -1;
+      const fields = creating
+        ? ['name', 'user', 'email', 'phone', 'rut', 'role_id', 'address', 'user_id', 'password']
+        : ['name', 'user', 'email', 'phone', 'rut', 'role_id', 'address', 'user_id'];
+      const updatedFields = fields.reduce((payload, key) => {
+        if (creating || this.editedItem[key] !== this.originalItem[key]) {
+          if (this.editedItem[key] !== '' && this.editedItem[key] !== null && this.editedItem[key] !== undefined) payload[key] = this.editedItem[key];
+        }
+        return payload;
+      }, {});
+      if (file) updatedFields.image = file;
+      if (Array.isArray(branches) && branches.length) updatedFields.branches = JSON.stringify(branches);
+      if (!creating && !Object.keys(updatedFields).length) {
+        this.showAlert('success', 'No se realizaron cambios.', 3000);
+        this.close();
+        return;
+      }
+      if (!creating) {
+        updatedFields.id = this.editedItem.id;
+        updatedFields.user_id = this.editedItem.user_id;
+      }
+      const formData = new FormData();
+      Object.entries(updatedFields).forEach(([key, value]) => formData.append(key, value));
+      this.loading = true;
+      try {
+        const result = await handleRequest({ endpoint: creating ? 'worker' : 'worker-update', method: 'POST', data: formData });
+        if (result.success) {
+          this.loading = false;
+          this.close();
+          await this.initialize();
+          this.showAlert('success', result.message || 'Trabajador guardado correctamente.', 3000);
+        } else {
+          this.showAlert('warning', result.message || 'No fue posible guardar el trabajador.', 3000);
+        }
+      } catch (error) {
+        this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async saveLegacy() {
 
       //this.$refs.form.reset();
 
@@ -820,13 +866,15 @@ export default {
 
           // Si la solicitud es exitosa, asignamos las sucursales
 
-          this.roles = result.data?.roles || [];
+          this.roles = this.toArray(result.data?.roles);
+          this.branches = this.toArray(result.data?.branches);
 
         } else {
 
           // Si no hay datos, asignamos un array vacío
 
           this.roles = [];
+          this.branches = [];
 
         }
 

@@ -77,75 +77,15 @@
       </v-card>
     </v-container>
 
-    <!-- Nivel principal · diálogo interno para crear o editar -->
-    <v-dialog v-model="dialog" max-width="760" persistent>
-      <v-form ref="form" v-model="valid" enctype="multipart/form-data" @submit.prevent="save">
-        <v-card class="form-dialog" elevation="0">
-          <div class="dialog-header">
-            <div class="dialog-heading">
-              <div class="dialog-icon"><v-icon class="dialog-icon-main" size="20">mdi-bus</v-icon><v-icon class="dialog-icon-action" size="11">{{ editedIndex === -1 ? "mdi-plus" : "mdi-pencil" }}</v-icon></div>
-              <div><div class="dialog-title">{{ formTitle }}</div><div class="dialog-subtitle">{{ editedIndex === -1 ? "Registra un nuevo vehículo en la flota" : "Actualiza la información del vehículo" }}</div></div>
-            </div>
-            <v-btn icon="mdi-close" variant="text" size="small" class="dialog-close" :disabled="loading" @click="close" />
-          </div>
-          <v-divider />
-
-          <v-card-text class="dialog-body">
-            <div class="form-section-label">Información general</div>
-            <v-row dense>
-              <v-col cols="12">
-                <v-autocomplete
-                  v-model="editedItem.structure_id"
-                  :items="structures"
-                  item-title="name"
-                  item-value="id"
-                  label="Estructura de asientos"
-                  prepend-inner-icon="mdi-seat-passenger"
-                  variant="outlined"
-                  density="comfortable"
-                  no-data-text="No hay estructuras disponibles"
-                  :rules="selectRules"
-                  :menu-props="{ contentClass: 'vehicle-structure-menu' }"
-                  @update:model-value="updateSeats"
-                >
-                  <template #item="{ props, item }">
-                    <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.description">
-                      <template #prepend><div class="structure-menu-icon"><v-icon size="18">mdi-seat-passenger</v-icon></div></template>
-                      <template #append><span class="structure-seat-count">{{ item.raw.seatCount || 0 }} asientos</span></template>
-                    </v-list-item>
-                  </template>
-                </v-autocomplete>
-              </v-col>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.brand" label="Marca" placeholder="Ej.: Mercedes-Benz" prepend-inner-icon="mdi-bus-marker" variant="outlined" density="comfortable" :rules="nameRules" maxlength="50" clearable /></v-col>
-              <v-col cols="12" md="6"><v-text-field v-model.trim="editedItem.model" label="Modelo" placeholder="Ej.: Marcopolo G7" prepend-inner-icon="mdi-bus-side" variant="outlined" density="comfortable" :rules="nameRules" maxlength="50" clearable /></v-col>
-              <v-col cols="12" md="4"><v-text-field v-model.trim="editedItem.plate" label="Patente" placeholder="Ej.: ABCD12" prepend-inner-icon="mdi-card-text-outline" variant="outlined" density="comfortable" :rules="[(v) => !!v || 'La patente es requerida']" clearable /></v-col>
-              <v-col cols="12" md="4"><v-text-field v-model.trim="editedItem.internal_number" label="Número interno" placeholder="Ej.: BUS-014" prepend-inner-icon="mdi-pound" variant="outlined" density="comfortable" clearable /></v-col>
-              <v-col cols="12" md="4"><v-text-field v-model="editedItem.seats" label="Asientos" prepend-inner-icon="mdi-seat-passenger" variant="outlined" density="comfortable" :rules="[(v) => !!v || 'El número de asientos es requerido', (v) => !isNaN(v) || 'Debe ser un número']" disabled /></v-col>
-            </v-row>
-
-            <div class="status-control">
-              <div><div class="status-control-title">Estado del vehículo</div><div class="status-control-description">Los vehículos inactivos no estarán disponibles para la operación.</div></div>
-              <div class="status-switch" :class="Number(editedItem.state) === 1 ? 'is-active' : 'is-inactive'"><span>{{ Number(editedItem.state) === 1 ? "Activo" : "Inactivo" }}</span><v-switch v-model="editedItem.state" :true-value="1" :false-value="0" color="success" hide-details inset /></div>
-            </div>
-
-            <div class="form-section-label form-section-label--spaced">Imagen del vehículo</div>
-            <div class="image-upload-area">
-              <div class="image-preview">
-                <v-img v-if="imgedit" :src="imgedit" cover><template #error><div class="preview-placeholder"><v-icon size="28">mdi-image-off-outline</v-icon></div></template></v-img>
-                <div v-else class="preview-placeholder"><v-icon size="28">mdi-bus</v-icon></div>
-              </div>
-              <div class="upload-copy">
-                <div class="upload-title">Fotografía del vehículo</div>
-                <div class="upload-description">Formatos JPG, JPEG o PNG. Tamaño máximo: 500 KB.</div>
-                <v-file-input ref="fileInput" v-model="file" class="file-field" label="Seleccionar imagen" prepend-inner-icon="mdi-upload-outline" prepend-icon="" variant="outlined" density="compact" accept=".png,.jpg,.jpeg" hide-details clearable @change="onFileSelected" />
-              </div>
-            </div>
-          </v-card-text>
-          <v-divider />
-          <v-card-actions class="dialog-actions"><v-btn variant="text" class="cancel-button" :disabled="loading" @click="close">Cancelar</v-btn><v-btn type="submit" class="save-button" elevation="0" :loading="loading" :disabled="!valid">{{ editedIndex === -1 ? "Crear vehículo" : "Guardar cambios" }}</v-btn></v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
+    <VehicleFormDialog
+      v-model="dialog"
+      :vehicle="editedItem"
+      :structures="structures"
+      :branches="branches"
+      :is-creating="editedIndex === -1"
+      :loading="loading"
+      @save="save"
+    />
 
     <!-- Nivel principal · diálogo interno de eliminación -->
     <v-dialog v-model="dialogDelete" max-width="430" persistent>
@@ -172,6 +112,7 @@
 import { handleRequest } from "@/utils/api"; // Ruta al archivo
 
 import VehicleWorker from "../vehicleworker/VehicleWorker.vue";
+import VehicleFormDialog from "./VehicleFormDialog.vue";
 
 import { paleteColors } from "@/assets/colors";
 
@@ -180,6 +121,7 @@ export default {
   components: {
 
     VehicleWorker,
+    VehicleFormDialog,
 
   },
 
@@ -216,6 +158,8 @@ export default {
     vehicles: [],
 
     structures: [],
+
+    branches: [],
 
     data: {},
 
@@ -443,72 +387,41 @@ export default {
 
     },
 
-    async showAdd() {
-
-      this.close();
-
-      try {
-
-        const result = await handleRequest({
-
-          endpoint: "structure",
-
-          method: "GET",
-
-        });
-
-        if (result.success) {
-
-          // Si la solicitud es exitosa, asignamos las sucursales
-
-          this.structures = result.data?.structures || [];
-
-        } else {
-
-          // Si no hay datos, asignamos un array vacío
-
-          this.structures = [];
-
-        }
-
-      } catch (error) {
-
-        this.showAlert(
-
-          "error",
-
-          "Ocurrió un error inesperado al procesar la solicitud.",
-
-          3000
-
-        );
-
-      } finally {
-
-        this.dialog = true;
-
-      }
-
+    async loadStructureBranches() {
+      const result = await handleRequest({ endpoint: "structure-branches", method: "POST" });
+      this.structures = result.success ? this.toArray(result.data?.structures) : [];
+      this.branches = result.success ? this.toArray(result.data?.branches) : [];
+      if (!result.success) this.showAlert("warning", result.message || "No fue posible cargar las estructuras y sucursales.", 3000);
+      return result;
     },
-
-    close() {
-
-      this.dialog = false;
-
-      this.$nextTick(() => {
-
-        this.editedItem = Object.assign({}, this.defaultItem);
-
-        this.originalItem = Object.assign({}, this.defaultItem);
-
-      });
-
+    toArray(value) {
+      return Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : []);
+    },
+    resetEditor() {
+      this.editedItem = Object.assign({}, this.defaultItem);
+      this.originalItem = Object.assign({}, this.defaultItem);
       this.editedIndex = -1;
-
+      this.valid = false;
       this.file = null;
-
       this.imgMiniatura = "";
-
+    },
+    async showAdd() {
+      this.resetEditor();
+      this.loading = true;
+      try {
+        await this.loadStructureBranches();
+      } catch (error) {
+        this.structures = [];
+        this.branches = [];
+        this.showAlert("error", "Ocurrió un error al cargar las estructuras y sucursales.", 3000);
+      } finally {
+        this.loading = false;
+        this.dialog = true;
+      }
+    },
+    close() {
+      this.dialog = false;
+      this.$nextTick(() => this.resetEditor());
     },
 
     async initialize() {
@@ -581,7 +494,47 @@ export default {
 
     },
 
-    async save() {
+    async save({ item = {}, file = null, branches = [], routePreferences = [] } = {}) {
+      this.editedItem = { ...this.editedItem, ...item };
+      const creating = this.editedIndex === -1;
+      const fields = ["brand", "model", "plate", "internal_number", "rut", "seats", "state", "structure_id"];
+      const payload = fields.reduce((changes, key) => {
+        if (creating || this.editedItem[key] !== this.originalItem[key]) {
+          if (this.editedItem[key] !== undefined && this.editedItem[key] !== null) changes[key] = this.editedItem[key];
+        }
+        return changes;
+      }, {});
+
+      if (file) payload.image = Array.isArray(file) ? file[0] : file;
+      if (Array.isArray(branches) && branches.length) payload.branches = JSON.stringify(branches);
+      if (Array.isArray(routePreferences) && routePreferences.length) payload.route_preferences = JSON.stringify(routePreferences);
+      if (!creating && !Object.keys(payload).length) {
+        this.showAlert("warning", "No se realizaron cambios.", 3000);
+        return;
+      }
+      if (!creating) payload.id = this.editedItem.id;
+
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => formData.append(key, value ?? ""));
+      this.loading = true;
+      try {
+        const result = await handleRequest({ endpoint: creating ? "vehicle" : "vehicle-update", method: "POST", data: formData });
+        if (result.success) {
+          this.dialog = false;
+          this.resetEditor();
+          await this.initialize();
+          this.showAlert("success", result.message || "Vehículo guardado correctamente.", 3000);
+        } else {
+          this.showAlert("warning", result.message || "No fue posible guardar el vehículo.", 3000);
+        }
+      } catch (error) {
+        this.showAlert("error", "Ocurrió un error al guardar el vehículo.", 3000);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async saveLegacy() {
 
       this.loading = true;
 
@@ -830,6 +783,29 @@ export default {
     },
 
     async editItem(item) {
+      const source = item?.raw ?? item ?? {};
+      const vehicle = {
+        ...source,
+        structure_id: source.structure_id ?? source.structureId ?? "",
+        internal_number: source.internal_number ?? source.internalNumber ?? "",
+      };
+      this.editedIndex = this.vehicles.findIndex((current) => String(current.id) === String(vehicle.id));
+      this.originalItem = Object.assign({}, vehicle);
+      this.editedItem = Object.assign({}, vehicle);
+      this.loading = true;
+      try {
+        await this.loadStructureBranches();
+      } catch (error) {
+        this.structures = [];
+        this.branches = [];
+        this.showAlert("error", "Ocurrió un error al cargar las estructuras y sucursales.", 3000);
+      } finally {
+        this.loading = false;
+        this.dialog = true;
+      }
+    },
+
+    async editItemLegacy(item) {
 
       this.editedIndex = 1;
 
@@ -891,7 +867,7 @@ export default {
 
         const result = await handleRequest({
 
-          endpoint: "structure",
+          endpoint: "structure-branches",
 
           method: "GET",
 

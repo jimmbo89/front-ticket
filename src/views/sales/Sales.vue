@@ -7,7 +7,7 @@
     <v-avatar :color="paleteColors.primary" class="busgo-page-icon"><v-icon>mdi-point-of-sale</v-icon></v-avatar>
     <div>
       <div class="busgo-page-title">Ventas</div>
-      <div class="busgo-page-subtitle">Venta de pasajes Full y Express</div>
+      <div class="busgo-page-subtitle">Venta de pasajes Full, Express y A bordo</div>
     </div>
   </v-card>
   <main class="sales-workspace">
@@ -36,8 +36,15 @@
         <div class="sales-mode-copy"><h3>Venta Express</h3><p>Registra pasajes con el flujo de venta rápida.</p></div>
         <div class="sales-mode-footer"><span class="sales-mode-note"><v-icon size="16">mdi-ticket-outline</v-icon>Comprobante con QR</span><v-btn class="sales-launch-button sales-launch-button--express" variant="flat" append-icon="mdi-arrow-right" :disabled="loading || !hasSelectedBranch" @click="openExpressSale">Iniciar venta Express</v-btn></div>
       </article>
+      <!-- Venta a bordo temporalmente oculta; se conserva para reactivarla cuando corresponda.
+      <article v-if="canUseOnBoardSale" class="sales-mode-card sales-mode-card--on-board">
+        <div class="sales-mode-top"><span class="sales-mode-icon"><v-icon size="29">mdi-bus</v-icon></span><span class="sales-mode-tag">Venta en ruta</span></div>
+        <div class="sales-mode-copy"><h3>Venta a bordo</h3><p>Opera desde el vehículo y emite pasajes según la ruta activa.</p></div>
+        <div class="sales-mode-footer"><span class="sales-mode-note"><v-icon size="16">mdi-bus-outline</v-icon>Contexto operativo</span><v-btn class="sales-launch-button sales-launch-button--on-board" variant="flat" append-icon="mdi-arrow-right" :disabled="loading" @click="openOnBoardSale">Iniciar venta a bordo</v-btn></div>
+      </article>
+      -->
     </div>
-    <v-alert v-if="!hasPermission(['view_traditional_sales_web', 'view_express_sales_web'])" type="info" variant="tonal" class="mt-5">No tienes permisos para realizar ventas.</v-alert>
+    <v-alert v-if="!hasPermission(['view_traditional_sales_web', 'view_express_sales_web']) && !canUseOnBoardSale" type="info" variant="tonal" class="mt-5">No tienes permisos para realizar ventas.</v-alert>
     <v-alert v-else-if="!loading && !hasSelectedBranch" type="info" variant="tonal" class="mt-5">Selecciona una sucursal para comenzar. Si no hay sucursales disponibles, revisa tu asignación con el administrador.</v-alert>
     <div class="sales-workspace-footnote"><v-icon size="17">mdi-information-outline</v-icon><span>Consulta y reimprime las ventas realizadas desde el reporte de Tickets.</span></div>
   </main>
@@ -49,6 +56,7 @@
     @alert="showAlert"
     @saved="handleExpressSaleSaved"
   />
+  <OnBoardSaleDialog v-model="dialogOnBoardSale" @saved="handleOnBoardSaleSaved" />
 
   <v-dialog
     v-model="dialog"
@@ -783,6 +791,7 @@ import {
 } from "@/utils/saleMode";
 import QRCode from "qrcode";
 import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
+import OnBoardSaleDialog from "@/views/sales/OnBoardSaleDialog.vue";
 
 const CARD_PAYMENT_DEVICE = "TJ44243320217";
 const PAYMENT_STATUS_POLL_INTERVAL_MS = 2000;
@@ -790,7 +799,7 @@ const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
 
 export default {
   name: 'SalesView',
-  components: { ExpressTicketSale, SaleModeChip },
+  components: { ExpressTicketSale, OnBoardSaleDialog, SaleModeChip },
   data: () => ({ snackbar: false,
     sb_type: "",
     sb_message: "",
@@ -804,6 +813,7 @@ export default {
     permissions: "",
     dialog: false,
     dialogExpressSale: false,
+    dialogOnBoardSale: false,
     branch_id: "",
     seatError: null,
     currentlyEditing: null,
@@ -1015,7 +1025,16 @@ export default {
         (row, field) => this.getTripSaleSortValue(row, field)
       );
     },
-    hasSelectedBranch() { return Number(this.branch_id) > 0; } },
+    hasSelectedBranch() { return Number(this.branch_id) > 0; },
+    canUseOnBoardSale() {
+      return this.hasPermission([
+        "view_on_board_sales_web",
+        "view_tickets_company",
+        "view_traditional_sales_web",
+        "view_express_sales_web",
+      ]);
+    },
+  },
   watch: {
     selectedSeats(newValue) {
       if (typeof newValue === "string") {
@@ -2519,8 +2538,9 @@ export default {
     async showGeneratedTicket(ticket) {
       this.currentTicket = ticket;
       this.showTicketDialog = true;
+      const branchId = ticket?.branch_id ?? ticket?.branchId;
       this.selectedBranch =
-        this.branches.find((branch) => branch.id === ticket.branch_id) || null;
+        this.branches.find((branch) => Number(branch.id) === Number(branchId)) || null;
       await this.$nextTick();
       await this.generateQRCode();
     },
@@ -2886,6 +2906,18 @@ export default {
 
       await this.$nextTick();
       await this.generateQRCode();
+    },
+    async handleOnBoardSaleSaved(ticket = null, response = null) {
+      if (ticket) {
+        // El modo de venta viene en la respuesta del backend y es utilizado
+        // por la vista previa y la impresión mediante SaleModeChip.
+        await this.showGeneratedTicket(ticket);
+      }
+      this.showAlert(
+        "success",
+        response?.message || response?.msg || "La venta a bordo se registró correctamente.",
+        3000
+      );
     },
     async printTicket() {
       try {
@@ -3474,7 +3506,11 @@ export default {
     },
     openExpressSale() {
       if (this.hasPermission('view_express_sales_web') && this.hasSelectedBranch) this.dialogExpressSale = true;
-    } }
+    },
+    openOnBoardSale() {
+      if (this.canUseOnBoardSale) this.dialogOnBoardSale = true;
+    },
+  }
 };
 </script>
 <style scoped>
@@ -4077,7 +4113,7 @@ export default {
   color: #2454d6;
 }
 
-.ticket-sale-mode--aboard {
+.ticket-sale-mode--on_board {
   background: #fff7e6;
   color: #b45309;
 }
@@ -4914,10 +4950,12 @@ export default {
 .sales-branch-icon { color:#2454d6; }
 .sales-assigned-branch span:not(.sales-branch-icon) { display:block; font-size:11px; color:#64748b; }
 .sales-assigned-branch strong { display:block; margin-top:2px; font-size:12px; font-weight:650; }
-.sales-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; max-width:1000px; }
+.sales-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; width:100%; max-width:980px; margin:16px 0 0; }
+.sales-mode-card:only-child { grid-column:1 / -1; }
 .sales-mode-card { min-width:0; display:flex; flex-direction:column; padding:18px; border-radius:12px; border:1px solid #e0e6ef; background:#fff; color:#162641; box-shadow:0 3px 12px #15264b05; }
 .sales-mode-card--full { border-top:3px solid #2454d6; }
 .sales-mode-card--express { border-top:3px solid #2454d6; }
+.sales-mode-card--on-board { border-top:3px solid #b45309; }
 .sales-mode-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .sales-mode-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; flex-shrink:0; background:#eef3ff; color:#2454d6; }
 .sales-mode-icon :deep(.v-icon) { font-size:23px!important; }
@@ -4930,6 +4968,7 @@ export default {
 .sales-launch-button.v-btn { min-height:38px; border-radius:8px; font-size:12px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
 .sales-launch-button--full.v-btn { background:#2454d6; color:#fff; }
 .sales-launch-button--express.v-btn { background:#eef3ff; color:#2454d6; }
+.sales-launch-button--on-board.v-btn { background:#fff7e6; color:#b45309; }
 .sales-launch-button:focus-visible { outline:3px solid #6e9bff; outline-offset:3px; }
 .sales-workspace-footnote { display:flex; align-items:center; gap:7px; margin-top:16px; color:#64748b; font-size:11px; line-height:1.5; }
 /* Full dialog: explicit background, type and controls independent of the page. */
@@ -5007,6 +5046,8 @@ export default {
 .sales-mode-card--express .sales-mode-tag { color:#116546; background:#edf8f2; }
 .sales-launch-button--express.v-btn { color:#116546; background:#edf8f2; }
 .sales-launch-button--express:focus-visible { outline-color:#78c9a2; }
+.sales-launch-button--on-board:focus-visible { outline-color:#e7a94f; }
+@media(max-width:1100px) { .sales-modes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:959px) { .busgo-full-sale .ticket-sale-topbar { padding-inline:17px; } }
 @media(max-width:600px) {
   .busgo-full-sale .ticket-sale-topbar { padding:12px; gap:9px; }

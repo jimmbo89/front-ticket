@@ -188,9 +188,9 @@
               <span>Salida</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('start') }}</v-icon>
             </div>
-            <div class="trip-col-end trip-sortable" @click="toggleTripSort('end')">
-              <span>Llegada</span>
-              <v-icon size="16" class="ml-1">{{ tripSortIcon('end') }}</v-icon>
+            <div class="trip-col-end trip-sortable" @click="toggleTripSort('arrival')">
+              <span>Llegada estimada</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('arrival') }}</v-icon>
             </div>
             <div class="trip-col-actions">Acciones</div>
           </div>
@@ -302,16 +302,16 @@
                 <div class="trip-col-end busgo-meta trip-datetime-cell">
                   <div class="trip-datetime-value">
                     <span >
-                      {{ formatTripDate(slotProps.item.end) }}
+                      {{ formatTripDate(getTripArrivalValue(slotProps.item)) }}
                     </span>
                     <span class="trip-datetime-time">
-                      {{ formatTripTime(slotProps.item.end) }}
+                      {{ formatTripTime(getTripArrivalValue(slotProps.item)) }}
                     </span>
                   </div>
 
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      {{ formatTripDateTimeTooltip("Llegada", slotProps.item.end) }}
+                      {{ formatTripDateTimeTooltip("Llegada estimada", getTripArrivalValue(slotProps.item)) }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -1551,6 +1551,7 @@ import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
   getSaleModeLabel as getSharedSaleModeLabel,
+  normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
   components: { BusgoChip, SaleModeChip },
@@ -1606,7 +1607,7 @@ export default {
       { title: "Hora Programada", value: "schedule" },
       { title: "Modo", value: "saleMode" },
       { title: "Salida", value: "start" },
-      { title: "Llegada", value: "end" },
+      { title: "Llegada estimada", value: "arrival" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
 
@@ -1834,20 +1835,29 @@ export default {
         return this.normalizeTripSaleMode(trip);
       }
 
+      if (field === "arrival") {
+        return trip.arrival || trip.end || "";
+      }
+
       return trip[field] ?? "";
     },
     getDefaultSaleMode() {
       return this.saleModes[0]?.id || "normal";
     },
     normalizeTripSaleMode(trip = {}) {
-      return trip.saleMode || trip.sale_mode || this.getDefaultSaleMode();
+      return normalizeSharedSaleMode(trip);
     },
     normalizeSaleModeOption(mode = {}) {
-      const id = mode.id || mode.value || "normal";
+      const id = normalizeSharedSaleMode(mode.id || mode.value || "normal");
       return {
         ...mode,
         id,
-        name: String(id).toLowerCase() === "normal" ? "Venta Full" : mode.name,
+        name:
+          id === "on_board"
+            ? getSharedSaleModeLabel(id)
+            : String(id).toLowerCase() === "normal"
+              ? "Venta Full"
+              : mode.name,
       };
     },
     normalizeSaleModeOptions(modes = []) {
@@ -2759,8 +2769,9 @@ export default {
     async editItem(item) {
       this.editedIndex = 1;
       this.step = 1;
-      this.originalItem = _.cloneDeep(item);
-      this.editedItem = _.cloneDeep(item);
+      const trip = item?.raw || item;
+      this.originalItem = _.cloneDeep(trip);
+      this.editedItem = _.cloneDeep(trip);
       this.originalItem.saleMode = this.normalizeTripSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTripSaleMode(this.editedItem);
       this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)
@@ -2776,6 +2787,9 @@ export default {
 
       const matchedRoute = this.selectedRouteRecord;
       this.estimated = matchedRoute ? matchedRoute.estimated : null;
+      if (!this.editedItem.arrival) {
+        this.updateArrival();
+      }
       this.syncTripStopsFromRoute(false);
       this.syncTripFareRows(false);
       this.filterWorkers();
@@ -2876,6 +2890,9 @@ export default {
       }
 
       return `${label}: ${date} ${time}`;
+    },
+    getTripArrivalValue(trip) {
+      return trip?.arrival || trip?.end || null;
     },
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type;

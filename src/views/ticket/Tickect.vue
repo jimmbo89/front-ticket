@@ -1027,7 +1027,11 @@ import _ from "lodash";
 import { paleteColors } from "@/assets/colors";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
-import { SALE_MODE_COLORS } from "@/utils/saleMode";
+import {
+  getSaleModeColor as getSharedSaleModeColor,
+  getSaleModeLabel as getSharedSaleModeLabel,
+  normalizeSaleMode as normalizeSharedSaleMode,
+} from "@/utils/saleMode";
 import QRCode from "qrcode";
 import * as XLSX from "xlsx";
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
@@ -1595,28 +1599,7 @@ export default {
         : this.getTicketQuantity(ticket);
     },
     getSaleModeKey(ticket = {}) {
-      const rawMode = String(
-        ticket?.sale_mode ??
-        ticket?.saleMode ??
-        ticket?.sale_mode_label ??
-        ticket?.saleModeLabel ??
-        "normal"
-      )
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[-\s]/g, "_");
-
-      if (["express", "venta_express"].includes(rawMode)) {
-        return "express";
-      }
-      if (["aboard", "a_bordo", "venta_a_bordo", "venta_aboard"].includes(rawMode)) {
-        return "aboard";
-      }
-      if (["web", "venta_web"].includes(rawMode)) {
-        return "web";
-      }
-      return "normal";
+      return normalizeSharedSaleMode(ticket);
     },
     sortRows(rows = [], sortBy = "", sortOrder = "asc", valueGetter = () => null) {
       const direction = sortOrder === "desc" ? -1 : 1;
@@ -1832,22 +1815,10 @@ export default {
       return ticket?.tripDestination ?? ticket?.destination ?? "No especificado";
     },
     getSaleModeLabel(ticket = {}) {
-      const labels = {
-        normal: "Full",
-        express: "Express",
-        aboard: "A Bordo",
-        web: "Web",
-      };
-      return labels[this.getSaleModeKey(ticket)] || "Full";
+      return getSharedSaleModeLabel(ticket);
     },
     getSaleModeColor(ticket = {}) {
-      const colors = {
-        normal: SALE_MODE_COLORS.full,
-        express: SALE_MODE_COLORS.express,
-        aboard: "warning",
-        web: "info",
-      };
-      return colors[this.getSaleModeKey(ticket)] || SALE_MODE_COLORS.full;
+      return getSharedSaleModeColor(ticket);
     },
     getMethodColor(methodValue) {
       const colors = {
@@ -5958,7 +5929,7 @@ table.v-table>thead,
   color: #2454d6;
 }
 
-.ticket-sale-mode--aboard {
+.ticket-sale-mode--on_board {
   background: #fff7e6;
   color: #b45309;
 }
