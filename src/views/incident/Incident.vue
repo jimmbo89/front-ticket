@@ -175,6 +175,36 @@
 
         </v-autocomplete>
 
+        <v-select
+
+          v-model="selectedIncidentType"
+
+          :items="incidentTypes"
+
+          item-title="value"
+
+          item-value="id"
+
+          density="compact"
+
+          variant="outlined"
+
+          prepend-inner-icon="mdi-alert-outline"
+
+          placeholder="Tipo de incidente"
+
+          hide-details
+
+          clearable
+
+          class="incident-filter"
+
+          :menu-props="{ contentClass: 'incidents-select-menu' }"
+
+          no-data-text="No hay tipos de incidentes disponibles"
+
+        />
+
         <v-btn
 
           variant="flat"
@@ -795,6 +825,10 @@ export default {
 
     branch_id: "",
 
+    incidentTypes: [],
+
+    selectedIncidentType: null,
+
     options: [
 
       { title: "Empresa", value: "Company", icon: "mdi-office-building" },
@@ -1188,6 +1222,18 @@ export default {
 
       }
 
+      if (this.selectedIncidentType !== null && this.selectedIncidentType !== undefined && this.selectedIncidentType !== "") {
+
+        const incidentTypeId = Number(this.selectedIncidentType);
+
+        if (Number.isFinite(incidentTypeId)) {
+
+          data.type = incidentTypeId;
+
+        }
+
+      }
+
       return data;
 
     },
@@ -1287,6 +1333,7 @@ export default {
 
           this.incidents = result.data?.incidents || [];
           this.summary = result.data?.summary || {};
+          this.incidentTypes = result.data?.incidentTypes || [];
 
         } else {
 
@@ -1294,6 +1341,7 @@ export default {
 
           this.incidents = [];
           this.summary = {};
+          this.incidentTypes = [];
 
         }
 
@@ -1346,6 +1394,7 @@ export default {
 
           this.incidents = result.data?.incidents || [];
           this.summary = result.data?.summary || {};
+          this.incidentTypes = result.data?.incidentTypes || [];
 
         } else {
 
@@ -1353,6 +1402,7 @@ export default {
 
           this.incidents = [];
           this.summary = {};
+          this.incidentTypes = [];
 
         }
 
