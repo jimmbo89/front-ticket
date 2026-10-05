@@ -97,7 +97,7 @@
           <v-icon size="18">mdi-tune-variant</v-icon>
           <div>
             <strong>Filtros del reporte</strong>
-            <span>Selecciona el período y el alcance de la consulta</span>
+            <span>El período filtra la fecha de venta de los tickets</span>
           </div>
         </div>
 
@@ -134,7 +134,7 @@
 
           single-line
 
-          class="worker-collection-filter"
+          class="worker-collection-filter worker-report-branch-filter"
 
           :menu-props="{ contentClass: 'worker-report-select-menu' }"
 
@@ -154,15 +154,6 @@
               <v-list-item-subtitle>Sucursal operativa</v-list-item-subtitle>
             </v-list-item>
 
-          </template>
-
-          <template #selection="{ item }">
-            <div class="worker-report-selection">
-              <v-avatar size="24" rounded="lg">
-                <v-img :src="getImageUrl(item.raw.image)" cover />
-              </v-avatar>
-              <span>{{ item.raw.name }}</span>
-            </div>
           </template>
 
         </v-autocomplete>
@@ -220,16 +211,33 @@
 
           </template>
 
-          <template #selection="{ item }">
-            <div class="worker-report-selection">
-              <v-avatar size="24" rounded="lg">
-                <v-img :src="getImageUrl(item.raw.image)" cover />
-              </v-avatar>
-              <span>{{ item.raw.name }}</span>
-            </div>
-          </template>
-
         </v-autocomplete>
+
+        <v-select
+          v-model="selectedPaymentMethods"
+          :items="paymentMethodOptions"
+          item-title="title"
+          item-value="value"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-credit-card-outline"
+          placeholder="Método de pago"
+          multiple
+          chips
+          closable-chips
+          clearable
+          hide-details
+          class="incident-filter ticket-report-optional-filter ticket-report-payment-filter"
+          :menu-props="{ contentClass: 'incidents-select-menu' }"
+        >
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props">
+              <template #prepend>
+                <v-icon :icon="item.raw.icon || 'mdi-credit-card-outline'" />
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
 
           <v-btn
 
@@ -337,19 +345,15 @@
           </div>
         </template>
 
-        <template #[`item.date`]="{ item }">
-          <span class="worker-date-value"><v-icon size="15">mdi-calendar-outline</v-icon>{{ item.date || "-" }}</span>
-        </template>
-
-        <template #[`item.scheduled_departure`]="{ item }">
-          <span class="worker-date-value"><v-icon size="15">mdi-clock-outline</v-icon>{{ formatScheduledDeparture(item.scheduled_departure) }}</span>
+        <template #[`item.scheduledDeparture`]="{ item }">
+          <span class="worker-date-value"><v-icon size="15">mdi-calendar-clock-outline</v-icon>{{ formatScheduledDeparture(item.scheduledDeparture, item) }}</span>
         </template>
 
         <template #[`item.sale_mode_label`]="{ item }">
           <SaleModeChip :value="item" />
         </template>
 
-        <template #[`item.vehicleName`]="{ item }">
+        <template #[`item.plate`]="{ item }">
           <div class="worker-vehicle-cell">
             <div class="worker-table-avatar">
               <v-img
@@ -364,8 +368,7 @@
               <v-icon v-else size="17">mdi-bus</v-icon>
             </div>
             <div class="worker-vehicle-copy">
-              <strong>{{ item.plate || item.vehicleName || "Sin vehículo" }}</strong>
-              <span v-if="item.vehicleName && item.vehicleName !== item.plate">{{ item.vehicleName }}</span>
+              <strong>{{ item.plate || "Sin vehículo" }}</strong>
             </div>
           </div>
         </template>
@@ -375,7 +378,7 @@
         </template>
 
         <template #[`item.passenger`]="{ item }">
-          <span class="worker-count-badge worker-count-badge--tickets"><v-icon size="14">mdi-ticket-outline</v-icon>{{ item.passenger || 0 }}</span>
+          <span class="worker-count-badge worker-count-badge--tickets"><v-icon size="14">mdi-account-group-outline</v-icon>{{ item.passenger || 0 }}</span>
         </template>
 
         <template #[`item.totalAmount`]="{ item }">
@@ -447,44 +450,17 @@ export default {
 
         page: 1,
 
-        tableSortBy: [{ key: 'date', order: 'desc' }],
+        tableSortBy: [{ key: 'scheduledDeparture', order: 'desc' }],
 
         tableHeaders: [
-            { title: 'Código', key: 'code', align: 'start', width: 125 },
-            { title: 'Ruta', key: 'routeCode', align: 'start', width: 300 },
-            { title: 'Fecha', key: 'date', align: 'start', width: 115 },
-            { title: 'Hora programada', key: 'scheduled_departure', align: 'start', width: 125 },
-            { title: 'Modo venta', key: 'sale_mode_label', align: 'center', width: 105 },
-            { title: 'Vehículo', key: 'vehicleName', align: 'start', width: 185 },
-            { title: 'Pasajeros', key: 'asientosComprados', align: 'center', width: 100 },
-            { title: 'Pasajes emitidos', key: 'passenger', align: 'center', width: 125 },
-            { title: 'Total', key: 'totalAmount', align: 'end', width: 130 },
-        ],
-
-        headers: [
-
-            { title: 'Código', value: 'code', },
-
-            { title: 'Ruta', value: 'routeCode', },
-
-            { title: 'Fecha', value: 'date', },
-
-            { title: 'Hora Programada', value: 'scheduled_departure', },
-
-            { title: 'Modo venta', value: 'sale_mode_label', },
-
-            { title: 'Origen', value: 'origin', },
-
-            { title: 'Destino', value: 'destination', },
-
-            { title: 'Vehículo', value: 'vehicleName', },
-
-            { title: 'Asientos', value: 'asientosComprados', },
-
-            { title: 'Pasajes', value: 'passenger', },
-
-            { title: 'Monto generado', value: 'totalAmount', },
-
+            { title: 'Código viaje', key: 'code', sortable: true, align: 'start', width: 125 },
+            { title: 'Recorrido', key: 'routeCode', sortable: true, align: 'start', width: 300 },
+            { title: 'Salida viaje', key: 'scheduledDeparture', sortable: true, align: 'start', width: 155 },
+            { title: 'Tipo venta', key: 'sale_mode_label', sortable: true, align: 'center', width: 120 },
+            { title: 'Vehículo', key: 'plate', sortable: true, align: 'start', width: 150 },
+            { title: 'Asientos', key: 'asientosComprados', sortable: true, align: 'center', width: 100 },
+            { title: 'Pasajeros', key: 'passenger', sortable: true, align: 'center', width: 100 },
+            { title: 'Recaudación', key: 'totalAmount', sortable: true, align: 'end', width: 130 },
         ],
 
         search: '',
@@ -505,7 +481,13 @@ export default {
 
         totalGeneral: 0,
 
-        sortBy: 'date',
+        totalAsientosComprados: 0,
+
+        paymentMethods: [],
+
+        selectedPaymentMethods: [],
+
+        sortBy: 'scheduledDeparture',
 
         sortOrder: 'desc',
 
@@ -534,6 +516,23 @@ export default {
     }),
 
     computed: {
+
+      paymentMethodOptions() {
+        const methods = Array.isArray(this.paymentMethods) ? this.paymentMethods : [];
+        return methods
+          .map((method) => {
+            if (typeof method === "string") {
+              return { value: method, title: method, icon: "mdi-cash" };
+            }
+
+            return {
+              value: method?.value,
+              title: method?.label || method?.value,
+              icon: method?.icon || "mdi-cash",
+            };
+          })
+          .filter((method) => method.value);
+      },
 
       workerKpiCards() {
         return [
@@ -578,16 +577,13 @@ export default {
 
       totalPassengers() {
         return (Array.isArray(this.response) ? this.response : []).reduce(
-          (total, item) => total + Number(item.asientosComprados || 0),
+          (total, item) => total + Number(item.passenger || 0),
           0
         );
       },
 
       totalTickets() {
-        return (Array.isArray(this.response) ? this.response : []).reduce(
-          (total, item) => total + Number(item.passenger || 0),
-          0
-        );
+        return Number(this.totalAsientosComprados || 0);
       },
 
       sortedResponse() {
@@ -730,7 +726,7 @@ export default {
 
         this.sortBy = key;
 
-        this.sortOrder = key === 'date' ? 'desc' : 'asc';
+        this.sortOrder = key === 'scheduledDeparture' ? 'desc' : 'asc';
 
       },
 
@@ -746,7 +742,7 @@ export default {
 
       isDateSortKey(key) {
 
-        return ['date'].includes(key);
+        return ['scheduledDeparture'].includes(key);
 
       },
 
@@ -768,13 +764,9 @@ export default {
 
             return item?.routeCode ?? '';
 
-          case 'date':
+          case 'scheduledDeparture':
 
-            return item?.date ?? '';
-
-          case 'scheduled_departure':
-
-            return item?.scheduled_departure ?? '';
+            return item?.scheduledDeparture ?? '';
 
           case 'sale_mode_label':
 
@@ -788,9 +780,9 @@ export default {
 
             return item?.destination ?? '';
 
-          case 'vehicleName':
+          case 'plate':
 
-            return item?.vehicleName ?? '';
+            return item?.plate ?? '';
 
           case 'asientosComprados':
 
@@ -824,33 +816,32 @@ export default {
 
       },
 
-      formatScheduledDeparture(value) {
+      formatScheduledDeparture(value, trip = {}) {
 
         if (!value) {
 
-          return '--:--';
+          value = [trip.date, trip.schedule].filter(Boolean).join(' ');
 
         }
 
         const text = String(value).trim();
 
-        const timeMatch = text.match(/(?:T|\s)(\d{2}:\d{2})(?::\d{2})?/);
+        const dateMatch = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+        const timeMatch = text.match(/(?:T|\s)(\d{1,2}:\d{2})(?::\d{2})?/) || text.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
+
+        if (dateMatch) {
+          const [, year, month, day] = dateMatch;
+          const time = timeMatch ? timeMatch[1].padStart(5, '0') : '--:--';
+          return `${day}/${month}/${year} · ${time}`;
+
+        }
 
         if (timeMatch) {
-
-          return timeMatch[1];
-
-        }
-
-        const shortTimeMatch = text.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
-
-        if (shortTimeMatch) {
-
-          return shortTimeMatch[1].padStart(5, '0');
+          return timeMatch[1].padStart(5, '0');
 
         }
 
-        return text;
+        return text || '--:--';
 
       },
 
@@ -896,7 +887,9 @@ export default {
 
         buildReportRequestData() {
 
-            const selectedWorker = this.workers.find((worker) => worker.id === this.selectedWorker);
+            const selectedWorker = this.workers.find(
+              (worker) => Number(worker.id) === Number(this.selectedWorker)
+            );
 
             const formattedDate = this.date || formatLocalDate();
 
@@ -904,18 +897,21 @@ export default {
 
             const data = {
 
-                branch_id: this.branch_id,
+                branch_id: Number(this.branch_id),
 
-                user_id: selectedWorker?.user_id ?? this.user_id ?? this.worker_id,
+                worker_id: Number(this.selectedWorker || this.worker_id),
+
+                user_id: Number(selectedWorker?.user_id ?? this.user_id) || undefined,
 
                 date: formattedDate,
 
+                endDate: formattedEndDate,
+
             };
 
-            if (formattedEndDate !== formattedDate) {
-
-                data.endDate = formattedEndDate;
-
+            const paymentMethods = this.normalizeSelectedFilterValues(this.selectedPaymentMethods);
+            if (paymentMethods.length) {
+                data.method = paymentMethods;
             }
 
             return data;
@@ -1016,19 +1012,31 @@ export default {
 
                 if (result.success) {
 
-                    // Si la solicitud es exitosa, asignamos las sucursales
+                    const trips = Array.isArray(result.data?.trips) ? result.data.trips : [];
 
-                    this.response = (result.data?.trips || []).map((trip) => ({
+                    this.response = trips.map((trip) => ({
 
                         ...trip,
 
-                        vehicleName: trip.vehicleName || trip.plate || '',
+                        scheduledDeparture: trip.scheduledDeparture
+                          || trip.scheduled_departure
+                          || [trip.date, trip.schedule].filter(Boolean).join(' '),
 
                         sale_mode_label: this.getSaleModeLabel(trip),
 
                     }));
 
                     this.totalGeneral = Number(result.data?.totalGeneral || 0);
+                    this.totalAsientosComprados = Number(
+                      result.data?.totalAsientosComprados
+                      ?? this.response.reduce(
+                        (total, trip) => total + Number(trip.asientosComprados || 0),
+                        0
+                      )
+                    );
+                    this.paymentMethods = result.data?.payment_methods
+                      || result.data?.paymentMethods
+                      || [];
 
                 } else {
 
@@ -1037,6 +1045,7 @@ export default {
                     this.response = [];
 
                     this.totalGeneral = 0;
+                    this.totalAsientosComprados = 0;
 
                 }
 
@@ -1112,93 +1121,58 @@ export default {
 
         },
 
+        normalizeSelectedFilterValues(value) {
+            const values = Array.isArray(value) ? value : [value];
+            return values.filter((item) => item !== null && item !== undefined && item !== "");
+        },
+
+        getExportValue(item, key) {
+            switch (key) {
+              case "routeCode":
+                return [
+                  item.routeCode,
+                  item.origin && item.destination
+                    ? `${item.origin} → ${item.destination}`
+                    : item.origin || item.destination,
+                ].filter(Boolean).join(" · ");
+              case "scheduledDeparture":
+                return this.formatScheduledDeparture(item.scheduledDeparture, item);
+              case "sale_mode_label":
+                return this.getSaleModeLabel(item);
+              case "plate":
+                return item.plate || "";
+              case "asientosComprados":
+                return Number(item.asientosComprados || 0);
+              case "passenger":
+                return Number(item.passenger || 0);
+              case "totalAmount":
+                return Number(item.totalAmount || 0);
+              default:
+                return item[key] ?? "";
+            }
+        },
+
         exportToExcel() {
+            const columns = this.tableHeaders;
+            const rows = [
+              columns.map((column) => column.title),
+              ...this.response.map((item) => columns.map((column) => (
+                this.getExportValue(item, column.key)
+              ))),
+            ];
 
-            // Primero, prepara una matriz que contendrá todas las filas de datos, incluidos los encabezados
+            const totalRow = new Array(columns.length).fill("");
+            totalRow[0] = "Total general";
+            totalRow[totalRow.length - 1] = Number(this.totalGeneral || 0);
+            rows.push(totalRow);
 
-            let rows = [];
-
-            // Construye un objeto para los encabezados basado en la estructura de 'headers'
-
-            let headerRow = {};
-
-            this.headers.forEach(header => {
-
-                headerRow[header.value] = header.title; // Usa 'key' para el mapeo y 'title' para el texto del encabezado
-
-            });
-
-            rows.push(headerRow);
-
-            // Ahora, mapea los datos de los items para que coincidan con los encabezados
-
-            this.response.forEach(item => {
-
-                let rowData = {};
-
-                this.headers.forEach(header => {
-
-                    rowData[header.value] = item[header.value] || ''; // Asegura que cada celda se mapee correctamente; usa '' para datos faltantes
-
-                });
-
-                rows.push(rowData);
-
-            });
-
-            let nameReport = {
-
-                // eslint-disable-next-line vue/no-use-computed-property-like-method
-
-                name: 'Recaudación por Trabajador', // Título coherente con el reporte
-
-                date: '',
-
-                scheduled_departure: '',
-
-                sale_mode_label: '',
-
-                origin: '',
-
-                destination: '',
-
-                plate: '',
-
-                asientosComprados: '',
-
-                passenger: '',
-
-                totalAmount: '',
-
-            };
-
-            rows.push(nameReport);
-
-            rows.push({
-
-                name: 'Total general',
-
-                totalAmount: `$${this.formatNumber(Number(this.totalGeneral || 0))}`,
-
-            });
-
-            // Convierte la matriz de filas en una hoja de trabajo Excel
-
-            const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: true }); // 'skipHeader: true' porque ya agregamos manualmente los encabezados
-
-            // Crea un nuevo libro de trabajo y añade la hoja de trabajo con los datos
-
+            const ws = XLSX.utils.aoa_to_sheet(rows);
             const wb = XLSX.utils.book_new();
 
-            XLSX.utils.book_append_sheet(wb, ws, "Report" + this.date);
-
-            // Escribe el libro de trabajo a un archivo y desencadena la descarga
-
-            //XLSX.writeFile(wb, "report.xlsx");
-
-            XLSX.writeFile(wb, `report_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
-
+            XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+            XLSX.writeFile(wb, `report_${new Date().toLocaleDateString().replace(/\//g, "-")}.xlsx`);
         },
+
 
     },
 
@@ -1982,22 +1956,6 @@ export default {
   min-width: 230px !important;
 }
 
-.worker-report-selection {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 7px;
-}
-
-.worker-report-selection span {
-  overflow: hidden;
-  color: #1e293b;
-  font-size: 12px;
-  font-weight: 750;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .worker-report-query-button {
   min-width: 112px !important;
   min-height: 40px !important;
@@ -2540,6 +2498,132 @@ export default {
 .worker-report-page .worker-report-query-button {
   min-height: 40px !important;
   border-radius: 9px !important;
+}
+
+.worker-report-page .worker-report-branch-filter {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.worker-report-page .worker-report-branch-filter .v-field__input {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.worker-report-page .worker-report-branch-filter .v-field__field,
+.worker-report-page .worker-report-branch-filter .v-autocomplete__selection {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.worker-report-page .ticket-report-optional-filter .v-chip {
+  min-height: 25px !important;
+  padding-inline: 8px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+.worker-report-page .ticket-report-optional-filter .v-chip__close {
+  color: #64748b !important;
+  font-size: 14px !important;
+}
+
+/* El menú del v-select se teletransporta a body; estas reglas deben ser globales
+   para conservar exactamente el lenguaje visual del Reporte de Ventas. */
+.incidents-select-menu {
+  overflow: hidden !important;
+  padding: 6px !important;
+  background: #fff !important;
+  border: 1px solid #dfe6ef !important;
+  border-radius: 11px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+}
+
+.incidents-select-menu .v-list {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.incidents-select-menu .v-list-item {
+  min-height: 48px !important;
+  margin: 2px 0 !important;
+  padding: 7px 10px !important;
+  color: #1e293b !important;
+  border-radius: 8px !important;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.incidents-select-menu .v-list-item:hover {
+  color: #2454d6 !important;
+  background: #f4f7ff !important;
+}
+
+.incidents-select-menu .v-list-item--active {
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+}
+
+.incidents-select-menu .v-list-item-title {
+  color: inherit !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+.incidents-select-menu .v-list-item-subtitle {
+  margin-top: 3px !important;
+  color: #64748b !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+.incidents-select-menu .v-list-item__prepend > .v-icon {
+  width: 32px !important;
+  height: 32px !important;
+  margin-inline-end: 10px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+  font-size: 17px !important;
+}
+
+.incidents-select-menu .v-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  margin-inline-end: 10px !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+}
+
+.incidents-select-menu .v-list-item__append .v-icon,
+.incidents-select-menu .v-selection-control__input {
+  color: #2454d6 !important;
+}
+
+.incidents-select-menu .v-list-item--active::before {
+  opacity: 0 !important;
+}
+
+.incidents-select-menu .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
+.incidents-select-menu .v-list-item--disabled {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
 }
 
 .worker-report-page .worker-table-panel {

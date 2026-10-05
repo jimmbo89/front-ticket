@@ -94,8 +94,43 @@
         loading-text="Cargando datos..."
 
         class="busgo-table template-list-table"
+        :hide-default-header="true"
       >
-<template #headers><tr><th colspan="100" class="template-header-cell"><div class="template-readable-head"><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">Ruta<v-icon size="14">{{ templateSortIcon('routeCode') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('vehicleName')">Vehículo<v-icon size="14">{{ templateSortIcon('vehicleName') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('workers')">Miembros<v-icon size="12">{{ templateSortIcon('workers') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('schedule')">Horario<v-icon size="14">{{ templateSortIcon('schedule') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('duration')">Duración<v-icon size="12">{{ templateSortIcon('duration') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('recurrence_pattern')">Programación<v-icon size="14">{{ templateSortIcon('recurrence_pattern') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('days_of_week')">Días<v-icon size="12">{{ templateSortIcon('days_of_week') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('saleMode')">Modalidad<v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('active')">Estado<v-icon size="12">{{ templateSortIcon('active') }}</v-icon></button></div><div>Acciones</div></div></th></tr></template>
+        <template #top>
+          <div class="template-readable-head">
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">
+                    Ruta
+                    <v-icon size="14">{{ templateSortIcon('routeCode') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('vehicleName')">
+                    Vehículo
+                    <v-icon size="14">{{ templateSortIcon('vehicleName') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('schedule')">
+                    Horario
+                    <v-icon size="14">{{ templateSortIcon('schedule') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('recurrence_pattern')">
+                    Programación
+                    <v-icon size="14">{{ templateSortIcon('recurrence_pattern') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('saleMode')">
+                    Modalidad
+                    <v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon>
+                  </button>
+                </div>
+                <div>Acciones</div>
+          </div>
+        </template>
         <template #item="{ item }">
           <tr><td colspan="100" class="pa-0 border-0">
             <div class="template-readable-row">
@@ -1418,6 +1453,7 @@ import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
+  getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
@@ -1802,11 +1838,16 @@ export default {
       return normalizeSharedSaleMode(template);
     },
     normalizeSaleModeOption(mode = {}) {
-      const id = mode.id || mode.value || "normal";
+      const id = normalizeSharedSaleMode(mode.id || mode.value || "normal");
       return {
         ...mode,
         id,
-        name: String(id).toLowerCase() === "normal" ? "Venta Full" : mode.name,
+        name:
+          id === "on_board"
+            ? getSharedSaleModeLabel(id)
+            : String(id).toLowerCase() === "normal"
+              ? "Venta Full"
+              : mode.name,
       };
     },
     normalizeSaleModeOptions(modes = []) {
@@ -3404,8 +3445,12 @@ export default {
 .trip-template-dialog :deep(.v-label),.template-small-dialog :deep(.v-label) { color:#475569; opacity:1; font-size:13px; }
 .trip-template-dialog :deep(.v-field__outline),.trip-template-toolbar :deep(.v-field__outline) { color:#c5cfdd; }
 .template-list-table :deep(.v-table__wrapper > table) { min-width:1390px; }
-.template-list-table :deep(thead),.trip-template-table :deep(thead) { display:table-header-group!important; }
+.template-list-table :deep(thead) { display:none!important; }
+.trip-template-table :deep(thead) { display:table-header-group!important; }
 .template-header-cell { height:auto!important; padding:0!important; border:0!important; }
+.template-list-table .v-data-table__top {
+  padding:0!important;
+}
 .busgo-table-head,.trip-template-row { display:grid!important; grid-template-columns:2.3fr 1fr 1fr .85fr .7fr .9fr 1fr .65fr .65fr 80px; align-items:center; gap:12px; min-width:1390px; padding:12px 17px!important; margin:0!important; border-radius:0!important; }
 .busgo-table-head > div,.trip-template-row > div { width:auto!important; min-width:0; }
 .busgo-table-head { min-height:42px; background:#f3f6fa; border-bottom:1px solid #e4eaf2; color:#334155; font-size:11px; font-weight:800; }
@@ -3490,6 +3535,10 @@ export default {
 .template-list-table :deep(.v-table__wrapper > table) { min-width:1100px; }
 .template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.7fr) minmax(115px,1fr) minmax(160px,1.25fr) minmax(90px,.75fr) minmax(176px,1.35fr) 80px 76px; gap:14px; padding:14px 18px; min-width:1100px; }
 .template-readable-head { background:#f3f6fa; color:#334155; font-size:11px; font-weight:750; border-bottom:1px solid #e4eaf2; align-items:center; }
+.template-list-table .template-readable-head {
+  box-sizing:border-box;
+  width:100%;
+}
 .template-heading-group { display:flex; flex-direction:column; gap:5px; }
 .template-sort-button { display:flex; align-items:center; gap:5px; text-align:left; font:inherit; color:inherit; cursor:pointer; width:fit-content; }
 .template-sort-button:hover { color:#2454d6; }

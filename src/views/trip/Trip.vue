@@ -145,10 +145,10 @@
         :loading="loading"
         loading-text="Cargando datos..."
         class="busgo-table trips-main-table"
+        :hide-default-header="true"
       >
-        <template #headers>
-<tr><th colspan="100" class="trip-header-shell">
-          <div class="busgo-table-head">
+        <template #top>
+          <div class="trip-main-table-head">
             <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
               <span>Código</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('code') }}</v-icon>
@@ -157,15 +157,9 @@
               <span>Ruta</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('routeCode') }}</v-icon>
             </div>
-            <div class="trip-col-vehicle trip-heading-group">
-              <button type="button" class="trip-sort-button" @click="toggleTripSort('vehicleName')">
-                <span>Vehículo</span>
-                <v-icon size="14">{{ tripSortIcon('vehicleName') }}</v-icon>
-              </button>
-              <button type="button" class="trip-sort-button trip-sort-button--secondary" @click="toggleTripSort('workers')">
-                <span>Miembros</span>
-                <v-icon size="12">{{ tripSortIcon('workers') }}</v-icon>
-              </button>
+            <div class="trip-col-vehicle trip-sortable" @click="toggleTripSort('vehicleName')">
+              <span>Vehículo</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('vehicleName') }}</v-icon>
             </div>
             <div class="trip-col-date trip-sortable" @click="toggleTripSort('date')">
               <span>Fecha</span>
@@ -188,15 +182,13 @@
               <span>Salida</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('start') }}</v-icon>
             </div>
-            <div class="trip-col-end trip-sortable" @click="toggleTripSort('end')">
-              <span>Llegada</span>
-              <v-icon size="16" class="ml-1">{{ tripSortIcon('end') }}</v-icon>
+            <div class="trip-col-end trip-sortable" @click="toggleTripSort('arrival')">
+              <span>Llegada estimada</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('arrival') }}</v-icon>
             </div>
             <div class="trip-col-actions">Acciones</div>
           </div>
-
-</th></tr>
-</template>
+        </template>
 
         <template #item="slotProps">
           <tr>
@@ -239,27 +231,12 @@
                   </v-tooltip>
                 </div>
 
-                <div class="trip-col-vehicle trip-vehicle-members-cell">
+                <div class="trip-col-vehicle trip-vehicle-cell">
                   <strong class="trip-cell-title">{{ slotProps.item.vehicleName || 'Sin vehículo' }}</strong>
                   <BusgoChip size="x-small" color="#2454d6" class="mt-2">
                     Interno {{ vehicleInternalNumber(slotProps.item) }}
                   </BusgoChip>
 
-                  <v-btn
-                    v-if="slotProps.item.workers?.length"
-                    class="trip-members-button"
-                    variant="text"
-                    size="small"
-                    color="#2454d6"
-                    :aria-expanded="expandedTripWorkersId === slotProps.item.id"
-                    :aria-controls="`trip-workers-${slotProps.item.id}`"
-                    :append-icon="expandedTripWorkersId === slotProps.item.id ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                    @click="expandedTripWorkersId = expandedTripWorkersId === slotProps.item.id ? null : slotProps.item.id"
-                  >
-                    {{ expandedTripWorkersId === slotProps.item.id ? 'Ocultar miembros' : 'Ver miembros' }}
-                    ({{ slotProps.item.workers.length }})
-                  </v-btn>
-                  <span v-else class="trip-muted">Sin miembros</span>
                 </div>
 
                 <div class="trip-col-date busgo-meta">
@@ -302,16 +279,16 @@
                 <div class="trip-col-end busgo-meta trip-datetime-cell">
                   <div class="trip-datetime-value">
                     <span >
-                      {{ formatTripDate(slotProps.item.end) }}
+                      {{ formatTripDate(getTripArrivalValue(slotProps.item)) }}
                     </span>
                     <span class="trip-datetime-time">
-                      {{ formatTripTime(slotProps.item.end) }}
+                      {{ formatTripTime(getTripArrivalValue(slotProps.item)) }}
                     </span>
                   </div>
 
                   <v-tooltip activator="parent" location="bottom" max-width="350px">
                     <span style="white-space: normal; word-break: break-word">
-                      {{ formatTripDateTimeTooltip("Llegada", slotProps.item.end) }}
+                      {{ formatTripDateTimeTooltip("Llegada estimada", getTripArrivalValue(slotProps.item)) }}
                     </span>
                   </v-tooltip>
                 </div>
@@ -344,60 +321,6 @@
                   </v-tooltip>
                 </div>
               </div>
-            </td>
-          </tr>
-          <tr
-            v-if="expandedTripWorkersId === slotProps.item.id && slotProps.item.workers?.length"
-            class="trip-members-expanded-row"
-          >
-            <td colspan="100" class="trip-members-expanded-cell">
-              <section
-                :id="`trip-workers-${slotProps.item.id}`"
-                class="trip-members-panel"
-                :aria-label="`Miembros del viaje ${slotProps.item.routeCode || slotProps.item.id}`"
-              >
-                <div class="trip-members-panel-heading">
-                  <div>
-                    <strong>Miembros asignados</strong>
-                    <span>
-                      {{ slotProps.item.routeCode || 'Viaje' }} ·
-                      {{ slotProps.item.workers.length }} miembro(s)
-                    </span>
-                  </div>
-                  <v-btn
-                    icon="mdi-close"
-                    variant="text"
-                    size="small"
-                    aria-label="Ocultar miembros"
-                    @click="expandedTripWorkersId = null"
-                  />
-                </div>
-
-                <div class="trip-worker-list">
-                  <div
-                    v-for="person in slotProps.item.workers || []"
-                    :key="person.id"
-                    class="trip-worker-person"
-                  >
-                    <v-avatar size="26" color="#eef3ff">
-                      <v-img
-                        v-if="person.workerImage || person.image"
-                        :src="getImageUrl(person.workerImage || person.image)"
-                        :alt="person.workerName || person.name || 'Trabajador'"
-                      >
-                        <template #error>
-                          <v-icon size="16" color="#2454d6">mdi-account-outline</v-icon>
-                        </template>
-                      </v-img>
-                      <v-icon v-else size="16" color="#2454d6">mdi-account-outline</v-icon>
-                    </v-avatar>
-                    <div>
-                      <strong>{{ person.workerName || person.name || 'Sin nombre' }}</strong>
-                      <small v-if="person.roleName">{{ person.roleName }}</small>
-                    </div>
-                  </div>
-                </div>
-              </section>
             </td>
           </tr>
         </template>
@@ -1551,6 +1474,7 @@ import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
   getSaleModeLabel as getSharedSaleModeLabel,
+  normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
   components: { BusgoChip, SaleModeChip },
@@ -1574,7 +1498,6 @@ export default {
     trips: [],
     tripSortBy: "date",
     tripSortOrder: "desc",
-    expandedTripWorkersId: null,
     routes: [],
     vehicles: [],
     workers: [],
@@ -1606,7 +1529,7 @@ export default {
       { title: "Hora Programada", value: "schedule" },
       { title: "Modo", value: "saleMode" },
       { title: "Salida", value: "start" },
-      { title: "Llegada", value: "end" },
+      { title: "Llegada estimada", value: "arrival" },
       { title: "Acciones", value: "actions", sortable: false, width: "10%" },
     ],
 
@@ -1851,12 +1774,6 @@ export default {
         return "";
       }
 
-      if (field === "workers") {
-        return (trip.workers || [])
-          .map((worker) => worker?.workerName || worker?.name || "")
-          .join(" ");
-      }
-
       if (field === "vehicleName") {
         return trip.vehicleName || trip.plate || "";
       }
@@ -1865,20 +1782,29 @@ export default {
         return this.normalizeTripSaleMode(trip);
       }
 
+      if (field === "arrival") {
+        return trip.arrival || trip.end || "";
+      }
+
       return trip[field] ?? "";
     },
     getDefaultSaleMode() {
       return this.saleModes[0]?.id || "normal";
     },
     normalizeTripSaleMode(trip = {}) {
-      return trip.saleMode || trip.sale_mode || this.getDefaultSaleMode();
+      return normalizeSharedSaleMode(trip);
     },
     normalizeSaleModeOption(mode = {}) {
-      const id = mode.id || mode.value || "normal";
+      const id = normalizeSharedSaleMode(mode.id || mode.value || "normal");
       return {
         ...mode,
         id,
-        name: String(id).toLowerCase() === "normal" ? "Venta Full" : mode.name,
+        name:
+          id === "on_board"
+            ? getSharedSaleModeLabel(id)
+            : String(id).toLowerCase() === "normal"
+              ? "Venta Full"
+              : mode.name,
       };
     },
     normalizeSaleModeOptions(modes = []) {
@@ -2792,8 +2718,9 @@ export default {
     async editItem(item) {
       this.editedIndex = 1;
       this.step = 1;
-      this.originalItem = _.cloneDeep(item);
-      this.editedItem = _.cloneDeep(item);
+      const trip = item?.raw || item;
+      this.originalItem = _.cloneDeep(trip);
+      this.editedItem = _.cloneDeep(trip);
       this.originalItem.saleMode = this.normalizeTripSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTripSaleMode(this.editedItem);
       this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)
@@ -2809,6 +2736,9 @@ export default {
 
       const matchedRoute = this.selectedRouteRecord;
       this.estimated = matchedRoute ? matchedRoute.estimated : null;
+      if (!this.editedItem.arrival) {
+        this.updateArrival();
+      }
       this.syncTripStopsFromRoute(false);
       this.syncTripFareRows(false);
       this.filterWorkers();
@@ -2909,6 +2839,9 @@ export default {
       }
 
       return `${label}: ${date} ${time}`;
+    },
+    getTripArrivalValue(trip) {
+      return trip?.arrival || trip?.end || null;
     },
     showAlert(sb_type, sb_message, sb_timeout) {
       this.sb_type = sb_type;
@@ -3346,7 +3279,7 @@ export default {
   min-width: 0;
 }
 
-.trip-vehicle-members-cell {
+.trip-vehicle-cell {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
@@ -3556,7 +3489,6 @@ export default {
   .trip-col-code,
   .trip-col-route,
   .trip-col-vehicle,
-  .trip-col-workers,
   .trip-col-date,
   .trip-col-schedule,
   .trip-col-sale-mode,
@@ -3995,7 +3927,7 @@ body { color:#1e293b; }
 
 @media(max-width:959px) { .busgo-page-header { padding-inline:17px; }.busgo-container { padding:15px 17px 24px!important; }.trip-toolbar { align-items:stretch; }.trip-search { width:100%; }.trip-dialog-header { grid-template-columns:minmax(0,1fr) 42px; }.trip-dialog-progress { display:none; }.trip-step-pane { padding:14px 15px 10px; }.trip-stepper .v-stepper-header { overflow-x:auto; justify-content:flex-start; }.trip-stepper .v-stepper-item { flex:0 0 auto; }.trip-route-menu { min-width:calc(100vw - 24px)!important; } }
 /* Una sola cabecera real en el Nivel 1: se conserva la cabecera visual alineada con las filas personalizadas. */
-.trips-main-table thead { display:table-header-group!important; }
+.trips-main-table thead { display:none!important; }
 .busgo-table-head { display:flex!important; visibility:visible!important; }
 
 /* Primer paso: formulario operativo, no formulario genérico. */
@@ -4018,7 +3950,36 @@ body { color:#1e293b; }
 .trips-main-table .v-table__wrapper > table { min-width:1120px; }
 .trip-step-table .v-table__wrapper > table { min-width:900px; }
 .trip-header-shell .trip-table-manual-head { border-radius:0!important; border-inline:0!important; }
-.trip-header-shell .busgo-table-head { white-space:normal; }
+.trips-main-table .v-data-table__top {
+  padding:0!important;
+}
+.trips-main-table .trip-main-table-head {
+  display:flex!important;
+  align-items:center;
+  box-sizing:border-box;
+  width:100%;
+  min-width:1120px;
+  height:40px;
+  margin:0;
+  padding:0 17px;
+  color:#334155;
+  background:#f8fafc;
+  border-top:1px solid #e8edf5;
+  border-bottom:1px solid #e8edf5;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:normal;
+  visibility:visible!important;
+}
+.trips-main-table .trip-main-table-head > * {
+  min-width:0;
+  overflow:hidden;
+}
+.trips-main-table .trip-main-table-head .v-icon {
+  flex-shrink:0;
+}
 .busgo-row { flex-direction:row!important; align-items:center!important; gap:0!important; }
 .action-button { border-radius:8px!important; }
 .action-button--edit { color:#2454d6!important; }
