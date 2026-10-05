@@ -145,9 +145,9 @@
         :loading="loading"
         loading-text="Cargando datos..."
         class="busgo-table trips-main-table"
+        :hide-default-header="true"
       >
-        <template #headers>
-<tr><th colspan="100" class="trip-header-shell">
+        <template #top>
           <div class="trip-main-table-head">
             <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
               <span>Código</span>
@@ -188,9 +188,7 @@
             </div>
             <div class="trip-col-actions">Acciones</div>
           </div>
-
-</th></tr>
-</template>
+        </template>
 
         <template #item="slotProps">
           <tr>
@@ -233,27 +231,12 @@
                   </v-tooltip>
                 </div>
 
-                <div class="trip-col-vehicle trip-vehicle-members-cell">
+                <div class="trip-col-vehicle trip-vehicle-cell">
                   <strong class="trip-cell-title">{{ slotProps.item.vehicleName || 'Sin vehículo' }}</strong>
                   <BusgoChip size="x-small" color="#2454d6" class="mt-2">
                     Interno {{ vehicleInternalNumber(slotProps.item) }}
                   </BusgoChip>
 
-                  <v-btn
-                    v-if="slotProps.item.workers?.length"
-                    class="trip-members-button"
-                    variant="text"
-                    size="small"
-                    color="#2454d6"
-                    :aria-expanded="expandedTripWorkersId === slotProps.item.id"
-                    :aria-controls="`trip-workers-${slotProps.item.id}`"
-                    :append-icon="expandedTripWorkersId === slotProps.item.id ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                    @click="expandedTripWorkersId = expandedTripWorkersId === slotProps.item.id ? null : slotProps.item.id"
-                  >
-                    {{ expandedTripWorkersId === slotProps.item.id ? 'Ocultar miembros' : 'Ver miembros' }}
-                    ({{ slotProps.item.workers.length }})
-                  </v-btn>
-                  <span v-else class="trip-muted">Sin miembros</span>
                 </div>
 
                 <div class="trip-col-date busgo-meta">
@@ -338,60 +321,6 @@
                   </v-tooltip>
                 </div>
               </div>
-            </td>
-          </tr>
-          <tr
-            v-if="expandedTripWorkersId === slotProps.item.id && slotProps.item.workers?.length"
-            class="trip-members-expanded-row"
-          >
-            <td colspan="100" class="trip-members-expanded-cell">
-              <section
-                :id="`trip-workers-${slotProps.item.id}`"
-                class="trip-members-panel"
-                :aria-label="`Miembros del viaje ${slotProps.item.routeCode || slotProps.item.id}`"
-              >
-                <div class="trip-members-panel-heading">
-                  <div>
-                    <strong>Miembros asignados</strong>
-                    <span>
-                      {{ slotProps.item.routeCode || 'Viaje' }} ·
-                      {{ slotProps.item.workers.length }} miembro(s)
-                    </span>
-                  </div>
-                  <v-btn
-                    icon="mdi-close"
-                    variant="text"
-                    size="small"
-                    aria-label="Ocultar miembros"
-                    @click="expandedTripWorkersId = null"
-                  />
-                </div>
-
-                <div class="trip-worker-list">
-                  <div
-                    v-for="person in slotProps.item.workers || []"
-                    :key="person.id"
-                    class="trip-worker-person"
-                  >
-                    <v-avatar size="26" color="#eef3ff">
-                      <v-img
-                        v-if="person.workerImage || person.image"
-                        :src="getImageUrl(person.workerImage || person.image)"
-                        :alt="person.workerName || person.name || 'Trabajador'"
-                      >
-                        <template #error>
-                          <v-icon size="16" color="#2454d6">mdi-account-outline</v-icon>
-                        </template>
-                      </v-img>
-                      <v-icon v-else size="16" color="#2454d6">mdi-account-outline</v-icon>
-                    </v-avatar>
-                    <div>
-                      <strong>{{ person.workerName || person.name || 'Sin nombre' }}</strong>
-                      <small v-if="person.roleName">{{ person.roleName }}</small>
-                    </div>
-                  </div>
-                </div>
-              </section>
             </td>
           </tr>
         </template>
@@ -1569,7 +1498,6 @@ export default {
     trips: [],
     tripSortBy: "date",
     tripSortOrder: "desc",
-    expandedTripWorkersId: null,
     routes: [],
     vehicles: [],
     workers: [],
@@ -1844,12 +1772,6 @@ export default {
     getTripSortValue(trip, field) {
       if (!trip) {
         return "";
-      }
-
-      if (field === "workers") {
-        return (trip.workers || [])
-          .map((worker) => worker?.workerName || worker?.name || "")
-          .join(" ");
       }
 
       if (field === "vehicleName") {
@@ -3357,7 +3279,7 @@ export default {
   min-width: 0;
 }
 
-.trip-vehicle-members-cell {
+.trip-vehicle-cell {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
@@ -4005,7 +3927,7 @@ body { color:#1e293b; }
 
 @media(max-width:959px) { .busgo-page-header { padding-inline:17px; }.busgo-container { padding:15px 17px 24px!important; }.trip-toolbar { align-items:stretch; }.trip-search { width:100%; }.trip-dialog-header { grid-template-columns:minmax(0,1fr) 42px; }.trip-dialog-progress { display:none; }.trip-step-pane { padding:14px 15px 10px; }.trip-stepper .v-stepper-header { overflow-x:auto; justify-content:flex-start; }.trip-stepper .v-stepper-item { flex:0 0 auto; }.trip-route-menu { min-width:calc(100vw - 24px)!important; } }
 /* Una sola cabecera real en el Nivel 1: se conserva la cabecera visual alineada con las filas personalizadas. */
-.trips-main-table thead { display:table-header-group!important; }
+.trips-main-table thead { display:none!important; }
 .busgo-table-head { display:flex!important; visibility:visible!important; }
 
 /* Primer paso: formulario operativo, no formulario genérico. */
@@ -4028,9 +3950,14 @@ body { color:#1e293b; }
 .trips-main-table .v-table__wrapper > table { min-width:1120px; }
 .trip-step-table .v-table__wrapper > table { min-width:900px; }
 .trip-header-shell .trip-table-manual-head { border-radius:0!important; border-inline:0!important; }
+.trips-main-table .v-data-table__top {
+  padding:0!important;
+}
 .trips-main-table .trip-main-table-head {
   display:flex!important;
   align-items:center;
+  box-sizing:border-box;
+  width:100%;
   min-width:1120px;
   height:40px;
   margin:0;

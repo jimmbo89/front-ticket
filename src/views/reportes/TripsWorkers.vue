@@ -134,7 +134,7 @@
 
           single-line
 
-          class="worker-collection-filter"
+          class="worker-collection-filter worker-report-branch-filter"
 
           :menu-props="{ contentClass: 'worker-report-select-menu' }"
 
@@ -154,15 +154,6 @@
               <v-list-item-subtitle>Sucursal operativa</v-list-item-subtitle>
             </v-list-item>
 
-          </template>
-
-          <template #selection="{ item }">
-            <div class="worker-report-selection">
-              <v-avatar size="24" rounded="lg">
-                <v-img :src="getImageUrl(item.raw.image)" cover />
-              </v-avatar>
-              <span>{{ item.raw.name }}</span>
-            </div>
           </template>
 
         </v-autocomplete>
@@ -220,46 +211,31 @@
 
           </template>
 
-          <template #selection="{ item }">
-            <div class="worker-report-selection">
-              <v-avatar size="24" rounded="lg">
-                <v-img :src="getImageUrl(item.raw.image)" cover />
-              </v-avatar>
-              <span>{{ item.raw.name }}</span>
-            </div>
-          </template>
-
         </v-autocomplete>
 
         <v-select
-          v-model="selectedPaymentMethod"
+          v-model="selectedPaymentMethods"
           :items="paymentMethodOptions"
-          item-title="label"
+          item-title="title"
           item-value="value"
-          label="Método de pago"
           density="compact"
           variant="outlined"
-          prepend-inner-icon="mdi-cash-register"
+          prepend-inner-icon="mdi-credit-card-outline"
+          placeholder="Método de pago"
+          multiple
+          chips
+          closable-chips
+          clearable
           hide-details
-          single-line
-          class="worker-collection-filter"
-          :menu-props="{ contentClass: 'worker-report-select-menu' }"
-          @update:model-value="initialize"
+          class="incident-filter ticket-report-optional-filter ticket-report-payment-filter"
+          :menu-props="{ contentClass: 'incidents-select-menu' }"
         >
           <template #item="{ props, item }">
-            <v-list-item v-bind="props" :title="undefined" :subtitle="undefined" class="worker-report-select-item">
+            <v-list-item v-bind="props">
               <template #prepend>
-                <v-icon size="19">{{ item.raw.icon }}</v-icon>
+                <v-icon :icon="item.raw.icon || 'mdi-credit-card-outline'" />
               </template>
-              <v-list-item-title>{{ item.raw.label }}</v-list-item-title>
             </v-list-item>
-          </template>
-
-          <template #selection="{ item }">
-            <div class="worker-report-selection">
-              <v-icon size="18">{{ item.raw.icon }}</v-icon>
-              <span>{{ item.raw.label }}</span>
-            </div>
           </template>
         </v-select>
 
@@ -509,7 +485,7 @@ export default {
 
         paymentMethods: [],
 
-        selectedPaymentMethod: 'all',
+        selectedPaymentMethods: [],
 
         sortBy: 'scheduledDeparture',
 
@@ -543,24 +519,19 @@ export default {
 
       paymentMethodOptions() {
         const methods = Array.isArray(this.paymentMethods) ? this.paymentMethods : [];
-        const normalizedMethods = methods
+        return methods
           .map((method) => {
-            if (typeof method === 'string') {
-              return { value: method, label: method, icon: 'mdi-cash' };
+            if (typeof method === "string") {
+              return { value: method, title: method, icon: "mdi-cash" };
             }
 
             return {
               value: method?.value,
-              label: method?.label || method?.value,
-              icon: method?.icon || 'mdi-cash',
+              title: method?.label || method?.value,
+              icon: method?.icon || "mdi-cash",
             };
           })
           .filter((method) => method.value);
-
-        return [
-          { value: 'all', label: 'Todos', icon: 'mdi-format-list-bulleted' },
-          ...normalizedMethods.filter((method) => method.value !== 'all'),
-        ];
       },
 
       workerKpiCards() {
@@ -862,10 +833,12 @@ export default {
           const [, year, month, day] = dateMatch;
           const time = timeMatch ? timeMatch[1].padStart(5, '0') : '--:--';
           return `${day}/${month}/${year} · ${time}`;
+
         }
 
         if (timeMatch) {
           return timeMatch[1].padStart(5, '0');
+
         }
 
         return text || '--:--';
@@ -934,9 +907,12 @@ export default {
 
                 endDate: formattedEndDate,
 
-                method: this.selectedPaymentMethod === 'all' ? null : this.selectedPaymentMethod,
-
             };
+
+            const paymentMethods = this.normalizeSelectedFilterValues(this.selectedPaymentMethods);
+            if (paymentMethods.length) {
+                data.method = paymentMethods;
+            }
 
             return data;
 
@@ -1145,29 +1121,34 @@ export default {
 
         },
 
+        normalizeSelectedFilterValues(value) {
+            const values = Array.isArray(value) ? value : [value];
+            return values.filter((item) => item !== null && item !== undefined && item !== "");
+        },
+
         getExportValue(item, key) {
             switch (key) {
-              case 'routeCode':
+              case "routeCode":
                 return [
                   item.routeCode,
                   item.origin && item.destination
                     ? `${item.origin} → ${item.destination}`
                     : item.origin || item.destination,
-                ].filter(Boolean).join(' · ');
-              case 'scheduledDeparture':
+                ].filter(Boolean).join(" · ");
+              case "scheduledDeparture":
                 return this.formatScheduledDeparture(item.scheduledDeparture, item);
-              case 'sale_mode_label':
+              case "sale_mode_label":
                 return this.getSaleModeLabel(item);
-              case 'plate':
-                return item.plate || '';
-              case 'asientosComprados':
+              case "plate":
+                return item.plate || "";
+              case "asientosComprados":
                 return Number(item.asientosComprados || 0);
-              case 'passenger':
+              case "passenger":
                 return Number(item.passenger || 0);
-              case 'totalAmount':
+              case "totalAmount":
                 return Number(item.totalAmount || 0);
               default:
-                return item[key] ?? '';
+                return item[key] ?? "";
             }
         },
 
@@ -1180,17 +1161,18 @@ export default {
               ))),
             ];
 
-            const totalRow = new Array(columns.length).fill('');
-            totalRow[0] = 'Total general';
+            const totalRow = new Array(columns.length).fill("");
+            totalRow[0] = "Total general";
             totalRow[totalRow.length - 1] = Number(this.totalGeneral || 0);
             rows.push(totalRow);
 
             const ws = XLSX.utils.aoa_to_sheet(rows);
             const wb = XLSX.utils.book_new();
 
-            XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-            XLSX.writeFile(wb, `report_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+            XLSX.writeFile(wb, `report_${new Date().toLocaleDateString().replace(/\//g, "-")}.xlsx`);
         },
+
 
     },
 
@@ -1974,22 +1956,6 @@ export default {
   min-width: 230px !important;
 }
 
-.worker-report-selection {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 7px;
-}
-
-.worker-report-selection span {
-  overflow: hidden;
-  color: #1e293b;
-  font-size: 12px;
-  font-weight: 750;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .worker-report-query-button {
   min-width: 112px !important;
   min-height: 40px !important;
@@ -2532,6 +2498,132 @@ export default {
 .worker-report-page .worker-report-query-button {
   min-height: 40px !important;
   border-radius: 9px !important;
+}
+
+.worker-report-page .worker-report-branch-filter {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.worker-report-page .worker-report-branch-filter .v-field__input {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.worker-report-page .worker-report-branch-filter .v-field__field,
+.worker-report-page .worker-report-branch-filter .v-autocomplete__selection {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.worker-report-page .ticket-report-optional-filter .v-chip {
+  min-height: 25px !important;
+  padding-inline: 8px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+.worker-report-page .ticket-report-optional-filter .v-chip__close {
+  color: #64748b !important;
+  font-size: 14px !important;
+}
+
+/* El menú del v-select se teletransporta a body; estas reglas deben ser globales
+   para conservar exactamente el lenguaje visual del Reporte de Ventas. */
+.incidents-select-menu {
+  overflow: hidden !important;
+  padding: 6px !important;
+  background: #fff !important;
+  border: 1px solid #dfe6ef !important;
+  border-radius: 11px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+}
+
+.incidents-select-menu .v-list {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.incidents-select-menu .v-list-item {
+  min-height: 48px !important;
+  margin: 2px 0 !important;
+  padding: 7px 10px !important;
+  color: #1e293b !important;
+  border-radius: 8px !important;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.incidents-select-menu .v-list-item:hover {
+  color: #2454d6 !important;
+  background: #f4f7ff !important;
+}
+
+.incidents-select-menu .v-list-item--active {
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+}
+
+.incidents-select-menu .v-list-item-title {
+  color: inherit !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+.incidents-select-menu .v-list-item-subtitle {
+  margin-top: 3px !important;
+  color: #64748b !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+.incidents-select-menu .v-list-item__prepend > .v-icon {
+  width: 32px !important;
+  height: 32px !important;
+  margin-inline-end: 10px !important;
+  color: #2454d6 !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+  font-size: 17px !important;
+}
+
+.incidents-select-menu .v-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  margin-inline-end: 10px !important;
+  background: #eef3ff !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 8px !important;
+}
+
+.incidents-select-menu .v-list-item__append .v-icon,
+.incidents-select-menu .v-selection-control__input {
+  color: #2454d6 !important;
+}
+
+.incidents-select-menu .v-list-item--active::before {
+  opacity: 0 !important;
+}
+
+.incidents-select-menu .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
+.incidents-select-menu .v-list-item--disabled {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
 }
 
 .worker-report-page .worker-table-panel {
