@@ -148,7 +148,7 @@
       >
         <template #headers>
 <tr><th colspan="100" class="trip-header-shell">
-          <div class="busgo-table-head">
+          <div class="trip-main-table-head">
             <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
               <span>Código</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('code') }}</v-icon>
@@ -157,15 +157,9 @@
               <span>Ruta</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('routeCode') }}</v-icon>
             </div>
-            <div class="trip-col-vehicle trip-heading-group">
-              <button type="button" class="trip-sort-button" @click="toggleTripSort('vehicleName')">
-                <span>Vehículo</span>
-                <v-icon size="14">{{ tripSortIcon('vehicleName') }}</v-icon>
-              </button>
-              <button type="button" class="trip-sort-button trip-sort-button--secondary" @click="toggleTripSort('workers')">
-                <span>Miembros</span>
-                <v-icon size="12">{{ tripSortIcon('workers') }}</v-icon>
-              </button>
+            <div class="trip-col-vehicle trip-sortable" @click="toggleTripSort('vehicleName')">
+              <span>Vehículo</span>
+              <v-icon size="16" class="ml-1">{{ tripSortIcon('vehicleName') }}</v-icon>
             </div>
             <div class="trip-col-date trip-sortable" @click="toggleTripSort('date')">
               <span>Fecha</span>
@@ -3573,7 +3567,6 @@ export default {
   .trip-col-code,
   .trip-col-route,
   .trip-col-vehicle,
-  .trip-col-workers,
   .trip-col-date,
   .trip-col-schedule,
   .trip-col-sale-mode,
@@ -4035,7 +4028,31 @@ body { color:#1e293b; }
 .trips-main-table .v-table__wrapper > table { min-width:1120px; }
 .trip-step-table .v-table__wrapper > table { min-width:900px; }
 .trip-header-shell .trip-table-manual-head { border-radius:0!important; border-inline:0!important; }
-.trip-header-shell .busgo-table-head { white-space:normal; }
+.trips-main-table .trip-main-table-head {
+  display:flex!important;
+  align-items:center;
+  min-width:1120px;
+  height:40px;
+  margin:0;
+  padding:0 17px;
+  color:#334155;
+  background:#f8fafc;
+  border-top:1px solid #e8edf5;
+  border-bottom:1px solid #e8edf5;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:normal;
+  visibility:visible!important;
+}
+.trips-main-table .trip-main-table-head > * {
+  min-width:0;
+  overflow:hidden;
+}
+.trips-main-table .trip-main-table-head .v-icon {
+  flex-shrink:0;
+}
 .busgo-row { flex-direction:row!important; align-items:center!important; gap:0!important; }
 .action-button { border-radius:8px!important; }
 .action-button--edit { color:#2454d6!important; }

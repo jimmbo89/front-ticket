@@ -95,7 +95,45 @@
 
         class="busgo-table template-list-table"
       >
-<template #headers><tr><th colspan="100" class="template-header-cell"><div class="template-readable-head"><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">Ruta<v-icon size="14">{{ templateSortIcon('routeCode') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('vehicleName')">Vehículo<v-icon size="14">{{ templateSortIcon('vehicleName') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('workers')">Miembros<v-icon size="12">{{ templateSortIcon('workers') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('schedule')">Horario<v-icon size="14">{{ templateSortIcon('schedule') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('duration')">Duración<v-icon size="12">{{ templateSortIcon('duration') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('recurrence_pattern')">Programación<v-icon size="14">{{ templateSortIcon('recurrence_pattern') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('days_of_week')">Días<v-icon size="12">{{ templateSortIcon('days_of_week') }}</v-icon></button></div><div class="template-heading-group"><button type="button" class="template-sort-button" @click="toggleTemplateSort('saleMode')">Modalidad<v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon></button><button type="button" class="template-sort-button template-sort-button--secondary" @click="toggleTemplateSort('active')">Estado<v-icon size="12">{{ templateSortIcon('active') }}</v-icon></button></div><div>Acciones</div></div></th></tr></template>
+        <template #headers>
+          <tr>
+            <th colspan="100" class="template-header-cell">
+              <div class="template-readable-head">
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">
+                    Ruta
+                    <v-icon size="14">{{ templateSortIcon('routeCode') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('vehicleName')">
+                    Vehículo
+                    <v-icon size="14">{{ templateSortIcon('vehicleName') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('schedule')">
+                    Horario
+                    <v-icon size="14">{{ templateSortIcon('schedule') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('recurrence_pattern')">
+                    Programación
+                    <v-icon size="14">{{ templateSortIcon('recurrence_pattern') }}</v-icon>
+                  </button>
+                </div>
+                <div class="template-heading-group">
+                  <button type="button" class="template-sort-button" @click="toggleTemplateSort('saleMode')">
+                    Modalidad
+                    <v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon>
+                  </button>
+                </div>
+                <div>Acciones</div>
+              </div>
+            </th>
+          </tr>
+        </template>
         <template #item="{ item }">
           <tr><td colspan="100" class="pa-0 border-0">
             <div class="template-readable-row">

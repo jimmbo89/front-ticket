@@ -198,20 +198,19 @@
       <v-divider />
 
       <v-data-table :headers="headers" :items="sortedTickets" :search="search"
+        v-model:expanded="expandedTicketItems" item-value="id"
         :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
         loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table incidents-table ticket-report-table">
         <template #top>
           <div class="busgo-table-head">
             <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')"><span>Código</span><v-icon size="14">{{ ticketSortIcon('code') }}</v-icon></div>
-            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('tripName')"><span>Tramos</span><v-icon size="14">{{ ticketSortIcon('tripName') }}</v-icon></div>
-            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('date')"><span>Fecha</span><v-icon size="14">{{ ticketSortIcon('date') }}</v-icon></div>
-            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('schedule')"><span>Horario</span><v-icon size="14">{{ ticketSortIcon('schedule') }}</v-icon></div>
+            <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('routeCode')"><span>Recorrido</span><v-icon size="14">{{ ticketSortIcon('routeCode') }}</v-icon></div>
+            <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('saleDateTime')"><span>Fecha venta</span><v-icon size="14">{{ ticketSortIcon('saleDateTime') }}</v-icon></div>
+            <div class="ticket-col-schedule ticket-sortable-header" @click="toggleTicketSort('departureDateTime')"><span>Salida viaje</span><v-icon size="14">{{ ticketSortIcon('departureDateTime') }}</v-icon></div>
             <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')"><span>Método</span><v-icon size="14">{{ ticketSortIcon('method') }}</v-icon></div>
             <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')"><span>Pasajes</span><v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon></div>
-            <div class="ticket-col-seats ticket-sortable-header" @click="toggleTicketSort('seats')"><span>Asientos</span><v-icon size="14">{{ ticketSortIcon('seats') }}</v-icon></div>
-            <div class="ticket-col-price ticket-sortable-header" @click="toggleTicketSort('price')"><span>Precio</span><v-icon size="14">{{ ticketSortIcon('price') }}</v-icon></div>
             <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')"><span>Total</span><v-icon size="14">{{ ticketSortIcon('total') }}</v-icon></div>
-            <div class="ticket-col-actions"></div>
+            <div class="ticket-col-actions"><span>Acciones</span></div>
           </div>
         </template>
 
@@ -223,13 +222,6 @@
                 <div class="ticket-col-route">
                   <div class="ticket-route-title-row">
                     <div class="ticket-route-main text-truncate">{{ slotProps.item.routeCode || "-" }}</div>
-                    <BusgoChip v-if="getTicketFareSegment(slotProps.item)" size="x-small" color="#2454d6" class="flex-shrink-0">Tramo</BusgoChip>
-                    <SaleModeChip
-                      :value="slotProps.item"
-                      :label="getSaleModeLabel(slotProps.item)"
-                      :color="getSaleModeColor(slotProps.item)"
-                      class="flex-shrink-0"
-                    />
                   </div>
                   <div class="ticket-route-meta">
                     <v-icon size="14" class="mr-0">mdi-map-marker</v-icon>
@@ -239,8 +231,8 @@
                   </div>
                   <v-tooltip activator="parent" location="bottom" max-width="420px"><span style="white-space: normal; word-break: break-word">Código viaje: {{ slotProps.item.code || "-" }}<br />Código ruta: {{ slotProps.item.routeCode || "-" }}<br />Origen: {{ getTicketRouteOriginLabel(slotProps.item) }}<br />Destino: {{ getTicketRouteDestinationLabel(slotProps.item) }}</span></v-tooltip>
                 </div>
-                <div class="ticket-col-date busgo-meta"><v-icon size="16" color="primary">mdi-calendar</v-icon><span class="text-truncate">{{ slotProps.item.date }}</span></div>
-                <div class="ticket-col-schedule busgo-meta"><v-icon size="16" color="primary">mdi-clock-outline</v-icon><span class="text-truncate">{{ slotProps.item.schedule }}</span></div>
+                <div class="ticket-col-date busgo-meta"><v-icon size="16" color="primary">mdi-calendar-clock-outline</v-icon><span class="text-truncate">{{ formatTicketDateTime(slotProps.item.saleDateTime) }}</span></div>
+                <div class="ticket-col-schedule busgo-meta"><v-icon size="16" color="primary">mdi-bus-clock</v-icon><span class="text-truncate">{{ formatTicketDateTime(slotProps.item.departureDateTime) }}</span></div>
                 <div class="ticket-col-method busgo-meta">
                   <BusgoChip
                     size="x-small"
@@ -251,12 +243,74 @@
                   </BusgoChip>
                 </div>
                 <div class="ticket-col-quantity busgo-meta"><span>{{ slotProps.item.quantity }}</span></div>
-                <div class="ticket-col-seats busgo-meta"><v-icon size="16" color="primary">mdi-seat</v-icon><span class="text-truncate">{{ slotProps.item.seats }}</span></div>
-                <div class="ticket-col-price ticket-money">${{ formatNumber(Number(slotProps.item.price)) }}</div>
                 <div class="ticket-col-total ticket-money ticket-money-total">${{ formatNumber(Number(slotProps.item.total)) }}</div>
                 <div class="ticket-col-actions busgo-actions">
                   <v-btn size="30" icon variant="tonal" :color="paleteColors.green" @click="printerItem(slotProps.item)" title="Reimprimir Ticket"><v-icon size="17">mdi-printer</v-icon></v-btn>
                   <v-btn size="30" icon variant="tonal" :color="paleteColors.error" @click="deleteItem(slotProps.item)" title="Eliminar Ticket"><v-icon size="17">mdi-delete</v-icon></v-btn>
+                  <v-btn size="30" icon variant="tonal" :color="isTicketExpanded(slotProps.item) ? paleteColors.primary : 'grey'" @click.stop="toggleTicketExpand(slotProps.item)" :title="isTicketExpanded(slotProps.item) ? 'Contraer detalle' : 'Expandir detalle'"><v-icon size="17">{{ isTicketExpanded(slotProps.item) ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon></v-btn>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+
+        <template #expanded-row="{ item }">
+          <tr class="ticket-expanded-row">
+            <td :colspan="headers.length" class="pa-0 border-0">
+              <div class="ticket-expanded">
+                <div class="ticket-detail-column ticket-detail-transaction">
+                  <div class="ticket-detail-label">ID TRANSACCIÓN</div>
+                  <div class="ticket-detail-value ticket-transaction-value">
+                    <span>{{ item.transactionId || "—" }}</span>
+                    <v-btn
+                      v-if="item.transactionId"
+                      icon
+                      size="24"
+                      variant="text"
+                      color="primary"
+                      title="Copiar ID de transacción"
+                      aria-label="Copiar ID de transacción"
+                      @click.stop="copyTransactionId(item)"
+                    >
+                      <v-icon size="16">mdi-content-copy</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
+
+                <div class="ticket-detail-column ticket-detail-passengers">
+                  <div class="ticket-detail-label">DETALLE PASAJEROS</div>
+                  <div v-if="getTicketItems(item).length" class="ticket-detail-value">
+                    <div v-for="(ticketItem, index) in getTicketItems(item)" :key="`${item.id}-detail-${index}`" class="ticket-passenger-line">
+                      <strong>{{ Number(ticketItem.quantity || 0) }} {{ ticketItem.ticket_type_name || "Pasajero" }}</strong>
+                      <span> × ${{ formatNumber(Number(ticketItem.unit_price || 0)) }}</span>
+                    </div>
+                  </div>
+                  <div v-else class="ticket-detail-value">—</div>
+                </div>
+
+                <div class="ticket-detail-column">
+                  <div class="ticket-detail-label">ASIENTOS</div>
+                  <div class="ticket-detail-value">{{ formatTicketSeats(item.seats) }}</div>
+                </div>
+
+                <div class="ticket-detail-column">
+                  <div class="ticket-detail-label">TIPO VENTA</div>
+                  <div class="ticket-detail-value">{{ getSaleModeLabel(item) }}</div>
+                </div>
+
+                <div class="ticket-detail-column">
+                  <div class="ticket-detail-label">TRABAJADOR</div>
+                  <div class="ticket-detail-value">{{ item.userName || "—" }}</div>
+                </div>
+
+                <div class="ticket-detail-column">
+                  <div class="ticket-detail-label">VEHÍCULO</div>
+                  <div class="ticket-detail-value">{{ formatTicketVehicle(item) }}</div>
+                </div>
+
+                <div class="ticket-detail-column">
+                  <div class="ticket-detail-label">REIMP.</div>
+                  <div class="ticket-detail-value">{{ getTicketReprintCount(item) }}</div>
                 </div>
               </div>
             </td>
@@ -886,13 +940,13 @@
 
       <v-card-text>
         <div class="ticket-container">
-          <div class="d-flex justify-space-between align-center mb-3">
+          <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
-              Fecha: {{ currentTicket.date }}
+              Fecha venta: {{ formatTicketDateTime(currentTicket.saleDateTime) }}
             </div>
 
             <div class="font-weight-medium">
-              Hora: {{ currentTicket.schedule || "--:--" }}
+              Salida viaje: {{ formatTicketDateTime(currentTicket.departureDateTime) }}
             </div>
           </div>
 
@@ -927,6 +981,11 @@
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
+            </div>
+
+            <div class="d-flex align-center mb-1">
+              <span class="font-weight-medium mr-1">ID transacción:</span>
+              <span>{{ currentTicket.transactionId || "—" }}</span>
             </div>
           </div>
 
@@ -948,13 +1007,13 @@
             </div>
           </div>
 
-          <div class="d-flex justify-space-between align-center mb-3">
+          <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
-              Fecha: {{ currentTicket.date }}
+              Fecha venta: {{ formatTicketDateTime(currentTicket.saleDateTime) }}
             </div>
 
             <div class="font-weight-medium">
-              Hora: {{ currentTicket.schedule || "--:--" }}
+              Salida viaje: {{ formatTicketDateTime(currentTicket.departureDateTime) }}
             </div>
           </div>
 
@@ -989,6 +1048,11 @@
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
+            </div>
+
+            <div class="d-flex align-center mb-1">
+              <span class="font-weight-medium mr-1">ID transacción:</span>
+              <span>{{ currentTicket.transactionId || "—" }}</span>
             </div>
           </div>
 
@@ -1100,6 +1164,7 @@ export default {
     promotions: [],
     tickettypes: [],
     currentTicket: {},
+    expandedTicketItems: [],
     nameBranch: "",
     imageBranch: "",
     nameUser: "",
@@ -1136,19 +1201,13 @@ export default {
     ],
     headers: [
       { title: "Código", key: "code" },
-      { title: "Ruta", key: "routeCode" },
-      { title: "Origen", key: "tripOrigin" },
-      { title: "Destino", key: "tripDestination" },
-      { title: "Fecha", key: "date" },
-      { title: "Horario", key: "schedule" },
-      { title: "Metodo", key: "method" },
+      { title: "Recorrido", key: "routeCode" },
+      { title: "Fecha venta", key: "saleDateTime" },
+      { title: "Salida viaje", key: "departureDateTime" },
+      { title: "Método", key: "method" },
       { title: "Pasajes", key: "quantity" },
-      //{ title: "Adultos", key: "adults", },
-      //{ title: "Menores", key: "minors", },
-      { title: "Asientos", key: "seats" },
-      { title: "Precio", key: "price" },
       { title: "Total", key: "total" },
-      { title: "Acciones", key: "actions", sortable: false, width: "15%" },
+      { title: "Acciones", key: "actions", sortable: false },
     ],
 
     editedItem: {
@@ -1244,7 +1303,7 @@ export default {
     itemsPerPage: 6, // Elementos por página
     quantityErrors: {},
     isRecalculatingTickettypes: false,
-    ticketSortBy: "date",
+    ticketSortBy: "saleDateTime",
     ticketSortOrder: "desc",
     tripSaleSortBy: "schedule",
     tripSaleSortOrder: "asc",
@@ -1654,6 +1713,126 @@ export default {
       this.ticketSortBy = field;
       this.ticketSortOrder = "asc";
     },
+    toggleTicketExpand(ticket) {
+      const ticketId = ticket?.id;
+
+      if (ticketId === null || ticketId === undefined) {
+        return;
+      }
+
+      this.expandedTicketItems = this.isTicketExpanded(ticket)
+        ? []
+        : [ticketId];
+    },
+    isTicketExpanded(ticket) {
+      const ticketId = ticket?.id;
+
+      return (
+        ticketId !== null &&
+        ticketId !== undefined &&
+        this.expandedTicketItems.includes(ticketId)
+      );
+    },
+    getTicketItems(ticket = {}) {
+      return Array.isArray(ticket?.ticketItems) ? ticket.ticketItems : [];
+    },
+    formatTicketSeats(seats) {
+      const normalizedSeats = Array.isArray(seats)
+        ? this.normalizeSeatNumbers(seats)
+        : String(seats || "")
+          .split(",")
+          .map((seat) => Number(String(seat).trim()))
+          .filter((seat) => Number.isFinite(seat));
+
+      return normalizedSeats.length ? normalizedSeats.join(", ") : "Sin asiento";
+    },
+    formatTicketVehicle(ticket = {}) {
+      const plate = ticket?.vehiclePlate || "";
+      const internalNumber =
+        ticket?.internalNumber ?? ticket?.internal_number ?? null;
+      const vehicle = [
+        plate,
+        internalNumber !== null && internalNumber !== undefined && internalNumber !== ""
+          ? `N.º ${internalNumber}`
+          : "",
+      ].filter(Boolean);
+
+      return vehicle.length ? vehicle.join(" · ") : "—";
+    },
+    getTicketReprintCount(ticket = {}) {
+      const reprintCount = Number(ticket?.reprintCount);
+
+      if (Number.isFinite(reprintCount)) {
+        return Math.max(0, reprintCount);
+      }
+
+      const printCount = Number(ticket?.print);
+      return Number.isFinite(printCount) ? Math.max(0, printCount - 1) : 0;
+    },
+    formatTicketDateTime(value) {
+      if (!value) {
+        return "—";
+      }
+
+      const rawValue = String(value).trim();
+      const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(rawValue);
+      const localDateTimeMatch = hasTimezone
+        ? null
+        : rawValue.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
+
+      if (localDateTimeMatch) {
+        const [, year, month, day, hour, minute] = localDateTimeMatch;
+        return `${day}/${month}/${year}${hour && minute ? ` · ${hour}:${minute}` : ""}`;
+      }
+
+      const parsedDate = new Date(rawValue);
+
+      if (Number.isNaN(parsedDate.getTime())) {
+        return rawValue;
+      }
+
+      const parts = new Intl.DateTimeFormat("es-CL", {
+        timeZone: "America/Santiago",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(parsedDate);
+      const values = Object.fromEntries(
+        parts.map(({ type, value: partValue }) => [type, partValue])
+      );
+
+      return `${values.day}/${values.month}/${values.year} · ${values.hour}:${values.minute}`;
+    },
+    async copyTransactionId(ticket = {}) {
+      const transactionId = String(ticket?.transactionId || "").trim();
+
+      if (!transactionId) {
+        return;
+      }
+
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(transactionId);
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = transactionId;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        }
+
+        this.showAlert("success", "ID de transacción copiado.", 2000);
+      } catch (error) {
+        this.showAlert("warning", "No fue posible copiar el ID de transacción.", 3000);
+      }
+    },
     toggleTripSaleSort(field) {
       if (this.tripSaleSortBy === field) {
         this.tripSaleSortOrder = this.tripSaleSortOrder === "asc" ? "desc" : "asc";
@@ -1667,20 +1846,16 @@ export default {
       switch (field) {
         case "code":
           return row?.code ?? "";
-        case "tripName":
-          return row?.tripName ?? "";
-        case "date":
-          return row?.date ?? "";
-        case "schedule":
-          return row?.schedule ?? "";
+        case "routeCode":
+          return row?.routeCode ?? "";
+        case "saleDateTime":
+          return row?.saleDateTime ?? "";
+        case "departureDateTime":
+          return row?.departureDateTime ?? "";
         case "method":
           return row?.method ?? "";
         case "quantity":
           return Number(row?.quantity ?? 0);
-        case "seats":
-          return Number(row?.seats ?? 0);
-        case "price":
-          return Number(row?.price ?? 0);
         case "total":
           return Number(row?.total ?? 0);
         default:
@@ -4086,11 +4261,9 @@ export default {
                 </div>
 
                 <!-- Ticket original -->
-                <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
-          }</div>
-                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
-          }</div>
+                <div class="ticket-print-dates">
+                    <div class="font-weight-medium">Fecha venta: ${this.formatTicketDateTime(this.currentTicket.saleDateTime)}</div>
+                    <div class="font-weight-medium">Salida viaje: ${this.formatTicketDateTime(this.currentTicket.departureDateTime)}</div>
                 </div>
 
                 <div class="mb-3">
@@ -4117,6 +4290,10 @@ export default {
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Medio de pago:</span>
                     <span>${this.currentTicket.method}</span>
+                    </div>
+                    <div class="d-flex align-center mb-1">
+                    <span class="font-weight-medium mr-1">ID transacción:</span>
+                    <span>${this.currentTicket.transactionId || "—"}</span>
                     </div>
                 </div>
 
@@ -4142,11 +4319,9 @@ export default {
                     <div class="branch-info">Folio N° ${this.currentTicket.id}</div>
                 </div>
 
-                <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
-          }</div>
-                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
-          }</div>
+                <div class="ticket-print-dates">
+                    <div class="font-weight-medium">Fecha venta: ${this.formatTicketDateTime(this.currentTicket.saleDateTime)}</div>
+                    <div class="font-weight-medium">Salida viaje: ${this.formatTicketDateTime(this.currentTicket.departureDateTime)}</div>
                 </div>
 
                 <div class="mb-3">
@@ -4173,6 +4348,10 @@ export default {
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Medio de pago:</span>
                     <span>${this.currentTicket.method}</span>
+                    </div>
+                    <div class="d-flex align-center mb-1">
+                    <span class="font-weight-medium mr-1">ID transacción:</span>
+                    <span>${this.currentTicket.transactionId || "—"}</span>
                     </div>
                 </div>
 
@@ -6921,7 +7100,19 @@ table.v-table>thead,
 }
 
 .ticket-report-page .ticket-report-table :deep(.busgo-table-head) {
-  display: none !important;
+  display: flex !important;
+  min-height: 40px;
+  height: 40px;
+  margin: 0 !important;
+  padding: 10px 17px;
+  color: #334155;
+  background: #f8fafc;
+  border-bottom: 1px solid #e8edf5;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 
 .ticket-report-page .ticket-report-table :deep(.busgo-row) {
@@ -6943,14 +7134,12 @@ table.v-table>thead,
 
 .ticket-report-page .ticket-report-table .ticket-col-code { width: 12%; }
 .ticket-report-page .ticket-report-table .ticket-col-route { width: 24%; }
-.ticket-report-page .ticket-report-table .ticket-col-date { width: 10%; }
-.ticket-report-page .ticket-report-table .ticket-col-schedule { width: 9%; }
-.ticket-report-page .ticket-report-table .ticket-col-method { width: 8%; }
+.ticket-report-page .ticket-report-table .ticket-col-date { width: 14%; }
+.ticket-report-page .ticket-report-table .ticket-col-schedule { width: 14%; }
+.ticket-report-page .ticket-report-table .ticket-col-method { width: 9%; }
 .ticket-report-page .ticket-report-table .ticket-col-quantity { width: 7%; }
-.ticket-report-page .ticket-report-table .ticket-col-seats { width: 9%; }
-.ticket-report-page .ticket-report-table .ticket-col-price { width: 7%; }
-.ticket-report-page .ticket-report-table .ticket-col-total { width: 8%; }
-.ticket-report-page .ticket-report-table .ticket-col-actions { width: 6%; }
+.ticket-report-page .ticket-report-table .ticket-col-total { width: 10%; }
+.ticket-report-page .ticket-report-table .ticket-col-actions { width: 10%; }
 
 .ticket-report-page .ticket-report-table .ticket-sortable-header {
   min-width: 0;
@@ -6974,6 +7163,45 @@ table.v-table>thead,
 .ticket-report-page .ticket-report-table .ticket-code-value { color: #172033; font-size: 12.5px; font-weight: 800; }
 .ticket-report-page .ticket-report-table .ticket-route-meta { color: #64748b; font-size: 11.5px; }
 .ticket-report-page .ticket-report-table .ticket-money { font-size: 12.5px; font-weight: 750; }
+.ticket-report-page .ticket-report-table .ticket-expanded-row:hover { background: transparent !important; }
+.ticket-report-page .ticket-report-table .ticket-expanded-row > td { background: #f8fafc; }
+.ticket-report-page .ticket-report-table .ticket-expanded {
+  display: grid;
+  grid-template-columns: 1.2fr 2.35fr 1fr 1.1fr 1.35fr 1.3fr .7fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 17px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e8edf5;
+  border-left: 3px solid #2454d6;
+}
+.ticket-report-page .ticket-report-table .ticket-detail-column { min-width: 0; }
+.ticket-report-page .ticket-report-table .ticket-detail-label {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.ticket-report-page .ticket-report-table .ticket-detail-value {
+  min-width: 0;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.ticket-report-page .ticket-report-table .ticket-transaction-value {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.ticket-report-page .ticket-report-table .ticket-transaction-value span { min-width: 0; }
+.ticket-report-page .ticket-report-table .ticket-passenger-line { white-space: nowrap; }
+.ticket-report-page .ticket-report-table .ticket-passenger-line + .ticket-passenger-line { margin-top: 3px; }
+.ticket-report-page .ticket-report-table .ticket-detail-value .v-btn { flex: 0 0 auto; }
+.ticket-print-dates { display: flex; flex-direction: column; gap: 4px; }
 @media (max-width: 960px) {
   .ticket-report-page .page-header {
     align-items: flex-start;
@@ -7001,10 +7229,18 @@ table.v-table>thead,
     min-width: 100% !important;
     max-width: none !important;
   }
+
+  .ticket-report-page .ticket-report-table .ticket-expanded {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
   .ticket-report-page .ticket-report-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-report-page .ticket-report-table .ticket-expanded {
     grid-template-columns: 1fr;
   }
 }

@@ -653,13 +653,13 @@
 
       <v-card-text>
         <div class="ticket-container">
-          <div class="d-flex justify-space-between align-center mb-3">
+          <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
-              Fecha: {{ currentTicket.date }}
+              Fecha venta: {{ formatTicketDateTime(currentTicket.saleDateTime) }}
             </div>
 
             <div class="font-weight-medium">
-              Hora: {{ currentTicket.schedule || "--:--" }}
+              Salida viaje: {{ formatTicketDateTime(currentTicket.departureDateTime) }}
             </div>
           </div>
 
@@ -690,6 +690,11 @@
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
+            </div>
+
+            <div class="d-flex align-center mb-1">
+              <span class="font-weight-medium mr-1">ID transacción:</span>
+              <span>{{ currentTicket.transactionId || "—" }}</span>
             </div>
           </div>
 
@@ -711,13 +716,13 @@
             </div>
           </div>
 
-          <div class="d-flex justify-space-between align-center mb-3">
+          <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
-              Fecha: {{ currentTicket.date }}
+              Fecha venta: {{ formatTicketDateTime(currentTicket.saleDateTime) }}
             </div>
 
             <div class="font-weight-medium">
-              Hora: {{ currentTicket.schedule || "--:--" }}
+              Salida viaje: {{ formatTicketDateTime(currentTicket.departureDateTime) }}
             </div>
           </div>
 
@@ -748,6 +753,11 @@
             <div class="d-flex align-center mb-1">
               <span class="font-weight-medium mr-1">Medio de pago:</span>
               <span>{{ currentTicket.method }}</span>
+            </div>
+
+            <div class="d-flex align-center mb-1">
+              <span class="font-weight-medium mr-1">ID transacción:</span>
+              <span>{{ currentTicket.transactionId || "—" }}</span>
             </div>
           </div>
 
@@ -2156,6 +2166,43 @@ export default {
 
       return formattedValue;
     },
+    formatTicketDateTime(value) {
+      if (!value) {
+        return "—";
+      }
+
+      const rawValue = String(value).trim();
+      const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(rawValue);
+      const localDateTimeMatch = hasTimezone
+        ? null
+        : rawValue.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
+
+      if (localDateTimeMatch) {
+        const [, year, month, day, hour, minute] = localDateTimeMatch;
+        return `${day}/${month}/${year}${hour && minute ? ` · ${hour}:${minute}` : ""}`;
+      }
+
+      const parsedDate = new Date(rawValue);
+
+      if (Number.isNaN(parsedDate.getTime())) {
+        return rawValue;
+      }
+
+      const parts = new Intl.DateTimeFormat("es-CL", {
+        timeZone: "America/Santiago",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(parsedDate);
+      const values = Object.fromEntries(
+        parts.map(({ type, value: partValue }) => [type, partValue])
+      );
+
+      return `${values.day}/${values.month}/${values.year} · ${values.hour}:${values.minute}`;
+    },
     getSelectedTripBasePrice() {
       return Number(this.editedItem.price) || 0;
     },
@@ -3087,11 +3134,9 @@ export default {
                 </div>
                 
                 <!-- Ticket original -->
-                <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
-          }</div>
-                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
-          }</div>
+                <div class="ticket-print-dates">
+                    <div class="font-weight-medium">Fecha venta: ${this.formatTicketDateTime(this.currentTicket.saleDateTime)}</div>
+                    <div class="font-weight-medium">Salida viaje: ${this.formatTicketDateTime(this.currentTicket.departureDateTime)}</div>
                 </div>
                 
                 <div class="mb-3">
@@ -3118,6 +3163,10 @@ export default {
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Medio de pago:</span>
                     <span>${this.currentTicket.method}</span>
+                    </div>
+                    <div class="d-flex align-center mb-1">
+                    <span class="font-weight-medium mr-1">ID transacción:</span>
+                    <span>${this.currentTicket.transactionId || "—"}</span>
                     </div>
                 </div>
                 
@@ -3143,11 +3192,9 @@ export default {
                     <div class="branch-info">Folio N° ${this.currentTicket.id}</div>
                 </div>
                 
-                <div class="detail-row">
-                    <div class="font-weight-medium">Fecha: ${this.currentTicket.date
-          }</div>
-                    <div class="font-weight-medium">Hora: ${this.currentTicket.schedule || "--:--"
-          }</div>
+                <div class="ticket-print-dates">
+                    <div class="font-weight-medium">Fecha venta: ${this.formatTicketDateTime(this.currentTicket.saleDateTime)}</div>
+                    <div class="font-weight-medium">Salida viaje: ${this.formatTicketDateTime(this.currentTicket.departureDateTime)}</div>
                 </div>
                 
                 <div class="mb-3">
@@ -3174,6 +3221,10 @@ export default {
                     <div class="d-flex align-center mb-1">
                     <span class="font-weight-medium mr-1">Medio de pago:</span>
                     <span>${this.currentTicket.method}</span>
+                    </div>
+                    <div class="d-flex align-center mb-1">
+                    <span class="font-weight-medium mr-1">ID transacción:</span>
+                    <span>${this.currentTicket.transactionId || "—"}</span>
                     </div>
                 </div>
                 
@@ -4896,6 +4947,7 @@ export default {
 .ticket-cancel-button { color:#475569!important; border-radius:9px!important; font-size:12.5px; font-weight:750; text-transform:none; }
 .ticket-delete-button { color:#fff!important; background:#dc2626!important; border-radius:9px!important; min-height:40px; font-size:12.5px; font-weight:750; text-transform:none; }
 .ticket-preview-dialog :deep(.v-card-text) { color:#334155; font-size:13px; }
+.ticket-print-dates { display:flex; flex-direction:column; gap:4px; }
 .ticket-alert-content { display:flex; align-items:center; gap:10px; font-size:12px; }
 .ticket-alert-content strong { display:block; margin-bottom:3px; font-size:13px; }
 @media(max-width:959px) { .busgo-container { padding:15px 17px 24px!important; }.busgo-page-header { padding-inline:17px; }.ticket-sale-summary-grid { grid-template-columns:1fr 1fr; }.ticket-toolbar { align-items:stretch; }.ticket-sale-body { padding-inline:14px!important; } }

@@ -97,7 +97,7 @@
           <v-icon size="18">mdi-tune-variant</v-icon>
           <div>
             <strong>Filtros del reporte</strong>
-            <span>Selecciona el período y el alcance de la consulta</span>
+            <span>El período filtra la fecha de venta de los tickets</span>
           </div>
         </div>
 
@@ -231,6 +231,38 @@
 
         </v-autocomplete>
 
+        <v-select
+          v-model="selectedPaymentMethod"
+          :items="paymentMethodOptions"
+          item-title="label"
+          item-value="value"
+          label="Método de pago"
+          density="compact"
+          variant="outlined"
+          prepend-inner-icon="mdi-cash-register"
+          hide-details
+          single-line
+          class="worker-collection-filter"
+          :menu-props="{ contentClass: 'worker-report-select-menu' }"
+          @update:model-value="initialize"
+        >
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props" :title="undefined" :subtitle="undefined" class="worker-report-select-item">
+              <template #prepend>
+                <v-icon size="19">{{ item.raw.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ item.raw.label }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
+          <template #selection="{ item }">
+            <div class="worker-report-selection">
+              <v-icon size="18">{{ item.raw.icon }}</v-icon>
+              <span>{{ item.raw.label }}</span>
+            </div>
+          </template>
+        </v-select>
+
           <v-btn
 
           variant="flat"
@@ -337,19 +369,15 @@
           </div>
         </template>
 
-        <template #[`item.date`]="{ item }">
-          <span class="worker-date-value"><v-icon size="15">mdi-calendar-outline</v-icon>{{ item.date || "-" }}</span>
-        </template>
-
-        <template #[`item.scheduled_departure`]="{ item }">
-          <span class="worker-date-value"><v-icon size="15">mdi-clock-outline</v-icon>{{ formatScheduledDeparture(item.scheduled_departure) }}</span>
+        <template #[`item.scheduledDeparture`]="{ item }">
+          <span class="worker-date-value"><v-icon size="15">mdi-calendar-clock-outline</v-icon>{{ formatScheduledDeparture(item.scheduledDeparture, item) }}</span>
         </template>
 
         <template #[`item.sale_mode_label`]="{ item }">
           <SaleModeChip :value="item" />
         </template>
 
-        <template #[`item.vehicleName`]="{ item }">
+        <template #[`item.plate`]="{ item }">
           <div class="worker-vehicle-cell">
             <div class="worker-table-avatar">
               <v-img
@@ -364,8 +392,7 @@
               <v-icon v-else size="17">mdi-bus</v-icon>
             </div>
             <div class="worker-vehicle-copy">
-              <strong>{{ item.plate || item.vehicleName || "Sin vehículo" }}</strong>
-              <span v-if="item.vehicleName && item.vehicleName !== item.plate">{{ item.vehicleName }}</span>
+              <strong>{{ item.plate || "Sin vehículo" }}</strong>
             </div>
           </div>
         </template>
@@ -375,7 +402,7 @@
         </template>
 
         <template #[`item.passenger`]="{ item }">
-          <span class="worker-count-badge worker-count-badge--tickets"><v-icon size="14">mdi-ticket-outline</v-icon>{{ item.passenger || 0 }}</span>
+          <span class="worker-count-badge worker-count-badge--tickets"><v-icon size="14">mdi-account-group-outline</v-icon>{{ item.passenger || 0 }}</span>
         </template>
 
         <template #[`item.totalAmount`]="{ item }">
@@ -447,44 +474,17 @@ export default {
 
         page: 1,
 
-        tableSortBy: [{ key: 'date', order: 'desc' }],
+        tableSortBy: [{ key: 'scheduledDeparture', order: 'desc' }],
 
         tableHeaders: [
-            { title: 'Código', key: 'code', align: 'start', width: 125 },
-            { title: 'Ruta', key: 'routeCode', align: 'start', width: 300 },
-            { title: 'Fecha', key: 'date', align: 'start', width: 115 },
-            { title: 'Hora programada', key: 'scheduled_departure', align: 'start', width: 125 },
-            { title: 'Modo venta', key: 'sale_mode_label', align: 'center', width: 105 },
-            { title: 'Vehículo', key: 'vehicleName', align: 'start', width: 185 },
-            { title: 'Pasajeros', key: 'asientosComprados', align: 'center', width: 100 },
-            { title: 'Pasajes emitidos', key: 'passenger', align: 'center', width: 125 },
-            { title: 'Total', key: 'totalAmount', align: 'end', width: 130 },
-        ],
-
-        headers: [
-
-            { title: 'Código', value: 'code', },
-
-            { title: 'Ruta', value: 'routeCode', },
-
-            { title: 'Fecha', value: 'date', },
-
-            { title: 'Hora Programada', value: 'scheduled_departure', },
-
-            { title: 'Modo venta', value: 'sale_mode_label', },
-
-            { title: 'Origen', value: 'origin', },
-
-            { title: 'Destino', value: 'destination', },
-
-            { title: 'Vehículo', value: 'vehicleName', },
-
-            { title: 'Asientos', value: 'asientosComprados', },
-
-            { title: 'Pasajes', value: 'passenger', },
-
-            { title: 'Monto generado', value: 'totalAmount', },
-
+            { title: 'Código viaje', key: 'code', sortable: true, align: 'start', width: 125 },
+            { title: 'Recorrido', key: 'routeCode', sortable: true, align: 'start', width: 300 },
+            { title: 'Salida viaje', key: 'scheduledDeparture', sortable: true, align: 'start', width: 155 },
+            { title: 'Tipo venta', key: 'sale_mode_label', sortable: true, align: 'center', width: 120 },
+            { title: 'Vehículo', key: 'plate', sortable: true, align: 'start', width: 150 },
+            { title: 'Asientos', key: 'asientosComprados', sortable: true, align: 'center', width: 100 },
+            { title: 'Pasajeros', key: 'passenger', sortable: true, align: 'center', width: 100 },
+            { title: 'Recaudación', key: 'totalAmount', sortable: true, align: 'end', width: 130 },
         ],
 
         search: '',
@@ -505,7 +505,13 @@ export default {
 
         totalGeneral: 0,
 
-        sortBy: 'date',
+        totalAsientosComprados: 0,
+
+        paymentMethods: [],
+
+        selectedPaymentMethod: 'all',
+
+        sortBy: 'scheduledDeparture',
 
         sortOrder: 'desc',
 
@@ -534,6 +540,28 @@ export default {
     }),
 
     computed: {
+
+      paymentMethodOptions() {
+        const methods = Array.isArray(this.paymentMethods) ? this.paymentMethods : [];
+        const normalizedMethods = methods
+          .map((method) => {
+            if (typeof method === 'string') {
+              return { value: method, label: method, icon: 'mdi-cash' };
+            }
+
+            return {
+              value: method?.value,
+              label: method?.label || method?.value,
+              icon: method?.icon || 'mdi-cash',
+            };
+          })
+          .filter((method) => method.value);
+
+        return [
+          { value: 'all', label: 'Todos', icon: 'mdi-format-list-bulleted' },
+          ...normalizedMethods.filter((method) => method.value !== 'all'),
+        ];
+      },
 
       workerKpiCards() {
         return [
@@ -578,16 +606,13 @@ export default {
 
       totalPassengers() {
         return (Array.isArray(this.response) ? this.response : []).reduce(
-          (total, item) => total + Number(item.asientosComprados || 0),
+          (total, item) => total + Number(item.passenger || 0),
           0
         );
       },
 
       totalTickets() {
-        return (Array.isArray(this.response) ? this.response : []).reduce(
-          (total, item) => total + Number(item.passenger || 0),
-          0
-        );
+        return Number(this.totalAsientosComprados || 0);
       },
 
       sortedResponse() {
@@ -730,7 +755,7 @@ export default {
 
         this.sortBy = key;
 
-        this.sortOrder = key === 'date' ? 'desc' : 'asc';
+        this.sortOrder = key === 'scheduledDeparture' ? 'desc' : 'asc';
 
       },
 
@@ -746,7 +771,7 @@ export default {
 
       isDateSortKey(key) {
 
-        return ['date'].includes(key);
+        return ['scheduledDeparture'].includes(key);
 
       },
 
@@ -768,13 +793,9 @@ export default {
 
             return item?.routeCode ?? '';
 
-          case 'date':
+          case 'scheduledDeparture':
 
-            return item?.date ?? '';
-
-          case 'scheduled_departure':
-
-            return item?.scheduled_departure ?? '';
+            return item?.scheduledDeparture ?? '';
 
           case 'sale_mode_label':
 
@@ -788,9 +809,9 @@ export default {
 
             return item?.destination ?? '';
 
-          case 'vehicleName':
+          case 'plate':
 
-            return item?.vehicleName ?? '';
+            return item?.plate ?? '';
 
           case 'asientosComprados':
 
@@ -824,33 +845,30 @@ export default {
 
       },
 
-      formatScheduledDeparture(value) {
+      formatScheduledDeparture(value, trip = {}) {
 
         if (!value) {
 
-          return '--:--';
+          value = [trip.date, trip.schedule].filter(Boolean).join(' ');
 
         }
 
         const text = String(value).trim();
 
-        const timeMatch = text.match(/(?:T|\s)(\d{2}:\d{2})(?::\d{2})?/);
+        const dateMatch = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+        const timeMatch = text.match(/(?:T|\s)(\d{1,2}:\d{2})(?::\d{2})?/) || text.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
+
+        if (dateMatch) {
+          const [, year, month, day] = dateMatch;
+          const time = timeMatch ? timeMatch[1].padStart(5, '0') : '--:--';
+          return `${day}/${month}/${year} · ${time}`;
+        }
 
         if (timeMatch) {
-
-          return timeMatch[1];
-
+          return timeMatch[1].padStart(5, '0');
         }
 
-        const shortTimeMatch = text.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
-
-        if (shortTimeMatch) {
-
-          return shortTimeMatch[1].padStart(5, '0');
-
-        }
-
-        return text;
+        return text || '--:--';
 
       },
 
@@ -896,7 +914,9 @@ export default {
 
         buildReportRequestData() {
 
-            const selectedWorker = this.workers.find((worker) => worker.id === this.selectedWorker);
+            const selectedWorker = this.workers.find(
+              (worker) => Number(worker.id) === Number(this.selectedWorker)
+            );
 
             const formattedDate = this.date || formatLocalDate();
 
@@ -904,19 +924,19 @@ export default {
 
             const data = {
 
-                branch_id: this.branch_id,
+                branch_id: Number(this.branch_id),
 
-                user_id: selectedWorker?.user_id ?? this.user_id ?? this.worker_id,
+                worker_id: Number(this.selectedWorker || this.worker_id),
+
+                user_id: Number(selectedWorker?.user_id ?? this.user_id) || undefined,
 
                 date: formattedDate,
 
+                endDate: formattedEndDate,
+
+                method: this.selectedPaymentMethod === 'all' ? null : this.selectedPaymentMethod,
+
             };
-
-            if (formattedEndDate !== formattedDate) {
-
-                data.endDate = formattedEndDate;
-
-            }
 
             return data;
 
@@ -1016,19 +1036,31 @@ export default {
 
                 if (result.success) {
 
-                    // Si la solicitud es exitosa, asignamos las sucursales
+                    const trips = Array.isArray(result.data?.trips) ? result.data.trips : [];
 
-                    this.response = (result.data?.trips || []).map((trip) => ({
+                    this.response = trips.map((trip) => ({
 
                         ...trip,
 
-                        vehicleName: trip.vehicleName || trip.plate || '',
+                        scheduledDeparture: trip.scheduledDeparture
+                          || trip.scheduled_departure
+                          || [trip.date, trip.schedule].filter(Boolean).join(' '),
 
                         sale_mode_label: this.getSaleModeLabel(trip),
 
                     }));
 
                     this.totalGeneral = Number(result.data?.totalGeneral || 0);
+                    this.totalAsientosComprados = Number(
+                      result.data?.totalAsientosComprados
+                      ?? this.response.reduce(
+                        (total, trip) => total + Number(trip.asientosComprados || 0),
+                        0
+                      )
+                    );
+                    this.paymentMethods = result.data?.payment_methods
+                      || result.data?.paymentMethods
+                      || [];
 
                 } else {
 
@@ -1037,6 +1069,7 @@ export default {
                     this.response = [];
 
                     this.totalGeneral = 0;
+                    this.totalAsientosComprados = 0;
 
                 }
 
@@ -1112,92 +1145,51 @@ export default {
 
         },
 
+        getExportValue(item, key) {
+            switch (key) {
+              case 'routeCode':
+                return [
+                  item.routeCode,
+                  item.origin && item.destination
+                    ? `${item.origin} → ${item.destination}`
+                    : item.origin || item.destination,
+                ].filter(Boolean).join(' · ');
+              case 'scheduledDeparture':
+                return this.formatScheduledDeparture(item.scheduledDeparture, item);
+              case 'sale_mode_label':
+                return this.getSaleModeLabel(item);
+              case 'plate':
+                return item.plate || '';
+              case 'asientosComprados':
+                return Number(item.asientosComprados || 0);
+              case 'passenger':
+                return Number(item.passenger || 0);
+              case 'totalAmount':
+                return Number(item.totalAmount || 0);
+              default:
+                return item[key] ?? '';
+            }
+        },
+
         exportToExcel() {
+            const columns = this.tableHeaders;
+            const rows = [
+              columns.map((column) => column.title),
+              ...this.response.map((item) => columns.map((column) => (
+                this.getExportValue(item, column.key)
+              ))),
+            ];
 
-            // Primero, prepara una matriz que contendrá todas las filas de datos, incluidos los encabezados
+            const totalRow = new Array(columns.length).fill('');
+            totalRow[0] = 'Total general';
+            totalRow[totalRow.length - 1] = Number(this.totalGeneral || 0);
+            rows.push(totalRow);
 
-            let rows = [];
-
-            // Construye un objeto para los encabezados basado en la estructura de 'headers'
-
-            let headerRow = {};
-
-            this.headers.forEach(header => {
-
-                headerRow[header.value] = header.title; // Usa 'key' para el mapeo y 'title' para el texto del encabezado
-
-            });
-
-            rows.push(headerRow);
-
-            // Ahora, mapea los datos de los items para que coincidan con los encabezados
-
-            this.response.forEach(item => {
-
-                let rowData = {};
-
-                this.headers.forEach(header => {
-
-                    rowData[header.value] = item[header.value] || ''; // Asegura que cada celda se mapee correctamente; usa '' para datos faltantes
-
-                });
-
-                rows.push(rowData);
-
-            });
-
-            let nameReport = {
-
-                // eslint-disable-next-line vue/no-use-computed-property-like-method
-
-                name: 'Recaudación por Trabajador', // Título coherente con el reporte
-
-                date: '',
-
-                scheduled_departure: '',
-
-                sale_mode_label: '',
-
-                origin: '',
-
-                destination: '',
-
-                plate: '',
-
-                asientosComprados: '',
-
-                passenger: '',
-
-                totalAmount: '',
-
-            };
-
-            rows.push(nameReport);
-
-            rows.push({
-
-                name: 'Total general',
-
-                totalAmount: `$${this.formatNumber(Number(this.totalGeneral || 0))}`,
-
-            });
-
-            // Convierte la matriz de filas en una hoja de trabajo Excel
-
-            const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: true }); // 'skipHeader: true' porque ya agregamos manualmente los encabezados
-
-            // Crea un nuevo libro de trabajo y añade la hoja de trabajo con los datos
-
+            const ws = XLSX.utils.aoa_to_sheet(rows);
             const wb = XLSX.utils.book_new();
 
-            XLSX.utils.book_append_sheet(wb, ws, "Report" + this.date);
-
-            // Escribe el libro de trabajo a un archivo y desencadena la descarga
-
-            //XLSX.writeFile(wb, "report.xlsx");
-
+            XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
             XLSX.writeFile(wb, `report_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
-
         },
 
     },
