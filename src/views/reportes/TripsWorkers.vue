@@ -342,6 +342,13 @@
               <v-icon size="13">mdi-arrow-right</v-icon>
               <span>{{ item.destination || "-" }}</span>
             </div>
+            <v-tooltip activator="parent" location="bottom" max-width="420px">
+              <span style="white-space: normal; word-break: break-word">
+                Código ruta: {{ item.routeCode || "-" }}<br />
+                Origen: {{ item.origin || "-" }}<br />
+                Destino: {{ item.destination || "-" }}
+              </span>
+            </v-tooltip>
           </div>
         </template>
 
@@ -453,14 +460,14 @@ export default {
         tableSortBy: [{ key: 'scheduledDeparture', order: 'desc' }],
 
         tableHeaders: [
-            { title: 'Código viaje', key: 'code', sortable: true, align: 'start', width: 125 },
-            { title: 'Recorrido', key: 'routeCode', sortable: true, align: 'start', width: 300 },
-            { title: 'Salida viaje', key: 'scheduledDeparture', sortable: true, align: 'start', width: 155 },
-            { title: 'Tipo venta', key: 'sale_mode_label', sortable: true, align: 'center', width: 120 },
-            { title: 'Vehículo', key: 'plate', sortable: true, align: 'start', width: 150 },
-            { title: 'Asientos', key: 'asientosComprados', sortable: true, align: 'center', width: 100 },
-            { title: 'Pasajeros', key: 'passenger', sortable: true, align: 'center', width: 100 },
-            { title: 'Recaudación', key: 'totalAmount', sortable: true, align: 'end', width: 130 },
+            { title: 'Código viaje', key: 'code', sortable: true, align: 'start', width: '15%' },
+            { title: 'Recorrido', key: 'routeCode', sortable: true, align: 'start', width: '26%' },
+            { title: 'Salida viaje', key: 'scheduledDeparture', sortable: true, align: 'start', width: '12%' },
+            { title: 'Tipo venta', key: 'sale_mode_label', sortable: true, align: 'center', width: '9%' },
+            { title: 'Vehículo', key: 'plate', sortable: true, align: 'start', width: '12%' },
+            { title: 'Asientos', key: 'asientosComprados', sortable: true, align: 'center', width: '8%' },
+            { title: 'Pasajeros', key: 'passenger', sortable: true, align: 'center', width: '8%' },
+            { title: 'Recaudación', key: 'totalAmount', sortable: true, align: 'end', width: '10%' },
         ],
 
         search: '',
@@ -1546,6 +1553,24 @@ export default {
   background: transparent;
 }
 
+.worker-native-table :deep(.v-table__wrapper) {
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.worker-native-table :deep(table) {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+}
+
+.worker-native-table :deep(thead th),
+.worker-native-table :deep(tbody td) {
+  box-sizing: border-box;
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
 .worker-native-table :deep(thead th) {
   height: 40px !important;
   color: #334155 !important;
@@ -1623,6 +1648,7 @@ export default {
   min-width: 0;
   align-items: center;
   gap: 9px;
+  overflow: hidden;
 }
 
 .worker-table-avatar {
@@ -1645,6 +1671,8 @@ export default {
 }
 
 .worker-code-value {
+  min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   color: #0f172a;
   font-size: 12.5px;
@@ -1656,6 +1684,7 @@ export default {
 .worker-route-cell,
 .worker-vehicle-copy {
   min-width: 0;
+  overflow: hidden;
 }
 
 .worker-route-name,
@@ -1681,6 +1710,7 @@ export default {
 }
 
 .worker-route-points span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1692,12 +1722,15 @@ export default {
 }
 
 .worker-date-value {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   color: #334155;
   font-size: 11.5px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -1706,6 +1739,7 @@ export default {
 }
 
 .worker-count-badge {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1738,19 +1772,20 @@ export default {
 }
 
 .worker-amount-value {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   color: #116b49;
   font-size: 12.5px;
   font-weight: 900;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 @media (max-width: 1180px) {
-  .worker-native-table {
-    overflow-x: auto;
-  }
-
-  .worker-native-table :deep(.v-table__wrapper) {
-    min-width: 1260px;
+  .worker-native-table :deep(thead th),
+  .worker-native-table :deep(tbody td) {
+    padding-inline: 10px !important;
   }
 }
 </style>
@@ -2697,7 +2732,7 @@ export default {
   }
 
   .worker-report-page .worker-native-table {
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 }
 
