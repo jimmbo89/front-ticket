@@ -16,6 +16,7 @@ import 'vuetify/styles'
 import './assets/styles/busgo.css'
 
 import DatePicker from "./components/DatePicker.vue";
+import StandardDataTable from "./components/StandardDataTable.vue";
 // Plugins
 import { registerPlugins } from "@/plugins";
 
@@ -24,6 +25,7 @@ const app = createApp(App);
 // Agregar axios a la instancia global de Vue
 app.config.globalProperties.$axios = axios
 app.component("DatePicker", DatePicker);
+app.component("StandardDataTable", StandardDataTable);
 
 app.use(snotify);
 

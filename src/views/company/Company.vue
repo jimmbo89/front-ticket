@@ -36,14 +36,14 @@
           <v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar empresa..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable />
         </div>
         <v-divider />
-        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" :headers="headers" :items="sortedCompanies" :search="search" :loading="loading" :hide-default-header="true" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay empresas disponibles" loading-text="Cargando empresa..." class="companies-table">
+        <StandardDataTable v-model:items-per-page="itemsPerPage" v-model:page="page" :headers="headers" :items="sortedCompanies" :search="search" :loading="loading" :hide-default-header="true" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay empresas disponibles" loading-text="Cargando empresa..." class="companies-table">
           <template #top>
-            <div class="company-table-head">
+            <div class="company-table-head standard-table-header">
               <button type="button" class="company-sort-button" @click="toggleCompanySort('name')">Nombre <v-icon size="15">{{ companySortIcon('name') }}</v-icon></button>
               <button type="button" class="company-sort-button" @click="toggleCompanySort('rut')">RUT <v-icon size="15">{{ companySortIcon('rut') }}</v-icon></button>
               <button type="button" class="company-sort-button" @click="toggleCompanySort('phone')">Teléfono <v-icon size="15">{{ companySortIcon('phone') }}</v-icon></button>
               <button type="button" class="company-sort-button" @click="toggleCompanySort('image')">Estado <v-icon size="15">{{ companySortIcon('image') }}</v-icon></button>
-              <div class="company-actions-heading">Acciones</div>
+              <div class="company-actions-heading standard-table-actions-heading">ACCIONES</div>
             </div>
           </template>
           <template #loading><v-skeleton-loader type="table-row@3" /></template>
@@ -61,7 +61,7 @@
               </div>
             </td></tr>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>El logotipo se utiliza en la navegación y otros elementos de identidad de BusGo.</div>
       </v-card>
     </v-container>
@@ -138,7 +138,7 @@ export default {
       { title: "RUT", key: "rut", sortable: true, width: "18%" },
       { title: "Teléfono", key: "phone", sortable: true, width: "18%" },
       { title: "Logotipo", key: "image", sortable: true, width: "13%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "9%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "9%" },
     ],
     editedItem: { id: "", name: "", address: "", rut: "", image: "", phone: "" },
     originalItem: { id: "", name: "", address: "", rut: "", image: "", phone: "" },

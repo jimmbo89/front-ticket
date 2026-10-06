@@ -31,7 +31,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -72,7 +72,7 @@
               <v-tooltip text="Eliminar vehículo" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Gestiona los trabajadores asignados desde las acciones de cada vehículo.</div>
       </v-card>
     </v-container>
@@ -189,7 +189,7 @@ export default {
 
       { title: "Estado", key: "state", sortable: true, width: "12%" },
 
-      { title: "", key: "actions", sortable: false, align: "end", width: "16%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "16%" },
 
     ],
 

@@ -136,7 +136,7 @@
         />
       </div>
 
-      <v-data-table
+      <StandardDataTable
         :headers="headers"
         :items="sortedTrips"
         :search="search"
@@ -148,7 +148,7 @@
         :hide-default-header="true"
       >
         <template #top>
-          <div class="trip-main-table-head">
+          <div class="trip-main-table-head standard-table-header">
             <div class="trip-col-code trip-sortable" @click="toggleTripSort('code')">
               <span>Código</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('code') }}</v-icon>
@@ -186,7 +186,7 @@
               <span>Llegada estimada</span>
               <v-icon size="16" class="ml-1">{{ tripSortIcon('arrival') }}</v-icon>
             </div>
-            <div class="trip-col-actions">Acciones</div>
+            <div class="trip-col-actions standard-table-actions-heading">ACCIONES</div>
           </div>
         </template>
 
@@ -324,7 +324,7 @@
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </StandardDataTable>
     </v-card>
   </v-container>
 
@@ -669,7 +669,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="tripStopsHeaders"
                       :items="tripStopRows"
                       class="elevation-1 trip-step-table"
@@ -685,7 +685,7 @@
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="trip-table-manual-head"
+                          class="trip-table-manual-head standard-table-header"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -917,7 +917,7 @@
                           </td>
                         </tr>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                 </v-sheet>
                 </div>
@@ -965,7 +965,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="tripFaresHeaders"
                       :items="tripFareRows"
                       class="elevation-1 trip-step-table"
@@ -981,7 +981,7 @@
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="trip-table-manual-head"
+                          class="trip-table-manual-head standard-table-header"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -1022,7 +1022,7 @@
                               Estado
                             </div>
 
-                            <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold"></div>
+                            <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold standard-table-header__actions">Tipos</div>
                           </v-card-text>
                         </v-card>
 
@@ -1202,7 +1202,7 @@
                           </td>
                         </tr>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                 </v-sheet>
                 </div>
@@ -1240,7 +1240,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="headersWorkers"
                       :items="filteredWorkers"
                       class="elevation-1 trip-step-table"
@@ -1309,7 +1309,7 @@
                           </span>
                         </div>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                 </v-sheet>
                 </div>
@@ -3935,9 +3935,9 @@ body { color:#1e293b; }
 .trip-step-pane--summary .v-field { min-height:50px; border:0; border-radius:9px!important; }.trip-step-pane--summary .v-field__outline { color:#d5deea; }.trip-step-pane--summary .v-field--focused .v-field__outline { color:#2454d6; }.trip-step-pane--summary .v-field__prepend-inner .v-icon { color:#64748b; }.trip-step-pane--summary .v-field--focused .v-field__prepend-inner .v-icon { color:#2454d6; }.trip-step-pane--summary .v-input__details { padding-inline:4px; }.trip-step-pane--summary .v-field--disabled { background:#f8fafc; opacity:.78; }
 
 /* Tablas internas con la misma densidad y lenguaje visual del Nivel 1. */
-.trip-config-section .trip-table-manual-head { height:40px!important; min-height:40px!important; margin:0!important; color:#334155!important; background:#f8fafc!important; border:1px solid #e8edf5!important; border-radius:9px 9px 0 0!important; box-shadow:none!important; }.trip-config-section .trip-table-manual-head .v-card-text { color:#334155; font-size:10px; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; }
+.trip-config-section .trip-table-manual-head { height:40px!important; min-height:40px!important; margin:0!important; color:#334155!important; background:#f8fafc!important; border:1px solid #e8edf5!important; border-radius:9px 9px 0 0!important; box-shadow:none!important; }.trip-config-section .trip-table-manual-head .v-card-text { color:#334155; font-size:11px; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; }
 .trip-stop-row-card,.trip-fare-row-card { margin:0!important; background:#fff!important; border:0!important; border-bottom:1px solid #edf1f5!important; border-radius:0!important; box-shadow:none!important; transition:background .15s ease; }.trip-stop-row-card:hover,.trip-fare-row-card:hover { background:#f8faff!important; }.trip-stop-row-card .v-card-text,.trip-fare-row-card .v-card-text { min-height:58px; padding:7px 14px!important; color:#334155; font-size:11.5px; font-weight:650; }.trip-stop-row-card .v-avatar { width:34px!important; height:34px!important; border:1px solid #dce6ff; border-radius:8px!important; }.trip-stop-row-card .font-weight-medium,.trip-fare-row-card .font-weight-medium { color:#1e293b; font-size:11.5px; font-weight:800!important; }.trip-stop-row-card .text-caption { color:#64748b!important; font-size:9.5px!important; }.trip-stop-row-card .v-field,.trip-fare-row-card .v-field,.trip-fare-ticket-types-row .v-field { background:#fff; border-radius:7px!important; }.trip-stop-row-card .v-field__outline,.trip-fare-row-card .v-field__outline { color:#dce3ed; }
-.trip-step-table .v-data-table__wrapper { border:1px solid #e8edf5; border-radius:9px; }.trip-step-table thead th { height:40px!important; color:#334155!important; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; font-size:10px!important; font-weight:850!important; letter-spacing:.04em!important; text-transform:uppercase; }.trip-step-table tbody td { height:56px!important; color:#334155!important; border-bottom:1px solid #edf1f5!important; font-size:11.5px!important; font-weight:650!important; }.trip-step-table tbody tr:hover { background:#f8faff!important; }.trip-step-table .v-data-table-footer { border-top:1px solid #e8edf5; }
+.trip-step-table .v-data-table__wrapper { border:1px solid #e8edf5; border-radius:9px; }.trip-step-table thead th { height:40px!important; color:#334155!important; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; font-size:11px!important; font-weight:850!important; letter-spacing:.04em!important; text-transform:uppercase; }.trip-step-table tbody td { height:56px!important; color:#334155!important; border-bottom:1px solid #edf1f5!important; font-size:11.5px!important; font-weight:650!important; }.trip-step-table tbody tr:hover { background:#f8faff!important; }.trip-step-table .v-data-table-footer { border-top:1px solid #e8edf5; }
 
 /* Menús de selección estructurados. */
 .trip-route-menu .v-card { margin:4px!important; }.trip-route-menu .v-list-item__content { overflow:visible!important; }.trip-route-menu .v-row { margin:0!important; }.trip-route-menu .v-col { padding:5px 7px!important; }.trip-route-menu .v-col:first-child { padding-bottom:8px!important; border-bottom:1px solid #edf1f5; }.trip-route-menu .trip-route-title-row::before { content:'Código de ruta'; margin-right:8px; color:#94a3b8; font-size:8px; font-weight:850; letter-spacing:.05em; text-transform:uppercase; }.trip-route-menu .trip-route-title-row { display:flex; align-items:center; }.trip-route-menu .v-col:nth-child(2),.trip-route-menu .v-col:nth-child(3) { position:relative; min-height:58px; }.trip-route-menu .v-col:nth-child(4) { color:#334155; background:#f8fafc; border-radius:8px; }.trip-route-menu .v-avatar { flex:0 0 38px; width:38px!important; height:38px!important; }.trip-route-menu .v-img__img { object-fit:cover; }
@@ -3966,7 +3966,7 @@ body { color:#1e293b; }
   background:#f8fafc;
   border-top:1px solid #e8edf5;
   border-bottom:1px solid #e8edf5;
-  font-size:10px;
+  font-size:11px;
   font-weight:850;
   letter-spacing:.04em;
   text-transform:uppercase;

@@ -250,7 +250,7 @@
 
         <v-divider />
 
-      <v-data-table
+      <StandardDataTable
 
         v-model:sort-by="tableSortBy"
 
@@ -282,7 +282,7 @@
 
         <template #unused-top>
 
-          <div class="busgo-table-head">
+          <div class="busgo-table-head standard-table-header">
 
             <div
 
@@ -340,7 +340,7 @@
 
             </div>
 
-            <div class="incident-col-actions"></div>
+            <div class="incident-col-actions standard-table-actions-heading">ACCIONES</div>
 
           </div>
 
@@ -721,7 +721,7 @@
 
         </template>
 
-      </v-data-table>
+      </StandardDataTable>
 
         <div class="table-footer-note">
           <v-icon size="15">mdi-information-outline</v-icon>
@@ -847,7 +847,7 @@ export default {
 
       { title: "Fecha", key: "date", sortable: true, width: "16%" },
 
-      { title: "", key: "actions", sortable: false, align: "end", width: "12%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "12%" },
 
     ],
 

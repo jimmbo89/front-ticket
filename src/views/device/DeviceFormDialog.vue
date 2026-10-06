@@ -28,46 +28,36 @@
           <section class="vehicle-association-panel">
             <div class="association-heading">
               <div class="association-heading-icon"><v-icon size="19">mdi-bus</v-icon></div>
-              <div><div class="association-heading-title">Asociación opcional</div><div class="association-heading-copy">Configura las asociaciones y guarda todo junto con el dispositivo.</div></div>
-              <v-tooltip :text="vehicleSearchOpen ? 'Ocultar búsqueda' : 'Buscar vehículo'" location="top">
-                <template #activator="{ props }">
-                  <v-btn v-bind="props" :icon="vehicleSearchOpen ? 'mdi-close' : 'mdi-magnify'" variant="text" size="small" class="vehicle-search-button" aria-label="Buscar vehículo" @click="toggleVehicleSearch" />
-                </template>
-              </v-tooltip>
+              <div><div class="association-heading-title">Seleccionar vehículo</div><div class="association-heading-copy">Un dispositivo solo puede estar asociado a un vehículo.</div></div>
             </div>
-            <v-expand-transition>
-              <v-text-field
-                v-if="vehicleSearchOpen"
-                v-model.trim="vehicleSearch"
-                class="vehicle-search-field"
-                prepend-inner-icon="mdi-magnify"
-                append-inner-icon="mdi-close"
-                label="Buscar por patente, interno, marca o modelo"
-                variant="outlined"
-                density="compact"
-                hide-details
-                clearable
-                @click:append-inner="clearVehicleSearch"
-              />
-            </v-expand-transition>
-            <div v-if="filteredVehicleRows.length" class="vehicle-association-list">
-              <div v-for="vehicle in filteredVehicleRows" :key="vehicle.id" class="vehicle-association-row">
-                <div class="vehicle-summary">
-                  <div class="vehicle-avatar"><v-icon size="18">mdi-bus</v-icon></div>
-                  <div class="cell-copy"><div class="vehicle-name">{{ vehicle.plate }}</div><div class="vehicle-caption">Interno: {{ vehicle.internalNumber }} · {{ vehicle.brand }} {{ vehicle.model }}</div></div>
-                </div>
-                <div class="vehicle-row-actions">
-                  <span class="status-badge" :class="vehicle.associated ? (vehicle.active ? 'status-badge--active' : 'status-badge--inactive') : 'status-badge--available'"><span class="status-dot" />{{ vehicle.associated ? (vehicle.active ? "Activa" : "Inactiva") : "Disponible" }}</span>
-                  <v-tooltip v-if="!vehicle.associated" text="Asociar vehículo" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-link-variant-plus" variant="text" size="small" class="action-button action-button--associate" :disabled="loading || saving" @click="associateVehicle(vehicle)" /></template></v-tooltip>
-                  <template v-else>
-                    <v-tooltip :text="vehicle.active ? 'Desactivar asociación' : (hasActiveVehicle ? 'El dispositivo ya tiene otra asociación activa' : 'Activar asociación')" location="top"><template #activator="{ props }"><v-btn v-bind="props" :icon="vehicle.active ? 'mdi-pause-circle-outline' : 'mdi-play-circle-outline'" variant="text" size="small" class="action-button action-button--associate" :disabled="loading || saving || (!vehicle.active && hasActiveVehicle)" @click="setVehicleActive(vehicle, !vehicle.active)" /></template></v-tooltip>
-                    <v-tooltip v-if="!vehicle.active" text="Eliminar asociación" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" :disabled="loading || saving" @click="deleteVehicle(vehicle)" /></template></v-tooltip>
-                  </template>
-                </div>
-              </div>
-            </div>
-            <div v-else class="association-empty"><v-icon size="19">{{ vehicleSearch ? "mdi-magnify-close" : "mdi-link-variant-off" }}</v-icon><span>{{ vehicleSearch ? "No hay vehículos que coincidan con la búsqueda." : "No hay vehículos disponibles para administrar." }}</span></div>
-            <div class="selection-summary"><v-icon size="18">mdi-information-outline</v-icon><span>{{ vehicleChanges.length ? `${vehicleChanges.length} cambio(s) de asociación pendiente(s)` : "Asociar un vehículo es opcional." }}</span></div>
+            <MultiSelectCombobox
+              :model-value="selectedVehicleRows"
+              :items="vehicleRows"
+              item-title="plate"
+              item-value="id"
+              label="Seleccionar vehículos"
+              placeholder="Busca por patente, interno, marca o modelo"
+              prepend-inner-icon="mdi-bus-search-outline"
+              no-data-text="No hay vehículos que coincidan con la búsqueda."
+              :disabled="loading || saving"
+              :loading="loading"
+              :custom-filter="vehicleFilter"
+              :menu-props="{ contentClass: 'device-vehicle-select-menu' }"
+              class="device-vehicle-combobox"
+              @update:model-value="updateSelectedVehicles"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :title="item.raw.plate" :subtitle="vehicleCaption(item.raw)">
+                  <template #prepend><div class="vehicle-avatar"><v-icon size="18">mdi-bus</v-icon></div></template>
+                </v-list-item>
+              </template>
+              <template #selection="{ item, remove }">
+                <v-chip class="selected-vehicle-chip" closable @click:close="remove">
+                  <template #prepend><v-icon size="14">mdi-bus</v-icon></template>
+                  {{ item.raw.plate }}
+                </v-chip>
+              </template>
+            </MultiSelectCombobox>
           </section>
 
           <div class="form-section-label form-section-label--spaced">Configuración y control</div>
@@ -121,8 +111,11 @@
 </template>
 
 <script>
+import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
+
 export default {
   name: "DeviceFormDialog",
+  components: { MultiSelectCombobox },
   emits: ["update:modelValue", "save", "branch-change"],
   props: {
     modelValue: { type: Boolean, default: false },
@@ -147,8 +140,6 @@ export default {
     snackbarIcon: "",
     snackbarMessage: "",
     snackbarTimeout: 3000,
-    vehicleSearch: "",
-    vehicleSearchOpen: false,
     nameRules: [(v) => !!v || "El nombre es requerido", (v) => !v || v.length >= 3 || "Debe tener al menos 3 caracteres", (v) => !v || v.length <= 50 || "No puede superar los 50 caracteres"],
     selectRules: [(v) => !!v || "Debes seleccionar una sucursal"],
     serialRules: [(v) => !!v || "El número de serie es requerido", (v) => !v || /^[a-zA-Z0-9-]{8,24}$/.test(v) || "Debe ser alfanumérico y tener entre 8 y 24 caracteres"],
@@ -159,27 +150,14 @@ export default {
     isOpen: { get() { return this.modelValue; }, set(value) { this.$emit("update:modelValue", value); } },
     imagePreview() { return this.imgMiniatura || this.baseImageUrl(this.formItem?.image || this.device?.image); },
     today() { return this.formatInputDate(new Date()); },
-    hasActiveVehicle() { return this.vehicleRows.some((vehicle) => vehicle.associated && vehicle.active); },
-    activeVehicleCount() { return this.vehicleRows.filter((vehicle) => vehicle.associated && vehicle.active).length; },
-    filteredVehicleRows() {
-      const search = this.vehicleSearch.toLowerCase().trim();
-      if (!search) return this.vehicleRows;
-      return this.vehicleRows.filter((vehicle) => [
-        vehicle.id,
-        vehicle.plate,
-        vehicle.internalNumber,
-        vehicle.brand,
-        vehicle.model,
-      ].some((value) => String(value ?? "").toLowerCase().includes(search)));
-    },
+    selectedVehicleRows() { return this.vehicleRows.filter((vehicle) => vehicle.associated && vehicle.active); },
     vehicleChanges() {
       const originalById = new Map(this.originalVehicles.map((vehicle) => [String(vehicle.id), vehicle]));
       return this.vehicleRows.map((vehicle) => {
         const original = originalById.get(String(vehicle.id));
         const originalAssociated = Boolean(original?.associated);
         const originalActive = Boolean(original?.active);
-        if (!originalAssociated && vehicle.associated) return { association_id: null, vehicle_id: vehicle.id, action: "associate", active: true };
-        if (originalAssociated && !vehicle.associated) return { association_id: vehicle.relationId, vehicle_id: vehicle.id, action: "delete", active: false };
+        if (!originalAssociated && vehicle.associated) return { association_id: null, vehicle_id: vehicle.id, action: "associate", active: Boolean(vehicle.active) };
         if (originalAssociated && vehicle.associated && originalActive !== vehicle.active) return { association_id: vehicle.relationId, vehicle_id: vehicle.id, action: vehicle.active ? "activate" : "deactivate", active: vehicle.active };
         return null;
       }).filter(Boolean);
@@ -220,8 +198,6 @@ export default {
       this.originalVehicles = this.vehicleRows.map((vehicle) => ({ ...vehicle }));
       this.file = null;
       this.imgMiniatura = this.baseImageUrl(this.device?.image);
-      this.vehicleSearch = "";
-      this.vehicleSearchOpen = false;
       this.valid = false;
       this.$nextTick(() => this.$refs.form?.resetValidation());
     },
@@ -238,7 +214,7 @@ export default {
       const active = associationActive !== undefined && associationActive !== null
         ? this.isActive(associationActive)
         : this.isActive(vehicle.active ?? relation.active) || associationStatus === "ASSOCIATED_ACTIVE";
-      return { ...source, ...vehicle, id, relationId, plate: source.plate || vehicle.plate || "Sin patente", internalNumber: source.internal_number ?? source.internalNumber ?? vehicle.internal_number ?? vehicle.internalNumber ?? "No asignado", brand: source.brand || vehicle.brand || "Sin marca", model: source.model || vehicle.model || "Sin modelo", associated, active: associated && active };
+      return { ...source, ...vehicle, id, relationId, plate: source.plate || vehicle.plate || "", internalNumber: source.internal_number ?? source.internalNumber ?? vehicle.internal_number ?? vehicle.internalNumber ?? "", brand: source.brand || vehicle.brand || "", model: source.model || vehicle.model || "", associated, active: associated && active };
     },
     branchImage(branch) { return this.baseImageUrl(branch?.image); },
     baseImageUrl(source) {
@@ -256,27 +232,32 @@ export default {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     },
     onBranchChanged(value) { if (this.isCreating) this.$emit("branch-change", value); },
-    toggleVehicleSearch() {
-      this.vehicleSearchOpen = !this.vehicleSearchOpen;
-      if (!this.vehicleSearchOpen) this.vehicleSearch = "";
-    },
-    clearVehicleSearch() { this.vehicleSearch = ""; },
     isActive(value) { return value === true || Number(value) === 1 || String(value).toLowerCase() === "true"; },
-    associateVehicle(vehicle) {
-      if (this.hasActiveVehicle) { this.notify("warning", "Desactiva la asociación activa antes de asociar otro vehículo."); return; }
-      vehicle.associated = true;
-      vehicle.active = true;
+    vehicleFilter(value, query, item) {
+      const search = String(query ?? "").toLowerCase().trim();
+      if (!search) return 1;
+      const vehicle = item?.raw ?? item ?? {};
+      const searchable = [value, vehicle.id, vehicle.plate, vehicle.internalNumber, vehicle.brand, vehicle.model].map((part) => String(part ?? "").toLowerCase()).join(" ");
+      return searchable.includes(search) ? 1 : -1;
     },
-    setVehicleActive(vehicle, active) {
-      if (active && this.hasActiveVehicle) { this.notify("warning", "El dispositivo ya tiene otra asociación activa."); return; }
-      if (!vehicle.relationId) { this.notify("warning", "No se pudo identificar la asociación."); return; }
-      vehicle.active = active;
+    vehicleCaption(vehicle = {}) {
+      return [
+        vehicle.internalNumber ? `Interno: ${vehicle.internalNumber}` : "",
+        vehicle.brand,
+        vehicle.model,
+      ].filter(Boolean).join(" · ");
     },
-    deleteVehicle(vehicle) {
-      if (vehicle.active) { this.notify("warning", "Desactiva la asociación antes de eliminarla."); return; }
-      if (!vehicle.relationId) { this.notify("warning", "No se pudo identificar la asociación."); return; }
-      vehicle.associated = false;
-      vehicle.active = false;
+    updateSelectedVehicles(selectedVehicles) {
+      const selected = this.toArray(selectedVehicles);
+      const selectedVehicle = selected[selected.length - 1] || null;
+      const selectedId = selectedVehicle?.id ?? selectedVehicle ?? null;
+      const selectedIds = new Set(selectedId === null ? [] : [String(selectedId)]);
+      this.vehicleRows = this.vehicleRows.map((vehicle) => {
+        const active = selectedIds.has(String(vehicle.id));
+        const original = this.originalVehicles.find((item) => String(item.id) === String(vehicle.id));
+        const associated = active || Boolean(original?.associated) || Boolean(vehicle.relationId);
+        return { ...vehicle, associated, active };
+      });
     },
     onFileSelected(value) {
       const selected = value?.target?.files?.[0] || (Array.isArray(value) ? value[0] : value);
@@ -288,10 +269,6 @@ export default {
     async submit() {
       const validation = await this.$refs.form?.validate();
       if (!validation?.valid) return;
-      if (this.activeVehicleCount > 1) {
-        this.notify("warning", "Un dispositivo solo puede tener un vehículo asociado activo.");
-        return;
-      }
       this.$emit("save", { item: { ...this.formItem }, file: this.file, vehicles: this.vehicleChanges });
     },
     close() { if (!this.loading) this.isOpen = false; },
@@ -305,4 +282,8 @@ export default {
 
 <style scoped>
 .form-dialog{overflow:hidden;color:#1e293b;background:#fff;border:1px solid #dfe6ef;border-radius:14px!important;box-shadow:0 22px 60px rgba(15,23,42,.2)!important}.dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px}.dialog-heading{display:flex;align-items:center;gap:11px}.dialog-icon{position:relative;display:grid;flex:0 0 38px;width:38px;height:38px;place-items:center;color:#fff;background:radial-gradient(circle at 90% 5%,rgba(53,184,232,.5),transparent 28px),linear-gradient(135deg,#0e1f46,#2454d6);border-radius:10px;box-shadow:0 5px 12px rgba(36,84,214,.17)}.dialog-icon-main{transform:translate(-2px,1px)}.dialog-icon-action{position:absolute;right:5px;bottom:5px;padding:1px;color:#0e1f46;background:#fff;border-radius:50%}.dialog-title{color:#0f172a;font-size:16px;font-weight:850;line-height:1.2}.dialog-subtitle{margin-top:4px;color:#64748b;font-size:11.5px;font-weight:600}.dialog-close{color:#64748b!important}.dialog-body{max-height:72vh;padding:21px 22px 18px!important;overflow-y:auto}.form-section-label{margin-bottom:13px;color:#475569;font-size:10.5px;font-weight:850;letter-spacing:.065em;text-transform:uppercase}.form-section-label--spaced{margin-top:9px}.dialog-body :deep(.v-field){border-radius:9px}.dialog-body :deep(.v-field__outline){color:#d6dee9}.dialog-body :deep(.v-label){color:#64748b;font-size:13px;font-weight:650;opacity:1}.dialog-body :deep(.v-field__input){color:#1e293b;font-size:13px;font-weight:650}.vehicle-association-panel{padding:13px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.association-heading{display:flex;align-items:center;gap:9px;margin-bottom:12px}.association-heading>div:nth-child(2){min-width:0;flex:1}.vehicle-search-button{flex:0 0 auto;color:#2454d6!important;border-radius:8px!important}.vehicle-search-button:hover{background:#eef3ff}.association-heading-icon{display:grid;width:32px;height:32px;place-items:center;color:#16875a;background:#eaf8f1;border:1px solid #d7f1e5;border-radius:8px}.association-heading-title{color:#0f172a;font-size:12.5px;font-weight:850}.association-heading-copy{margin-top:2px;color:#64748b;font-size:10.5px;font-weight:650}.vehicle-search-field{margin-bottom:9px}.vehicle-association-list{max-height:320px;overflow-x:hidden;overflow-y:auto;background:#fff;border:1px solid #e8edf5;border-radius:9px}.vehicle-association-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border-bottom:1px solid #eef2f6}.vehicle-association-row:last-child{border-bottom:0}.vehicle-summary{display:flex;align-items:center;gap:9px;min-width:0}.vehicle-avatar{display:grid;flex:0 0 34px;width:34px;height:34px;place-items:center;color:#2454d6;background:#eef3ff;border:1px solid #dce6ff;border-radius:8px}.cell-copy{min-width:0}.vehicle-name{overflow:hidden;color:#0f172a;font-size:12px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}.vehicle-caption{margin-top:2px;overflow:hidden;color:#64748b;font-size:10px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.vehicle-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:7px;font-size:10.5px;font-weight:800;white-space:nowrap}.status-badge--active{color:#116b49;background:#eaf8f1}.status-badge--inactive{color:#475569;background:#f1f5f9}.status-badge--available{color:#8a5b08;background:#fff6e6}.status-dot{width:6px;height:6px;background:currentColor;border-radius:50%}.action-button{border-radius:8px!important}.action-button--associate{color:#16875a!important}.action-button--associate:hover{background:#eaf8f1}.action-button--delete{color:#dc2626!important}.action-button--delete:hover{background:#fff1f2}.association-empty,.selection-summary{display:flex;align-items:flex-start;gap:8px;padding:10px 11px;color:#64748b;background:#fff;border:1px solid #e8edf5;border-radius:8px;font-size:10.5px;font-weight:650;line-height:1.45}.selection-summary{margin-top:9px}.status-control{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:9px;padding:12px 13px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.status-control-title{color:#334155;font-size:12px;font-weight:850}.status-control-description{margin-top:3px;color:#64748b;font-size:10.5px;font-weight:650}.status-switch{display:flex;align-items:center;gap:8px;color:#16875a;font-size:11px;font-weight:850}.status-switch.is-inactive{color:#64748b}.image-upload-area{display:flex;align-items:center;gap:14px;padding:12px;background:#f8fafc;border:1px dashed #cfd9e7;border-radius:10px}.image-preview{display:grid;flex:0 0 88px;width:88px;height:88px;overflow:hidden;place-items:center;background:#eef3ff;border:1px solid #dce6ff;border-radius:10px}.image-preview :deep(.v-img__img){object-fit:cover}.preview-placeholder{display:grid;width:100%;height:100%;place-items:center;color:#8aa0bf}.upload-copy{min-width:0;flex:1}.upload-title{color:#334155;font-size:12.5px;font-weight:850}.upload-description{margin:4px 0 8px;color:#64748b;font-size:10.5px;font-weight:650}.dialog-actions{justify-content:flex-end;gap:9px;padding:14px 20px!important}.cancel-button{min-width:94px;min-height:39px;color:#475569!important;font-size:12.5px;font-weight:750;letter-spacing:0;text-transform:none;border-radius:9px!important}.save-button{min-width:160px;min-height:40px;color:#fff!important;background:linear-gradient(100deg,#2454d6,#3266e4)!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:0 5px 12px rgba(36,84,214,.2)!important}.snackbar-content{display:flex;align-items:center;gap:10px}.snackbar-title{font-size:11px;font-weight:850}.snackbar-message{margin-top:2px;font-size:9.5px;font-weight:600}.busgo-snackbar :deep(.v-snackbar__wrapper){border-radius:11px}@media(max-width:600px){.dialog-header{padding:14px}.dialog-body{padding:17px 14px 12px!important}.vehicle-association-row{align-items:flex-start;flex-direction:column}.vehicle-row-actions{width:100%;justify-content:flex-end}.vehicle-caption{max-width:210px}.image-upload-area{align-items:flex-start;flex-direction:column}.image-preview{flex-basis:76px;width:76px;height:76px}.dialog-actions{padding-inline:13px!important}}
+</style>
+
+<style>
+.device-vehicle-select-menu .v-list{padding:6px!important}.device-vehicle-select-menu .v-list-item{min-height:54px;margin:2px 0;border-radius:9px}.device-vehicle-select-menu .v-list-item:hover{background:#f4f7ff}.device-vehicle-select-menu .v-list-item__prepend{margin-inline-end:12px!important}.device-vehicle-select-menu .v-list-item-subtitle{color:#64748b!important;font-size:10.5px!important;font-weight:650!important;opacity:1!important}.device-vehicle-select-menu .vehicle-avatar{flex:0 0 36px;width:36px;height:36px}.selected-vehicle-chip{max-width:220px!important;color:#2454d6!important;background:#eef3ff!important;font-size:11px!important;font-weight:750!important}.selected-vehicle-chip .v-chip__content{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selected-vehicle-chip .v-chip__close{color:#64748b!important}.selected-vehicle-chip .v-chip__close:hover{color:#dc2626!important}
 </style>

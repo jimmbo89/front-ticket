@@ -189,7 +189,7 @@
 
           <v-card-text class="trip-card-body"
             ><!-- TABLE -->
-            <v-data-table
+            <StandardDataTable
   :headers="tripHeaders"
   :items="trips"
   :loading="loading"
@@ -295,7 +295,7 @@
       </span>
     </div>
   </template>
-</v-data-table>
+</StandardDataTable>
           </v-card-text>
         </v-card>
       </v-col>

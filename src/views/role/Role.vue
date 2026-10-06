@@ -29,7 +29,7 @@
         </div>
         <v-divider />
 
-        <v-data-table v-model:sort-by="sortBy" :headers="headers" :items="roles" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page="10" items-per-page-text="Elementos por página" no-data-text="No hay roles disponibles" loading-text="Cargando roles..." class="roles-table">
+        <StandardDataTable v-model:sort-by="sortBy" :headers="headers" :items="roles" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page="10" items-per-page-text="Elementos por página" no-data-text="No hay roles disponibles" loading-text="Cargando roles..." class="roles-table">
           <template #loading><v-skeleton-loader type="table-row@5" /></template>
           <template #[`item.name`]="{ item }">
             <div class="role-name-cell">
@@ -50,7 +50,7 @@
               <v-tooltip text="Eliminar rol" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los permisos determinan las acciones disponibles para cada rol.</div>
       </v-card>
     </v-container>
@@ -121,7 +121,7 @@ export default {
       { title: "Rol", key: "name", value: "name", sortable: true, width: "24%" },
       { title: "Tipo", key: "type", value: "type", sortable: true, width: "16%" },
       { title: "Descripción", key: "description", value: "description", sortable: true, width: "42%" },
-      { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "18%" },
+      { title: "Acciones", key: "actions", value: "actions", sortable: false, align: "end", width: "18%" },
     ],
     editedItem: { id: "", name: "", description: "", type: "Sistema" },
     defaultItem: { id: "", name: "", description: "", type: "Sistema" },

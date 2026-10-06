@@ -140,7 +140,7 @@
                 <v-icon start>mdi-credit-card-multiple</v-icon>
                 Totales por Método de Pago
               </v-card-title>
-              <v-data-table :headers="headersMetodos" :items="response.totalesPorMetodo || []" :items-per-page="5"
+              <StandardDataTable :headers="headersMetodos" :items="response.totalesPorMetodo || []" :items-per-page="5"
                 class="elevation-0" density="comfortable" no-data-text="No se encontraron registros de pagos">
                 <template v-slot:item.metodo="{ item }">
                   <v-chip :color="getMethodInfo(item.metodo).color" size="small" label
@@ -167,7 +167,7 @@
                     </span>
                   </div>
                 </template>
-              </v-data-table>
+              </StandardDataTable>
             </v-card>
           </v-col>
         </v-row>
@@ -252,7 +252,7 @@
                     <!-- Solo mostrar el contenido si hay pasajes -->
                     <v-expansion-panel-text v-if="tramo.totalPasajes > 0" class="pt-2 pb-1 rounded-lg">
                       <v-card variant="flat" class="border rounded-lg">
-                        <v-data-table :headers="headersTramoMetodos" :items="tramo.totalesPorMetodo || []"
+                        <StandardDataTable :headers="headersTramoMetodos" :items="tramo.totalesPorMetodo || []"
                           :items-per-page="3" density="compact" class="elevation-0 metodo-pago-table">
                           <template v-slot:item.metodo="{ item }">
                             <v-chip :color="getMethodInfo(item.metodo).color" size="small" label
@@ -281,7 +281,7 @@
                               </span>
                             </div>
                           </template>
-                        </v-data-table>
+                        </StandardDataTable>
                       </v-card>
                     </v-expansion-panel-text>
                   </v-expansion-panel>

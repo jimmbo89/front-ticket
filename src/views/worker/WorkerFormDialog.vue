@@ -30,29 +30,38 @@
             <div class="association-heading">
               <div class="association-heading-icon"><v-icon size="19">mdi-store-marker-outline</v-icon></div>
               <div><div class="association-heading-title">Asociación opcional</div><div class="association-heading-copy">Un trabajador puede pertenecer a una sola sucursal. El rol seleccionado se aplicará a la asociación.</div></div>
-              <v-tooltip :text="branchSearchOpen ? 'Ocultar búsqueda' : 'Buscar sucursal'" location="top">
-                <template #activator="{ props }"><v-btn v-bind="props" :icon="branchSearchOpen ? 'mdi-close' : 'mdi-magnify'" variant="text" size="small" class="branch-search-button" :aria-label="branchSearchOpen ? 'Ocultar búsqueda' : 'Buscar sucursal'" @click="toggleBranchSearch" /></template>
-              </v-tooltip>
             </div>
-            <v-expand-transition><v-text-field v-if="branchSearchOpen" v-model.trim="branchSearch" class="branch-search-field" prepend-inner-icon="mdi-magnify" label="Buscar por sucursal o dirección" variant="outlined" density="compact" hide-details clearable autofocus /></v-expand-transition>
-
-            <div v-if="filteredBranchRows.length" class="branch-association-list">
-              <div v-for="branch in filteredBranchRows" :key="branch.id" class="branch-association-row">
-                <div class="branch-summary">
-                  <div class="branch-avatar"><v-img v-if="branchImage(branch)" :src="branchImage(branch)" width="36" height="36" cover><template #error><div class="image-fallback"><v-icon size="18">mdi-store</v-icon></div></template></v-img><v-icon v-else size="18">mdi-store</v-icon></div>
-                  <div class="cell-copy"><div class="branch-name">{{ branch.name }}</div><div class="branch-caption">{{ branch.address }}</div></div>
-                </div>
-                <div class="branch-row-actions">
-                  <span v-if="branch.associated" class="branch-role-label"><v-icon size="14">mdi-account-tie-outline</v-icon>Rol: {{ roleName(branch.role_id ?? formItem.role_id) }}</span>
-                  <span class="status-badge" :class="branch.associated ? 'status-badge--active' : 'status-badge--available'"><span class="status-dot" />{{ branch.associated ? "Asociada" : "Disponible" }}</span>
-                  <v-tooltip :text="branch.associated ? 'Eliminar asociación' : (hasAssociatedBranch ? 'Desasocia primero la sucursal actual' : 'Asociar sucursal')" location="top">
-                    <template #activator="{ props }"><v-btn v-bind="props" :icon="branch.associated ? 'mdi-trash-can-outline' : 'mdi-link-variant-plus'" variant="text" size="small" :class="['action-button', branch.associated ? 'action-button--delete' : 'action-button--associate']" :disabled="loading || (!branch.associated && hasAssociatedBranch)" @click="toggleBranchAssociation(branch)" /></template>
-                  </v-tooltip>
-                </div>
-              </div>
-            </div>
-            <div v-else class="association-empty"><v-icon size="19">{{ branchSearch ? "mdi-magnify-close" : "mdi-store-off-outline" }}</v-icon><span>{{ branchSearch ? "No hay sucursales que coincidan con la búsqueda." : "No hay sucursales disponibles para administrar." }}</span></div>
-            <div class="selection-summary"><v-icon size="18">mdi-information-outline</v-icon><span>{{ branchChanges.length ? `${branchChanges.length} cambio(s) de asociación pendiente(s)` : "Asociar una sucursal es opcional." }}</span></div>
+            <MultiSelectCombobox
+              :model-value="selectedBranchRows"
+              :items="branchRows"
+              item-title="name"
+              item-value="id"
+              label="Seleccionar sucursal"
+              placeholder="Busca por sucursal o dirección"
+              prepend-inner-icon="mdi-store-search-outline"
+              no-data-text="No hay sucursales que coincidan con la búsqueda."
+              :disabled="loading"
+              :loading="loading"
+              :custom-filter="branchFilter"
+              :menu-props="{ contentClass: 'worker-branch-select-menu' }"
+              class="worker-branch-combobox"
+              @update:model-value="updateSelectedBranch"
+            >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.address">
+                  <template #prepend>
+                    <div class="worker-branch-avatar"><v-img v-if="branchImage(item.raw)" :src="branchImage(item.raw)" width="36" height="36" cover><template #error><div class="image-fallback"><v-icon size="18">mdi-store</v-icon></div></template></v-img><v-icon v-else size="18">mdi-store</v-icon></div>
+                  </template>
+                  <template #append><span class="worker-branch-status" :class="item.raw.associated ? 'worker-branch-status--associated' : 'worker-branch-status--available'">{{ item.raw.associated ? "Asociada" : "Disponible" }}</span></template>
+                </v-list-item>
+              </template>
+              <template #selection="{ item, remove }">
+                <v-chip class="selected-worker-branch-chip" closable @click:close="remove">
+                  <template #prepend><v-icon size="14">mdi-store</v-icon></template>
+                  {{ item.raw.name }}
+                </v-chip>
+              </template>
+            </MultiSelectCombobox>
           </section>
 
           <div class="form-section-label form-section-label--spaced">Imagen del trabajador</div>
@@ -68,8 +77,11 @@
 </template>
 
 <script>
+import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
+
 export default {
   name: "WorkerFormDialog",
+  components: { MultiSelectCombobox },
   emits: ["update:modelValue", "save"],
   props: {
     modelValue: { type: Boolean, default: false },
@@ -84,8 +96,6 @@ export default {
     formItem: {},
     originalBranches: [],
     branchRows: [],
-    branchSearch: "",
-    branchSearchOpen: false,
     file: null,
     imgMiniatura: "",
     showPassword: false,
@@ -107,11 +117,7 @@ export default {
     isOpen: { get() { return this.modelValue; }, set(value) { this.$emit("update:modelValue", value); } },
     imagePreview() { return this.imgMiniatura || this.baseImageUrl(this.formItem?.image); },
     hasAssociatedBranch() { return this.branchRows.some((branch) => branch.associated); },
-    filteredBranchRows() {
-      const search = this.branchSearch.toLowerCase().trim();
-      if (!search) return this.branchRows;
-      return this.branchRows.filter((branch) => [branch.id, branch.name, branch.address].some((value) => String(value ?? "").toLowerCase().includes(search)));
-    },
+    selectedBranchRows() { return this.branchRows.filter((branch) => branch.associated); },
     branchChanges() {
       const originalById = new Map(this.originalBranches.map((branch) => [String(branch.id), branch]));
       return this.branchRows.map((branch) => {
@@ -160,8 +166,6 @@ export default {
       }
       this.file = null;
       this.imgMiniatura = this.baseImageUrl(this.worker?.image);
-      this.branchSearch = "";
-      this.branchSearchOpen = false;
       this.showPassword = false;
       this.valid = false;
       this.$nextTick(() => this.$refs.form?.resetValidation());
@@ -182,17 +186,28 @@ export default {
       return clean.startsWith("images/") ? `${base}${clean}` : `${base}images/${clean}`;
     },
     branchImage(branch) { return this.baseImageUrl(branch?.image); },
-    toggleBranchSearch() { this.branchSearchOpen = !this.branchSearchOpen; if (!this.branchSearchOpen) this.branchSearch = ""; },
-    toggleBranchAssociation(branch) {
-      if (!branch) return;
-      if (branch.associated) {
-        if (!branch.relationId) { this.notify("warning", "No se pudo identificar la asociación de la sucursal."); return; }
-        branch.associated = false;
-        return;
+    branchFilter(value, query, item) {
+      const search = String(query ?? "").toLowerCase().trim();
+      if (!search) return 1;
+      const branch = item?.raw ?? item ?? {};
+      const searchable = [value, branch.id, branch.name, branch.address].map((part) => String(part ?? "").toLowerCase()).join(" ");
+      return searchable.includes(search) ? 1 : -1;
+    },
+    updateSelectedBranch(selectedBranches) {
+      const selected = this.toArray(selectedBranches);
+      const selectedBranch = selected[selected.length - 1] || null;
+      const selectedId = selectedBranch?.id ?? selectedBranch ?? null;
+      const current = this.branchRows.find((branch) => branch.associated);
+      if (current && (!selectedId || String(current.id) !== String(selectedId))) {
+        const original = this.originalBranches.find((item) => String(item.id) === String(current.id));
+        if (original?.associated && !current.relationId) { this.notify("warning", "No se pudo identificar la asociación de la sucursal."); return; }
       }
-      if (this.hasAssociatedBranch) { this.notify("warning", "Un trabajador solo puede estar asociado a una sucursal."); return; }
-      branch.associated = true;
-      branch.role_id = this.formItem.role_id || null;
+      this.branchRows = this.branchRows.map((branch) => {
+        const associated = selectedId !== null && String(branch.id) === String(selectedId);
+        return { ...branch, associated, role_id: associated ? (branch.role_id ?? this.formItem.role_id ?? null) : branch.role_id };
+      });
+      const associated = this.branchRows.find((branch) => branch.associated);
+      if (associated) associated.role_id = this.formItem.role_id || null;
     },
     onFileSelected(value) {
       const selected = value?.target?.files?.[0] || (Array.isArray(value) ? value[0] : value);
@@ -220,4 +235,8 @@ export default {
 </style>
 <style scoped>
 .branch-role-label{display:inline-flex;align-items:center;justify-content:flex-start;gap:5px;min-width:230px;max-width:230px;overflow:hidden;color:#475569;font-size:11px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.branch-role-label :deep(.v-icon){color:#5145a8}@media(max-width:600px){.branch-role-label{width:100%;min-width:0;max-width:100%}}
+</style>
+
+<style>
+.worker-branch-select-menu .v-list{padding:6px!important}.worker-branch-select-menu .v-list-item{min-height:54px;margin:2px 0;border-radius:9px}.worker-branch-select-menu .v-list-item:hover{background:#f4f7ff}.worker-branch-select-menu .v-list-item__prepend{margin-inline-end:12px!important}.worker-branch-select-menu .v-list-item-subtitle{color:#64748b!important;font-size:10.5px!important;font-weight:650!important;opacity:1!important}.worker-branch-select-menu .worker-branch-avatar{display:grid;flex:0 0 36px;width:36px;height:36px;overflow:hidden;place-items:center;color:#16875a;background:#eaf8f1;border:1px solid #d7f1e5;border-radius:9px}.worker-branch-select-menu .worker-branch-avatar :deep(.v-img__img){object-fit:cover}.worker-branch-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:7px;font-size:10px;font-weight:800}.worker-branch-status--associated{color:#116b49;background:#eaf8f1}.worker-branch-status--available{color:#8a5b08;background:#fff6e6}.selected-worker-branch-chip{max-width:220px!important;color:#2454d6!important;background:#eef3ff!important;font-size:11px!important;font-weight:750!important}.selected-worker-branch-chip .v-chip__content{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selected-worker-branch-chip .v-chip__close{color:#64748b!important}.selected-worker-branch-chip .v-chip__close:hover{color:#dc2626!important}
 </style>

@@ -69,7 +69,7 @@
         </div>
 
         <v-divider />
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -151,7 +151,7 @@
               </div>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
 
         <div class="table-footer-note">
           <v-icon size="15">mdi-information-outline</v-icon>
@@ -217,7 +217,7 @@ export default {
     headers: [
       { title: "Sucursal", key: "branch", sortable: true, width: "35%" },
       { title: "Dirección", key: "address", sortable: true, width: "45%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "20%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "20%" },
     ],
   }),
   computed: {

@@ -545,7 +545,7 @@
 
           </div>
 
-          <v-data-table
+          <StandardDataTable
 
             :headers="headers"
 
@@ -571,7 +571,7 @@
 
             <template #top>
 
-              <div class="ticket-type-report-table-head">
+              <div class="ticket-type-report-table-head standard-table-header">
 
                 <div class="ticket-type-report-col-method ticket-type-report-sortable" @click="toggleSort('tripCode')">
 
@@ -763,7 +763,7 @@
 
             </template>
 
-          </v-data-table>
+          </StandardDataTable>
 
         </v-card>
 

@@ -79,7 +79,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -144,7 +144,7 @@
                 <template #activator="{ props }">
                   <v-btn
                     v-bind="props"
-                    icon="mdi-delete-outline"
+                    icon="mdi-trash-can-outline"
                     size="small"
                     variant="text"
                     class="action-button action-button--delete"
@@ -164,7 +164,7 @@
               <div class="empty-text">Intenta cambiar la búsqueda o agrega uno nuevo.</div>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los permisos determinan las acciones disponibles para cada rol.</div>
       </v-card>
     </v-container>
@@ -289,7 +289,7 @@
           </v-btn>
           <v-btn
             class="delete-button"
-            prepend-icon="mdi-delete-outline"
+            prepend-icon="mdi-trash-can-outline"
             :loading="loading"
             :disabled="loading"
             elevation="0"

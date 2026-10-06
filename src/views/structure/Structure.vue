@@ -67,7 +67,7 @@
         />
       </div>
 
-      <v-data-table
+      <StandardDataTable
         :headers="headers"
         :items="structures"
         :search="search"
@@ -87,7 +87,7 @@
         <template #[`item.seatCount`]="{ item }"><button type="button" class="seat-count-badge" @click="openDialog(item)"><v-icon size="16">mdi-seat-outline</v-icon><strong>{{ item.seatCount || 0 }}</strong><span>asientos</span></button></template>
         <template #[`item.description`]="{ item }"><span class="structure-description">{{ item.description || 'Sin descripción' }}</span></template>
         <template #[`item.actions`]="{ item }"><div class="structure-actions"><v-tooltip text="Ver distribución" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-eye-outline" variant="text" size="small" class="action-button action-button--view" @click="openDialog(item)" /></template></v-tooltip><v-tooltip text="Editar estructura" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Eliminar estructura" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div></template>
-      </v-data-table>
+      </StandardDataTable>
       <div class="structures-table-note"><v-icon size="15">mdi-information-outline</v-icon>Las estructuras se utilizan para configurar la distribución de asientos de los vehículos.</div>
     </v-card>
   </v-container>
@@ -441,7 +441,7 @@ export default {
         { title: 'Nombre', key: 'name', sortable: true, width: '34%' },
         { title: 'Asientos', key: 'seatCount', sortable: true, width: '18%' },
         { title: 'Descripción', key: 'description', sortable: true, width: '34%' },
-        { title: '', key: 'actions', sortable: false, align: 'end', width: '14%' },
+        { title: "Acciones", key: 'actions', sortable: false, align: 'end', width: '14%' },
       ],
       editedItem: {
         id: '',

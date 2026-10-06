@@ -287,7 +287,7 @@
 
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
 
         v-model:items-per-page="itemsPerPage"
 
@@ -392,7 +392,7 @@
           <span class="worker-amount-value">${{ formatNumber(Number(item.totalAmount || 0)) }}</span>
         </template>
 
-        </v-data-table>
+        </StandardDataTable>
       </div>
 
     </v-card>

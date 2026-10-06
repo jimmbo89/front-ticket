@@ -20,7 +20,7 @@
         <div class="table-toolbar"><div><div class="section-title">Listado de rutas</div><div class="section-subtitle">{{ registeredCountText }}</div></div><v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar ruta..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable /></div>
         <v-divider />
 
-        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="branchRoutes" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay rutas disponibles" loading-text="Cargando rutas..." class="routes-table">
+        <StandardDataTable v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="branchRoutes" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay rutas disponibles" loading-text="Cargando rutas..." class="routes-table">
           <template #loading><v-skeleton-loader type="table-row@5" /></template>
           <template #[`item.code`]="{ item }"><div class="route-code-cell"><div class="route-icon"><v-icon size="18">mdi-road-variant</v-icon></div><div><div class="route-code">{{ item.code || "Sin código" }}</div></div></div></template>
           <template #[`item.originAddress`]="{ item }"><div class="location-cell"><div class="location-avatar"><v-img v-if="item.originImage" :src="imageUrl(item.originImage)" class="location-photo" width="36" height="36" cover><template #error><div class="location-fallback"><v-icon size="17">mdi-map-marker-outline</v-icon></div></template></v-img><v-icon v-else size="17">mdi-map-marker-outline</v-icon></div><span :title="item.originAddress">{{ item.originAddress || "Sin origen" }}</span></div></template>
@@ -33,7 +33,7 @@
             <v-tooltip text="Editar ruta" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip>
             <v-tooltip text="Eliminar ruta" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip>
           </div></template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Gestiona las paradas y tramos comerciales desde las acciones de cada ruta.</div>
       </v-card>
     </v-container>
@@ -71,7 +71,7 @@ export default {
     locations:[],locationsOrigins:[],filteredDestinations:[],branches:[],branchRoutes:[],branch_id:"",permissions:"",selectedRoute:{},dialogRouteStop:false,dialogFareSegment:false,
     search:"",page:1,itemsPerPage:10,sortBy:[],editedIndex:-1,
     headers:[
-      {title:"Código",key:"code",sortable:true,width:"13%"},{title:"Origen",key:"originAddress",sortable:true,width:"22%"},{title:"Destino",key:"destinationAddress",sortable:true,width:"22%"},{title:"Distancia",key:"distance",sortable:true,width:"10%"},{title:"Duración",key:"estimated",sortable:true,width:"10%"},{title:"",key:"actions",sortable:false,align:"end",width:"23%"},
+      {title:"Código",key:"code",sortable:true,width:"13%"},{title:"Origen",key:"originAddress",sortable:true,width:"22%"},{title:"Destino",key:"destinationAddress",sortable:true,width:"22%"},{title:"Distancia",key:"distance",sortable:true,width:"10%"},{title:"Duración",key:"estimated",sortable:true,width:"10%"},{title: "Acciones",key:"actions",sortable:false,align:"end",width:"23%"},
     ],
     editedItem:{id:"",code:"",origin_id:"",destination_id:"",distance:"",estimated:"",status:"1",route_id:"",branch_id:"",branches:[]},
     defaultItem:{id:"",code:"",origin_id:"",destination_id:"",distance:"",estimated:"",status:"1",route_id:"",branch_id:"",branches:[]},originalItem:{},

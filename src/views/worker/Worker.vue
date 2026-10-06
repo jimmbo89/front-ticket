@@ -19,7 +19,7 @@
       <v-card class="table-panel" elevation="0">
         <div class="table-toolbar"><div><div class="section-title">Listado de trabajadores</div><div class="section-subtitle">{{ registeredCountText }}</div></div><div class="toolbar-filters"><v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar trabajador..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable /></div></div>
         <v-divider />
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -44,7 +44,7 @@
           <template #[`item.role`]="{ item }"><span class="role-badge"><v-icon size="14">mdi-account-tie-outline</v-icon>{{ item.role || "Sin rol" }}</span></template>
           <template #[`item.address`]="{ item }"><div class="address-cell" :title="item.address"><v-icon size="15">mdi-map-marker-outline</v-icon><span>{{ item.address || "Sin dirección" }}</span></div></template>
           <template #[`item.actions`]="{ item }"><div class="action-buttons"><v-tooltip text="Editar trabajador" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Cambiar contraseña" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-lock-reset" variant="text" size="small" class="action-button action-button--password" @click="changePass(item)" /></template></v-tooltip><v-tooltip text="Eliminar trabajador" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div></template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los trabajadores acceden a las funciones habilitadas para el rol asignado.</div>
       </v-card>
     </v-container>
@@ -160,7 +160,7 @@ export default {
 
       { title: 'Dirección', key: 'address', sortable: true, width: '14%' },
 
-      { title: '', key: 'actions', sortable: false, align: 'end', width: '13%' },
+      { title: "Acciones", key: 'actions', sortable: false, align: 'end', width: '13%' },
 
     ],
 

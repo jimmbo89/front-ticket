@@ -50,7 +50,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -119,7 +119,7 @@
               <v-tooltip text="Eliminar dispositivo" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los dispositivos activos pueden operar con los servicios habilitados para su sucursal.</div>
       </v-card>
     </v-container>
@@ -171,7 +171,7 @@ export default {
       { title: "Mantenimiento", key: "maintenance", value: "maintenance", sortable: true, width: "12%" },
       { title: "Estado", key: "status", value: "status", sortable: true, width: "9%" },
       { title: "Descripción", key: "notes", value: "notes", sortable: false, width: "9%" },
-      { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
+      { title: "Acciones", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
     ],
     editedItem: { id: "", name: "", mac: "", version: "", image: "", serial: "", status: 1, maintenance: "", acquisition: "", notes: "", branch_id: "", vehicles: [] },
     defaultItem: { id: "", name: "", mac: "", version: "", image: "", serial: "", status: 1, maintenance: "", acquisition: "", notes: "", branch_id: "", vehicles: [] },

@@ -16,7 +16,7 @@
     </div>
 
     <v-card class="permission-panel" elevation="0">
-      <v-data-table :headers="headers" :items="rolepermissions" :search="search" :loading="loading" :items-per-page="10"
+      <StandardDataTable :headers="headers" :items="rolepermissions" :search="search" :loading="loading" :items-per-page="10"
         items-per-page-text="Elementos por página" no-data-text="Este rol no tiene permisos asignados"
         loading-text="Cargando permisos..." class="permission-table">
         <template #loading><v-skeleton-loader type="table-row@5" /></template>
@@ -28,7 +28,7 @@
         <template #[`item.actions`]="{ item }">
           <v-tooltip text="Quitar permiso" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="delete-action" @click="deleteItem(item)" /></template></v-tooltip>
         </template>
-      </v-data-table>
+      </StandardDataTable>
       <div class="panel-note"><v-icon size="15">mdi-information-outline</v-icon>Los cambios se aplican al rol inmediatamente.</div>
     </v-card>
 
@@ -115,7 +115,7 @@ export default {
       { title:"Permiso", key:"name", value:"name", width:"25%" },
       { title:"Módulo", key:"module", value:"module", width:"20%" },
       { title:"Descripción", key:"description", value:"description", width:"45%" },
-      { title:"", key:"actions", value:"actions", sortable:false, align:"end", width:"10%" },
+      { title: "Acciones", key:"actions", value:"actions", sortable:false, align:"end", width:"10%" },
     ],
     selectRules:[(v) => Array.isArray(v) && v.length > 0 || "Debes seleccionar al menos un permiso"],
   }),

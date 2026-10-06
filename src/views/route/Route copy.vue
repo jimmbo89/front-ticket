@@ -75,7 +75,7 @@
       </v-card-title>
 
       <!-- Tabla de rutas con filas personalizadas -->
-      <v-data-table
+      <StandardDataTable
         :headers="headers"
         :items="routes"
         :search="search"
@@ -92,7 +92,7 @@
           <v-card
             flat
             color="blue-grey-lighten-5"
-            class="mb-2 mx-1 rounded-lg"
+            class="mb-2 mx-1 rounded-lg standard-table-header"
             elevation="1"
             style="
               border: 1px solid #eceff1;
@@ -139,8 +139,8 @@
               <!-- Acciones (25%) -->
               <div
                 style="width: 10%; min-width: 0"
-                class="d-flex justify-left font-weight-bold"
-              ></div>
+                class="d-flex justify-left font-weight-bold standard-table-actions-heading"
+              >ACCIONES</div>
             </v-card-text>
           </v-card>
         </template>
@@ -262,7 +262,7 @@
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </StandardDataTable>
       
             <v-card-actions class="pa-4">
     <v-spacer></v-spacer>

@@ -39,7 +39,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -73,7 +73,7 @@
           <template #[`item.actions`]="{ item }">
             <div class="action-buttons"><v-tooltip text="Quitar ruta" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Las rutas asociadas estarán disponibles para la planificación de esta sucursal.</div>
       </v-card>
     </v-container>
@@ -185,7 +185,7 @@ export default {
       { title: "Origen", key: "originName", sortable: true, width: "27%" },
       { title: "Destino", key: "destinationName", sortable: true, width: "27%" },
       { title: "Distancia / tiempo", key: "routeInfo", sortable: false, width: "18%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "12%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "12%" },
     ],
     editedItem: { id: "", branch_id: "", route_id: [], code: "" },
     originalItem: { id: "", branch_id: "", route_id: [], code: "" },

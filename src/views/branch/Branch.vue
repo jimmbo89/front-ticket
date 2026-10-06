@@ -14,14 +14,14 @@
       <v-card class="table-panel" elevation="0">
         <div class="table-toolbar"><div><div class="section-title">Listado de sucursales</div><div class="section-subtitle">{{ registeredCountText }}</div></div><div class="toolbar-filters"><v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar sucursal..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable /></div></div>
         <v-divider />
-        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="branches" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page-options="[5, 10, 15, 25]" items-per-page-text="Elementos por página" no-data-text="No hay sucursales disponibles" loading-text="Cargando sucursales..." class="branches-table">
+        <StandardDataTable v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="branches" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page-options="[5, 10, 15, 25]" items-per-page-text="Elementos por página" no-data-text="No hay sucursales disponibles" loading-text="Cargando sucursales..." class="branches-table">
           <template #loading><v-skeleton-loader type="table-row@5" /></template>
           <template #[`item.name`]="{ item }"><div class="branch-name-cell"><div class="branch-avatar"><v-img v-if="item.image" :src="branchImage(item.image)" class="branch-photo" width="34" height="34" cover><template #error><div class="image-fallback"><v-icon size="17">mdi-store</v-icon></div></template></v-img><v-icon v-else size="17">mdi-store</v-icon></div><div class="cell-copy"><div class="branch-name">{{ item.name || "Sin nombre" }}</div><div class="branch-caption">Sucursal operativa</div></div></div></template>
           <template #[`item.companyName`]="{ item }"><span class="company-badge"><v-icon size="14">mdi-domain</v-icon>{{ item.companyName || "Sin empresa" }}</span></template>
           <template #[`item.phone`]="{ item }"><div class="contact-cell"><v-icon size="15">mdi-phone-outline</v-icon><span>{{ item.phone || "Sin teléfono" }}</span></div></template>
           <template #[`item.address`]="{ item }"><div class="address-cell" :title="item.address"><v-icon size="15">mdi-map-marker-outline</v-icon><span>{{ item.address || "Sin dirección" }}</span></div></template>
           <template #[`item.actions`]="{ item }"><div class="action-buttons"><v-tooltip text="Gestionar trabajadores" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-account-group-outline" variant="text" size="small" class="action-button action-button--workers" @click="showAddWorker(item)" /></template></v-tooltip><v-tooltip text="Gestionar vehículos" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-bus" variant="text" size="small" class="action-button action-button--vehicles" @click="showAddVehicle(item)" /></template></v-tooltip><v-tooltip text="Gestionar rutas" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-map-marker-path" variant="text" size="small" class="action-button action-button--routes" @click="showAddRoute(item)" /></template></v-tooltip><v-tooltip text="Editar sucursal" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Eliminar sucursal" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div></template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Desde las acciones puedes administrar trabajadores, vehículos y rutas de cada sucursal.</div>
       </v-card>
     </v-container>
@@ -132,7 +132,7 @@ export default {
 
       { title: "Dirección", key: "address", sortable: true, width: "21%" },
 
-      { title: "", key: "actions", sortable: false, align: "end", width: "20%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "20%" },
 
     ],
 

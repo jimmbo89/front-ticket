@@ -40,7 +40,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -73,7 +73,7 @@
           <template #[`item.actions`]="{ item }">
             <div class="action-buttons"><v-tooltip text="Quitar trabajador" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los trabajadores asociados pueden operar este vehículo según sus permisos.</div>
       </v-card>
     </v-container>
@@ -175,7 +175,7 @@ export default {
     headers: [
       { title: "Nombre del trabajador", key: "name", sortable: true, width: "42%" },
       { title: "Correo", key: "email", sortable: true, width: "42%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "16%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "16%" },
     ],
     editedItem: { id: "", vehicle_id: "", worker_id: [], name: "" },
     originalItem: { id: "", vehicle_id: "", worker_id: [], name: "" },

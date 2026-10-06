@@ -39,7 +39,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -74,7 +74,7 @@
           <template #[`item.actions`]="{ item }">
             <div class="action-buttons"><v-tooltip text="Quitar vehículo" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Los vehículos asociados estarán disponibles para la operación de esta sucursal.</div>
       </v-card>
     </v-container>
@@ -188,7 +188,7 @@ export default {
       { title: "Marca", key: "brand", sortable: true, width: "18%" },
       { title: "Modelo", key: "model", sortable: true, width: "18%" },
       { title: "Asientos", key: "seats", sortable: true, width: "14%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "16%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "16%" },
     ],
     editedItem: { id: "", branch_id: "", vehicle_id: [], plate: "" },
     originalItem: { id: "", branch_id: "", vehicle_id: [], plate: "" },

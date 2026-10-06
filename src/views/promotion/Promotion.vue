@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="tariff-page">
     <v-snackbar
       v-model="snackbar"
@@ -104,7 +104,7 @@
 
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:sort-by="sortBy"
           :headers="headers"
           :items="promotions"
@@ -199,7 +199,7 @@
             </div>
           </template>
 
-        </v-data-table>
+        </StandardDataTable>
 
         <div class="table-footer-note">
           <v-icon size="15">mdi-information-outline</v-icon>
@@ -406,7 +406,7 @@ export default {
       { title: "Tipo", key: "discount_type", value: "discount_type", sortable: true, width: "16%" },
       { title: "Descripción", key: "description", value: "description", sortable: true, width: "30%" },
       { title: "Estado", key: "active", value: "active", sortable: true, width: "12%" },
-      { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
+      { title: "Acciones", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
     ],
 
     discountTypeOptions: [

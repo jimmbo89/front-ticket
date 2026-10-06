@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <v-snackbar class="mt-12" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="24"
     :multi-line="true" vertical v-model="snackbar">
     <v-row>
@@ -198,12 +198,12 @@
 
       <v-divider />
 
-      <v-data-table :headers="headers" :items="sortedTickets" :search="search"
+      <StandardDataTable :headers="headers" :items="sortedTickets" :search="search"
         v-model:expanded="expandedTicketItems" item-value="id"
         :items-per-page-text="'Elementos por página'" no-data-text="No hay datos disponibles" :loading="loading"
         loading-text="Cargando datos..." :hide-default-header="true" class="busgo-table incidents-table ticket-report-table">
         <template #top>
-          <div class="busgo-table-head">
+          <div class="busgo-table-head standard-table-header">
             <div class="ticket-col-code ticket-sortable-header" @click="toggleTicketSort('code')"><span>Código</span><v-icon size="14">{{ ticketSortIcon('code') }}</v-icon></div>
             <div class="ticket-col-route ticket-sortable-header" @click="toggleTicketSort('routeCode')"><span>Recorrido</span><v-icon size="14">{{ ticketSortIcon('routeCode') }}</v-icon></div>
             <div class="ticket-col-date ticket-sortable-header" @click="toggleTicketSort('saleDateTime')"><span>Fecha venta</span><v-icon size="14">{{ ticketSortIcon('saleDateTime') }}</v-icon></div>
@@ -211,7 +211,7 @@
             <div class="ticket-col-method ticket-sortable-header" @click="toggleTicketSort('method')"><span>Método</span><v-icon size="14">{{ ticketSortIcon('method') }}</v-icon></div>
             <div class="ticket-col-quantity ticket-sortable-header" @click="toggleTicketSort('quantity')"><span>Pasajes</span><v-icon size="14">{{ ticketSortIcon('quantity') }}</v-icon></div>
             <div class="ticket-col-total ticket-sortable-header" @click="toggleTicketSort('total')"><span>Total</span><v-icon size="14">{{ ticketSortIcon('total') }}</v-icon></div>
-            <div class="ticket-col-actions"><span>Acciones</span></div>
+            <div class="ticket-col-actions standard-table-actions-heading"><span>ACCIONES</span></div>
           </div>
         </template>
 
@@ -317,7 +317,7 @@
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </StandardDataTable>
     </v-card>
   </div>
   </v-container>

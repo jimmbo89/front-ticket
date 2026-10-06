@@ -84,7 +84,7 @@
         />
       </div>
 
-      <v-data-table
+      <StandardDataTable
         :headers="headers"
         :items="sortedTemplates"
         :search="search"
@@ -97,7 +97,7 @@
         :hide-default-header="true"
       >
         <template #top>
-          <div class="template-readable-head">
+          <div class="template-readable-head standard-table-header">
                 <div class="template-heading-group">
                   <button type="button" class="template-sort-button" @click="toggleTemplateSort('routeCode')">
                     Ruta
@@ -128,7 +128,7 @@
                     <v-icon size="14">{{ templateSortIcon('saleMode') }}</v-icon>
                   </button>
                 </div>
-                <div>Acciones</div>
+                <div class="standard-table-actions-heading">ACCIONES</div>
           </div>
         </template>
         <template #item="{ item }">
@@ -200,7 +200,7 @@
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </StandardDataTable>
     </v-card>
   </v-container>
 
@@ -637,7 +637,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="tripStopsHeaders"
                       :items="templateStopRows"
                       class="elevation-1 trip-step-table"
@@ -652,7 +652,7 @@
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="trip-table-manual-head"
+                          class="trip-table-manual-head standard-table-header"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -871,7 +871,7 @@
                           </td>
                         </tr>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                 </v-sheet>
               </div>
@@ -919,7 +919,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="tripFaresHeaders"
                       :items="templateFareRows"
                       class="elevation-1 trip-step-table"
@@ -934,7 +934,7 @@
                         <v-card
                           flat
                           color="blue-grey-lighten-5"
-                          class="trip-table-manual-head"
+                          class="trip-table-manual-head standard-table-header"
                           elevation="1"
                           style="
                             border: 1px solid #eceff1;
@@ -975,7 +975,7 @@
                               Estado
                             </div>
 
-                            <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold"></div>
+                          <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold standard-table-header__actions">Tipos</div>
                           </v-card-text>
                         </v-card>
                       </th></tr></template>
@@ -1145,7 +1145,7 @@
                           </td>
                         </tr>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                 </v-sheet>
               </div>
@@ -1196,7 +1196,7 @@
                   </v-toolbar>
 
                   <v-card-text>
-                    <v-data-table
+                    <StandardDataTable
                       :headers="headersWorkers"
                       :items="filteredWorkers"
                       class="elevation-1 trip-step-table"
@@ -1268,7 +1268,7 @@
                           </span>
                         </div>
                       </template>
-                    </v-data-table>
+                    </StandardDataTable>
                   </v-card-text>
                   </v-sheet>
                 </div>
@@ -3534,7 +3534,7 @@ export default {
 /* Group related information into readable columns without hiding fields. */
 .template-list-table :deep(.v-table__wrapper > table) { min-width:1100px; }
 .template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.7fr) minmax(115px,1fr) minmax(160px,1.25fr) minmax(90px,.75fr) minmax(176px,1.35fr) 80px 76px; gap:14px; padding:14px 18px; min-width:1100px; }
-.template-readable-head { background:#f3f6fa; color:#334155; font-size:11px; font-weight:750; border-bottom:1px solid #e4eaf2; align-items:center; }
+.template-readable-head { background:#f8fafc; color:#334155; font-size:11px; font-weight:850; letter-spacing:.04em; text-transform:uppercase; border-bottom:1px solid #e4eaf2; align-items:center; }
 .template-list-table .template-readable-head {
   box-sizing:border-box;
   width:100%;
@@ -3704,7 +3704,7 @@ export default {
 .trip-step-table tbody td { height:56px!important; color:#334155!important; border-bottom:1px solid #edf1f5!important; font-size:11.5px!important; font-weight:650!important; }
 .trip-step-table tbody tr:hover { background:#f8faff!important; }
 .trip-table-manual-head { margin:0!important; color:#334155!important; background:#f8fafc!important; border:1px solid #e8edf5!important; border-radius:9px 9px 0 0!important; box-shadow:none!important; }
-.trip-table-manual-head .v-card-text { color:#334155; font-size:10px; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; }
+.trip-table-manual-head .v-card-text { color:#334155; font-size:11px; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; }
 .trip-stop-row-card,.trip-fare-row-card { margin:0!important; background:#fff!important; border:0!important; border-bottom:1px solid #edf1f5!important; border-radius:0!important; box-shadow:none!important; transition:background .15s ease; }
 .trip-stop-row-card:hover,.trip-fare-row-card:hover { background:#f8faff!important; }
 .trip-stop-row-card .v-card-text,.trip-fare-row-card .v-card-text { min-height:58px; padding:7px 14px!important; color:#334155; font-size:13px; font-weight:650; }

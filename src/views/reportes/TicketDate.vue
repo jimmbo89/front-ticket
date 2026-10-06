@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 
   <div class="ticket-report-page revenue-report-page">
 
@@ -412,7 +412,7 @@
 
           <v-card-text class="pa-0 collection-routes-container">
 
-            <v-data-table
+            <StandardDataTable
 
               v-model:expanded="expandedTramoRows"
 
@@ -440,7 +440,7 @@
 
               <template #top>
 
-                <div class="collection-route-table-head">
+                <div class="collection-route-table-head standard-table-header">
 
                   <div
 
@@ -520,7 +520,7 @@
 
                   </div>
 
-                  <div class="collection-route-col-actions"></div>
+                  <div class="collection-route-col-actions standard-table-actions-heading">ACCIONES</div>
 
                 </div>
 
@@ -828,7 +828,7 @@
 
               </template>
 
-            </v-data-table>
+            </StandardDataTable>
 
           </v-card-text>
 

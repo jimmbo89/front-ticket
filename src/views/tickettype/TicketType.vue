@@ -56,7 +56,7 @@
         </div>
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:sort-by="sortBy"
           :headers="headers"
           :items="ticketTypes"
@@ -108,7 +108,7 @@
             </div>
           </template>
 
-        </v-data-table>
+        </StandardDataTable>
 
         <div class="table-footer-note">
           <v-icon size="15">mdi-information-outline</v-icon>
@@ -220,7 +220,7 @@ export default {
       { title: "Tipo de pasajero", key: "name", value: "name", sortable: true, width: "30%" },
       { title: "Descripción", key: "description", value: "description", sortable: true, width: "45%" },
       { title: "Estado", key: "active", value: "active", sortable: true, width: "15%" },
-      { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
+      { title: "Acciones", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
     ],
     editedItem: {
       id: "", name: "", description: "", adjustment_type: null,

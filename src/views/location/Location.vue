@@ -100,7 +100,7 @@
 
         <v-divider />
 
-        <v-data-table
+        <StandardDataTable
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
           v-model:sort-by="sortBy"
@@ -203,7 +203,7 @@
               </v-tooltip>
             </div>
           </template>
-        </v-data-table>
+        </StandardDataTable>
 
         <div class="table-footer-note">
           <v-icon size="15">mdi-information-outline</v-icon>
@@ -491,7 +491,7 @@ export default {
       { title: "País", key: "country", sortable: true, width: "13%" },
       { title: "Ciudad", key: "city", sortable: true, width: "14%" },
       { title: "Estado", key: "active", sortable: true, width: "10%" },
-      { title: "", key: "actions", sortable: false, align: "end", width: "6%" },
+      { title: "Acciones", key: "actions", sortable: false, align: "end", width: "6%" },
     ],
 
     editedItem: {
