@@ -36,18 +36,31 @@
           <v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar empresa..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable />
         </div>
         <v-divider />
-        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="companies" :search="search" :loading="loading" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay empresas disponibles" loading-text="Cargando empresa..." class="companies-table">
-          <template #loading><v-skeleton-loader type="table-row@3" /></template>
-          <template #[`item.name`]="{ item }">
-            <div class="company-name-cell">
-              <button type="button" class="company-avatar" title="Ampliar logotipo" @click="openLogo(item)"><v-img v-if="item.displayImage" :src="item.displayImage" class="company-photo" width="46" height="38" contain><template #error><div class="image-fallback"><v-icon size="18">mdi-domain</v-icon></div></template></v-img><v-icon v-else size="18">mdi-domain</v-icon></button>
-              <div class="cell-copy"><div class="company-name">{{ item.name || 'Empresa sin nombre' }}</div><div class="company-address">{{ item.address || 'Dirección no registrada' }}</div></div>
+        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" :headers="headers" :items="sortedCompanies" :search="search" :loading="loading" :hide-default-header="true" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay empresas disponibles" loading-text="Cargando empresa..." class="companies-table">
+          <template #top>
+            <div class="company-table-head">
+              <button type="button" class="company-sort-button" @click="toggleCompanySort('name')">Nombre <v-icon size="15">{{ companySortIcon('name') }}</v-icon></button>
+              <button type="button" class="company-sort-button" @click="toggleCompanySort('rut')">RUT <v-icon size="15">{{ companySortIcon('rut') }}</v-icon></button>
+              <button type="button" class="company-sort-button" @click="toggleCompanySort('phone')">Teléfono <v-icon size="15">{{ companySortIcon('phone') }}</v-icon></button>
+              <button type="button" class="company-sort-button" @click="toggleCompanySort('image')">Estado <v-icon size="15">{{ companySortIcon('image') }}</v-icon></button>
+              <div class="company-actions-heading">Acciones</div>
             </div>
           </template>
-          <template #[`item.rut`]="{ item }"><span class="table-value">{{ item.rut || 'No registrado' }}</span></template>
-          <template #[`item.phone`]="{ item }"><span class="phone-value"><v-icon size="15">mdi-phone-outline</v-icon>{{ item.phone || 'No registrado' }}</span></template>
-          <template #[`item.image`]="{ item }"><span class="status-badge" :class="item.image ? 'status-badge--active' : 'status-badge--inactive'"><span class="status-dot" />{{ item.image ? 'Disponible' : 'Sin logo' }}</span></template>
-          <template #[`item.actions`]="{ item }"><div class="action-buttons"><v-tooltip text="Editar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Eliminar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div></template>
+          <template #loading><v-skeleton-loader type="table-row@3" /></template>
+          <template #item="{ item }">
+            <tr><td colspan="100" class="pa-0 border-0">
+              <div class="company-table-row">
+                <div class="company-name-cell">
+                  <button type="button" class="company-avatar" title="Ampliar logotipo" @click="openLogo(item)"><v-img v-if="item.displayImage" :src="item.displayImage" class="company-photo" width="40" height="34" contain><template #error><div class="image-fallback"><v-icon size="18">mdi-domain</v-icon></div></template></v-img><v-icon v-else size="18">mdi-domain</v-icon></button>
+                  <div class="cell-copy"><div class="company-name">{{ item.name || 'Empresa sin nombre' }}</div><div class="company-address">{{ item.address || 'Dirección no registrada' }}</div></div>
+                </div>
+                <div class="table-value">{{ item.rut || 'No registrado' }}</div>
+                <div class="phone-value"><v-icon size="15">mdi-phone-outline</v-icon>{{ item.phone || 'No registrado' }}</div>
+                <div><span class="status-badge" :class="item.image ? 'status-badge--active' : 'status-badge--inactive'"><span class="status-dot" />{{ item.image ? 'Disponible' : 'Sin logo' }}</span></div>
+                <div class="action-buttons"><v-tooltip text="Editar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-pencil-outline" variant="text" size="small" class="action-button action-button--edit" @click="editItem(item)" /></template></v-tooltip><v-tooltip text="Eliminar empresa" location="top"><template #activator="{ props }"><v-btn v-bind="props" icon="mdi-trash-can-outline" variant="text" size="small" class="action-button action-button--delete" @click="deleteItem(item)" /></template></v-tooltip></div>
+              </div>
+            </td></tr>
+          </template>
         </v-data-table>
         <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>El logotipo se utiliza en la navegación y otros elementos de identidad de BusGo.</div>
       </v-card>
@@ -119,9 +132,9 @@ export default {
     snackbar: false, sb_type: "", sb_message: "", sb_timeout: 2500, sb_title: "", sb_icon: "",
     valid: false, loading: false, dialog: false, dialogDelete: false, logoDialog: false,
     companies: [], selectedCompany: null, file: null, imgMiniatura: "", editedIndex: -1,
-    search: "", page: 1, itemsPerPage: 10, sortBy: [],
+    search: "", page: 1, itemsPerPage: 10, companySortBy: "name", companySortOrder: "asc",
     headers: [
-      { title: "Empresa / Dirección", key: "name", sortable: true, width: "42%" },
+      { title: "Nombre", key: "name", sortable: true, width: "42%" },
       { title: "RUT", key: "rut", sortable: true, width: "18%" },
       { title: "Teléfono", key: "phone", sortable: true, width: "18%" },
       { title: "Logotipo", key: "image", sortable: true, width: "13%" },
@@ -137,9 +150,28 @@ export default {
   computed: {
     formTitle() { return this.editedIndex === -1 ? "Agregar empresa" : "Editar empresa"; },
     registeredCountText() { return this.companies.length === 1 ? "1 empresa registrada" : `${this.companies.length} empresas registradas`; },
+    sortedCompanies() {
+      const direction = this.companySortOrder === "asc" ? 1 : -1;
+      return [...this.companies].sort((a, b) => String(this.getCompanySortValue(a, this.companySortBy) ?? "").localeCompare(String(this.getCompanySortValue(b, this.companySortBy) ?? ""), "es", { numeric: true, sensitivity: "base" }) * direction);
+    },
   },
   mounted() { this.initialize(); },
   methods: {
+    toggleCompanySort(field) {
+      if (this.companySortBy === field) {
+        this.companySortOrder = this.companySortOrder === "asc" ? "desc" : "asc";
+        return;
+      }
+      this.companySortBy = field;
+      this.companySortOrder = "asc";
+    },
+    companySortIcon(field) {
+      if (this.companySortBy !== field) return "mdi-swap-vertical";
+      return this.companySortOrder === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+    },
+    getCompanySortValue(company, field) {
+      return field === "image" ? (company?.image ? "Disponible" : "Sin logo") : company?.[field];
+    },
     clone(value) { return JSON.parse(JSON.stringify(value)); },
     unwrapItem(item) { return item?.raw ?? item ?? {}; },
     resolveCompanyImage(image, cache = true) {
@@ -253,4 +285,34 @@ export default {
 <style scoped>
 .company-page{--blue:#2454d6;--blue-light:#3266e4;min-height:100%;color:#1e293b;background:#f6f8fb}.page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:70px;padding:12px 24px;background:#fff;border-bottom:1px solid #e8edf5}.page-heading,.dialog-heading{display:flex;align-items:center;gap:11px}.page-icon,.dialog-icon{position:relative;display:grid;flex:0 0 38px;width:38px;height:38px;place-items:center;color:#fff;background:radial-gradient(circle at 90% 5%,rgba(53,184,232,.5),transparent 28px),linear-gradient(135deg,#0e1f46,#2454d6);border-radius:10px;box-shadow:0 5px 12px rgba(36,84,214,.17)}.dialog-icon-main{transform:translate(-2px,1px)}.dialog-icon-action{position:absolute;right:5px;bottom:5px;padding:1px;color:#0e1f46;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(15,23,42,.22)}h1,h2,h3,p{margin:0}.page-heading h1{color:#0f172a;font-size:19px;font-weight:850}.page-heading p{margin-top:3px;color:#526176;font-size:12px;font-weight:650}.primary-button,.save-button{min-height:40px;color:#fff!important;background:linear-gradient(100deg,#2454d6,#3266e4)!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:0 5px 12px rgba(36,84,214,.2)!important}.page-content{padding:18px 24px 28px}.summary-row{margin-bottom:4px}.summary-card{display:flex;align-items:center;gap:11px;min-height:72px;padding:13px 15px;background:#fff;border:1px solid #e8edf5;border-radius:12px;box-shadow:0 4px 14px rgba(15,23,42,.035)}.summary-icon{display:grid;flex:0 0 36px;width:36px;height:36px;place-items:center;border-radius:9px}.summary-icon.blue{color:#2454d6;background:#eef3ff}.summary-icon.green{color:#16875a;background:#eaf8f1}.summary-icon.amber{color:#64748b;background:#f1f5f9}.summary-card b{display:block;color:#0f172a;font-size:20px;font-weight:900;line-height:1}.summary-card span{display:block;margin-top:4px;color:#526176;font-size:11px;font-weight:700}.table-panel{overflow:hidden;background:#fff;border:1px solid #e8edf5;border-radius:13px!important;box-shadow:0 5px 18px rgba(15,23,42,.04)!important}.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:69px;padding:12px 17px}.section-title{color:#0f172a;font-size:15px;font-weight:850}.section-subtitle{margin-top:3px;color:#64748b;font-size:11px;font-weight:650}.search-field{flex:0 1 320px}.search-field :deep(.v-field){border-radius:9px;font-size:12px}.companies-table{color:#1e293b;background:transparent}.companies-table :deep(thead th){height:40px!important;color:#334155!important;font-size:11px!important;font-weight:850!important;letter-spacing:.04em;text-transform:uppercase;background:#f8fafc!important;border-bottom:1px solid #e8edf5!important}.companies-table :deep(tbody td){height:62px!important;color:#1e293b;font-size:13px;font-weight:600;border-bottom:1px solid #eef2f6!important}.companies-table :deep(tbody tr:hover){background:#f8faff!important}.companies-table :deep(.v-data-table-footer){min-height:52px;padding:6px 16px;color:#334155;font-size:11.5px;font-weight:700}.companies-table :deep(.v-data-table__th--sortable:hover),.companies-table :deep(.v-data-table__th--sorted){color:#2454d6!important;background:#f4f7ff!important}.company-name-cell{display:flex;align-items:center;gap:10px;min-width:0}.company-avatar{display:grid;flex:0 0 48px;width:48px;height:40px;padding:3px;overflow:hidden;place-items:center;color:#2454d6;background:#fff;border:1px solid #dce6ff;border-radius:9px;cursor:pointer}.company-photo,.preview-image{width:100%!important;height:100%!important}.image-fallback,.large-logo-fallback{display:grid;width:100%;height:100%;place-items:center;color:#2454d6;background:#eef3ff}.cell-copy{min-width:0}.company-name{max-width:320px;overflow:hidden;color:#0f172a;font-size:13.5px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}.company-address{margin-top:2px;overflow:hidden;color:#526176;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.table-value,.phone-value{color:#334155;font-size:12.5px;font-weight:700}.phone-value{display:flex;align-items:center;gap:5px}.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;font-size:11.5px;font-weight:800;border-radius:7px}.status-badge--active{color:#116b49;background:#eaf8f1}.status-badge--inactive{color:#475569;background:#f1f5f9}.status-dot{width:6px;height:6px;background:currentColor;border-radius:50%}.action-buttons{display:flex;justify-content:flex-end;gap:2px}.action-button{border-radius:8px!important}.action-button--edit{color:#2454d6!important}.action-button--edit:hover{background:#eef3ff}.action-button--delete{color:#dc2626!important}.action-button--delete:hover{background:#fff1f2}.table-footer-note{display:flex;align-items:center;gap:6px;min-height:42px;padding:9px 16px;color:#64748b;font-size:10.5px;font-weight:650;border-top:1px solid #edf1f5}.form-dialog,.logo-dialog,.delete-dialog{overflow:hidden;color:#1e293b;background:#fff;border:1px solid #dfe6ef;border-radius:14px!important;box-shadow:0 22px 60px rgba(15,23,42,.2)!important}.dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px}.dialog-title{color:#0f172a;font-size:16px;font-weight:850;line-height:1.2}.dialog-subtitle{margin-top:4px;color:#64748b;font-size:11.5px;font-weight:600}.dialog-close{color:#64748b!important}.dialog-body{max-height:70vh;padding:21px 22px 16px!important;overflow-y:auto}.form-section-label{margin-bottom:13px;color:#475569;font-size:10.5px;font-weight:850;letter-spacing:.065em;text-transform:uppercase}.form-section-label--spaced{margin-top:7px}.dialog-body :deep(.v-field){border-radius:9px}.dialog-body :deep(.v-field__outline){color:#d6dee9}.dialog-body :deep(.v-label){color:#64748b;font-size:13px;font-weight:650;opacity:1}.dialog-body :deep(.v-field__input){color:#1e293b;font-size:13px;font-weight:650}.image-upload-area{display:flex;align-items:center;gap:14px;padding:12px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.image-preview{flex:0 0 112px;width:112px;height:76px;overflow:hidden;background:#eef3ff;border:1px solid #dce6ff;border-radius:9px}.preview-placeholder{display:grid;width:100%;height:100%;place-items:center;color:#2454d6}.upload-copy{flex:1;min-width:0}.upload-title{color:#334155;font-size:12.5px;font-weight:800}.upload-description{margin:3px 0 8px;color:#64748b;font-size:10.5px;font-weight:600}.file-field{max-width:350px}.dialog-actions{justify-content:flex-end;gap:9px;padding:14px 20px!important}.cancel-button{min-width:94px;min-height:39px;color:#475569!important;font-size:12.5px;font-weight:750;letter-spacing:0;text-transform:none;border-radius:9px!important}.cancel-button:hover{background:#f1f5f9}.save-button{min-width:150px;padding-inline:18px!important}.logo-preview-large{display:grid;min-height:300px;padding:28px;place-items:center;background:#f8fafc}.delete-dialog{padding:29px 27px 24px;text-align:center}.delete-icon{display:grid;width:56px;height:56px;margin:0 auto 16px;place-items:center;color:#dc2626;background:#fff1f2;border:1px solid #ffe0e4;border-radius:15px}.delete-title{color:#0f172a;font-size:18px;font-weight:850}.delete-message{max-width:350px;margin:10px auto 22px;color:#64748b;font-size:12.5px;font-weight:600;line-height:1.55}.delete-message strong{color:#334155;font-weight:800}.delete-actions{display:flex;justify-content:center;gap:9px}.confirm-delete{min-width:112px;min-height:40px;color:#fff!important;background:#dc2626!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none}.snackbar-content{display:flex;align-items:center;gap:10px}.snackbar-content strong,.snackbar-content small{display:block}.snackbar-content small{margin-top:2px}
 @media(max-width:1050px){.companies-table{overflow-x:auto}.companies-table :deep(.v-table__wrapper){min-width:880px}}@media(max-width:700px){.page-header{align-items:flex-start;padding:12px 14px}.page-heading p{display:none}.page-content{padding:12px 13px 22px}.table-toolbar{align-items:stretch;flex-direction:column}.search-field{width:100%;max-width:none}.image-editor{grid-template-columns:1fr}.image-preview{margin:auto}.dialog-body{padding:17px 14px 13px!important}}@media(max-width:450px){.page-header{flex-direction:column}.primary-button{width:100%}}
+</style>
+
+<style>
+/* El encabezado visible es el manual, igual que en Viajes y Plantillas. */
+.companies-table thead { display:none!important; }
+</style>
+
+<style scoped>
+.companies-table :deep(.v-data-table__top) { padding:0!important; }
+.companies-table :deep(.v-table__wrapper > table) { min-width:760px; }
+.companies-table :deep(tbody td) { height:auto!important; width:100%; border-bottom:0!important; }
+.company-table-head,
+.company-table-row { display:grid; grid-template-columns:minmax(180px,2fr) minmax(110px,.9fr) minmax(135px,1fr) minmax(115px,.9fr) 76px; gap:10px; min-width:760px; padding-inline:14px; }
+.company-table-head { box-sizing:border-box; min-height:40px; align-items:center; color:#334155; background:#f8fafc; border-top:1px solid #e8edf5; border-bottom:1px solid #e8edf5; font-size:11px; font-weight:850; letter-spacing:.04em; text-transform:uppercase; }
+.company-table-row { min-height:56px; align-items:center; padding-block:7px; color:#334155; background:#fff; border-bottom:1px solid #eef2f6; font-size:12px; font-weight:650; }
+.company-table-row:hover { background:#f8faff; }
+.company-table-head > *,
+.company-table-row > * { min-width:0; }
+.company-sort-button { display:flex; align-items:center; gap:4px; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.company-sort-button:hover { color:#2454d6; }
+.company-sort-button:focus-visible { outline:2px solid #2454d6; outline-offset:3px; border-radius:3px; }
+.company-actions-heading { text-align:right; }
+.company-table-row .company-name-cell { gap:8px; }
+.company-table-row .company-avatar { flex-basis:42px; width:42px; height:36px; }
+.company-table-row .company-name { font-size:12.5px; }
+.company-table-row .table-value,
+.company-table-row .phone-value { font-size:12px; }
+.company-table-row .status-badge { font-size:10.5px; }
+.company-table-row .action-buttons { gap:0; }
+@media(max-width:1050px) { .companies-table :deep(.v-table__wrapper) { min-width:760px; } }
 </style>

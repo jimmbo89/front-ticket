@@ -57,10 +57,14 @@
         <v-divider />
 
         <v-data-table
+          v-model:sort-by="sortBy"
           :headers="headers"
           :items="ticketTypes"
           :search="search"
           :loading="loading"
+          :hide-default-header="false"
+          sort-asc-icon="mdi-arrow-up"
+          sort-desc-icon="mdi-arrow-down"
           :items-per-page="10"
           items-per-page-text="Elementos por página"
           no-data-text="No hay tipos de pasajeros disponibles"
@@ -211,10 +215,11 @@ export default {
     ticketTypes: [],
     editedIndex: -1,
     search: "",
+    sortBy: [],
     headers: [
-      { title: "Tipo de pasajero", key: "name", value: "name", width: "30%" },
-      { title: "Descripción", key: "description", value: "description", width: "45%" },
-      { title: "Estado", key: "active", value: "active", width: "15%" },
+      { title: "Tipo de pasajero", key: "name", value: "name", sortable: true, width: "30%" },
+      { title: "Descripción", key: "description", value: "description", sortable: true, width: "45%" },
+      { title: "Estado", key: "active", value: "active", sortable: true, width: "15%" },
       { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
     ],
     editedItem: {
@@ -424,6 +429,10 @@ export default {
 .search-field { flex:0 1 300px; }.search-field :deep(.v-field) { border-radius:9px; font-size:12px; }.search-field :deep(.v-field__outline) { color:#dce3ed; }
 .passenger-table { color:#334155; background:transparent; }
 .passenger-table :deep(thead th) { height:40px!important; color:#475569!important; font-size:10.5px!important; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; }
+.passenger-table :deep(.v-data-table__th--sortable) { cursor:pointer; user-select:none; }
+.passenger-table :deep(.v-data-table-header__content) { display:flex!important; align-items:center!important; gap:5px!important; }
+.passenger-table :deep(.v-data-table-header__sort-icon) { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; color:#94a3b8!important; font-size:15px!important; opacity:.65!important; }
+.passenger-table :deep(.v-data-table__th--sorted),.passenger-table :deep(.v-data-table__th--sortable:hover) { color:#2454d6!important; background:#f5f7ff!important; }
 .passenger-table :deep(tbody td) { height:58px!important; color:#334155; font-size:12px; border-bottom:1px solid #eef2f6!important; }.passenger-table :deep(tbody tr:hover) { background:#f8faff!important; }
 .passenger-name-cell { display:flex; align-items:center; gap:9px; min-width:0; }.passenger-avatar { display:grid; flex:0 0 31px; width:31px; height:31px; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:8px; }
 .cell-copy { min-width:0; }.passenger-name { overflow:hidden; color:#172033; font-size:12.5px; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }.passenger-id { margin-top:2px; color:#64748b; font-size:10px; font-weight:650; }

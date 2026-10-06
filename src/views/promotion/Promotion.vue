@@ -105,10 +105,14 @@
         <v-divider />
 
         <v-data-table
+          v-model:sort-by="sortBy"
           :headers="headers"
           :items="promotions"
           :search="search"
           :loading="loading"
+          :hide-default-header="false"
+          sort-asc-icon="mdi-arrow-up"
+          sort-desc-icon="mdi-arrow-down"
           :items-per-page="10"
           items-per-page-text="Elementos por página"
           no-data-text="No hay tarifas disponibles"
@@ -394,13 +398,14 @@ export default {
     promotions: [],
     editedIndex: -1,
     search: "",
+    sortBy: [],
 
     headers: [
-      { title: "Tarifa", key: "name", value: "name", width: "20%" },
-      { title: "Descuento", key: "percentage", value: "percentage", width: "12%" },
-      { title: "Tipo", key: "discount_type", value: "discount_type", width: "16%" },
-      { title: "Descripción", key: "description", value: "description", width: "30%" },
-      { title: "Estado", key: "active", value: "active", width: "12%" },
+      { title: "Tarifa", key: "name", value: "name", sortable: true, width: "20%" },
+      { title: "Descuento", key: "percentage", value: "percentage", sortable: true, width: "12%" },
+      { title: "Tipo", key: "discount_type", value: "discount_type", sortable: true, width: "16%" },
+      { title: "Descripción", key: "description", value: "description", sortable: true, width: "30%" },
+      { title: "Estado", key: "active", value: "active", sortable: true, width: "12%" },
       { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "10%" },
     ],
 
@@ -868,6 +873,10 @@ export default {
   background: #f8fafc !important;
   border-bottom: 1px solid #e8edf5 !important;
 }
+.tariff-table :deep(.v-data-table__th--sortable) { cursor:pointer; user-select:none; }
+.tariff-table :deep(.v-data-table-header__content) { display:flex!important; align-items:center!important; gap:5px!important; }
+.tariff-table :deep(.v-data-table-header__sort-icon) { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; color:#94a3b8!important; font-size:15px!important; opacity:.65!important; }
+.tariff-table :deep(.v-data-table__th--sorted),.tariff-table :deep(.v-data-table__th--sortable:hover) { color:#2454d6!important; background:#f5f7ff!important; }
 
 .tariff-table :deep(tbody td) {
   height: 58px !important;

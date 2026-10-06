@@ -108,6 +108,9 @@
           :items="locations"
           :search="search"
           :loading="loading"
+          :hide-default-header="false"
+          sort-asc-icon="mdi-arrow-up"
+          sort-desc-icon="mdi-arrow-down"
           :items-per-page-options="[5, 10, 15, 25]"
           items-per-page-text="Elementos por página"
           no-data-text="No hay ubicaciones disponibles"
@@ -1089,6 +1092,22 @@ export default {
 .locations-table :deep(.v-data-table__th--sortable) {
   cursor: pointer;
   user-select: none;
+}
+
+.locations-table :deep(.v-data-table-header__content) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.locations-table :deep(.v-data-table-header__sort-icon) {
+  display: inline-flex !important;
+  visibility: visible !important;
+  width: 15px !important;
+  height: 15px !important;
+  color: #94a3b8 !important;
+  font-size: 15px !important;
+  opacity: 0.65 !important;
 }
 
 .locations-table :deep(.v-data-table__th--sortable:hover),

@@ -98,6 +98,7 @@
         prepend-inner-icon="mdi-store"
         placeholder="Sucursal"
         hide-details
+        single-line
         class="incident-filter ticket-report-scope-filter ticket-report-branch-filter"
         :menu-props="{ contentClass: 'incidents-select-menu' }"
         :rules="selectRules"
@@ -6961,6 +6962,51 @@ table.v-table>thead,
   max-width: none !important;
 }
 
+.ticket-report-page .ticket-report-branch-filter {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.ticket-report-page .ticket-report-branch-filter .v-field__input {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  height: 40px !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  max-width: 100% !important;
+  max-height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden !important;
+}
+
+.ticket-report-page .ticket-report-branch-filter .v-field {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+}
+
+.ticket-report-page .ticket-report-branch-filter .v-field__field,
+.ticket-report-page .ticket-report-branch-filter .v-autocomplete__selection {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.ticket-report-page .ticket-report-branch-filter .v-field__field {
+  min-height: 0 !important;
+  max-height: 40px !important;
+}
+
+.ticket-report-page .ticket-report-branch-filter .v-autocomplete__selection {
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
 .ticket-report-page .ticket-report-filter-controls > .incidents-query-button {
   flex: 0 0 112px !important;
   width: 112px !important;
@@ -7076,6 +7122,14 @@ table.v-table>thead,
   background: transparent;
 }
 
+.ticket-report-page .ticket-report-table .v-data-table__top {
+  padding: 0 !important;
+}
+
+.ticket-report-page .ticket-report-table .v-table__wrapper > table {
+  min-width: 1120px;
+}
+
 .ticket-report-page .ticket-report-table :deep(thead) {
   display: none !important;
 }
@@ -7099,20 +7153,29 @@ table.v-table>thead,
   border-top: 1px solid #eef2f6;
 }
 
-.ticket-report-page .ticket-report-table :deep(.busgo-table-head) {
-  display: flex !important;
-  min-height: 40px;
-  height: 40px;
+.ticket-report-page .ticket-report-table .busgo-table-head {
+  display: grid !important;
+  grid-template-columns: 12fr 24fr 14fr 14fr 9fr 7fr 10fr 10fr;
+  align-items: center;
+  gap: 12px;
+  min-width: 1120px;
+  width: 100%;
+  min-height: 42px;
+  height: auto;
+  box-sizing: border-box;
   margin: 0 !important;
-  padding: 10px 17px;
+  padding: 12px 17px !important;
   color: #334155;
-  background: #f8fafc;
+  background: #f3f6fa;
   border-bottom: 1px solid #e8edf5;
   border-radius: 0;
   font-size: 11px;
-  font-weight: 850;
-  letter-spacing: .04em;
-  text-transform: uppercase;
+  font-weight: 750;
+}
+
+.ticket-report-page .ticket-report-table .busgo-table-head > div {
+  width: auto !important;
+  min-width: 0;
 }
 
 .ticket-report-page .ticket-report-table :deep(.busgo-row) {

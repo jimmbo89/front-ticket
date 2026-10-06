@@ -82,10 +82,14 @@
         <v-data-table
           v-model:items-per-page="itemsPerPage"
           v-model:page="page"
+          v-model:sort-by="sortBy"
           :headers="headers"
           :items="permisions"
           :search="search"
           :loading="loading"
+          :hide-default-header="false"
+          sort-asc-icon="mdi-arrow-up"
+          sort-desc-icon="mdi-arrow-down"
           :items-per-page-options="[5, 10, 15, 25]"
           items-per-page-text="Elementos por página"
           no-data-text="No hay permisos disponibles"
@@ -321,10 +325,11 @@ export default {
     search: "",
     page: 1,
     itemsPerPage: 10,
+    sortBy: [],
     headers: [
-      { title: "Nombre", key: "name", width: "26%" },
-      { title: "Módulo", key: "module", width: "22%" },
-      { title: "Descripción", key: "description", width: "38%" },
+      { title: "Nombre", key: "name", sortable: true, width: "26%" },
+      { title: "Módulo", key: "module", sortable: true, width: "22%" },
+      { title: "Descripción", key: "description", sortable: true, width: "38%" },
       { title: "Acciones", key: "actions", sortable: false, align: "end", width: "14%" },
     ],
     editedItem: {
@@ -1104,6 +1109,10 @@ export default {
   background: #f8fafc !important;
   border-bottom: 1px solid #e8edf5 !important;
 }
+.permissions-table :deep(.v-data-table__th--sortable) { cursor:pointer; user-select:none; }
+.permissions-table :deep(.v-data-table-header__content) { display:flex!important; align-items:center!important; gap:5px!important; }
+.permissions-table :deep(.v-data-table-header__sort-icon) { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; color:#94a3b8!important; font-size:15px!important; opacity:.65!important; }
+.permissions-table :deep(.v-data-table__th--sorted),.permissions-table :deep(.v-data-table__th--sortable:hover) { color:#2454d6!important; background:#f5f7ff!important; }
 .permissions-table :deep(tbody td) {
   height: 58px !important;
   color: #334155;

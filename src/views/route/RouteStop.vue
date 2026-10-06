@@ -16,7 +16,7 @@
 
       <v-card class="table-panel" elevation="0">
         <div class="table-toolbar"><div><h3>Listado de paradas</h3><p>{{ countText }}</p></div><v-text-field v-model="search" class="search-field" density="compact" placeholder="Buscar parada..." prepend-inner-icon="mdi-magnify" variant="outlined" hide-details clearable/></div><v-divider/>
-        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="routeStops" :search="search" :loading="loading" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay paradas configuradas" loading-text="Cargando paradas..." class="stops-table">
+        <v-data-table v-model:items-per-page="itemsPerPage" v-model:page="page" v-model:sort-by="sortBy" :headers="headers" :items="routeStops" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page-options="[5,10,15,25]" items-per-page-text="Elementos por página" no-data-text="No hay paradas configuradas" loading-text="Cargando paradas..." class="stops-table">
           <template #loading><v-skeleton-loader type="table-row@5"/></template>
           <template #[`item.locationName`]="{ item }"><div class="stop-cell"><div class="stop-avatar"><v-img v-if="item.locationImage" :src="imageUrl(item.locationImage)" class="stop-photo" width="38" height="38" cover><template #error><div class="image-fallback"><v-icon size="18">mdi-map-marker-outline</v-icon></div></template></v-img><v-icon v-else size="18">mdi-map-marker-outline</v-icon></div><div><strong>{{ item.locationName || 'Sin nombre' }}</strong><small>{{ areaText(item) }}</small></div></div></template>
           <template #[`item.stop_order`]="{ item }"><span class="order-badge">{{ item.stop_order }}</span></template>
@@ -73,4 +73,11 @@ export default{
 
 <style>
 .location-option{min-height:52px!important;padding:7px 12px!important}.location-option .v-list-item__prepend{align-self:center!important;margin-inline-end:11px!important}.location-option .v-list-item__spacer{width:0!important}.option-avatar{display:grid!important;overflow:hidden!important;place-items:center!important;color:#2454d6!important;background:#eef3ff!important;border:1px solid #dce6ff!important}
+</style>
+
+<style>
+.stops-table .v-data-table-header__content { display:flex!important; align-items:center!important; gap:5px!important; }
+.stops-table .v-data-table__th--sortable .v-data-table-header__sort-icon { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; margin-left:5px!important; color:#94a3b8!important; font-size:15px!important; opacity:.72!important; }
+.stops-table .v-data-table__th--sortable:hover .v-data-table-header__sort-icon,
+.stops-table .v-data-table__th--sorted .v-data-table-header__sort-icon { color:#2454d6!important; opacity:1!important; }
 </style>

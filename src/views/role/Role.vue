@@ -29,7 +29,7 @@
         </div>
         <v-divider />
 
-        <v-data-table :headers="headers" :items="roles" :search="search" :loading="loading" :items-per-page="10" items-per-page-text="Elementos por página" no-data-text="No hay roles disponibles" loading-text="Cargando roles..." class="roles-table">
+        <v-data-table v-model:sort-by="sortBy" :headers="headers" :items="roles" :search="search" :loading="loading" :hide-default-header="false" sort-asc-icon="mdi-arrow-up" sort-desc-icon="mdi-arrow-down" :items-per-page="10" items-per-page-text="Elementos por página" no-data-text="No hay roles disponibles" loading-text="Cargando roles..." class="roles-table">
           <template #loading><v-skeleton-loader type="table-row@5" /></template>
           <template #[`item.name`]="{ item }">
             <div class="role-name-cell">
@@ -115,12 +115,12 @@ export default {
   data: () => ({
     snackbar: false, sb_type: "", sb_message: "", sb_timeout: 2000, sb_title: "", sb_icon: "",
     valid: false, loading: false, dialog: false, dialogDelete: false, dialogRolePermission: false,
-    roles: [], selectedRole: null, editedIndex: -1, search: "",
+    roles: [], selectedRole: null, editedIndex: -1, search: "", sortBy: [],
     typeOptions: [{ name: "Sistema", id: "Sistema" }, { name: "Sucursal", id: "Sucursal" }],
     headers: [
-      { title: "Rol", key: "name", value: "name", width: "24%" },
-      { title: "Tipo", key: "type", value: "type", width: "16%" },
-      { title: "Descripción", key: "description", value: "description", width: "42%" },
+      { title: "Rol", key: "name", value: "name", sortable: true, width: "24%" },
+      { title: "Tipo", key: "type", value: "type", sortable: true, width: "16%" },
+      { title: "Descripción", key: "description", value: "description", sortable: true, width: "42%" },
       { title: "", key: "actions", value: "actions", sortable: false, align: "end", width: "18%" },
     ],
     editedItem: { id: "", name: "", description: "", type: "Sistema" },
@@ -269,6 +269,10 @@ export default {
 .search-field { flex:0 1 300px; }.search-field :deep(.v-field) { border-radius:9px; font-size:12px; }.search-field :deep(.v-field__outline) { color:#dce3ed; }
 .roles-table { color:#334155; background:transparent; }
 .roles-table :deep(thead th) { height:40px!important; color:#475569!important; font-size:10.5px!important; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; }
+.roles-table :deep(.v-data-table__th--sortable) { cursor:pointer; user-select:none; }
+.roles-table :deep(.v-data-table-header__content) { display:flex!important; align-items:center!important; gap:5px!important; }
+.roles-table :deep(.v-data-table-header__sort-icon) { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; color:#94a3b8!important; font-size:15px!important; opacity:.65!important; }
+.roles-table :deep(.v-data-table__th--sorted),.roles-table :deep(.v-data-table__th--sortable:hover) { color:#2454d6!important; background:#f5f7ff!important; }
 .roles-table :deep(tbody td) { height:58px!important; color:#334155; font-size:12px; border-bottom:1px solid #eef2f6!important; }.roles-table :deep(tbody tr:hover) { background:#f8faff!important; }
 .role-name-cell { display:flex; align-items:center; gap:9px; min-width:0; }.role-avatar { display:grid; flex:0 0 31px; width:31px; height:31px; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:8px; }
 .cell-copy { min-width:0; }.role-name { overflow:hidden; color:#172033; font-size:12.5px; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }.role-id { margin-top:2px; color:#64748b; font-size:10px; font-weight:650; }
