@@ -71,7 +71,7 @@
           class="busgo-table template-list-table"
           :hide-default-header="true"
         >
-          <template #top>
+          <template #header>
             <div class="template-readable-head">
               <div class="template-heading-group">
                 <button type="button" class="template-sort-button">
@@ -940,6 +940,103 @@ export default {
     min-height: 86px;
     align-items: center;
   }
+}
+
+/* Dialog fullscreen styles */
+.trip-dialog {
+  background: #ffffff;
+  border-radius: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-dialog-header {
+  background: linear-gradient(110deg, #0e1f46, #173b8f 58%, #2454d6);
+  color: #ffffff;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.18);
+  flex-shrink: 0;
+}
+
+.trip-dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.trip-dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.trip-dialog-icon .v-icon {
+  color: #ffffff;
+}
+
+.trip-dialog-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.trip-dialog-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+}
+
+.trip-dialog-close {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.trip-dialog-close :deep(.v-btn__overlay) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.trip-dialog-close:hover :deep(.v-btn__overlay) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.trip-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.trip-step-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.trip-step-actions .v-btn {
+  min-width: 108px;
+  min-height: 42px;
+  border-radius: 9px;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.trip-step-actions .v-spacer {
+  flex: 1;
 }
 
 /* Thermal ticket preview styles */
