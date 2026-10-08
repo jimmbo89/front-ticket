@@ -92,6 +92,19 @@
           <v-divider />
           <v-card-text class="dialog-body">
             <div class="form-section-label">Vehículos disponibles</div>
+            <div class="d-flex align-center justify-space-between ga-2 mb-2">
+              <div class="text-caption text-medium-emphasis">
+                Vehículos disponibles
+              </div>
+
+              <v-checkbox
+                v-model="selectAllCheckbox"
+                label="Seleccionar todos"
+                hide-details
+                density="compact"
+                class="select-all-checkbox"
+              />
+            </div>
             <v-autocomplete
               v-model="editedItem.vehicle_id"
               :items="vehicles"
@@ -209,6 +222,18 @@ export default {
     selectedVehicleCount() {
       return Array.isArray(this.editedItem.vehicle_id) ? this.editedItem.vehicle_id.length : 0;
     },
+    selectAllCheckbox: {
+      get() {
+        return this.vehicles.length > 0 && this.selectedVehicleCount === this.vehicles.length;
+      },
+      set(value) {
+        if (value) {
+          this.selectAllVehicles();
+        } else {
+          this.clearSelectedVehicles();
+        }
+      },
+    },
     selectionSummary() {
       if (!this.selectedVehicleCount) return "Selecciona uno o varios vehículos disponibles.";
       return `${this.selectedVehicleCount} ${this.selectedVehicleCount === 1 ? "vehículo seleccionado" : "vehículos seleccionados"}`;
@@ -226,6 +251,12 @@ export default {
     getCacheTimestamp() {
       const now = new Date();
       return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    },
+    selectAllVehicles() {
+      this.editedItem.vehicle_id = this.vehicles.map((vehicle) => vehicle.id);
+    },
+    clearSelectedVehicles() {
+      this.editedItem.vehicle_id = [];
     },
     vehicleImage(image) {
       return `${this.$axios.defaults.baseURL}images/${image}?t=${this.getCacheTimestamp()}`;
@@ -418,7 +449,7 @@ export default {
 .table-panel { overflow:hidden; background:#fff; border:1px solid #e8edf5; border-radius:13px!important; box-shadow:0 5px 18px rgba(15,23,42,.04)!important; }.table-toolbar { display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:69px; padding:12px 17px; }.section-title { color:#0f172a; font-size:15px; font-weight:850; }.section-subtitle { margin-top:3px; color:#64748b; font-size:11px; font-weight:650; }.toolbar-filters { display:flex; align-items:center; justify-content:flex-end; gap:9px; flex:1; }.search-field { flex:0 1 285px; }.search-field :deep(.v-field) { border-radius:9px; font-size:12px; }.search-field :deep(.v-field__outline) { color:#dce3ed; }
 .vehicles-table { color:#1e293b; background:transparent; }.vehicles-table :deep(thead th) { height:40px!important; color:#334155!important; font-size:11px!important; font-weight:850!important; letter-spacing:.04em; text-transform:uppercase; background:#f8fafc!important; border-bottom:1px solid #e8edf5!important; }.vehicles-table :deep(tbody td) { height:62px!important; color:#1e293b; font-size:13px; font-weight:600; border-bottom:1px solid #eef2f6!important; }.vehicles-table :deep(tbody tr:hover) { background:#f8faff!important; }.vehicles-table :deep(.v-data-table-footer) { min-height:52px; padding:6px 16px; color:#334155; font-size:11.5px; font-weight:700; }.vehicles-table :deep(.v-data-table__th--sortable) { cursor:pointer; }.vehicles-table :deep(.v-data-table-header__content) { display:flex!important; align-items:center!important; gap:5px!important; }.vehicles-table :deep(.v-data-table-header__sort-icon) { display:inline-flex!important; visibility:visible!important; width:15px!important; height:15px!important; color:#94a3b8!important; font-size:15px!important; opacity:.65!important; }.vehicles-table :deep(.v-data-table__th--sorted),.vehicles-table :deep(.v-data-table__th--sortable:hover) { color:#2454d6!important; background:#f5f7ff!important; }
 .vehicle-name-cell { display:flex; align-items:center; gap:10px; min-width:0; }.vehicle-avatar { display:grid; flex:0 0 38px; width:38px; height:38px; overflow:hidden; place-items:center; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:9px; }.vehicle-photo,.image-fallback { width:100%; height:100%; }.vehicle-photo :deep(.v-img__img) { object-fit:cover; }.image-fallback { display:grid; place-items:center; }.cell-copy { min-width:0; }.vehicle-name { overflow:hidden; color:#0f172a; font-size:13.5px; font-weight:850; text-overflow:ellipsis; white-space:nowrap; }.vehicle-caption { margin-top:2px; color:#64748b; font-size:10.5px; font-weight:650; }.vehicle-meta { color:#334155; font-size:12.5px; font-weight:700; }.seats-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 8px; color:#2454d6; background:#eef3ff; border-radius:7px; font-size:11.5px; font-weight:800; }.branch-summary-name { max-width:360px; overflow:hidden; font-size:16px; text-overflow:ellipsis; white-space:nowrap; }.action-buttons { display:flex; justify-content:flex-end; }.action-button { border-radius:8px!important; }.action-button--delete { color:#dc2626!important; }.action-button--delete:hover { background:#fff1f2; }.table-footer-note { display:flex; align-items:center; gap:6px; min-height:42px; padding:9px 16px; color:#64748b; font-size:10.5px; font-weight:650; border-top:1px solid #edf1f5; }
-.form-dialog,.delete-dialog { overflow:hidden; color:#1e293b; background:#fff; border:1px solid #dfe6ef; border-radius:14px!important; box-shadow:0 22px 60px rgba(15,23,42,.2)!important; }.dialog-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:17px 20px; }.dialog-title { color:#0f172a; font-size:16px; font-weight:850; line-height:1.2; }.dialog-subtitle { margin-top:4px; color:#64748b; font-size:11.5px; font-weight:600; }.dialog-close { color:#64748b!important; }.dialog-body { padding:21px 22px 18px!important; }.form-section-label { margin-bottom:13px; color:#475569; font-size:10.5px; font-weight:850; letter-spacing:.065em; text-transform:uppercase; }.dialog-body :deep(.v-field) { border-radius:9px; }.dialog-body :deep(.v-field__outline) { color:#d6dee9; }.dialog-body :deep(.v-label) { color:#64748b; font-size:13px; font-weight:650; opacity:1; }.dialog-body :deep(.v-field__input) { color:#1e293b; font-size:13px; font-weight:650; }.selected-vehicle-chip { max-width:205px; color:#1e293b!important; background:#eef3ff!important; font-size:11px!important; font-weight:750!important; }.selected-vehicle-chip :deep(.v-chip__content) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.select-avatar { display:grid; flex:0 0 auto; place-items:center; overflow:hidden; color:#2454d6; background:#eef3ff; }.selection-summary { display:flex; align-items:flex-start; gap:7px; margin-top:3px; padding:10px 11px; color:#526176; background:#f8fafc; border:1px solid #e8edf5; border-radius:9px; font-size:10.5px; font-weight:650; line-height:1.45; }.selection-summary.has-selection { color:#116b49; background:#eaf8f1; border-color:#d7f1e5; }
+.form-dialog,.delete-dialog { overflow:hidden; color:#1e293b; background:#fff; border:1px solid #dfe6ef; border-radius:14px!important; box-shadow:0 22px 60px rgba(15,23,42,.2)!important; }.dialog-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:17px 20px; }.dialog-title { color:#0f172a; font-size:16px; font-weight:850; line-height:1.2; }.dialog-subtitle { margin-top:4px; color:#64748b; font-size:11.5px; font-weight:600; }.dialog-close { color:#64748b!important; }.dialog-body { padding:21px 22px 18px!important; }.form-section-label { margin-bottom:13px; color:#475569; font-size:10.5px; font-weight:850; letter-spacing:.065em; text-transform:uppercase; }.select-all-checkbox { margin-left:auto; margin-bottom:0; flex:0 0 auto; }.select-all-checkbox :deep(.v-selection-control) { margin-inline:0; }.select-all-checkbox :deep(.v-label) { margin-left:6px; color:#334155; font-size:12.5px; font-weight:700; }.dialog-body :deep(.v-field) { border-radius:9px; }.dialog-body :deep(.v-field__outline) { color:#d6dee9; }.dialog-body :deep(.v-label) { color:#64748b; font-size:13px; font-weight:650; opacity:1; }.dialog-body :deep(.v-field__input) { color:#1e293b; font-size:13px; font-weight:650; }.selected-vehicle-chip { max-width:205px; color:#1e293b!important; background:#eef3ff!important; font-size:11px!important; font-weight:750!important; }.selected-vehicle-chip :deep(.v-chip__content) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.select-avatar { display:grid; flex:0 0 auto; place-items:center; overflow:hidden; color:#2454d6; background:#eef3ff; }.selection-summary { display:flex; align-items:flex-start; gap:7px; margin-top:3px; padding:10px 11px; color:#526176; background:#f8fafc; border:1px solid #e8edf5; border-radius:9px; font-size:10.5px; font-weight:650; line-height:1.45; }.selection-summary.has-selection { color:#116b49; background:#eaf8f1; border-color:#d7f1e5; }
 .dialog-actions { justify-content:flex-end; gap:9px; padding:14px 20px!important; }.cancel-button { min-width:94px; min-height:39px; color:#475569!important; font-size:12.5px; font-weight:750; letter-spacing:0; text-transform:none; border-radius:9px!important; }.cancel-button:hover { background:#f1f5f9; }.save-button { min-width:160px; padding-inline:18px!important; }.delete-dialog { padding:29px 27px 24px; text-align:center; }.delete-icon { display:grid; width:56px; height:56px; margin:0 auto 16px; place-items:center; color:#dc2626; background:#fff1f2; border:1px solid #ffe0e4; border-radius:15px; }.delete-title { color:#0f172a; font-size:18px; font-weight:850; }.delete-message { max-width:340px; margin:10px auto 22px; color:#64748b; font-size:12.5px; font-weight:600; line-height:1.55; }.delete-message strong { color:#334155; font-weight:800; }.delete-actions { display:flex; justify-content:center; gap:9px; }.delete-button { min-width:112px; min-height:40px; color:#fff!important; background:#dc2626!important; border-radius:9px!important; font-size:12.5px; font-weight:800; letter-spacing:0; text-transform:none; }
 .snackbar-content { display:flex; align-items:center; gap:10px; }.snackbar-title { font-size:11px; font-weight:850; }.snackbar-message { margin-top:2px; font-size:9.5px; font-weight:600; }.busgo-snackbar :deep(.v-snackbar__wrapper) { border-radius:11px; }
 @media (max-width:959px) { .page-header { padding-inline:17px; }.page-content { padding:15px 17px 24px; }.table-toolbar { align-items:stretch; flex-direction:column; }.toolbar-filters { justify-content:flex-start; }.search-field { flex:1 1 auto; } }
