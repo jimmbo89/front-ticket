@@ -51,14 +51,6 @@
         class="drawer-item"
       />
 
-      <v-list-item
-        v-if="hasPermission(['view_tickets', 'view_tickets_company', 'view_tickettemplates', 'view_tickettemplates_company'])"
-        prepend-icon="mdi-ticket-percent-outline"
-        title="Plantillas de Tickets"
-        to="ticket-template"
-        class="drawer-item"
-      />
-
       <!-- CONFIGURACIÓN -->
       <div
         v-if="
@@ -190,6 +182,17 @@ export default {
         title: "Dispositivos",
         to: "device",
         permission: "view_devices",
+      },
+      {
+        icon: "mdi-ticket-percent-outline",
+        title: "Plantillas de tickets",
+        to: "ticket-template",
+        permission: [
+          "view_tickets",
+          "view_tickets_company",
+          "view_tickettemplates",
+          "view_tickettemplates_company",
+        ],
       },
     ],
 
