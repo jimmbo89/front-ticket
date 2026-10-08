@@ -1,66 +1,134 @@
 <template>
-  <v-container fluid>
-    <v-card elevation="6" class="mx-2">
-      <v-toolbar color="#1976D2">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="grow ml-4">
-            <span class="text-subtitle-1"><strong>Plantillas de Tickets</strong></span>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn class="text-subtitle-1 ml-12" color="white" variant="tonal" elevation="2"
-              prepend-icon="mdi-plus-circle" @click="openCreateDialog">
-              Nueva plantilla
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-toolbar>
+  <div class="ticket-templates-view">
+    <v-snackbar class="busgo-snackbar" location="right top" :timeout="sb_timeout" :color="sb_type" elevation="10" v-model="snackbar">
+      <div class="template-alert"><v-icon :icon="sb_icon" size="22" /><div><strong>{{ sb_title }}</strong><div>{{ sb_message }}</div></div></div>
+    </v-snackbar>
 
-      <v-card-text>
-        <v-row class="mt-1 mb-2">
-          <v-col cols="12" md="4">
-            <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar por nombre" single-line hide-details />
-          </v-col>
-          <v-col cols="12" md="4">
-            <v-select v-model="filterType" :items="tripTypeOptions" label="Tipo de viaje" clearable variant="outlined" density="compact" />
-          </v-col>
-          <v-col cols="12" md="4">
-            <v-select v-model="filterStatus" :items="statusOptions" label="Estado" clearable variant="outlined" density="compact" />
-          </v-col>
-        </v-row>
+    <v-card class="busgo-page-header" elevation="0">
+      <v-avatar :color="'#2454d6'" class="busgo-page-icon">
+        <v-icon>mdi-ticket-percent-outline</v-icon>
+      </v-avatar>
 
-        <v-data-table :headers="headers" :items="filteredTemplates" :search="search" class="elevation-1"
-          style="max-height: 68vh; overflow-y: auto" :items-per-page-text="'Elementos por páginas'"
-          no-data-text="No hay datos disponibles" :loading="loading" loading-text="Cargando datos..."
-          :items-per-page="10" :items-per-page-options="[5, 10, 20]">
-          <template v-slot:item.name="{ item }">
-            <div class="font-weight-medium">{{ item.name }}</div>
-          </template>
-          <template v-slot:item.tripType="{ item }">
-            <v-chip color="#1976D2" variant="flat" size="small">
-              {{ item.tripType }}
-            </v-chip>
-          </template>
-          <template v-slot:item.status="{ item }">
-            <v-chip :color="item.status === 'active' ? 'success' : 'default'" size="small" variant="tonal">
-              {{ item.status === 'active' ? 'Activa' : 'Inactiva' }}
-            </v-chip>
-          </template>
-          <template v-slot:item.updatedAt="{ item }">
-            {{ formatDate(item.updatedAt) }}
-          </template>
-          <template v-slot:item.actions="{ item }">
-            <div class="d-flex align-center ga-2">
-              <v-btn density="comfortable" icon="mdi-eye-outline" @click="viewTemplate(item)" color="#1976D2" variant="tonal" title="Ver configuración" />
-              <v-btn density="comfortable" icon="mdi-pencil" @click="editTemplate(item)" color="#1976D2" variant="tonal" title="Editar" />
-              <v-btn density="comfortable" icon="mdi-content-copy" @click="duplicateTemplate(item)" color="#5C6BC0" variant="tonal" title="Duplicar" />
-              <v-btn density="comfortable" :icon="item.status === 'active' ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'" @click="toggleTemplateStatus(item)" :color="item.status === 'active' ? 'success' : 'grey'" variant="tonal" :title="item.status === 'active' ? 'Desactivar' : 'Activar'" />
-              <v-btn density="comfortable" icon="mdi-delete" @click="confirmDelete(item)" color="#DA7171" variant="tonal" title="Eliminar" />
+      <div>
+        <div class="busgo-page-title">Plantillas de tickets</div>
+        <div class="busgo-page-subtitle">
+          Gestionar configuración, bloques y campos del ticket térmico
+        </div>
+      </div>
+
+      <v-spacer />
+
+      <v-btn
+        color="#2454d6"
+        variant="flat"
+        elevation="0"
+        prepend-icon="mdi-plus"
+        class="busgo-add-btn"
+        @click="openCreateDialog()"
+      >
+        Nueva plantilla
+      </v-btn>
+    </v-card>
+
+    <v-container fluid class="busgo-container">
+      <v-card class="busgo-card" elevation="0">
+        <div class="busgo-card-header">
+          <div>
+            <div class="busgo-card-title">
+              Listado de plantillas de tickets
+            </div>
+
+            <div class="busgo-card-subtitle">
+              Administra bloques, campos y configuración de tickets.
+            </div>
+          </div>
+        </div>
+
+        <div class="ticket-template-toolbar px-6 pb-4">
+          <v-spacer />
+
+          <v-text-field
+            v-model="search"
+            density="compact"
+            placeholder="Buscar plantilla de ticket..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            hide-details
+            single-line
+            class="ticket-template-search"
+          />
+        </div>
+
+        <v-data-table
+          :headers="headers"
+          :items="filteredTemplates"
+          :search="search"
+          :items-per-page-text="'Elementos por página'"
+          no-data-text="No hay datos disponibles"
+          :loading="loading"
+          loading-text="Cargando datos..."
+
+          class="busgo-table template-list-table"
+          :hide-default-header="true"
+        >
+          <template #top>
+            <div class="template-readable-head">
+              <div class="template-heading-group">
+                <button type="button" class="template-sort-button">
+                  Nombre
+                </button>
+              </div>
+              <div class="template-heading-group">
+                <button type="button" class="template-sort-button">
+                  Tipo de viaje
+                </button>
+              </div>
+              <div class="template-heading-group">
+                <button type="button" class="template-sort-button">
+                  Estado
+                </button>
+              </div>
+              <div class="template-heading-group">
+                <button type="button" class="template-sort-button">
+                  Actualización
+                </button>
+              </div>
+              <div>Acciones</div>
             </div>
           </template>
+          <template #item="{ item }">
+            <tr><td colspan="100" class="pa-0 border-0">
+              <div class="template-readable-row">
+                <div class="template-name-cell">
+                  <strong class="template-cell-title">{{ item.name || 'Sin nombre' }}</strong>
+                  <div class="template-subtitle">Configuración de bloques y campos</div>
+                </div>
+                <div>
+                  <v-chip color="#2454d6" variant="flat" size="small">
+                    {{ item.tripType || '—' }}
+                  </v-chip>
+                </div>
+                <div class="template-chip-stack">
+                  <v-chip :color="item.status === 'active' ? '#16845b' : '#64748b'">{{ item.status === 'active' ? 'Activa' : 'Inactiva' }}</v-chip>
+                </div>
+                <div>
+                  <div class="template-date-label"><small>Actualización</small></div>
+                  <div class="template-date">{{ formatDate(item.updatedAt) }}</div>
+                </div>
+                <div class="template-row-actions">
+                  <v-btn icon="mdi-eye-outline" variant="text" size="small" color="#2454d6" title="Ver configuración" aria-label="Ver configuración" @click="viewTemplate(item)" />
+                  <v-btn icon="mdi-pencil-outline" variant="text" size="small" color="#2454d6" title="Editar plantilla" aria-label="Editar plantilla" @click="editTemplate(item)" />
+                  <v-btn icon="mdi-content-copy" variant="text" size="small" color="#2454d6" title="Duplicar plantilla" aria-label="Duplicar plantilla" @click="duplicateTemplate(item)" />
+                  <v-btn :icon="item.status === 'active' ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'" variant="text" size="small" :color="item.status === 'active' ? '#16845b' : '#64748b'" :title="item.status === 'active' ? 'Desactivar' : 'Activar'" :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)" />
+                  <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="#dc2626" title="Eliminar plantilla" aria-label="Eliminar plantilla" @click="confirmDelete(item)" />
+                </div>
+              </div>
+            </td></tr>
+          </template>
         </v-data-table>
-      </v-card-text>
-    </v-card>
-  </v-container>
+      </v-card>
+    </v-container>
+  </div>
 
   <v-dialog v-model="dialog" max-width="1200px" persistent class="trip-dialog-modal">
     <v-card class="trip-dialog-card">
@@ -660,6 +728,222 @@ export default {
 </script>
 
 <style scoped>
+.ticket-templates-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.busgo-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+.busgo-page-icon {
+  flex-shrink: 0;
+}
+
+.busgo-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.busgo-page-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.busgo-add-btn {
+  text-transform: none;
+  font-weight: 600;
+}
+
+.busgo-container {
+  padding: 0 8px;
+}
+
+.busgo-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.busgo-card-header {
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.busgo-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.busgo-card-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.ticket-template-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px 16px;
+}
+
+.ticket-template-search {
+  width: 100%;
+  max-width: 320px;
+}
+
+.busgo-table {
+  background: transparent;
+  border-collapse: collapse;
+}
+
+.template-readable-head,
+.template-readable-row {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.7fr) minmax(115px, 1fr) minmax(90px, 0.75fr) minmax(176px, 1.35fr) 80px;
+  gap: 14px;
+  padding: 14px 18px;
+  min-width: 900px;
+}
+
+.template-readable-head {
+  background: #f3f6fa;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 750;
+  border-bottom: 1px solid #e4eaf2;
+  align-items: center;
+}
+
+.template-readable-head .template-heading-group {
+  display: contents;
+}
+
+.template-heading-group {
+  display: flex;
+  align-items: center;
+}
+
+.template-sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 750;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.template-readable-row {
+  min-height: 110px;
+  align-items: start;
+  background: #fff;
+  border-bottom: 1px solid #e8edf5;
+  color: #334155;
+  font-size: 13px;
+}
+
+.template-readable-row:hover {
+  background: #f8faff;
+}
+
+.template-readable-row > div {
+  min-width: 0;
+}
+
+.template-cell-title {
+  display: block;
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 750;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.template-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.template-date-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.template-date {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.template-chip-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.template-row-actions .v-btn {
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+}
+
+.template-row-actions :deep(.v-icon) {
+  font-size: 18px;
+}
+
+@media (max-width: 1200px) {
+  .template-readable-head,
+  .template-readable-row {
+    grid-template-columns: minmax(180px, 1.5fr) minmax(100px, 0.9fr) minmax(80px, 0.7fr) minmax(140px, 1.1fr) 76px;
+    min-width: 800px;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .template-readable-row {
+    min-height: 86px;
+    align-items: center;
+  }
+}
+
+/* Thermal ticket preview styles */
 .preview-panel {
   background: #f7f7f7;
   min-height: 420px;
