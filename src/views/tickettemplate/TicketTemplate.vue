@@ -130,23 +130,22 @@
     </v-container>
   </div>
 
-  <v-dialog v-model="dialog" max-width="1200px" persistent class="trip-dialog-modal">
-    <v-card class="trip-dialog-card">
-      <v-toolbar color="#2454d6" class="trip-dialog-toolbar">
-        <v-icon class="mr-3">mdi-ticket-percent-outline</v-icon>
-        <div>
-          <div class="trip-dialog-title-text">{{ dialogTitle }}</div>
-          <div class="trip-dialog-subtitle-text">{{ readOnly ? 'Visualizar configuración' : 'Configurar bloques y campos' }}</div>
+  <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition" :no-click-animation="true">
+    <v-card class="trip-dialog">
+      <header class="trip-dialog-header">
+        <div class="trip-dialog-heading">
+          <div class="trip-dialog-icon"><v-icon size="21">mdi-ticket-percent-outline</v-icon></div>
+          <div>
+            <div class="trip-dialog-title">{{ dialogTitle }}</div>
+            <div class="trip-dialog-subtitle">{{ readOnly ? 'Visualizar configuración' : 'Configurar bloques y campos' }}</div>
+          </div>
         </div>
-        <v-spacer />
-        <v-btn icon variant="text" @click="cancelDialog" class="trip-dialog-close">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-toolbar>
-
-      <v-card-text class="pa-4">
-        <v-row>
-          <v-col cols="12" md="6">
+        <v-btn icon="mdi-close" variant="text" class="trip-dialog-close" :disabled="saving" @click="cancelDialog()" />
+      </header>
+      <v-card-text class="trip-dialog-body pa-0">
+        <v-container fluid class="pa-6">
+          <v-row>
+            <v-col cols="12" lg="6">
             <v-text-field v-model="draft.name" label="Nombre de la plantilla" prepend-icon="mdi-text-box-outline" variant="underlined" :disabled="readOnly" :rules="nameRules" />
 
             <v-select v-model="draft.tripType" :items="tripTypeOptions" label="Tipo de viaje" prepend-icon="mdi-map-marker-path" variant="underlined" :disabled="readOnly" />
@@ -222,7 +221,7 @@
             </v-card>
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col cols="12" lg="6">
             <v-card variant="outlined" class="h-100">
               <v-card-title class="text-subtitle-2 pb-2">Vista previa con datos de ejemplo</v-card-title>
               <v-card-text class="preview-panel">
@@ -319,18 +318,18 @@
               </v-card-text>
             </v-card>
           </v-col>
-        </v-row>
+          </v-row>
+        </v-container>
       </v-card-text>
-
       <v-divider></v-divider>
-      <v-card-actions class="trip-step-actions pa-4">
-        <v-btn variant="flat" color="#475569" @click="cancelDialog">Cancelar</v-btn>
+      <footer class="trip-step-actions pa-4">
+        <v-btn variant="flat" color="#fff" border class="mr-2" @click="cancelDialog()" :disabled="saving">Cancelar</v-btn>
         <v-spacer />
-        <v-btn variant="flat" color="#475569" @click="restoreDefaultConfig" :disabled="readOnly" class="mr-2" v-if="!readOnly">Restaurar</v-btn>
+        <v-btn variant="flat" color="#475569" @click="restoreDefaultConfig" :disabled="readOnly || saving" class="mr-2" v-if="!readOnly">Restaurar</v-btn>
         <v-btn color="#2454d6" variant="flat" @click="saveTemplate" :loading="saving" :disabled="saving || !isDraftValid || readOnly">
           {{ readOnly ? 'Cerrar' : 'Guardar' }}
         </v-btn>
-      </v-card-actions>
+      </footer>
     </v-card>
   </v-dialog>
 
