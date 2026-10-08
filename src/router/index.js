@@ -192,8 +192,16 @@ const routes = [
             /* webpackChunkName: "home" */ "@/views/triptemplate/TripTemplate.vue"
           ),
       },
-    ],
-  },
+     {
+       path: "/ticket-template",
+       name: "TicketTemplates",
+       component: () =>
+         import(
+           /* webpackChunkName: "home" */ "@/views/tickettemplate/TicketTemplate.vue"
+         ),
+     },
+   ],
+ },
 ];
 
 const router = createRouter({
