@@ -106,6 +106,7 @@
               multiple
               chips
               closable-chips
+              hide-selected
             >
               <template #item="{ props, item }">
                 <v-list-item
@@ -181,9 +182,9 @@ export default {
       { title: "Rol", key: "roleName", sortable: true, width: "29%" },
       { title: "Acciones", key: "actions", sortable: false, align: "end", width: "16%" },
     ],
-    editedItem: { id: "", branch_id: "", worker_id: [], role_id: "", workerName: "" },
-    originalItem: { id: "", branch_id: "", worker_id: [], role_id: "", workerName: "" },
-    defaultItem: { id: "", branch_id: "", worker_id: [], role_id: "", workerName: "" },
+    editedItem: { id: "", branch_id: "", worker_id: [], workerName: "" },
+    originalItem: { id: "", branch_id: "", worker_id: [], workerName: "" },
+    defaultItem: { id: "", branch_id: "", worker_id: [], workerName: "" },
     editedIndex: -1,
     search: "",
     selectRules: [(v) => (Array.isArray(v) && v.length > 0) || "Selecciona al menos un trabajador"],
@@ -214,6 +215,61 @@ export default {
     this.initialize();
   },
   methods: {
+    toArray(value) {
+      return Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : []);
+    },
+    workerIdFrom(record = {}) {
+      return record.worker_id ?? record.workerId ?? record.worker?.id ?? null;
+    },
+    roleTypeFrom(record = {}) {
+      const nestedRole = record.role && typeof record.role === "object" ? record.role : record.worker?.role;
+      return String(
+        record.roleType
+        ?? record.role_type
+        ?? record.workerRoleType
+        ?? record.worker_role_type
+        ?? nestedRole?.type
+        ?? ""
+      ).trim().toLowerCase();
+    },
+    branchCountFrom(record = {}) {
+      const associations = record.branches
+        ?? record.branchAssociations
+        ?? record.branch_associations
+        ?? record.workerBranches
+        ?? record.worker_branches
+        ?? record.associations;
+      if (associations !== undefined && associations !== null) return this.toArray(associations).length;
+      const count = record.branchCount
+        ?? record.branch_count
+        ?? record.branchesCount
+        ?? record.branches_count
+        ?? record.associationCount
+        ?? record.association_count
+        ?? record.authorizedBranchCount
+        ?? record.authorized_branch_count;
+      return count === undefined || count === null || count === "" ? null : Number(count);
+    },
+    async loadWorkerRecord(workerId) {
+      if (workerId === undefined || workerId === null || workerId === "") return null;
+      const result = await handleRequest({ endpoint: "worker", method: "GET" });
+      if (!result.success) return null;
+      return this.toArray(result.data?.workers ?? result.data).find((worker) => String(worker.id ?? worker.worker_id ?? worker.workerId) === String(workerId)) || null;
+    },
+    async isLastSucursalAssociation(item) {
+      let record = item || {};
+      let roleType = this.roleTypeFrom(record);
+      let branchCount = this.branchCountFrom(record);
+      if (!roleType || branchCount === null) {
+        const worker = await this.loadWorkerRecord(this.workerIdFrom(record));
+        if (worker) {
+          record = { ...record, ...worker };
+          roleType = this.roleTypeFrom(record);
+          branchCount = this.branchCountFrom(record);
+        }
+      }
+      return roleType === "sucursal" && Number.isFinite(branchCount) && branchCount <= 1;
+    },
     getCacheTimestamp() {
       const now = new Date();
       return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -283,14 +339,12 @@ export default {
         let failed = 0;
         for (const workerId of workerIds) {
           try {
-            const selectedWorker = this.workers.find((worker) => String(worker.id) === String(workerId));
             const result = await handleRequest({
               endpoint: "branch-worker",
               method: "POST",
               data: {
                 branch_id: this.branch_id,
                 worker_id: workerId,
-                role_id: selectedWorker?.role_id ?? selectedWorker?.roleId ?? null,
               },
             });
             if (result.success) assigned += 1;
@@ -309,13 +363,25 @@ export default {
         }
       } else {
         this.valid = false;
-        const fieldsToUpdate = ["id", "branch_id", "worker_id", "role_id"];
-        const updatedFields = Object.keys(this.editedItem)
-          .filter((key) => fieldsToUpdate.includes(key) && this.editedItem[key] !== this.originalItem[key])
-          .reduce((obj, key) => { obj[key] = this.editedItem[key]; return obj; }, {});
+        const currentWorkerId = Array.isArray(this.editedItem.worker_id) ? this.editedItem.worker_id[0] : this.editedItem.worker_id;
+        const originalWorkerId = Array.isArray(this.originalItem.worker_id) ? this.originalItem.worker_id[0] : this.originalItem.worker_id;
+        const updatedFields = {};
+        if (String(this.editedItem.branch_id ?? "") !== String(this.originalItem.branch_id ?? "")) {
+          updatedFields.branch_id = this.editedItem.branch_id;
+        }
+        if (String(currentWorkerId ?? "") !== String(originalWorkerId ?? "") && currentWorkerId !== undefined && currentWorkerId !== null) {
+          updatedFields.worker_id = currentWorkerId;
+        }
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.id = this.editedItem.id;
           try {
+            if (updatedFields.worker_id !== undefined) {
+              const previousAssociation = { ...this.originalItem, worker_id: originalWorkerId };
+              if (await this.isLastSucursalAssociation(previousAssociation)) {
+                this.showAlert("warning", "Un trabajador con Rol Sucursal debe mantener al menos una sucursal asociada.", 4000);
+                return;
+              }
+            }
             const result = await handleRequest({ endpoint: "branch-worker", method: "PUT", data: updatedFields });
             if (result.success) {
               this.showAlert("success", result.message, 3000);
@@ -375,6 +441,10 @@ export default {
     async deleteItemConfirm() {
       this.loadingDelete = true;
       try {
+        if (await this.isLastSucursalAssociation(this.editedItem)) {
+          this.showAlert("warning", "Un trabajador con Rol Sucursal debe mantener al menos una sucursal asociada.", 4000);
+          return;
+        }
         const result = await handleRequest({ endpoint: "branch-worker-destroy", method: "POST", data: { id: this.editedItem.id } });
         if (result.success) {
           this.showAlert("success", result.message, 3000);

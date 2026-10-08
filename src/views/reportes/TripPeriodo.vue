@@ -52,7 +52,7 @@
               </template>
             </v-select>
           </v-col>
-          <v-col cols="auto" v-if="type === 'Sucursal' && mostrarFila">
+          <v-col cols="auto" v-if="type === 'Sucursal' && (mostrarFila || showBranchSelector)">
             <v-autocomplete :no-data-text="'No hay datos disponibles'" v-model="branch_id" :items="branches"
               label="Seleccione una Sucursal" prepend-inner-icon="mdi-store" item-title="name" item-value="id"
               variant="solo-filled"
@@ -339,6 +339,7 @@ export default {
     loading: false,
     mostrar: false,
     mostrarFila: false,
+    showBranchSelector: false,
     permissions: '',
     dialog: false,
     type: "Sucursal",
@@ -393,14 +394,11 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.company_id = LocalStorageService.getItem("business_id");
     this.permissions = LocalStorageService.getItem('permissions');
-    if (this.hasPermission('view_tickettripsdate_company')) {
-      this.showBranches();
-      this.type = "Company";
-      this.mostrarFila = true;
-    } else {
-      this.type = "Sucursal";
-      this.branch_id = LocalStorageService.getItem("branch_id");
-    }
+    const canViewCompany = this.hasPermission('view_tickettripsdate_company');
+    this.type = canViewCompany ? "Company" : "Sucursal";
+    this.mostrarFila = canViewCompany;
+    if (!canViewCompany) this.branch_id = LocalStorageService.getItem("branch_id");
+    this.showBranches();
   },
   methods: {
      hasPermission(requiredPermissions) {
@@ -466,8 +464,11 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.branches = result.data?.branches || [];
-          this.branch_id = this.branches[0].id;
+          this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
+          this.showBranchSelector = this.mostrarFila || this.branches.length > 1;
+          if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+            this.branch_id = this.branches[0].id;
+          }
         } else {
           // Si no hay datos, asignamos un array vacío
           this.branches = [];

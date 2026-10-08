@@ -440,54 +440,41 @@ export default {
 
     },*/
 
+    async loadRoleTypeData() {
+      const roleTypes = ['Empresa', 'Sucursal'];
+      const results = await Promise.all(roleTypes.map((type) => handleRequest({
+        endpoint: 'get-role-type',
+        method: 'POST',
+        data: { type },
+      })));
+      const failedResult = results.find((result) => !result.success);
+      if (failedResult) {
+        this.roles = [];
+        this.branches = [];
+        this.showAlert('warning', failedResult.message || 'No fue posible cargar los roles.', 3000);
+        return;
+      }
+      const rolesById = new Map();
+      const branchesById = new Map();
+      results.forEach((result) => {
+        this.toArray(result.data?.roles).forEach((role) => rolesById.set(String(role.id), role));
+        this.toArray(result.data?.branches).forEach((branch) => branchesById.set(String(branch.id), branch));
+      });
+      this.roles = Array.from(rolesById.values());
+      this.branches = Array.from(branchesById.values());
+    },
+
     async showAdd() {
-
       this.close();
-
-      const request = {
-
-        type: 'Sistema'
-
-      }
-
       try {
-
-        const result = await handleRequest({
-
-          endpoint: 'get-role-type',
-
-          method: 'POST',
-
-          data: request
-
-        });
-
-        if (result.success) {
-
-          // Si la solicitud es exitosa, asignamos las sucursales
-
-          this.roles = this.toArray(result.data?.roles);
-          this.branches = this.toArray(result.data?.branches);
-
-        } else {
-
-          // Si no hay datos, asignamos un array vacío
-
-          this.roles = [];
-          this.branches = [];
-
-        }
-
+        await this.loadRoleTypeData();
       } catch (error) {
-
-        this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
-
+        this.roles = [];
+        this.branches = [];
+        this.showAlert('error', 'Ocurrió un error inesperado al cargar los roles.', 3000);
       } finally {
-
         this.dialog = true;
-
       }
-
     },
 
     close() {
@@ -844,48 +831,14 @@ export default {
 
       };
 
-      const request = {
-
-        type: 'Sistema'
-
-      }
-
       try {
-
-        const result = await handleRequest({
-
-          endpoint: 'get-role-type',
-
-          method: 'POST',
-
-          data: request
-
-        });
-
-        if (result.success) {
-
-          // Si la solicitud es exitosa, asignamos las sucursales
-
-          this.roles = this.toArray(result.data?.roles);
-          this.branches = this.toArray(result.data?.branches);
-
-        } else {
-
-          // Si no hay datos, asignamos un array vacío
-
-          this.roles = [];
-          this.branches = [];
-
-        }
-
+        await this.loadRoleTypeData();
       } catch (error) {
-
-        this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
-
+        this.roles = [];
+        this.branches = [];
+        this.showAlert('error', 'Ocurrió un error inesperado al cargar los roles.', 3000);
       } finally {
-
         this.dialog = true;
-
       }
 
     },

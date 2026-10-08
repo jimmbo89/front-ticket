@@ -107,6 +107,7 @@
               multiple
               chips
               closable-chips
+              hide-selected
             >
               <template #item="{ props, item }">
                 <v-list-item v-bind="props" :title="item.raw.name" :subtitle="item.raw.email">

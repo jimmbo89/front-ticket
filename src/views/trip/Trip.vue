@@ -1703,13 +1703,9 @@ export default {
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.permissions = LocalStorageService.getItem("permissions");
-    if (this.hasPermission("view_trips_company")) {
-      this.showBranches();
-      this.mostrarFila = true;
-    } else {
-      this.branch_id = LocalStorageService.getItem("branch_id");
-      this.initialize();
-    }
+    this.mostrarFila = this.hasPermission("view_trips_company");
+    if (!this.mostrarFila) this.branch_id = LocalStorageService.getItem("branch_id");
+    this.showBranches();
   },
   watch: {
     // Observar cambios en la fecha para resetear selecciÃ³n
@@ -2257,9 +2253,12 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.branches = result.data?.branches || [];
-          this.editedItem.branch_id = this.branches[0].id;
-          this.branch_id = this.branches[0].id;
+          this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
+          this.mostrarFila = this.hasPermission("view_trips_company") || this.branches.length > 1;
+          if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+            this.branch_id = this.branches[0].id;
+          }
+          this.editedItem.branch_id = this.branch_id;
         } else {
           // Si no hay datos, asignamos un array vacÃ­o
           this.branches = [];
@@ -2274,7 +2273,6 @@ export default {
           3000
         );
       } finally {
-        this.mostrarFila = true;
         this.loading = false;
         this.initialize();
       }

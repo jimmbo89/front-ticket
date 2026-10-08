@@ -110,7 +110,7 @@
 
         <v-autocomplete
 
-          v-if="mostrarFila"
+          v-if="mostrarFila || showBranchSelector"
 
           v-model="branch_id"
 
@@ -502,6 +502,8 @@ export default {
 
         mostrarFila: false,
 
+        showBranchSelector: false,
+
         permissions: '',
 
         data: {},
@@ -697,21 +699,9 @@ export default {
 
         this.permissions = LocalStorageService.getItem('permissions');
 
-        if (this.hasPermission('view_tripsworker_company'))  {
-
-            this.showBranches();
-
-            this.mostrarFila = true;
-
-        } else {
-
-          this.mostrarFila = false,
-
-            this.branch_id =  parseInt(LocalStorageService.getItem('branch_id'), 10);
-
-            this.initialize();
-
-        }
+        this.mostrarFila = this.hasPermission('view_tripsworker_company');
+        if (!this.mostrarFila) this.branch_id = parseInt(LocalStorageService.getItem('branch_id'), 10);
+        this.showBranches();
 
         console.log('LocalStorageService.getItem(branch_id)');
 
@@ -949,11 +939,13 @@ export default {
 
                     // Si la solicitud es exitosa, asignamos las sucursales
 
-                    this.branches = result.data?.branches || [];
-
-                    this.branch_id = this.branches[0].id;
-
-                    this.workers = this.branches[0]?.workers || [];
+                    this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
+                    this.showBranchSelector = this.mostrarFila || this.branches.length > 1;
+                    if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+                      this.branch_id = this.branches[0].id;
+                    }
+                    const selectedBranch = this.branches.find((branch) => String(branch.id) === String(this.branch_id));
+                    this.workers = selectedBranch?.workers || [];
 
                     this.selectedWorker = this.worker_id;
 
@@ -974,12 +966,6 @@ export default {
                 //this.showAlert('error', 'Ocurrió un error inesperado al procesar la solicitud.', 3000);
 
             } finally {
-
-                if (this.branches.length > 1) {
-
-                    this.mostrarFila = true;
-
-                }
 
                 this.loading = false;
 

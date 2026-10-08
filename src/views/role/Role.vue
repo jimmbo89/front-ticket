@@ -18,7 +18,7 @@
     <v-container fluid class="page-content">
       <v-row class="summary-row">
         <v-col cols="12" sm="4"><div class="summary-card"><div class="summary-icon summary-icon--blue"><v-icon size="19">mdi-account-key-outline</v-icon></div><div><div class="summary-value">{{ roles.length }}</div><div class="summary-label">Total de roles</div></div></div></v-col>
-        <v-col cols="12" sm="4"><div class="summary-card"><div class="summary-icon summary-icon--green"><v-icon size="19">mdi-cog-outline</v-icon></div><div><div class="summary-value">{{ systemRoles }}</div><div class="summary-label">Roles de sistema</div></div></div></v-col>
+        <v-col cols="12" sm="4"><div class="summary-card"><div class="summary-icon summary-icon--green"><v-icon size="19">mdi-domain</v-icon></div><div><div class="summary-value">{{ companyRoles }}</div><div class="summary-label">Roles de empresa</div></div></div></v-col>
         <v-col cols="12" sm="4"><div class="summary-card"><div class="summary-icon summary-icon--slate"><v-icon size="19">mdi-store-outline</v-icon></div><div><div class="summary-value">{{ branchRoles }}</div><div class="summary-label">Roles de sucursal</div></div></div></v-col>
       </v-row>
 
@@ -38,8 +38,8 @@
             </div>
           </template>
           <template #[`item.type`]="{ item }">
-            <span class="role-type-badge" :class="normalizeRoleType(item.type) === 'SISTEMA' ? 'role-type-badge--system' : 'role-type-badge--branch'">
-              <v-icon size="14">{{ normalizeRoleType(item.type) === "SISTEMA" ? "mdi-cog-outline" : "mdi-store-outline" }}</v-icon>{{ getRoleTypeLabel(item.type) }}
+            <span class="role-type-badge" :class="normalizeRoleType(item.type) === 'EMPRESA' ? 'role-type-badge--system' : 'role-type-badge--branch'">
+              <v-icon size="14">{{ normalizeRoleType(item.type) === "EMPRESA" ? "mdi-domain" : "mdi-store-outline" }}</v-icon>{{ getRoleTypeLabel(item.type) }}
             </span>
           </template>
           <template #[`item.description`]="{ item }"><div class="description-cell" :title="item.description">{{ item.description || "Sin descripción" }}</div></template>
@@ -116,15 +116,15 @@ export default {
     snackbar: false, sb_type: "", sb_message: "", sb_timeout: 2000, sb_title: "", sb_icon: "",
     valid: false, loading: false, dialog: false, dialogDelete: false, dialogRolePermission: false,
     roles: [], selectedRole: null, editedIndex: -1, search: "", sortBy: [],
-    typeOptions: [{ name: "Sistema", id: "Sistema" }, { name: "Sucursal", id: "Sucursal" }],
+    typeOptions: [{ name: "Empresa", id: "Empresa" }, { name: "Sucursal", id: "Sucursal" }],
     headers: [
       { title: "Rol", key: "name", value: "name", sortable: true, width: "24%" },
       { title: "Tipo", key: "type", value: "type", sortable: true, width: "16%" },
       { title: "Descripción", key: "description", value: "description", sortable: true, width: "42%" },
       { title: "Acciones", key: "actions", value: "actions", sortable: false, align: "end", width: "18%" },
     ],
-    editedItem: { id: "", name: "", description: "", type: "Sistema" },
-    defaultItem: { id: "", name: "", description: "", type: "Sistema" },
+    editedItem: { id: "", name: "", description: "", type: "Empresa" },
+    defaultItem: { id: "", name: "", description: "", type: "Empresa" },
     originalItem: {},
     nameRules: [
       (v) => !!v || "El nombre es requerido",
@@ -136,7 +136,7 @@ export default {
   }),
   computed: {
     formTitle() { return this.editedIndex === -1 ? "Agregar rol" : "Editar rol"; },
-    systemRoles() { return this.roles.filter((role) => this.normalizeRoleType(role.type) === "SISTEMA").length; },
+    companyRoles() { return this.roles.filter((role) => this.normalizeRoleType(role.type) === "EMPRESA").length; },
     branchRoles() { return this.roles.filter((role) => this.normalizeRoleType(role.type) === "SUCURSAL").length; },
     registeredCountText() { return this.roles.length === 1 ? "1 rol registrado" : `${this.roles.length} roles registrados`; },
   },
@@ -145,9 +145,10 @@ export default {
     cloneItem(item) { return { ...item }; },
     unwrapRole(item) { return item?.raw ?? item ?? {}; },
     normalizeRoleType(type) { return String(type ?? "").trim().toUpperCase(); },
+    isValidRoleType(type) { return ["Empresa", "Sucursal"].includes(String(type ?? "").trim()); },
     getRoleTypeLabel(type) {
       const normalizedType = this.normalizeRoleType(type);
-      if (normalizedType === "SISTEMA") return "Sistema";
+      if (normalizedType === "EMPRESA") return "Empresa";
       if (normalizedType === "SUCURSAL") return "Sucursal";
       return type || "Sin tipo";
     },
@@ -157,7 +158,7 @@ export default {
         const result = await handleRequest({ endpoint: "role", method: "GET" });
         if (result.success) {
           const raw = Array.isArray(result.data?.roles) ? result.data.roles : [];
-          this.roles = raw.filter((role) => role.type !== "");
+          this.roles = raw.filter((role) => this.isValidRoleType(role.type));
         } else {
           this.roles = [];
           this.showAlert("warning", result.message || "No fue posible cargar los roles.", 3000);
@@ -192,10 +193,15 @@ export default {
     async save() {
       const validation = await this.$refs.form?.validate();
       if (!validation?.valid) return;
+      const roleType = String(this.editedItem.type ?? "").trim();
+      if (!this.isValidRoleType(roleType)) {
+        this.showAlert("warning", "El tipo de rol debe ser Empresa o Sucursal.", 3000);
+        return;
+      }
       const creating = this.editedIndex === -1;
-      const payload = creating ? { name: this.editedItem.name, description: this.editedItem.description, type: this.editedItem.type } : this.getChangedFields();
+      const payload = creating ? { name: this.editedItem.name, description: this.editedItem.description, type: roleType } : this.getChangedFields();
       if (!creating && Object.keys(payload).length === 0) { this.showAlert("warning", "No se realizaron cambios.", 3000); this.close(); return; }
-      if (!creating) payload.id = this.editedItem.id;
+      if (!creating) { payload.id = this.editedItem.id; payload.type = roleType; }
       this.loading = true;
       try {
         const result = await handleRequest({ endpoint: "role", method: creating ? "POST" : "PUT", data: payload });

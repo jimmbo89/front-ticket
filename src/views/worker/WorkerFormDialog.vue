@@ -18,30 +18,33 @@
             <v-col cols="12" md="6"><v-text-field v-model.trim="formItem.email" label="Correo electrónico" placeholder="nombre@empresa.cl" prepend-inner-icon="mdi-email-outline" variant="outlined" density="comfortable" :rules="emailRules" clearable /></v-col>
             <v-col cols="12" md="6"><v-text-field v-model.trim="formItem.user" label="Usuario" placeholder="Usuario de acceso" prepend-inner-icon="mdi-account-circle-outline" variant="outlined" density="comfortable" clearable /></v-col>
             <v-col v-if="isCreating" cols="12" md="6"><v-text-field v-model="formItem.password" :type="showPassword ? 'text' : 'password'" label="Contraseña" placeholder="Mínimo 5 caracteres" prepend-inner-icon="mdi-lock-outline" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" variant="outlined" density="comfortable" :rules="requiredRules" @click:append-inner="showPassword = !showPassword" /></v-col>
-            <v-col cols="12" md="6"><v-autocomplete v-model="formItem.role_id" :items="roles" item-title="name" item-value="id" label="Rol del sistema" prepend-inner-icon="mdi-account-tie-outline" variant="outlined" density="comfortable" no-data-text="No hay roles disponibles" :rules="selectRules" :menu-props="{ contentClass: 'worker-role-menu' }"><template #item="{ props, item }"><v-list-item v-bind="props" :title="item.raw.name"><template #prepend><div class="role-menu-icon"><v-icon size="18">mdi-account-tie-outline</v-icon></div></template></v-list-item></template></v-autocomplete></v-col>
+            <v-col cols="12" md="6"><v-autocomplete v-model="formItem.role_id" :items="roles" item-title="name" item-value="id" label="Rol" prepend-inner-icon="mdi-account-tie-outline" variant="outlined" density="comfortable" no-data-text="No hay roles disponibles" :rules="selectRules" :menu-props="{ contentClass: 'worker-role-menu' }"><template #item="{ props, item }"><v-list-item v-bind="props" :title="item.raw.name"><template #prepend><div class="role-menu-icon"><v-icon size="18">mdi-account-tie-outline</v-icon></div></template></v-list-item></template></v-autocomplete></v-col>
             <v-col cols="12" md="6"><v-text-field v-model.trim="formItem.rut" label="RUT" placeholder="12.345.678-9" prepend-inner-icon="mdi-card-account-details-outline" variant="outlined" density="comfortable" :rules="rutRules" clearable /></v-col>
           </v-row>
 
           <div class="form-section-label form-section-label--spaced">Información de contacto</div>
           <v-row dense><v-col cols="12" md="6"><v-text-field v-model.trim="formItem.phone" label="Teléfono" placeholder="+56912345678" prepend-inner-icon="mdi-phone-outline" variant="outlined" density="comfortable" :rules="mobileRules" clearable /></v-col><v-col cols="12" md="6"><v-text-field v-model.trim="formItem.address" label="Dirección" placeholder="Dirección del trabajador" prepend-inner-icon="mdi-map-marker-outline" variant="outlined" density="comfortable" clearable /></v-col></v-row>
 
-          <div class="form-section-label form-section-label--spaced">Sucursal del trabajador</div>
-          <section class="branch-association-panel">
+          <div class="form-section-label form-section-label--spaced">Acceso a sucursales</div>
+          <section v-if="requiresBranchAssociation" class="branch-association-panel">
             <div class="association-heading">
               <div class="association-heading-icon"><v-icon size="19">mdi-store-marker-outline</v-icon></div>
-              <div><div class="association-heading-title">Asociación opcional</div><div class="association-heading-copy">Un trabajador puede pertenecer a una sola sucursal. El rol seleccionado se aplicará a la asociación.</div></div>
+              <div><div class="association-heading-title">Sucursales autorizadas ({{ selectedBranchRows.length }})</div><div class="association-heading-copy">Selecciona una o varias sucursales para el trabajador. El rol se administra en el trabajador.</div></div>
             </div>
             <MultiSelectCombobox
+              :key="`worker-branches-${branchSelectionRevision}`"
               :model-value="selectedBranchRows"
               :items="branchRows"
               item-title="name"
               item-value="id"
-              label="Seleccionar sucursal"
-              placeholder="Busca por sucursal o dirección"
+              label="Seleccionar sucursales"
+              placeholder="Busca y selecciona una o varias sucursales"
               prepend-inner-icon="mdi-store-search-outline"
               no-data-text="No hay sucursales que coincidan con la búsqueda."
               :disabled="loading"
               :loading="loading"
+              :rules="branchRules"
+              :clearable="!requiresBranchAssociation || selectedBranchRows.length > 1"
               :custom-filter="branchFilter"
               :menu-props="{ contentClass: 'worker-branch-select-menu' }"
               class="worker-branch-combobox"
@@ -56,13 +59,14 @@
                 </v-list-item>
               </template>
               <template #selection="{ item, remove }">
-                <v-chip class="selected-worker-branch-chip" closable @click:close="remove">
+                <v-chip class="selected-worker-branch-chip" :closable="!requiresBranchAssociation || selectedBranchRows.length > 1" @click:close="remove">
                   <template #prepend><v-icon size="14">mdi-store</v-icon></template>
                   {{ item.raw.name }}
                 </v-chip>
               </template>
             </MultiSelectCombobox>
           </section>
+          <div v-else class="not-applicable-panel"><v-icon size="18">mdi-domain</v-icon><span>No aplica para roles Empresa. El trabajador no requiere una asociación individual a sucursal.</span></div>
 
           <div class="form-section-label form-section-label--spaced">Imagen del trabajador</div>
           <div class="image-upload-area"><div class="image-preview"><v-img v-if="imagePreview" :key="imagePreview" :src="imagePreview" width="92" height="92" cover><template #error><div class="preview-placeholder"><v-icon size="28">mdi-image-off-outline</v-icon></div></template></v-img><div v-else class="preview-placeholder"><v-icon size="28">mdi-account</v-icon></div></div><div class="upload-copy"><div class="upload-title">Fotografía de perfil</div><div class="upload-description">Formatos JPG, JPEG o PNG. Tamaño máximo: 500 KB.</div><v-file-input ref="fileInput" v-model="file" class="file-field" label="Seleccionar imagen" prepend-inner-icon="mdi-upload-outline" prepend-icon="" variant="outlined" density="compact" accept=".png,.jpg,.jpeg" hide-details clearable @update:model-value="onFileSelected" /></div></div>
@@ -96,10 +100,10 @@ export default {
     formItem: {},
     originalBranches: [],
     branchRows: [],
+    branchSelectionRevision: 0,
     file: null,
     imgMiniatura: "",
     showPassword: false,
-    syncingRole: false,
     snackbar: false,
     snackbarType: "",
     snackbarTitle: "",
@@ -118,15 +122,24 @@ export default {
     imagePreview() { return this.imgMiniatura || this.baseImageUrl(this.formItem?.image); },
     hasAssociatedBranch() { return this.branchRows.some((branch) => branch.associated); },
     selectedBranchRows() { return this.branchRows.filter((branch) => branch.associated); },
+    selectedRoleType() {
+      const selectedRole = this.roles.find((role) => String(role.id) === String(this.formItem.role_id));
+      return selectedRole?.type ?? this.formItem?.role?.type ?? this.formItem?.roleType ?? this.formItem?.role_type ?? "";
+    },
+    requiresBranchAssociation() { return String(this.selectedRoleType).trim().toLowerCase() === "sucursal"; },
+    branchRules() {
+      return this.requiresBranchAssociation
+        ? [() => this.hasAssociatedBranch || "Selecciona al menos una sucursal para este rol."]
+        : [];
+    },
     branchChanges() {
+      if (!this.requiresBranchAssociation) return [];
       const originalById = new Map(this.originalBranches.map((branch) => [String(branch.id), branch]));
       return this.branchRows.map((branch) => {
         const original = originalById.get(String(branch.id));
         const originalAssociated = Boolean(original?.associated);
-        const currentRole = branch.role_id ?? this.formItem.role_id ?? null;
-        if (!originalAssociated && branch.associated) return { association_id: null, branch_id: branch.id, role_id: currentRole, action: "associate" };
-        if (originalAssociated && !branch.associated) return { association_id: original.relationId, branch_id: branch.id, role_id: original.role_id ?? null, action: "delete" };
-        if (originalAssociated && branch.associated && String(original.role_id ?? "") !== String(currentRole ?? "")) return { association_id: original.relationId, branch_id: branch.id, role_id: currentRole, action: "update" };
+        if (!originalAssociated && branch.associated) return { branch_id: branch.id, action: "associate" };
+        if (originalAssociated && !branch.associated) return { association_id: original.relationId, branch_id: branch.id, action: "delete" };
         return null;
       }).filter(Boolean);
     },
@@ -135,11 +148,6 @@ export default {
     modelValue(value) { if (value) this.syncFromWorker(); },
     worker: { deep: true, handler() { if (this.modelValue) this.syncFromWorker(); } },
     branches: { deep: true, handler() { if (this.modelValue) this.syncFromWorker(); } },
-    "formItem.role_id"(value) {
-      if (this.syncingRole) return;
-      const associated = this.branchRows.find((branch) => branch.associated);
-      if (associated) associated.role_id = value;
-    },
   },
   methods: {
     defaultItem() { return { id: "", name: "", user: "", email: "", image: "", phone: "", password: "", rut: "", address: "", role_id: "", user_id: "", branches: [] }; },
@@ -149,18 +157,12 @@ export default {
       const catalog = this.toArray(this.branches);
       const workerBranches = this.toArray(this.worker?.branches);
       const byId = new Map();
-      catalog.forEach((branch) => { const normalized = this.normalizeBranch({ ...branch, associated: false, association_id: null, role_id: null }); if (normalized.id) byId.set(String(normalized.id), normalized); });
+      catalog.forEach((branch) => { const normalized = this.normalizeBranch({ ...branch, associated: false, association_id: null }); if (normalized.id) byId.set(String(normalized.id), normalized); });
       workerBranches.forEach((branch) => { const normalized = this.normalizeBranch(branch); if (!normalized.id) return; byId.set(String(normalized.id), { ...byId.get(String(normalized.id)), ...normalized }); });
       this.branchRows = Array.from(byId.values());
-      const associated = this.branchRows.find((branch) => branch.associated);
-      if (associated?.role_id !== null && associated?.role_id !== undefined && associated?.role_id !== "") {
-        this.syncingRole = true;
-        this.formItem.role_id = associated.role_id;
-        this.$nextTick(() => { this.syncingRole = false; });
-      }
       if (this.isCreating) {
         this.originalBranches = [];
-        this.branchRows = this.branchRows.map((branch) => ({ ...branch, associated: false, relationId: null, role_id: null }));
+        this.branchRows = this.branchRows.map((branch) => ({ ...branch, associated: false, relationId: null }));
       } else {
         this.originalBranches = this.branchRows.map((branch) => ({ ...branch }));
       }
@@ -171,11 +173,14 @@ export default {
       this.$nextTick(() => this.$refs.form?.resetValidation());
     },
     normalizeBranch(branch = {}) {
+      const branchData = { ...branch };
+      delete branchData.role_id;
+      delete branchData.roleId;
+      delete branchData.association_role_id;
       const relationId = branch.association_id ?? branch.associationId ?? branch.workerBranchId ?? branch.worker_branch_id ?? null;
       const associated = branch.associated === true || relationId !== null && relationId !== undefined && relationId !== "";
-      return { ...branch, id: branch.branch_id ?? branch.branchId ?? branch.id ?? "", name: branch.name ?? branch.branchName ?? "Sucursal sin nombre", address: branch.address ?? branch.branchAddress ?? "Dirección no disponible", image: branch.image ?? branch.branchImage ?? "", associated, relationId, role_id: branch.role_id ?? branch.roleId ?? branch.association_role_id ?? null };
+      return { ...branchData, id: branch.branch_id ?? branch.branchId ?? branch.id ?? "", name: branch.name ?? branch.branchName ?? "Sucursal sin nombre", address: branch.address ?? branch.branchAddress ?? "Dirección no disponible", image: branch.image ?? branch.branchImage ?? "", associated, relationId };
     },
-    roleName(roleId) { return this.roles.find((role) => String(role.id) === String(roleId))?.name || "Sin rol"; },
     baseImageUrl(source) {
       if (!source) return "";
       const image = typeof source === "string" ? source.trim() : String(source.image ?? source.image_url ?? source.imageUrl ?? source.url ?? source.path ?? "").trim();
@@ -195,19 +200,22 @@ export default {
     },
     updateSelectedBranch(selectedBranches) {
       const selected = this.toArray(selectedBranches);
-      const selectedBranch = selected[selected.length - 1] || null;
-      const selectedId = selectedBranch?.id ?? selectedBranch ?? null;
-      const current = this.branchRows.find((branch) => branch.associated);
-      if (current && (!selectedId || String(current.id) !== String(selectedId))) {
-        const original = this.originalBranches.find((item) => String(item.id) === String(current.id));
-        if (original?.associated && !current.relationId) { this.notify("warning", "No se pudo identificar la asociación de la sucursal."); return; }
+      const selectedIds = new Set(selected.map((branch) => String(branch?.id ?? branch?.branch_id ?? branch)));
+      if (this.requiresBranchAssociation && selectedIds.size === 0) {
+        this.branchSelectionRevision += 1;
+        this.notify("warning", "Un trabajador con Rol Sucursal debe mantener al menos una sucursal asociada.");
+        return;
       }
-      this.branchRows = this.branchRows.map((branch) => {
-        const associated = selectedId !== null && String(branch.id) === String(selectedId);
-        return { ...branch, associated, role_id: associated ? (branch.role_id ?? this.formItem.role_id ?? null) : branch.role_id };
+      const removedExisting = this.branchRows.find((branch) => {
+        if (!branch.associated || selectedIds.has(String(branch.id))) return false;
+        const original = this.originalBranches.find((item) => String(item.id) === String(branch.id));
+        return original?.associated && !branch.relationId;
       });
-      const associated = this.branchRows.find((branch) => branch.associated);
-      if (associated) associated.role_id = this.formItem.role_id || null;
+      if (removedExisting) { this.notify("warning", "No se pudo identificar la asociación de la sucursal."); return; }
+      this.branchRows = this.branchRows.map((branch) => {
+        const associated = selectedIds.has(String(branch.id));
+        return { ...branch, associated };
+      });
     },
     onFileSelected(value) {
       const selected = value?.target?.files?.[0] || (Array.isArray(value) ? value[0] : value);
@@ -219,6 +227,10 @@ export default {
     async submit() {
       const validation = await this.$refs.form?.validate();
       if (!validation?.valid) return;
+      if (this.requiresBranchAssociation && !this.hasAssociatedBranch) {
+        this.notify("warning", "Selecciona al menos una sucursal para un trabajador con Rol Sucursal.");
+        return;
+      }
       this.$emit("save", { item: { ...this.formItem }, file: this.file, branches: this.branchChanges });
     },
     close() { if (!this.loading) this.isOpen = false; },
@@ -232,6 +244,7 @@ export default {
 
 <style scoped>
 .form-dialog{overflow:hidden;color:#1e293b;background:#fff;border:1px solid #dfe6ef;border-radius:14px!important;box-shadow:0 22px 60px rgba(15,23,42,.2)!important}.dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px}.dialog-heading{display:flex;align-items:center;gap:11px}.dialog-icon{position:relative;display:grid;flex:0 0 38px;width:38px;height:38px;place-items:center;color:#fff;background:radial-gradient(circle at 90% 5%,rgba(53,184,232,.5),transparent 28px),linear-gradient(135deg,#0e1f46,#2454d6);border-radius:10px;box-shadow:0 5px 12px rgba(36,84,214,.17)}.dialog-icon-main{transform:translate(-2px,1px)}.dialog-icon-action{position:absolute;right:5px;bottom:5px;padding:1px;color:#0e1f46;background:#fff;border-radius:50%}.dialog-title{color:#0f172a;font-size:16px;font-weight:850;line-height:1.2}.dialog-subtitle{margin-top:4px;color:#64748b;font-size:11.5px;font-weight:600}.dialog-close{color:#64748b!important}.dialog-body{max-height:72vh;padding:21px 22px 18px!important;overflow-y:auto}.form-section-label{margin-bottom:13px;color:#475569;font-size:10.5px;font-weight:850;letter-spacing:.065em;text-transform:uppercase}.form-section-label--spaced{margin-top:9px}.dialog-body :deep(.v-field){border-radius:9px}.dialog-body :deep(.v-label){color:#64748b;font-size:13px;font-weight:650;opacity:1}.dialog-body :deep(.v-field__input){color:#1e293b;font-size:13px;font-weight:650}.branch-association-panel{padding:13px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.association-heading{display:flex;align-items:center;gap:9px;margin-bottom:12px}.association-heading>div:nth-child(2){min-width:0;flex:1}.association-heading-icon{display:grid;width:32px;height:32px;place-items:center;color:#16875a;background:#eaf8f1;border:1px solid #d7f1e5;border-radius:8px}.association-heading-title{color:#0f172a;font-size:12.5px;font-weight:850}.association-heading-copy{margin-top:2px;color:#64748b;font-size:10.5px;font-weight:650;line-height:1.35}.branch-search-button{flex:0 0 auto;color:#2454d6!important;border-radius:8px!important}.branch-search-button:hover{background:#eef3ff}.branch-search-field{margin-bottom:9px}.branch-association-list{max-height:320px;overflow-x:hidden;overflow-y:auto;background:#fff;border:1px solid #e8edf5;border-radius:9px}.branch-association-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border-bottom:1px solid #eef2f6}.branch-association-row:last-child{border-bottom:0}.branch-summary{display:flex;align-items:center;gap:9px;min-width:0}.branch-avatar{display:grid;flex:0 0 36px;width:36px;height:36px;overflow:hidden;place-items:center;color:#16875a;background:#eaf8f1;border:1px solid #d7f1e5;border-radius:9px}.branch-avatar :deep(.v-img__img){object-fit:cover}.image-fallback{display:grid;width:100%;height:100%;place-items:center}.cell-copy{min-width:0}.branch-name{overflow:hidden;color:#0f172a;font-size:12px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}.branch-caption{overflow:hidden;margin-top:2px;color:#64748b;font-size:10px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.branch-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:7px;font-size:10.5px;font-weight:800;white-space:nowrap}.status-badge--active{color:#116b49;background:#eaf8f1}.status-badge--available{color:#8a5b08;background:#fff6e6}.status-dot{width:6px;height:6px;background:currentColor;border-radius:50%}.action-button{border-radius:8px!important}.action-button--associate{color:#16875a!important}.action-button--associate:hover{background:#eaf8f1}.action-button--delete{color:#dc2626!important}.action-button--delete:hover{background:#fff1f2}.association-empty,.selection-summary{display:flex;align-items:flex-start;gap:8px;padding:10px 11px;color:#64748b;background:#fff;border:1px solid #e8edf5;border-radius:8px;font-size:10.5px;font-weight:650;line-height:1.45}.selection-summary{margin-top:9px}.image-upload-area{display:flex;align-items:center;gap:14px;padding:12px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.image-preview{display:grid;flex:0 0 92px;width:92px;height:92px;overflow:hidden;place-items:center;background:#eef3ff;border:1px solid #dce6ff;border-radius:10px}.image-preview :deep(.v-img__img){object-fit:cover}.preview-placeholder{display:grid;width:100%;height:100%;place-items:center;color:#8aa0bf}.upload-copy{min-width:0;flex:1}.upload-title{color:#334155;font-size:12.5px;font-weight:850}.upload-description{margin:4px 0 8px;color:#64748b;font-size:10.5px;font-weight:650}.dialog-actions{justify-content:flex-end;gap:9px;padding:14px 20px!important}.cancel-button{min-width:94px;min-height:39px;color:#475569!important;font-size:12.5px;font-weight:750;letter-spacing:0;text-transform:none;border-radius:9px!important}.save-button{min-width:150px;min-height:40px;color:#fff!important;background:linear-gradient(100deg,#2454d6,#3266e4)!important;border-radius:9px!important;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:0 5px 12px rgba(36,84,214,.2)!important}.snackbar-content{display:flex;align-items:center;gap:10px}.snackbar-title{font-size:11px;font-weight:850}.snackbar-message{margin-top:2px;font-size:9.5px;font-weight:600}.busgo-snackbar :deep(.v-snackbar__wrapper){border-radius:11px}.worker-role-menu .v-list{padding:6px!important}.worker-role-menu .v-list-item{min-height:48px!important;margin:2px 0;border-radius:9px!important}.worker-role-menu .v-list-item:hover{background:#f4f7ff!important}.worker-role-menu .v-list-item-title{color:#1e293b!important;font-size:12.5px!important;font-weight:750!important}.worker-role-menu .role-menu-icon{display:grid;width:34px;height:34px;place-items:center;color:#5145a8;background:#f1edff;border-radius:8px}@media(max-width:600px){.dialog-header{padding:14px}.dialog-body{padding:17px 14px 12px!important}.branch-association-row{align-items:flex-start;flex-direction:column}.branch-row-actions{width:100%;justify-content:flex-end}.branch-caption{max-width:240px}.image-upload-area{align-items:flex-start;flex-direction:column}.dialog-actions{padding-inline:13px!important}}
+.not-applicable-panel{display:flex;align-items:flex-start;gap:8px;padding:11px 12px;color:#64748b;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px;font-size:10.5px;font-weight:650;line-height:1.45}.not-applicable-panel :deep(.v-icon){color:#64748b}
 </style>
 <style scoped>
 .branch-role-label{display:inline-flex;align-items:center;justify-content:flex-start;gap:5px;min-width:230px;max-width:230px;overflow:hidden;color:#475569;font-size:11px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.branch-role-label :deep(.v-icon){color:#5145a8}@media(max-width:600px){.branch-role-label{width:100%;min-width:0;max-width:100%}}

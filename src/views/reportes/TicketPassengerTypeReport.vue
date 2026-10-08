@@ -190,7 +190,7 @@
 
         <v-autocomplete
 
-          v-if="mostrarFila && showBranchFilter"
+          v-if="(mostrarFila || showBranchSelector) && showBranchFilter"
 
           v-model="branch_id"
 
@@ -854,6 +854,8 @@ export default {
 
     mostrarFila: false,
 
+    showBranchSelector: false,
+
     response: {
 
       filters: {},
@@ -1189,20 +1191,9 @@ export default {
 
     this.endDate = formatLocalDate();
 
-    if (this.hasPermission("view_ticketsdate_company")) {
-
-      this.mostrarFila = true;
-
-      this.showBranchesAndTicketTypes();
-
-      return;
-
-    }
-
-    this.mostrarFila = false;
-
-    this.visibleFilterTypes = ["Sucursal"];
-
+    const canViewCompany = this.hasPermission("view_ticketsdate_company");
+    this.mostrarFila = canViewCompany;
+    if (!canViewCompany) this.visibleFilterTypes = ["Sucursal"];
     this.showBranchesAndTicketTypes();
 
   },
@@ -1349,10 +1340,9 @@ export default {
 
           );
 
-          if (!this.branch_id && this.branches.length) {
-
+          this.showBranchSelector = this.mostrarFila || this.branches.length > 1;
+          if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
             this.branch_id = this.branches[0].id;
-
           }
 
           const selectedBranch = this.branches.find(
@@ -1365,12 +1355,6 @@ export default {
 
           this.selectedWorker = null;
 
-          if (this.branches.length > 1 && this.hasPermission("view_ticketsdate_company")) {
-
-            this.mostrarFila = true;
-
-          }
-
         } else {
 
           this.branches = [];
@@ -1378,6 +1362,7 @@ export default {
           this.workers = [];
 
           this.ticketTypes = [];
+          this.showBranchSelector = false;
 
           this.showAlert("warning", result.message || "No se encontraron filtros disponibles.", 3000);
 

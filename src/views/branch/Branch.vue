@@ -420,21 +420,8 @@ export default {
 
         if (result.success) {
 
-          if(this.hasPermission(['view_branches_company'])){            
-
-          // Si la solicitud es exitosa, asignamos las sucursales
-
-          this.branches = result.data?.branches || [];
-
-          }else{
-
-            this.branches = (result.data?.branches || []).filter(branch => 
-
-              branch.id == this.branch_id
-
-            );
-
-          }
+          // Backend devuelve únicamente las sucursales visibles para el usuario.
+          this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
 
         } else {
 

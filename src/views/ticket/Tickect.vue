@@ -87,7 +87,7 @@
       </v-select>
 
       <v-autocomplete
-        v-if="type === 'Sucursal' && mostrarFila"
+        v-if="type === 'Sucursal' && (mostrarFila || showBranchSelector)"
         v-model="branch_id"
         :items="branches"
         :no-data-text="'No hay datos disponibles'"
@@ -1126,6 +1126,8 @@ export default {
     loading: false,
     mostrar: false,
     mostrarFila: false,
+
+    showBranchSelector: false,
     permissions: "",
     dialog: false,
     dialogExpressSale: false,
@@ -1552,15 +1554,11 @@ export default {
     this.permissions = LocalStorageService.getItem("permissions");
     this.company_id = LocalStorageService.getItem("business_id");
     this.includeMaintainers = true;
-    if (this.hasPermission("view_tickets_company")) {
-      this.type = "Company";
-      this.mostrarFila = true;
-      this.showBranches();
-    } else {
-      this.type = "Sucursal";
-      this.branch_id = LocalStorageService.getItem("branch_id");
-      this.initialize();
-    }
+    const canViewCompany = this.hasPermission("view_tickets_company");
+    this.type = canViewCompany ? "Company" : "Sucursal";
+    this.mostrarFila = canViewCompany;
+    if (!canViewCompany) this.branch_id = LocalStorageService.getItem("branch_id");
+    this.showBranches();
     this.restorePendingCardPayment();
   },
   methods: {
@@ -3064,11 +3062,12 @@ export default {
 
         if (result.success) {
           // Si la solicitud es exitosa, asignamos las sucursales
-          this.branches = result.data?.branches || [];
-          if (this.branches.length) {
-            this.editedItem.branch_id = this.branches[0].id;
-            this.branch_id = this.branch_id || this.branches[0].id;
+          this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
+          this.showBranchSelector = this.mostrarFila || this.branches.length > 1;
+          if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+            this.branch_id = this.branches[0].id;
           }
+          if (this.branch_id) this.editedItem.branch_id = this.branch_id;
         } else {
           this.mostrarFila = false;
           // Si no hay datos, asignamos un array vacÃ­o
@@ -3083,7 +3082,6 @@ export default {
           3000
         );
       } finally {
-        this.mostrarFila = true;
         this.loading = false;
         this.initialize();
       }

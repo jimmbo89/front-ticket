@@ -1065,13 +1065,9 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.nameUser = JSON.parse(LocalStorageService.getItem("name"));
     this.permissions = LocalStorageService.getItem("permissions");
-    if (this.hasPermission("view_tickets_company")) {
-      this.showBranches();
-      this.mostrarFila = true;
-    } else {
-      this.branch_id = LocalStorageService.getItem("branch_id");
-      
-    }
+    this.mostrarFila = this.hasPermission("view_tickets_company");
+    if (!this.mostrarFila) this.branch_id = LocalStorageService.getItem("branch_id");
+    this.showBranches();
     this.restorePendingCardPayment();
   },
   methods: { getLocalStorageValue(key) {
@@ -2232,7 +2228,10 @@ export default {
     try {
       const result = await handleRequest({ endpoint: 'branch', method: 'GET' });
       this.branches = result.success && Array.isArray(result.data?.branches) ? result.data.branches : [];
-      this.branch_id = this.branches[0]?.id ?? '';
+      if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+        this.branch_id = this.branches[0].id;
+      }
+      this.mostrarFila = this.hasPermission("view_tickets_company") || this.branches.length > 1;
       if (!result.success) this.showAlert('warning', result.message || 'No se pudieron cargar las sucursales.', 3000);
     } catch (error) {
       this.branches = [];

@@ -156,7 +156,7 @@
 
         <v-autocomplete
 
-          v-if="type === 'Sucursal' && mostrarFila"
+          v-if="type === 'Sucursal' && (mostrarFila || showBranchSelector)"
 
           v-model="branch_id"
 
@@ -1022,6 +1022,8 @@ export default {
 
     mostrarFila: false,
 
+    showBranchSelector: false,
+
     permissions: "",
 
     branch_id: "",
@@ -1265,25 +1267,11 @@ export default {
 
     this.permissions = LocalStorageService.getItem("permissions");
 
-    if (this.hasPermission("view_ticketsdate_company")) {
-
-      this.showBranches();
-
-      this.type = "Company";
-
-      this.mostrarFila = true;
-
-      return;
-
-    } else {
-
-      this.type = "Sucursal";
-
-      this.branch_id = LocalStorageService.getItem("branch_id");
-
-    }
-
-    this.initialize();
+    const canViewCompany = this.hasPermission("view_ticketsdate_company");
+    this.type = canViewCompany ? "Company" : "Sucursal";
+    this.mostrarFila = canViewCompany;
+    if (!canViewCompany) this.branch_id = LocalStorageService.getItem("branch_id");
+    this.showBranches();
 
   },
 
@@ -1530,9 +1518,11 @@ export default {
 
           // Si la solicitud es exitosa, asignamos las sucursales
 
-          this.branches = result.data?.branches || [];
-
-          this.branch_id = this.branches[0].id;
+          this.branches = Array.isArray(result.data?.branches) ? result.data.branches : [];
+          this.showBranchSelector = this.mostrarFila || this.branches.length > 1;
+          if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
+            this.branch_id = this.branches[0].id;
+          }
 
         } else {
 
