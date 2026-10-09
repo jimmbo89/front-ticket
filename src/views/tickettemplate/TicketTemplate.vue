@@ -69,7 +69,7 @@
                     <strong class="template-cell-title">{{ item.name || 'Sin nombre' }}</strong>
                     <span class="template-muted">Configuración de bloques y campos</span>
                   </div>
-                  <div><BusgoChip color="#2454d6">{{ item.tripType || '—' }}</BusgoChip></div>
+                  <div><BusgoChip color="#2454d6">{{ tripTypeLabel(item.tripType) }}</BusgoChip></div>
                   <div><BusgoChip :color="item.status === 'active' ? '#16845b' : '#64748b'">
                     {{ item.status === 'active' ? 'Activa' : 'Inactiva' }}
                   </BusgoChip></div>
@@ -109,7 +109,7 @@
           </div>
           <div class="ticket-dialog-meta">
             <span>{{ readOnly ? 'Modo consulta' : 'Configuración del ticket' }}</span>
-            <strong>{{ draft.tripType || 'Tipo de viaje pendiente' }}</strong>
+            <strong>{{ draft.tripType ? tripTypeLabel(draft.tripType) : 'Tipo de viaje pendiente' }}</strong>
           </div>
           <v-btn icon="mdi-close" variant="text" class="ticket-dialog-close"
             aria-label="Cerrar configuración" :disabled="saving" @click="cancelDialog" />
@@ -244,7 +244,7 @@
               </div>
               <div class="ticket-preview-meta">
                 <strong>{{ draft.name.trim() || 'Nueva plantilla' }}</strong>
-                <div><BusgoChip color="#2454d6">{{ draft.tripType || '—' }}</BusgoChip>
+                <div><BusgoChip color="#2454d6">{{ tripTypeLabel(draft.tripType) }}</BusgoChip>
                   <BusgoChip :color="draft.status === 'active' ? '#16845b' : '#64748b'">
                     {{ draft.status === 'active' ? 'Activa' : 'Inactiva' }}
                   </BusgoChip>
@@ -440,6 +440,7 @@ import ticketTemplateService, {
   getDefaultTicketTemplateConfig,
   ticketTemplateTripTypes,
   ticketTemplateStatusOptions,
+  ticketTemplateTripTypeLabel,
   buildExamplePreviewData,
   buildQrPayload,
 } from '@/services/ticketTemplateService';
@@ -496,6 +497,7 @@ export default {
     footerFieldLabels: { copyControl: 'Copia de control', transactionId: 'ID de transacción', optionalText: 'Texto adicional' },
     selectedTemplate: null,
     selectedTemplateName: '',
+    company_id: '',
     templates: [],
     draft: null,
     originalDraft: null,
@@ -575,6 +577,14 @@ export default {
       footer: { label: 'Pie de control', switchable: true },
     },
   }),
+  watch: {
+    filterType() {
+      this.loadTemplates();
+    },
+    filterStatus() {
+      this.loadTemplates();
+    },
+  },
   computed: {
     blockGroupColumns() {
       return [
@@ -643,7 +653,7 @@ export default {
         transactionId: this.previewData.footer.transactionId,
         vehiclePlate: this.previewData.footer.vehiclePlate,
         company: this.previewData.company.name,
-        tripType: this.draft?.tripType || 'Express',
+        tripType: this.draft?.tripType || 'express',
       });
       return `https://api.qrserver.com/v1/create-qr-code/?size=${this.draft?.config?.blocks?.qr?.size || 120}x${this.draft?.config?.blocks?.qr?.size || 120}&qzone=4&margin=0&format=svg&color=000000&bgcolor=ffffff&data=${encodeURIComponent(payload)}`;
     },
@@ -675,10 +685,23 @@ export default {
     },
   },
   mounted() {
+    this.company_id = this.getStorageValue('business_id');
     this.ensureAccess();
     this.loadTemplates();
   },
   methods: {
+    getStorageValue(key) {
+      const raw = LocalStorageService.getItem(key);
+      if (raw === null || raw === undefined || raw === '') return '';
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return String(raw).replace(/^['"]|['"]$/g, '').trim();
+      }
+    },
+    tripTypeLabel(value) {
+      return ticketTemplateTripTypeLabel(value);
+    },
     hasVisibleFields(key) {
       const block = this.draft?.config?.blocks?.[key];
       return !!(block?.enabled && Object.values(block.fields || {}).some(Boolean));
@@ -741,6 +764,10 @@ export default {
         this.sb_icon = 'mdi-information';
       }
       this.snackbar = true;
+    },
+    showRequestError(error, fallbackMessage, timeout = 3000) {
+      const validationError = [400, 422].includes(Number(error?.status));
+      this.showAlert(validationError ? 'warning' : 'error', error?.message || fallbackMessage, timeout);
     },
     formatDate(value) {
       if (!value) return '-';
@@ -812,7 +839,7 @@ export default {
       return {
         id: null,
         name: '',
-        tripType: 'Express',
+        tripType: 'express',
         status: 'active',
         updatedAt: new Date().toISOString(),
         config: this.cloneConfig(getDefaultTicketTemplateConfig()),
@@ -827,11 +854,21 @@ export default {
       this.originalDraft = JSON.parse(JSON.stringify(this.draft));
     },
     async loadTemplates() {
+      if (!this.company_id) {
+        this.templates = [];
+        this.showAlert('warning', 'No se encontró la empresa seleccionada.', 3500);
+        return;
+      }
       this.loading = true;
       try {
-        this.templates = await ticketTemplateService.listTemplates();
+        this.templates = await ticketTemplateService.listTemplates({
+          companyId: this.company_id,
+          tripType: this.filterType,
+          status: this.filterStatus,
+        });
       } catch (error) {
-        this.showAlert('error', 'No se pudieron cargar las plantillas de tickets.', 3500);
+        this.templates = [];
+        this.showRequestError(error, 'No se pudieron cargar las plantillas de tickets.', 3500);
       } finally {
         this.loading = false;
       }
@@ -859,25 +896,25 @@ export default {
     },
     async duplicateTemplate(item) {
       try {
-        const copied = await ticketTemplateService.duplicateTemplate(item.id);
+        const copied = await ticketTemplateService.duplicateTemplate(item, this.company_id);
         if (copied) {
           this.showAlert('success', 'Plantilla duplicada correctamente.', 2500);
-          this.loadTemplates();
+          await this.loadTemplates();
         }
       } catch (error) {
-        this.showAlert('error', 'No se pudo duplicar la plantilla.', 3000);
+        this.showRequestError(error, 'No se pudo duplicar la plantilla.', 3000);
       }
     },
     async toggleTemplateStatus(item) {
       try {
         const nextStatus = item.status === 'active' ? 'inactive' : 'active';
-        const updated = await ticketTemplateService.toggleStatus(item.id, nextStatus);
+        const updated = await ticketTemplateService.toggleStatus(item, nextStatus);
         if (updated) {
           this.showAlert('success', `Plantilla ${nextStatus === 'active' ? 'activada' : 'desactivada'}.`, 2500);
-          this.loadTemplates();
+          await this.loadTemplates();
         }
       } catch (error) {
-        this.showAlert('error', 'No se pudo cambiar el estado de la plantilla.', 3000);
+        this.showRequestError(error, 'No se pudo cambiar el estado de la plantilla.', 3000);
       }
     },
     confirmDelete(item) {
@@ -894,9 +931,9 @@ export default {
         this.dialogDelete = false;
         this.selectedTemplate = null;
         this.selectedTemplateName = '';
-        this.loadTemplates();
+        await this.loadTemplates();
       } catch (error) {
-        this.showAlert('error', 'No se pudo eliminar la plantilla.', 3000);
+        this.showRequestError(error, 'No se pudo eliminar la plantilla.', 3000);
       } finally {
         this.deleting = false;
       }
@@ -965,17 +1002,17 @@ export default {
 
         const saved = this.draft.id
           ? await ticketTemplateService.updateTemplate(payload)
-          : await ticketTemplateService.createTemplate(payload);
+          : await ticketTemplateService.createTemplate(payload, this.company_id);
 
         if (saved) {
           this.showAlert('success', 'Plantilla guardada correctamente.', 2500);
           this.dialog = false;
-          this.loadTemplates();
+          await this.loadTemplates();
           this.draft = null;
           this.originalDraft = null;
         }
       } catch (error) {
-        this.showAlert('error', 'No se pudo guardar la plantilla.', 3000);
+        this.showRequestError(error, 'No se pudo guardar la plantilla.', 3000);
       } finally {
         this.saving = false;
       }

@@ -1,8 +1,31 @@
-// Ticket Template Configuration Service
-// Centralizes template structure, QR generation, preview data, and persistence
+import { handleRequest } from '@/utils/api';
 
-export const ticketTemplateTripTypes = ['Express', 'Full', 'Web', 'Abordo'];
+// Ticket Template Configuration Service
+// Centralizes template structure, QR generation, preview data, and API access
+
+export const ticketTemplateTripTypes = [
+  { title: 'Normal', value: 'normal' },
+  { title: 'Express', value: 'express' },
+  { title: 'A bordo', value: 'on_board' },
+];
 export const ticketTemplateStatusOptions = ['active', 'inactive'];
+
+const tripTypeAliases = {
+  full: 'normal',
+  web: 'normal',
+  abordo: 'on_board',
+  'on board': 'on_board',
+};
+
+export function normalizeTripType(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return tripTypeAliases[normalized] || normalized;
+}
+
+export function ticketTemplateTripTypeLabel(value) {
+  const normalized = normalizeTripType(value);
+  return ticketTemplateTripTypes.find((option) => option.value === normalized)?.title || value || '—';
+}
 
 export function getDefaultTicketTemplateConfig() {
   return {
@@ -101,41 +124,66 @@ export function buildQrPayload(data) {
   return `${company}|${tripType}|${transactionId}|${vehiclePlate}`;
 }
 
-// ============================================================================
-// PERSISTENCE SERVICE (with backend contract documented)
-// ============================================================================
-
-// LOCAL STORAGE KEY
-const STORAGE_KEY = 'busgo_ticket_templates';
-
-// In-memory cache for current session
-let templatesCache = null;
-
-function loadFromStorage() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error('Error loading templates from localStorage:', error);
-  }
-  return [];
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== '';
 }
 
-function saveToStorage(templates) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-  } catch (error) {
-    console.error('Error saving templates to localStorage:', error);
+function requireCompanyId(companyId) {
+  if (!hasValue(companyId)) {
+    throw new Error('No se encontró la empresa seleccionada.');
   }
+  return companyId;
 }
 
-function ensureCache() {
-  if (!templatesCache) {
-    templatesCache = loadFromStorage();
+function normalizeTemplate(template = {}) {
+  return {
+    ...template,
+    id: template.id,
+    company_id: template.company_id ?? template.companyId,
+    name: template.name || '',
+    tripType: normalizeTripType(template.trip_type ?? template.tripType),
+    status: template.status || 'active',
+    config: template.config || getDefaultTicketTemplateConfig(),
+    createdAt: template.created_at ?? template.createdAt,
+    updatedAt: template.updated_at ?? template.updatedAt,
+  };
+}
+
+function ticketTemplateFromResponse(data) {
+  return normalizeTemplate(data?.ticketTemplate ?? data);
+}
+
+function throwRequestError(result, fallbackMessage) {
+  if (result?.success) return;
+  const error = new Error(result?.message || fallbackMessage);
+  error.status = result?.status;
+  error.data = result?.data;
+  throw error;
+}
+
+function buildTemplatePayload(templateData = {}, companyId, includeCompany = false) {
+  const payload = {
+    name: String(templateData.name || '').trim(),
+    trip_type: normalizeTripType(templateData.trip_type ?? templateData.tripType),
+    status: templateData.status || 'active',
+    config: templateData.config || getDefaultTicketTemplateConfig(),
+  };
+
+  if (includeCompany) {
+    payload.company_id = requireCompanyId(companyId);
   }
-  return templatesCache;
+
+  if (hasValue(templateData.id)) {
+    payload.id = templateData.id;
+  }
+
+  return payload;
+}
+
+function templatesFromResponse(data) {
+  const templates = data?.ticketTemplates ?? data?.templates ?? data;
+  if (!Array.isArray(templates)) return [];
+  return templates.map(normalizeTemplate);
 }
 
 // ============================================================================
@@ -144,14 +192,28 @@ function ensureCache() {
 
 const ticketTemplateService = {
   /**
-   * List all ticket templates.
+   * List templates for a company. Type and status are sent in the POST body
+   * because the backend uses parameterized POST queries.
    * @returns {Promise<Array>} Array of templates
    */
-  async listTemplates() {
-    // TODO: Replace with backend call
-    // return axios.get('/api/ticket-templates');
-    ensureCache();
-    return Promise.resolve(templatesCache || []);
+  async listTemplates({ companyId, tripType, status } = {}) {
+    const data = { company_id: requireCompanyId(companyId) };
+    if (hasValue(tripType)) data.trip_type = normalizeTripType(tripType);
+    if (hasValue(status)) data.status = status;
+
+    const result = await handleRequest({
+      endpoint: 'get-ticket-templates',
+      method: 'POST',
+      data,
+    });
+
+    // The API uses 204 when the company has no templates.
+    if (result?.status === 204 || (!result?.success && result?.message === 'No encontrado.')) {
+      return [];
+    }
+
+    throwRequestError(result, 'No fue posible cargar las plantillas de tickets.');
+    return templatesFromResponse(result.data);
   },
 
   /**
@@ -159,10 +221,9 @@ const ticketTemplateService = {
    * @param {string} id Template ID
    * @returns {Promise<Object>} Template object or null
    */
-  async getTemplate(id) {
-    ensureCache();
-    const template = templatesCache.find((t) => t.id === id);
-    return Promise.resolve(template || null);
+  async getTemplate(id, companyId) {
+    const templates = await this.listTemplates({ companyId });
+    return templates.find((template) => String(template.id) === String(id)) || null;
   },
 
   /**
@@ -170,17 +231,14 @@ const ticketTemplateService = {
    * @param {Object} templateData Template data with name, tripType, status, config
    * @returns {Promise<Object>} Created template with ID
    */
-  async createTemplate(templateData) {
-    ensureCache();
-    const newTemplate = {
-      id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...templateData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    templatesCache.push(newTemplate);
-    saveToStorage(templatesCache);
-    return Promise.resolve(newTemplate);
+  async createTemplate(templateData, companyId) {
+    const result = await handleRequest({
+      endpoint: 'ticket-templates',
+      method: 'POST',
+      data: buildTemplatePayload(templateData, companyId, true),
+    });
+    throwRequestError(result, 'No fue posible crear la plantilla de tickets.');
+    return ticketTemplateFromResponse(result.data);
   },
 
   /**
@@ -189,41 +247,29 @@ const ticketTemplateService = {
    * @returns {Promise<Object>} Updated template
    */
   async updateTemplate(templateData) {
-    ensureCache();
-    const index = templatesCache.findIndex((t) => t.id === templateData.id);
-    if (index >= 0) {
-      templatesCache[index] = {
-        ...templatesCache[index],
-        ...templateData,
-        updatedAt: new Date().toISOString(),
-      };
-      saveToStorage(templatesCache);
-      return Promise.resolve(templatesCache[index]);
-    }
-    return Promise.reject(new Error('Template not found'));
+    const result = await handleRequest({
+      endpoint: 'ticket-templates',
+      method: 'PUT',
+      data: buildTemplatePayload(templateData),
+    });
+    throwRequestError(result, 'No fue posible actualizar la plantilla de tickets.');
+    return ticketTemplateFromResponse(result.data);
   },
 
   /**
-   * Duplicate a template by ID.
-   * @param {string} id Template ID to duplicate
+   * Duplicate a template by creating a copy through the public create endpoint.
+   * The backend contract does not require a dedicated duplicate endpoint.
+   * @param {Object} template Template to duplicate
    * @returns {Promise<Object>} New duplicated template
    */
-  async duplicateTemplate(id) {
-    ensureCache();
-    const original = templatesCache.find((t) => t.id === id);
-    if (!original) {
-      return Promise.reject(new Error('Template not found'));
-    }
-    const newTemplate = {
-      id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...JSON.parse(JSON.stringify(original)),
-      name: `${original.name} (Copia)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    templatesCache.push(newTemplate);
-    saveToStorage(templatesCache);
-    return Promise.resolve(newTemplate);
+  async duplicateTemplate(template, companyId) {
+    if (!template) throw new Error('No se encontró la plantilla a duplicar.');
+    return this.createTemplate({
+      name: `${template.name || 'Plantilla'} (Copia)`,
+      tripType: template.tripType,
+      status: template.status,
+      config: JSON.parse(JSON.stringify(template.config || getDefaultTicketTemplateConfig())),
+    }, companyId);
   },
 
   /**
@@ -232,16 +278,15 @@ const ticketTemplateService = {
    * @param {string} newStatus New status ('active' or 'inactive')
    * @returns {Promise<Object>} Updated template
    */
-  async toggleStatus(id, newStatus) {
-    ensureCache();
-    const template = templatesCache.find((t) => t.id === id);
-    if (!template) {
-      return Promise.reject(new Error('Template not found'));
-    }
-    template.status = newStatus;
-    template.updatedAt = new Date().toISOString();
-    saveToStorage(templatesCache);
-    return Promise.resolve(template);
+  async toggleStatus(template, newStatus) {
+    if (!template) throw new Error('No se encontró la plantilla.');
+    return this.updateTemplate({
+      id: template.id,
+      name: template.name,
+      tripType: template.tripType,
+      status: newStatus,
+      config: template.config,
+    });
   },
 
   /**
@@ -250,14 +295,13 @@ const ticketTemplateService = {
    * @returns {Promise<boolean>} True if deleted
    */
   async deleteTemplate(id) {
-    ensureCache();
-    const index = templatesCache.findIndex((t) => t.id === id);
-    if (index >= 0) {
-      templatesCache.splice(index, 1);
-      saveToStorage(templatesCache);
-      return Promise.resolve(true);
-    }
-    return Promise.reject(new Error('Template not found'));
+    const result = await handleRequest({
+      endpoint: 'ticket-templates-destroy',
+      method: 'POST',
+      data: { id },
+    });
+    throwRequestError(result, 'No fue posible eliminar la plantilla de tickets.');
+    return true;
   },
 };
 
