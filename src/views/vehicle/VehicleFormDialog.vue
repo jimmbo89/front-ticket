@@ -60,7 +60,7 @@
                   <section class="branch-association-panel">
                     <div class="association-heading">
                       <div class="association-heading-icon"><v-icon size="19">mdi-store-marker-outline</v-icon></div>
-                      <div><div class="association-heading-title">Sucursales</div><div class="association-heading-copy">Selecciona una o varias sucursales. Puedes buscar, seleccionar y quitar opciones desde el mismo campo.</div></div>
+                      <div><div class="association-heading-title">Sucursales (OPCIONAL)</div><div class="association-heading-copy">Selecciona una o varias sucursales. Puedes buscar, seleccionar y quitar opciones desde el mismo campo.</div></div>
                     </div>
                     <MultiSelectCombobox
                       :model-value="selectedBranchRows"
