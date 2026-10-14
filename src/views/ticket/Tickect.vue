@@ -905,7 +905,7 @@
   <v-dialog v-model="showTicketDialog" max-width="500" persistent>
     <v-card class="ticket-print-card">
       <v-card-title class="ticket-print-header">
-        <div class="d-flex flex-column align-center" style="width: 100%">
+        <div v-if="!ticketTemplateConfig" class="d-flex flex-column align-center" style="width: 100%">
           <div v-if="ticketCompanyImage" class="ticket-branch-logo-preview mb-3">
             <img :src="`${this.$axios.defaults.baseURL}images/${ticketCompanyImage}`" :alt="ticketCompanyName"
               class="ticket-branch-logo-preview__img" />
@@ -940,6 +940,17 @@
       </v-card-title>
 
       <v-card-text>
+        <TicketTemplatePrintPreview
+          v-if="ticketTemplateConfig"
+          :ticket="currentTicket"
+          :config="ticketTemplateConfig"
+          :branch="selectedBranch"
+          :company-name="ticketCompanyName"
+          :company-image-url="ticketCompanyImage ? `${this.$axios.defaults.baseURL}images/${ticketCompanyImage}` : ''"
+          :qr-image="ticketTemplateQrImage"
+          :name-user="nameUser"
+        />
+        <div v-else>
         <div class="ticket-container">
           <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
@@ -1071,6 +1082,7 @@
             (COPIA REIMPRESA POR EL OPERADOR {{ nameUser }})
           </div>
         </div>
+        </div>
       </v-card-text>
 
       <v-card-actions class="busgo-dialog-actions">
@@ -1098,6 +1110,11 @@ import {
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 import QRCode from "qrcode";
+import {
+  buildTicketTemplatePrintHtml,
+  getTicketTemplateConfig,
+} from "@/services/ticketPrintService";
+import TicketTemplatePrintPreview from "@/components/TicketTemplatePrintPreview.vue";
 import * as XLSX from "xlsx";
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 import ReportKpiCards from "@/components/ReportKpiCards.vue";
@@ -1113,6 +1130,7 @@ export default {
     ReportKpiCards,
     BusgoChip,
     SaleModeChip,
+    TicketTemplatePrintPreview,
   },
   data: () => ({
     snackbar: false,
@@ -1165,6 +1183,7 @@ export default {
     promotions: [],
     tickettypes: [],
     currentTicket: {},
+    ticketTemplateQrImage: "",
     expandedTicketItems: [],
     nameBranch: "",
     imageBranch: "",
@@ -1310,6 +1329,9 @@ export default {
     tripSaleSortOrder: "asc",
   }),
   computed: {
+    ticketTemplateConfig() {
+      return getTicketTemplateConfig(this.currentTicket);
+    },
     salesKpiCards() {
       return [
         {
@@ -4000,7 +4022,10 @@ export default {
       try {
         const qrData = this.currentTicket.qr;
 
-        if (!qrData) return;
+        if (!qrData) {
+          await this.refreshTicketTemplatePreview();
+          return;
+        }
 
         // Opciones comunes para ambos QR
         const qrOptions = {
@@ -4021,10 +4046,48 @@ export default {
         if (this.$refs.qrCanvasControl) {
           await QRCode.toCanvas(this.$refs.qrCanvasControl, qrData, qrOptions);
         }
+        await this.refreshTicketTemplatePreview();
       } catch (error) {
         console.error("Error generando QR codes:", error);
         this.showError("Error al generar códigos QR");
       }
+    },
+    async refreshTicketTemplatePreview() {
+      this.ticketTemplateQrImage = "";
+      const config = this.ticketTemplateConfig;
+      if (!config) return;
+
+      const qrData = this.currentTicket.qr || this.currentTicket.id;
+      if (qrData) {
+        this.ticketTemplateQrImage = await QRCode.toDataURL(String(qrData), {
+          width: Number(config.blocks?.qr?.size || 110),
+          margin: 1,
+          color: { dark: "#000000", light: "#ffffff" },
+        });
+      }
+    },
+    async printTicketWithTemplate() {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        this.showError("El navegador bloqueó la ventana de impresión.");
+        return;
+      }
+
+      await this.refreshTicketTemplatePreview();
+      const printContent = buildTicketTemplatePrintHtml({
+        ticket: this.currentTicket,
+        config: this.ticketTemplateConfig,
+        branch: this.selectedBranch,
+        companyName: this.ticketCompanyName,
+        companyImageUrl: this.ticketCompanyImage
+          ? `${this.$axios.defaults.baseURL}images/${this.ticketCompanyImage}`
+          : "",
+        qrImage: this.ticketTemplateQrImage,
+        nameUser: this.nameUser,
+      });
+      printWindow.document.open();
+      printWindow.document.write(printContent);
+      printWindow.document.close();
     },
     formatDate(dateString) {
       if (!dateString) return "";
@@ -4097,6 +4160,10 @@ export default {
     },
     async printTicket() {
       try {
+        if (this.ticketTemplateConfig) {
+          await this.printTicketWithTemplate();
+          return;
+        }
         const printWindow = window.open("", "_blank");
 
         // Generar ambos cÃ³digos QR

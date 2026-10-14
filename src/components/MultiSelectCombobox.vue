@@ -71,18 +71,26 @@ export default {
   methods: {
     getItemValue(item) {
       if (typeof this.itemValue === "function") return this.itemValue(item);
-      return this.itemValue ? item?.[this.itemValue] : item;
+      if (!this.itemValue || item === null || item === undefined) return item;
+      return typeof item === "object" ? item[this.itemValue] : item;
     },
     getItemTitle(item) {
       if (typeof this.itemTitle === "function") return this.itemTitle(item);
-      return this.itemTitle ? item?.[this.itemTitle] : item;
+      if (!this.itemTitle || item === null || item === undefined) return item;
+      if (typeof item === "object") return item[this.itemTitle];
+
+      const matchedItem = this.items.find(
+        (option) => String(this.getItemValue(option)) === String(item)
+      );
+      return matchedItem ? matchedItem[this.itemTitle] : item;
     },
     normalizeSelection(value) {
       const allowed = new Map(this.items.map((item) => [String(this.getItemValue(item)), item]));
       const seen = new Set();
       return (Array.isArray(value) ? value : []).map((item) => {
         const raw = item?.raw ?? item;
-        const normalized = allowed.get(String(this.getItemValue(raw)));
+        const rawValue = raw && typeof raw === "object" ? this.getItemValue(raw) : raw;
+        const normalized = allowed.get(String(rawValue));
         if (!normalized) return null;
         const key = String(this.getItemValue(normalized));
         if (seen.has(key)) return null;
@@ -96,7 +104,8 @@ export default {
     },
     removeSelection(item) {
       const raw = item?.raw ?? item;
-      const removedKey = String(this.getItemValue(raw));
+      const removedValue = raw && typeof raw === "object" ? this.getItemValue(raw) : raw;
+      const removedKey = String(removedValue);
       const next = this.normalizeSelection(this.modelValue).filter((selected) => String(this.getItemValue(selected)) !== removedKey);
       this.$emit("update:modelValue", this.returnObject ? next : next.map((selected) => this.getItemValue(selected)));
     },
