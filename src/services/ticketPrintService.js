@@ -239,7 +239,19 @@ function renderCopy({
 }
 
 export function getTicketTemplateConfig(ticket = {}) {
-  const config = ticket.ticket_template_config ?? ticket.ticketTemplateConfig;
+  let config = ticket.ticket_template_config ?? ticket.ticketTemplateConfig;
+
+  for (let attempt = 0; attempt < 3 && typeof config === 'string'; attempt += 1) {
+    const serializedConfig = config.trim();
+    if (!serializedConfig) return null;
+
+    try {
+      config = JSON.parse(serializedConfig);
+    } catch (error) {
+      return null;
+    }
+  }
+
   return config && typeof config === 'object' && !Array.isArray(config) ? config : null;
 }
 
