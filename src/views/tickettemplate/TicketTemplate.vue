@@ -34,7 +34,7 @@
         <div class="ticket-template-toolbar">
           <v-select v-model="filterType" :items="tripTypeOptions" label="Tipo de viaje"
             prepend-inner-icon="mdi-ticket-outline" variant="outlined" density="compact"
-            clearable hide-details class="ticket-template-filter" />
+            clearable hide-details :loading="saleModesLoading" class="ticket-template-filter" />
           <v-select v-model="filterStatus" :items="statusOptionsLabels" label="Estado"
             prepend-inner-icon="mdi-toggle-switch-outline" variant="outlined" density="compact"
             clearable hide-details class="ticket-template-filter ticket-template-filter--status" />
@@ -70,6 +70,14 @@
                     <span class="template-muted">Configuración de bloques y campos</span>
                   </div>
                   <div><BusgoChip color="#2454d6">{{ tripTypeLabel(item.tripType) }}</BusgoChip></div>
+                  <div class="template-default-types">
+                    <template v-if="defaultTripTypeLabels(item).length">
+                      <BusgoChip v-for="type in defaultTripTypeLabels(item)" :key="type" color="#7c3aed">
+                        {{ type }}
+                      </BusgoChip>
+                    </template>
+                    <span v-else class="template-muted">No predeterminada</span>
+                  </div>
                   <div><BusgoChip :color="item.status === 'active' ? '#16845b' : '#64748b'">
                     {{ item.status === 'active' ? 'Activa' : 'Inactiva' }}
                   </BusgoChip></div>
@@ -85,8 +93,11 @@
                       variant="text" size="small" :color="item.status === 'active' ? '#16845b' : '#64748b'"
                       :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                       :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)" />
-                    <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="#dc2626"
-                      title="Eliminar plantilla" aria-label="Eliminar plantilla" @click="confirmDelete(item)" />
+                    <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
+                      :color="isTemplateDefault(item) ? '#94a3b8' : '#dc2626'"
+                      :title="isTemplateDefault(item) ? 'No se puede eliminar una plantilla predeterminada' : 'Eliminar plantilla'"
+                      :aria-label="isTemplateDefault(item) ? 'Plantilla predeterminada no eliminable' : 'Eliminar plantilla'"
+                      :disabled="isTemplateDefault(item)" @click="confirmDelete(item)" />
                   </div>
                 </div>
               </td>
@@ -132,11 +143,30 @@
                   <v-col cols="12" md="3">
                     <v-select v-model="draft.tripType" :items="tripTypeOptions" label="Tipo de viaje"
                       prepend-inner-icon="mdi-ticket-outline" variant="outlined" density="compact" hide-details="auto"
+                      :loading="saleModesLoading"
                       :rules="[(value) => !!value || 'Selecciona el tipo de viaje']" />
                   </v-col>
                   <v-col cols="12" md="3">
                     <v-select v-model="draft.status" :items="statusOptionsLabels" label="Estado"
                       prepend-inner-icon="mdi-toggle-switch-outline" variant="outlined" density="compact" hide-details="auto" />
+                  </v-col>
+                  <v-col cols="12">
+                    <MultiSelectCombobox
+                      :model-value="draft.defaultTripTypes"
+                      :items="tripTypeOptions"
+                      item-title="title"
+                      item-value="value"
+                      label="Tipos de viaje predeterminados"
+                      placeholder="Selecciona uno o varios tipos de viaje"
+                      prepend-inner-icon="mdi-star-settings-outline"
+                      no-data-text="No hay tipos de viaje disponibles."
+                      :return-object="false"
+                      :disabled="readOnly || saving"
+                      :loading="saleModesLoading"
+                      hint="Una plantilla activa puede ser predeterminada para uno o varios tipos de viaje."
+                      persistent-hint
+                      @update:model-value="onDefaultTripTypesChange"
+                    />
                   </v-col>
                 </v-row>
               </section>
@@ -446,10 +476,11 @@ import ticketTemplateService, {
 } from '@/services/ticketTemplateService';
 import { paleteColors } from '@/assets/colors';
 import BusgoChip from '@/components/BusgoChip.vue';
+import MultiSelectCombobox from '@/components/MultiSelectCombobox.vue';
 
 export default {
   name: 'TicketTemplateView',
-  components: { BusgoChip },
+  components: { BusgoChip, MultiSelectCombobox },
   data: () => ({
     snackbar: false,
     sb_type: '',
@@ -459,6 +490,8 @@ export default {
     sb_icon: '',
     paleteColors: paleteColors,
     loading: false,
+    saleModesLoading: false,
+    saleModesLoaded: false,
     saving: false,
     deleting: false,
     dialog: false,
@@ -474,6 +507,7 @@ export default {
     sortableColumns: [
       { title: 'Nombre', key: 'name' },
       { title: 'Tipo de viaje', key: 'tripType' },
+      { title: 'Predeterminada para', key: 'defaultTripTypes' },
       { title: 'Estado', key: 'status' },
       { title: 'Actualización', key: 'updatedAt' },
     ],
@@ -508,11 +542,12 @@ export default {
       { title: 'Inactiva', value: 'inactive' },
     ],
     headers: [
-      { title: 'Nombre', value: 'name', width: '28%' },
-      { title: 'Tipo de viaje', value: 'tripType', width: '18%' },
-      { title: 'Estado', value: 'status', width: '14%' },
-      { title: 'Fecha de actualización', value: 'updatedAt', width: '22%' },
-      { title: 'Acciones', value: 'actions', sortable: false, width: '18%' },
+      { title: 'Nombre', value: 'name', width: '24%' },
+      { title: 'Tipo de viaje', value: 'tripType', width: '14%' },
+      { title: 'Predeterminada para', value: 'defaultTripTypes', width: '19%' },
+      { title: 'Estado', value: 'status', width: '12%' },
+      { title: 'Fecha de actualización', value: 'updatedAt', width: '17%' },
+      { title: 'Acciones', value: 'actions', sortable: false, width: '14%' },
     ],
     nameRules: [
       (v) => !!v || 'El nombre es obligatorio',
@@ -687,7 +722,7 @@ export default {
   mounted() {
     this.company_id = this.getStorageValue('business_id');
     this.ensureAccess();
-    this.loadTemplates();
+    this.loadTemplates({ includeSaleModes: true });
   },
   methods: {
     getStorageValue(key) {
@@ -700,7 +735,33 @@ export default {
       }
     },
     tripTypeLabel(value) {
-      return ticketTemplateTripTypeLabel(value);
+      const option = this.tripTypeOptions.find((item) => item.value === value);
+      return option?.title || ticketTemplateTripTypeLabel(value);
+    },
+    defaultTripTypeLabels(template = {}) {
+      return Array.isArray(template.defaultTripTypes)
+        ? template.defaultTripTypes.map((value) => this.tripTypeLabel(value))
+        : [];
+    },
+    isTemplateDefault(template = {}) {
+      return Boolean(template.isDefault)
+        || (Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length > 0);
+    },
+    onDefaultTripTypesChange(selection) {
+      const values = Array.isArray(selection) ? selection : [];
+      this.draft.defaultTripTypes = values
+        .map((item) => {
+          if (!item || typeof item !== 'object') return item;
+          return item.value ?? item.id ?? item.raw?.value ?? item.raw?.id;
+        })
+        .filter((value) => value !== undefined && value !== null && value !== '');
+    },
+    areSameSelection(first, second) {
+      const normalize = (value) => [...new Set((Array.isArray(value) ? value : [])
+        .map((item) => (item && typeof item === 'object' ? item.value ?? item.id : item))
+        .filter((item) => item !== undefined && item !== null && item !== '')
+        .map(String))].sort();
+      return JSON.stringify(normalize(first)) === JSON.stringify(normalize(second));
     },
     hasVisibleFields(key) {
       const block = this.draft?.config?.blocks?.[key];
@@ -839,8 +900,9 @@ export default {
       return {
         id: null,
         name: '',
-        tripType: 'express',
+        tripType: this.tripTypeOptions[0]?.value || '',
         status: 'active',
+        defaultTripTypes: [],
         updatedAt: new Date().toISOString(),
         config: this.cloneConfig(getDefaultTicketTemplateConfig()),
       };
@@ -849,28 +911,45 @@ export default {
       this.draft = {
         ...template,
         name: template.name || '',
+        defaultTripTypes: Array.isArray(template.defaultTripTypes) ? [...template.defaultTripTypes] : [],
         config: this.cloneConfig(template.config || getDefaultTicketTemplateConfig()),
       };
       this.originalDraft = JSON.parse(JSON.stringify(this.draft));
     },
-    async loadTemplates() {
+    async loadTemplates({ includeSaleModes } = {}) {
       if (!this.company_id) {
         this.templates = [];
         this.showAlert('warning', 'No se encontró la empresa seleccionada.', 3500);
         return;
       }
+      const shouldIncludeSaleModes = includeSaleModes ?? !this.saleModesLoaded;
+      if (shouldIncludeSaleModes) {
+        this.saleModesLoaded = true;
+        this.saleModesLoading = true;
+      }
       this.loading = true;
       try {
-        this.templates = await ticketTemplateService.listTemplates({
+        const response = await ticketTemplateService.listTemplates({
           companyId: this.company_id,
           tripType: this.filterType,
           status: this.filterStatus,
+          includeSaleModes: shouldIncludeSaleModes,
         });
+        this.templates = response.templates;
+        if (shouldIncludeSaleModes && response.saleModes) {
+          this.tripTypeOptions = response.saleModes;
+        }
       } catch (error) {
         this.templates = [];
+        if (shouldIncludeSaleModes) {
+          this.tripTypeOptions = ticketTemplateTripTypes;
+        }
         this.showRequestError(error, 'No se pudieron cargar las plantillas de tickets.', 3500);
       } finally {
         this.loading = false;
+        if (shouldIncludeSaleModes) {
+          this.saleModesLoading = false;
+        }
       }
     },
     initialize() {
@@ -918,12 +997,29 @@ export default {
       }
     },
     confirmDelete(item) {
+      if (this.isTemplateDefault(item)) {
+        this.showAlert(
+          'warning',
+          'No se puede eliminar una plantilla que es predeterminada para uno o varios tipos de viaje.',
+          4000,
+        );
+        return;
+      }
       this.selectedTemplate = item;
       this.selectedTemplateName = item.name;
       this.dialogDelete = true;
     },
     async deleteTemplateConfirmed() {
       if (!this.selectedTemplate) return;
+      if (this.isTemplateDefault(this.selectedTemplate)) {
+        this.dialogDelete = false;
+        this.showAlert(
+          'warning',
+          'No se puede eliminar una plantilla que es predeterminada para uno o varios tipos de viaje.',
+          4000,
+        );
+        return;
+      }
       this.deleting = true;
       try {
         await ticketTemplateService.deleteTemplate(this.selectedTemplate.id);
@@ -991,14 +1087,36 @@ export default {
 
       this.saving = true;
       try {
-        const payload = {
-          ...this.draft,
-          name: trimmedName,
-          status: this.draft.status || 'active',
-          tripType: this.draft.tripType,
-          config: this.draft.config,
-          updatedAt: new Date().toISOString(),
-        };
+        const currentDefaultTripTypes = Array.isArray(this.draft.defaultTripTypes)
+          ? [...this.draft.defaultTripTypes]
+          : [];
+        const payload = this.draft.id
+          ? { id: this.draft.id }
+          : {
+            name: trimmedName,
+            status: this.draft.status || 'active',
+            tripType: this.draft.tripType,
+            defaultTripTypes: currentDefaultTripTypes,
+            config: this.draft.config,
+          };
+
+        if (this.draft.id) {
+          if (trimmedName !== String(this.originalDraft?.name || '').trim()) {
+            payload.name = trimmedName;
+          }
+          if (this.draft.tripType !== this.originalDraft?.tripType) {
+            payload.tripType = this.draft.tripType;
+          }
+          if ((this.draft.status || 'active') !== (this.originalDraft?.status || 'active')) {
+            payload.status = this.draft.status || 'active';
+          }
+          if (!this.areSameSelection(currentDefaultTripTypes, this.originalDraft?.defaultTripTypes)) {
+            payload.defaultTripTypes = currentDefaultTripTypes;
+          }
+          if (JSON.stringify(this.draft.config) !== JSON.stringify(this.originalDraft?.config)) {
+            payload.config = this.draft.config;
+          }
+        }
 
         const saved = this.draft.id
           ? await ticketTemplateService.updateTemplate(payload)
@@ -1043,10 +1161,10 @@ export default {
 .ticket-template-toolbar :deep(.v-field__outline) { color:#c5cfdd; }
 .ticket-template-toolbar :deep(.v-label) { color:#475569; opacity:1; font-size:13px; }
 .template-list-table :deep(.v-table__wrapper) { overflow-x:auto; }
-.template-list-table :deep(.v-table__wrapper > table) { min-width:980px; width:100%; table-layout:fixed; }
+.template-list-table :deep(.v-table__wrapper > table) { min-width:1180px; width:100%; table-layout:fixed; }
 .template-list-table :deep(th.template-header-shell) { height:auto!important; padding:0!important; border:0!important; }
 .template-list-table :deep(td.template-row-shell) { padding:0!important; border:0!important; }
-.template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(220px,1.7fr) minmax(125px,1fr) minmax(95px,.75fr) minmax(185px,1.2fr) 180px; align-items:center; gap:14px; padding:12px 18px; min-width:980px; width:100%; box-sizing:border-box; }
+.template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.45fr) minmax(115px,.9fr) minmax(210px,1.35fr) minmax(95px,.75fr) minmax(175px,1.1fr) 180px; align-items:center; gap:14px; padding:12px 18px; min-width:1180px; width:100%; box-sizing:border-box; }
 .template-readable-head { background:#f3f6fa; color:#334155; font-size:11px; font-weight:750; border-bottom:1px solid #e4eaf2; }
 .template-heading-group { display:flex; min-width:0; }
 .template-sort-button { display:flex; align-items:center; gap:5px; text-align:left; font:inherit; color:inherit; cursor:pointer; width:fit-content; background:none; border:0; }
@@ -1057,6 +1175,7 @@ export default {
 .template-readable-row > div { min-width:0; }
 .template-cell-title { display:block; font-size:13px; color:#1e293b; font-weight:750; line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
 .template-muted { display:block; color:#64748b; font-size:11px; line-height:1.5; margin-top:5px; }
+.template-default-types { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
 .template-date { display:flex; align-items:flex-start; gap:6px; color:#475569; font-size:12px; line-height:1.5; }
 .template-date > .v-icon { flex-shrink:0; margin-top:2px; color:#64748b; }
 .template-row-actions { display:flex; align-items:center; gap:0; }

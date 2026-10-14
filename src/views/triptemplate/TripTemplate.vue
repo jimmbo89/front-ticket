@@ -396,7 +396,7 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-calendar-clock</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="3">
                     <v-select
                       v-model="editedItem.recurrence_pattern"
                       :items="frequencyOptions"
@@ -445,7 +445,7 @@
                     </v-select>
                   </v-col>
 
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="3">
                     <v-text-field
                       v-model="editedItem.duration"
                       label="Duración (minutos)"
@@ -456,7 +456,7 @@
                     />
                   </v-col>
 
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="3">
                     <v-select
                       v-model="editedItem.saleMode"
                       :items="saleModes"
@@ -468,11 +468,37 @@
                       variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      @update:model-value="onTemplateSaleModeChange"
                     >
                       <template #selection="{ item }">
                         <SaleModeChip :value="item.raw?.id || editedItem.saleMode" />
                       </template>
                     </v-select>
+                  </v-col>
+
+                  <v-col cols="12" sm="6" md="3">
+                    <MultiSelectCombobox
+                      :model-value="ticketTemplateSelection"
+                      :items="ticketTemplates"
+                      item-title="name"
+                      item-value="id"
+                      label="Plantilla de ticket"
+                      placeholder="Selecciona una plantilla o usa la predeterminada"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      no-data-text="No hay plantillas de tickets activas."
+                      :return-object="false"
+                      :filter-keys="['name']"
+                      :disabled="loading"
+                      :loading="loading"
+                      @update:model-value="onTemplateTicketTemplateChange"
+                    >
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
+                          <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
+                          <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
+                        </v-list-item>
+                      </template>
+                    </MultiSelectCombobox>
                   </v-col>
 
                   <v-col cols="12" md="8">
@@ -1452,12 +1478,19 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
+import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
+import {
+  findDefaultTicketTemplate,
+  isTicketTemplateCompatibleWithTripType,
+  normalizeTicketTemplates,
+  ticketTemplateTripTypeLabel,
+} from "@/services/ticketTemplateService";
 import {
   getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
-  components: { BusgoChip, SaleModeChip },
+  components: { BusgoChip, SaleModeChip, MultiSelectCombobox },
   data: () => ({
     expandedMembersId: null,
     snackbar: false,
@@ -1481,6 +1514,9 @@ export default {
     workers: [],
     branches: [],
     saleModes: [{ id: "normal", name: "Venta Full" }],
+    ticketTemplates: [],
+    ticketTemplateSelection: [],
+    ticketTemplateSelectionManual: false,
     filteredWorkers: [],
     templateStopRows: [],
     templateFareRows: [],
@@ -1567,6 +1603,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1582,6 +1619,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1598,6 +1636,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1860,6 +1899,55 @@ export default {
       if (useDefault || !this.editedItem.saleMode) {
         this.editedItem.saleMode = this.getDefaultSaleMode();
       }
+    },
+    ticketTemplateOptionSubtitle(template = {}) {
+      const defaults = Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length
+        ? `Predeterminada para: ${template.defaultTripTypes.map(ticketTemplateTripTypeLabel).join(", ")}`
+        : `Tipo: ${ticketTemplateTripTypeLabel(template.tripType)}`;
+      return `${defaults} · Activa`;
+    },
+    isDefaultTicketTemplate(template = {}) {
+      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      return String(defaultTemplate?.id) === String(template.id);
+    },
+    applyDefaultTemplateTicketTemplate() {
+      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      const id = defaultTemplate?.id ?? null;
+      this.ticketTemplateSelectionManual = false;
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+    },
+    syncTemplateTicketTemplateWithSaleMode() {
+      const currentTemplate = this.ticketTemplates.find(
+        (template) => String(template.id) === String(this.editedItem.ticket_template_id),
+      );
+
+      if (isTicketTemplateCompatibleWithTripType(currentTemplate, this.editedItem.saleMode)) {
+        return;
+      }
+
+      this.applyDefaultTemplateTicketTemplate();
+    },
+    ensureTemplateTicketTemplateSelection({ useDefault = false } = {}) {
+      if (useDefault) this.ticketTemplateSelectionManual = false;
+
+      if (!useDefault && this.editedItem.ticket_template_id !== null && this.editedItem.ticket_template_id !== undefined && this.editedItem.ticket_template_id !== "") {
+        this.ticketTemplateSelection = [this.editedItem.ticket_template_id];
+        this.ticketTemplateSelectionManual = true;
+        return;
+      }
+
+      if (!this.ticketTemplateSelectionManual) this.applyDefaultTemplateTicketTemplate();
+    },
+    onTemplateSaleModeChange() {
+      this.syncTemplateTicketTemplateWithSaleMode();
+    },
+    onTemplateTicketTemplateChange(selection) {
+      const ids = Array.isArray(selection) ? selection : [];
+      const id = ids.length ? ids[ids.length - 1] : null;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelectionManual = id !== null;
     },
     parseTemplateStops(value) {
       if (Array.isArray(value)) return value;
@@ -2411,6 +2499,8 @@ export default {
         schedule: this.getCurrentTime(),
       });
       this.originalItem = Object.assign({}, this.defaultItem);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.editedItem.branch_id = this.branch_id;
       await this.loadTripTemplateFormData(this.editedItem.branch_id, {
         resetSelections: true,
@@ -2426,6 +2516,8 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
@@ -2571,6 +2663,9 @@ export default {
         if (result.success) {
           this.routes = result.data?.triproutes || [];
           this.vehicles = this.normalizeTemplateVehicles(result.data?.tripvehicles);
+          this.ticketTemplates = normalizeTicketTemplates(
+            result.data?.tickettemplates ?? result.data?.ticketTemplates ?? result.data?.ticket_templates
+          ).filter((template) => template.status === "active");
           this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTemplateSaleMode({ useDefault: resetSelections });
@@ -2584,18 +2679,29 @@ export default {
             this.expandedTemplateFareIds = [];
             this.estimated = 0;
             this.filteredWorkers = [];
+            this.editedItem.ticket_template_id = null;
+            this.ticketTemplateSelection = [];
+            this.ticketTemplateSelectionManual = false;
           } else {
             this.filterWorkers();
           }
+
+          this.ensureTemplateTicketTemplateSelection({ useDefault: resetSelections });
         } else {
           this.routes = [];
           this.vehicles = [];
+          this.ticketTemplates = [];
+          this.ticketTemplateSelection = [];
+          this.ticketTemplateSelectionManual = false;
           this.workers = [];
           this.filteredWorkers = [];
           this.saleModes = this.normalizeSaleModeOptions();
           this.ensureTemplateSaleMode();
         }
       } catch (error) {
+        this.ticketTemplates = [];
+        this.ticketTemplateSelection = [];
+        this.ticketTemplateSelectionManual = false;
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2611,6 +2717,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      this.syncTemplateTicketTemplateWithSaleMode();
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
@@ -2623,6 +2730,7 @@ export default {
           "days_of_week",
           "active",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2651,6 +2759,7 @@ export default {
           }, {});
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
+          updatedFields.ticket_template_id = this.editedItem.ticket_template_id ?? null;
           try {
             const result = await handleRequest({
               endpoint: "trip-template",
@@ -2692,6 +2801,7 @@ export default {
           "days_of_week",
           "active",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2775,6 +2885,10 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = this.editedItem.ticket_template_id !== null
+        && this.editedItem.ticket_template_id !== undefined
+        && this.editedItem.ticket_template_id !== "";
       this.originalItem.saleMode = this.normalizeTemplateSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTemplateSaleMode(this.editedItem);
       this.originalItem.tripStops = this.parseTemplateStops(this.originalItem.tripStops);

@@ -537,11 +537,37 @@
                       variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      @update:model-value="onTripSaleModeChange"
                     >
                       <template #selection="{ item }">
                         <SaleModeChip :value="item.raw?.id || editedItem.saleMode" />
                       </template>
                     </v-select>
+                  </v-col>
+
+                  <v-col cols="12" md="8">
+                    <MultiSelectCombobox
+                      :model-value="ticketTemplateSelection"
+                      :items="ticketTemplates"
+                      item-title="name"
+                      item-value="id"
+                      label="Plantilla de ticket"
+                      placeholder="Selecciona una plantilla o usa la predeterminada"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      no-data-text="No hay plantillas de tickets activas."
+                      :return-object="false"
+                      :filter-keys="['name']"
+                      :disabled="loading"
+                      :loading="loading"
+                      @update:model-value="onTripTicketTemplateChange"
+                    >
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
+                          <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
+                          <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
+                        </v-list-item>
+                      </template>
+                    </MultiSelectCombobox>
                   </v-col>
 
                   <v-col cols="12">
@@ -1472,12 +1498,19 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
+import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
+import {
+  findDefaultTicketTemplate,
+  isTicketTemplateCompatibleWithTripType,
+  normalizeTicketTemplates,
+  ticketTemplateTripTypeLabel,
+} from "@/services/ticketTemplateService";
 import {
   getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
-  components: { BusgoChip, SaleModeChip },
+  components: { BusgoChip, SaleModeChip, MultiSelectCombobox },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -1503,6 +1536,9 @@ export default {
     workers: [],
     branches: [],
     saleModes: [{ id: "normal", name: "Venta Full" }],
+    ticketTemplates: [],
+    ticketTemplateSelection: [],
+    ticketTemplateSelectionManual: false,
     filteredWorkers: [],
     tripStopRows: [],
     tripFareRows: [],
@@ -1568,6 +1604,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1583,6 +1620,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1598,6 +1636,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1820,6 +1859,55 @@ export default {
       if (useDefault || !this.editedItem.saleMode) {
         this.editedItem.saleMode = this.getDefaultSaleMode();
       }
+    },
+    ticketTemplateOptionSubtitle(template = {}) {
+      const defaults = Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length
+        ? `Predeterminada para: ${template.defaultTripTypes.map(ticketTemplateTripTypeLabel).join(", ")}`
+        : `Tipo: ${ticketTemplateTripTypeLabel(template.tripType)}`;
+      return `${defaults} · Activa`;
+    },
+    isDefaultTicketTemplate(template = {}) {
+      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      return String(defaultTemplate?.id) === String(template.id);
+    },
+    applyDefaultTripTicketTemplate() {
+      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      const id = defaultTemplate?.id ?? null;
+      this.ticketTemplateSelectionManual = false;
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+    },
+    syncTripTicketTemplateWithSaleMode() {
+      const currentTemplate = this.ticketTemplates.find(
+        (template) => String(template.id) === String(this.editedItem.ticket_template_id),
+      );
+
+      if (isTicketTemplateCompatibleWithTripType(currentTemplate, this.editedItem.saleMode)) {
+        return;
+      }
+
+      this.applyDefaultTripTicketTemplate();
+    },
+    ensureTripTicketTemplateSelection({ useDefault = false } = {}) {
+      if (useDefault) this.ticketTemplateSelectionManual = false;
+
+      if (!useDefault && this.editedItem.ticket_template_id !== null && this.editedItem.ticket_template_id !== undefined && this.editedItem.ticket_template_id !== "") {
+        this.ticketTemplateSelection = [this.editedItem.ticket_template_id];
+        this.ticketTemplateSelectionManual = true;
+        return;
+      }
+
+      if (!this.ticketTemplateSelectionManual) this.applyDefaultTripTicketTemplate();
+    },
+    onTripSaleModeChange() {
+      this.syncTripTicketTemplateWithSaleMode();
+    },
+    onTripTicketTemplateChange(selection) {
+      const ids = Array.isArray(selection) ? selection : [];
+      const id = ids.length ? ids[ids.length - 1] : null;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelectionManual = id !== null;
     },
     compareTrips(a, b) {
       const direction = this.tripSortOrder === "asc" ? 1 : -1;
@@ -2365,6 +2453,9 @@ export default {
         if (result.success) {
           this.routes = result.data?.triproutes || [];
           this.vehicles = this.normalizeTripVehicles(result.data?.tripvehicles);
+          this.ticketTemplates = normalizeTicketTemplates(
+            result.data?.tickettemplates ?? result.data?.ticketTemplates ?? result.data?.ticket_templates
+          ).filter((template) => template.status === "active");
           this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTripSaleMode({ useDefault: resetSelections });
@@ -2379,18 +2470,29 @@ export default {
             this.expandedTripFareIds = [];
             this.estimated = null;
             this.editedItem.arrival = null;
+            this.editedItem.ticket_template_id = null;
+            this.ticketTemplateSelection = [];
+            this.ticketTemplateSelectionManual = false;
           } else {
             this.filterWorkers();
           }
+
+          this.ensureTripTicketTemplateSelection({ useDefault: resetSelections });
         } else {
           this.routes = [];
           this.vehicles = [];
+          this.ticketTemplates = [];
+          this.ticketTemplateSelection = [];
+          this.ticketTemplateSelectionManual = false;
           this.workers = [];
           this.filteredWorkers = [];
           this.saleModes = this.normalizeSaleModeOptions();
           this.ensureTripSaleMode();
         }
       } catch (error) {
+        this.ticketTemplates = [];
+        this.ticketTemplateSelection = [];
+        this.ticketTemplateSelectionManual = false;
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2417,6 +2519,8 @@ export default {
         schedule: this.getCurrentTime(),
       });
       this.originalItem = Object.assign({}, this.defaultItem);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.editedItem.branch_id = this.branch_id;
       await this.loadTripFormData(this.editedItem.branch_id, {
         resetSelections: true,
@@ -2431,6 +2535,8 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
@@ -2571,6 +2677,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      this.syncTripTicketTemplateWithSaleMode();
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
@@ -2583,6 +2690,7 @@ export default {
           "start",
           "end",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2609,6 +2717,7 @@ export default {
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.date = this.editedItem.date ? this.editedItem.date : new Date();
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
+          updatedFields.ticket_template_id = this.editedItem.ticket_template_id ?? null;
           try {
             const result = await handleRequest({
               endpoint: "trip",
@@ -2650,6 +2759,7 @@ export default {
           "start",
           "end",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2721,6 +2831,10 @@ export default {
       const trip = item?.raw || item;
       this.originalItem = _.cloneDeep(trip);
       this.editedItem = _.cloneDeep(trip);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = this.editedItem.ticket_template_id !== null
+        && this.editedItem.ticket_template_id !== undefined
+        && this.editedItem.ticket_template_id !== "";
       this.originalItem.saleMode = this.normalizeTripSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTripSaleMode(this.editedItem);
       this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)

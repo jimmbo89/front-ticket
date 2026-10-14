@@ -22,9 +22,85 @@ export function normalizeTripType(value) {
   return tripTypeAliases[normalized] || normalized;
 }
 
+export function normalizeTicketTemplateSaleMode(mode = {}) {
+  const value = normalizeTripType(
+    mode.id
+      ?? mode.value
+      ?? mode.sale_mode
+      ?? mode.saleMode
+      ?? mode.trip_type
+      ?? mode.tripType,
+  );
+
+  if (!value) return null;
+
+  return {
+    title: String(mode.name ?? mode.title ?? ticketTemplateTripTypeLabel(value)).trim() || value,
+    value,
+  };
+}
+
+export function normalizeTicketTemplateSaleModes(modes) {
+  const source = Array.isArray(modes) ? modes : Object.values(modes || {});
+
+  return source
+    .map(normalizeTicketTemplateSaleMode)
+    .filter(Boolean);
+}
+
 export function ticketTemplateTripTypeLabel(value) {
   const normalized = normalizeTripType(value);
   return ticketTemplateTripTypes.find((option) => option.value === normalized)?.title || value || '—';
+}
+
+export function normalizeTicketTemplate(template = {}) {
+  const defaultTripTypes = template.default_trip_types ?? template.defaultTripTypes;
+
+  return {
+    ...template,
+    id: template.id,
+    company_id: template.company_id ?? template.companyId,
+    name: template.name || '',
+    tripType: normalizeTripType(template.trip_type ?? template.tripType),
+    status: template.status || 'active',
+    config: template.config || getDefaultTicketTemplateConfig(),
+    defaultTripTypes: Array.isArray(defaultTripTypes)
+      ? defaultTripTypes.map(normalizeTripType).filter(Boolean)
+      : [],
+    isDefault: Boolean(template.is_default ?? template.isDefault),
+    createdAt: template.created_at ?? template.createdAt,
+    updatedAt: template.updated_at ?? template.updatedAt,
+  };
+}
+
+export function normalizeTicketTemplates(templates) {
+  const source = Array.isArray(templates)
+    ? templates
+    : Object.values(templates || {});
+
+  return source.filter(Boolean).map(normalizeTicketTemplate);
+}
+
+export function findDefaultTicketTemplate(templates, tripType) {
+  const normalizedTripType = normalizeTripType(tripType);
+  return normalizeTicketTemplates(templates).find((template) => {
+    if (template.status !== 'active') return false;
+    return template.defaultTripTypes.includes(normalizedTripType)
+      || (template.isDefault && template.tripType === normalizedTripType);
+  }) || null;
+}
+
+export function isTicketTemplateCompatibleWithTripType(template, tripType) {
+  if (!template) return false;
+
+  const normalizedTemplate = normalizeTicketTemplate(template);
+  const normalizedTripType = normalizeTripType(tripType);
+
+  return normalizedTemplate.status === 'active'
+    && (
+      normalizedTemplate.tripType === normalizedTripType
+      || normalizedTemplate.defaultTripTypes.includes(normalizedTripType)
+    );
 }
 
 export function getDefaultTicketTemplateConfig() {
@@ -136,17 +212,7 @@ function requireCompanyId(companyId) {
 }
 
 function normalizeTemplate(template = {}) {
-  return {
-    ...template,
-    id: template.id,
-    company_id: template.company_id ?? template.companyId,
-    name: template.name || '',
-    tripType: normalizeTripType(template.trip_type ?? template.tripType),
-    status: template.status || 'active',
-    config: template.config || getDefaultTicketTemplateConfig(),
-    createdAt: template.created_at ?? template.createdAt,
-    updatedAt: template.updated_at ?? template.updatedAt,
-  };
+  return normalizeTicketTemplate(template);
 }
 
 function ticketTemplateFromResponse(data) {
@@ -162,15 +228,33 @@ function throwRequestError(result, fallbackMessage) {
 }
 
 function buildTemplatePayload(templateData = {}, companyId, includeCompany = false) {
-  const payload = {
-    name: String(templateData.name || '').trim(),
-    trip_type: normalizeTripType(templateData.trip_type ?? templateData.tripType),
-    status: templateData.status || 'active',
-    config: templateData.config || getDefaultTicketTemplateConfig(),
-  };
+  const payload = {};
+
+  if (includeCompany || templateData.name !== undefined) {
+    payload.name = String(templateData.name || '').trim();
+  }
+
+  if (includeCompany || templateData.trip_type !== undefined || templateData.tripType !== undefined) {
+    payload.trip_type = normalizeTripType(templateData.trip_type ?? templateData.tripType);
+  }
+
+  if (includeCompany || templateData.status !== undefined) {
+    payload.status = templateData.status || 'active';
+  }
+
+  if (includeCompany || templateData.config !== undefined) {
+    payload.config = templateData.config || getDefaultTicketTemplateConfig();
+  }
 
   if (includeCompany) {
     payload.company_id = requireCompanyId(companyId);
+  }
+
+  const defaultTripTypes = templateData.default_trip_types ?? templateData.defaultTripTypes;
+  if (includeCompany || defaultTripTypes !== undefined) {
+    payload.default_trip_types = Array.isArray(defaultTripTypes)
+      ? defaultTripTypes.map(normalizeTripType).filter(Boolean)
+      : [];
   }
 
   if (hasValue(templateData.id)) {
@@ -182,8 +266,12 @@ function buildTemplatePayload(templateData = {}, companyId, includeCompany = fal
 
 function templatesFromResponse(data) {
   const templates = data?.ticketTemplates ?? data?.templates ?? data;
-  if (!Array.isArray(templates)) return [];
-  return templates.map(normalizeTemplate);
+  return normalizeTicketTemplates(templates);
+}
+
+function saleModesFromResponse(data) {
+  const saleModes = data?.saleModes ?? data?.sale_modes;
+  return saleModes === undefined ? null : normalizeTicketTemplateSaleModes(saleModes);
 }
 
 // ============================================================================
@@ -194,12 +282,13 @@ const ticketTemplateService = {
   /**
    * List templates for a company. Type and status are sent in the POST body
    * because the backend uses parameterized POST queries.
-   * @returns {Promise<Array>} Array of templates
+   * @returns {Promise<Object>} Templates and optional sale mode catalog
    */
-  async listTemplates({ companyId, tripType, status } = {}) {
+  async listTemplates({ companyId, tripType, status, includeSaleModes = false } = {}) {
     const data = { company_id: requireCompanyId(companyId) };
     if (hasValue(tripType)) data.trip_type = normalizeTripType(tripType);
     if (hasValue(status)) data.status = status;
+    data.include_sale_modes = Boolean(includeSaleModes);
 
     const result = await handleRequest({
       endpoint: 'get-ticket-templates',
@@ -209,11 +298,14 @@ const ticketTemplateService = {
 
     // The API uses 204 when the company has no templates.
     if (result?.status === 204 || (!result?.success && result?.message === 'No encontrado.')) {
-      return [];
+      return { templates: [], saleModes: null };
     }
 
     throwRequestError(result, 'No fue posible cargar las plantillas de tickets.');
-    return templatesFromResponse(result.data);
+    return {
+      templates: templatesFromResponse(result.data),
+      saleModes: saleModesFromResponse(result.data),
+    };
   },
 
   /**
@@ -222,8 +314,8 @@ const ticketTemplateService = {
    * @returns {Promise<Object>} Template object or null
    */
   async getTemplate(id, companyId) {
-    const templates = await this.listTemplates({ companyId });
-    return templates.find((template) => String(template.id) === String(id)) || null;
+    const response = await this.listTemplates({ companyId });
+    return response.templates.find((template) => String(template.id) === String(id)) || null;
   },
 
   /**
@@ -268,6 +360,7 @@ const ticketTemplateService = {
       name: `${template.name || 'Plantilla'} (Copia)`,
       tripType: template.tripType,
       status: template.status,
+      defaultTripTypes: template.defaultTripTypes,
       config: JSON.parse(JSON.stringify(template.config || getDefaultTicketTemplateConfig())),
     }, companyId);
   },
@@ -285,6 +378,7 @@ const ticketTemplateService = {
       name: template.name,
       tripType: template.tripType,
       status: newStatus,
+      defaultTripTypes: Array.isArray(template.defaultTripTypes) ? template.defaultTripTypes : [],
       config: template.config,
     });
   },
