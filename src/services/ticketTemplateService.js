@@ -90,6 +90,19 @@ export function findDefaultTicketTemplate(templates, tripType) {
   }) || null;
 }
 
+export function isTicketTemplateCompatibleWithTripType(template, tripType) {
+  if (!template) return false;
+
+  const normalizedTemplate = normalizeTicketTemplate(template);
+  const normalizedTripType = normalizeTripType(tripType);
+
+  return normalizedTemplate.status === 'active'
+    && (
+      normalizedTemplate.tripType === normalizedTripType
+      || normalizedTemplate.defaultTripTypes.includes(normalizedTripType)
+    );
+}
+
 export function getDefaultTicketTemplateConfig() {
   return {
     version: '1.0',

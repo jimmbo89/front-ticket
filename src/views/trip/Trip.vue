@@ -1501,6 +1501,7 @@ import SaleModeChip from "@/components/SaleModeChip.vue";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
 import {
   findDefaultTicketTemplate,
+  isTicketTemplateCompatibleWithTripType,
   normalizeTicketTemplates,
   ticketTemplateTripTypeLabel,
 } from "@/services/ticketTemplateService";
@@ -1872,8 +1873,20 @@ export default {
     applyDefaultTripTicketTemplate() {
       const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
       const id = defaultTemplate?.id ?? null;
+      this.ticketTemplateSelectionManual = false;
       this.editedItem.ticket_template_id = id;
       this.ticketTemplateSelection = id === null ? [] : [id];
+    },
+    syncTripTicketTemplateWithSaleMode() {
+      const currentTemplate = this.ticketTemplates.find(
+        (template) => String(template.id) === String(this.editedItem.ticket_template_id),
+      );
+
+      if (isTicketTemplateCompatibleWithTripType(currentTemplate, this.editedItem.saleMode)) {
+        return;
+      }
+
+      this.applyDefaultTripTicketTemplate();
     },
     ensureTripTicketTemplateSelection({ useDefault = false } = {}) {
       if (useDefault) this.ticketTemplateSelectionManual = false;
@@ -1887,7 +1900,7 @@ export default {
       if (!this.ticketTemplateSelectionManual) this.applyDefaultTripTicketTemplate();
     },
     onTripSaleModeChange() {
-      if (!this.ticketTemplateSelectionManual) this.applyDefaultTripTicketTemplate();
+      this.syncTripTicketTemplateWithSaleMode();
     },
     onTripTicketTemplateChange(selection) {
       const ids = Array.isArray(selection) ? selection : [];
@@ -2664,6 +2677,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      this.syncTripTicketTemplateWithSaleMode();
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
