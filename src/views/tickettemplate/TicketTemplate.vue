@@ -94,10 +94,9 @@
                       :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                       :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)" />
                     <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
-                      :color="isTemplateDefault(item) ? '#94a3b8' : '#dc2626'"
-                      :title="isTemplateDefault(item) ? 'No se puede eliminar una plantilla predeterminada' : 'Eliminar plantilla'"
-                      :aria-label="isTemplateDefault(item) ? 'Plantilla predeterminada no eliminable' : 'Eliminar plantilla'"
-                      :disabled="isTemplateDefault(item)" @click="confirmDelete(item)" />
+                      :color="isTemplateDefault(item) || isTemplateInUse(item) ? '#d97706' : '#dc2626'"
+                      :title="deleteActionTitle(item)"
+                      :aria-label="deleteActionTitle(item)" @click="confirmDelete(item)" />
                   </div>
                 </div>
               </td>
@@ -449,15 +448,44 @@
       <v-card class="busgo-dialog-card template-small-dialog">
         <v-toolbar :color="paleteColors.error">
           <v-icon class="ml-4" size="21">mdi-trash-can-outline</v-icon>
-          <span class="text-subtitle-2 ml-3">Eliminar plantilla de ticket</span>
+          <span class="text-subtitle-2 ml-3">{{ deleteDialogTitle }}</span>
         </v-toolbar>
-        <v-card-text class="mt-2 mb-2">¿Desea eliminar la plantilla <strong>{{ selectedTemplateName }}</strong>?</v-card-text>
+        <v-card-text class="mt-2 mb-2">
+          <template v-if="selectedTemplateIsDefault">
+            <div>
+              La plantilla <strong>{{ selectedTemplateName }}</strong> es predeterminada para
+              <strong>{{ selectedTemplateDefaultTypeLabels.join(', ') }}</strong>.
+            </div>
+            <div class="mt-3">
+              Seleccione otra plantilla predeterminada antes de desactivarla o eliminarla.
+            </div>
+          </template>
+          <template v-else-if="selectedTemplateIsInUse">
+            <div>
+              La plantilla <strong>{{ selectedTemplateName }}</strong> ya está siendo utilizada y no puede eliminarse definitivamente.
+            </div>
+            <div v-if="selectedTemplateUsageLabels.length" class="mt-3">
+              Asociaciones actuales: {{ selectedTemplateUsageLabels.join(' y ') }}.
+            </div>
+            <div v-if="selectedTemplateCanDeactivate" class="mt-3">
+              Puede desactivarla para impedir nuevas asignaciones. Los viajes y tickets existentes conservarán su histórico.
+            </div>
+            <div v-else class="mt-3">
+              La plantilla ya está inactiva; sus asociaciones históricas se conservarán.
+            </div>
+          </template>
+          <template v-else>
+            ¿Desea eliminar la plantilla <strong>{{ selectedTemplateName }}</strong>?
+          </template>
+        </v-card-text>
         <v-divider />
         <v-card-actions class="busgo-dialog-actions">
           <v-spacer />
           <v-btn variant="flat" class="ticket-secondary-btn" :disabled="deleting" @click="dialogDelete = false">Cancelar</v-btn>
-          <v-btn :color="paleteColors.error" variant="flat" :loading="deleting" :disabled="deleting"
-            @click="deleteTemplateConfirmed">Eliminar</v-btn>
+          <v-btn v-if="selectedTemplateCanDeactivate" :color="paleteColors.warning || '#d97706'" variant="flat"
+            :loading="deleting" :disabled="deleting" @click="deactivateTemplateConfirmed">Desactivar</v-btn>
+          <v-btn v-else-if="selectedTemplateCanDelete" :color="paleteColors.error" variant="flat"
+            :loading="deleting" :disabled="deleting" @click="deleteTemplateConfirmed">Eliminar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -635,6 +663,36 @@ export default {
         ? '¿Desea descartar los cambios sin guardar?'
         : '¿Desea restaurar la configuración inicial del ticket?';
     },
+    selectedTemplateIsDefault() {
+      return this.isTemplateDefault(this.selectedTemplate || {});
+    },
+    selectedTemplateIsInUse() {
+      return this.isTemplateInUse(this.selectedTemplate || {});
+    },
+    selectedTemplateCanDelete() {
+      return Boolean(this.selectedTemplate) && !this.selectedTemplateIsDefault && !this.selectedTemplateIsInUse;
+    },
+    selectedTemplateCanDeactivate() {
+      return Boolean(this.selectedTemplate)
+        && !this.selectedTemplateIsDefault
+        && this.selectedTemplateIsInUse
+        && this.selectedTemplate.status === 'active';
+    },
+    selectedTemplateDefaultTypeLabels() {
+      return this.defaultTripTypeLabels(this.selectedTemplate || {});
+    },
+    selectedTemplateUsageLabels() {
+      const labels = [];
+      const template = this.selectedTemplate || {};
+      if (template.hasTrips) labels.push('viajes');
+      if (template.hasTripTemplates) labels.push('plantillas de viaje');
+      return labels;
+    },
+    deleteDialogTitle() {
+      if (this.selectedTemplateIsDefault) return 'Plantilla predeterminada';
+      if (this.selectedTemplateIsInUse) return 'Plantilla en uso';
+      return 'Eliminar plantilla de ticket';
+    },
     filteredTemplates() {
       return this.templates.filter((item) => {
         const q = this.search.trim().toLowerCase();
@@ -747,6 +805,21 @@ export default {
       return Boolean(template.isDefault)
         || (Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length > 0);
     },
+    isTemplateInUse(template = {}) {
+      return Boolean(
+        template.isInUse
+        || template.is_in_use
+        || template.hasTrips
+        || template.has_trips
+        || template.hasTripTemplates
+        || template.has_trip_templates,
+      );
+    },
+    deleteActionTitle(template = {}) {
+      if (this.isTemplateDefault(template)) return 'Revisar plantilla predeterminada';
+      if (this.isTemplateInUse(template)) return 'Revisar opciones de desactivación';
+      return 'Eliminar plantilla';
+    },
     onDefaultTripTypesChange(selection) {
       const values = Array.isArray(selection) ? selection : [];
       this.draft.defaultTripTypes = values
@@ -827,7 +900,7 @@ export default {
       this.snackbar = true;
     },
     showRequestError(error, fallbackMessage, timeout = 3000) {
-      const validationError = [400, 422].includes(Number(error?.status));
+      const validationError = [400, 409, 422].includes(Number(error?.status));
       this.showAlert(validationError ? 'warning' : 'error', error?.message || fallbackMessage, timeout);
     },
     formatDate(value) {
@@ -987,6 +1060,15 @@ export default {
     async toggleTemplateStatus(item) {
       try {
         const nextStatus = item.status === 'active' ? 'inactive' : 'active';
+        if (nextStatus === 'inactive' && this.isTemplateDefault(item)) {
+          const defaultTypes = this.defaultTripTypeLabels(item).join(', ');
+          this.showAlert(
+            'warning',
+            `Seleccione otra plantilla predeterminada para ${defaultTypes || 'los tipos de viaje'} antes de desactivarla.`,
+            4500,
+          );
+          return;
+        }
         const updated = await ticketTemplateService.toggleStatus(item, nextStatus);
         if (updated) {
           this.showAlert('success', `Plantilla ${nextStatus === 'active' ? 'activada' : 'desactivada'}.`, 2500);
@@ -997,25 +1079,19 @@ export default {
       }
     },
     confirmDelete(item) {
-      if (this.isTemplateDefault(item)) {
-        this.showAlert(
-          'warning',
-          'No se puede eliminar una plantilla que es predeterminada para uno o varios tipos de viaje.',
-          4000,
-        );
-        return;
-      }
       this.selectedTemplate = item;
       this.selectedTemplateName = item.name;
       this.dialogDelete = true;
     },
     async deleteTemplateConfirmed() {
       if (!this.selectedTemplate) return;
-      if (this.isTemplateDefault(this.selectedTemplate)) {
+      if (!this.selectedTemplateCanDelete) {
         this.dialogDelete = false;
         this.showAlert(
           'warning',
-          'No se puede eliminar una plantilla que es predeterminada para uno o varios tipos de viaje.',
+          this.selectedTemplateIsDefault
+            ? 'Seleccione otra plantilla predeterminada antes de eliminar esta plantilla.'
+            : 'Esta plantilla está en uso y debe desactivarse en lugar de eliminarse.',
           4000,
         );
         return;
@@ -1030,6 +1106,26 @@ export default {
         await this.loadTemplates();
       } catch (error) {
         this.showRequestError(error, 'No se pudo eliminar la plantilla.', 3000);
+      } finally {
+        this.deleting = false;
+      }
+    },
+    async deactivateTemplateConfirmed() {
+      if (!this.selectedTemplateCanDeactivate) return;
+
+      this.deleting = true;
+      try {
+        await ticketTemplateService.updateTemplate({
+          id: this.selectedTemplate.id,
+          status: 'inactive',
+        });
+        this.showAlert('success', 'Plantilla desactivada correctamente.', 2500);
+        this.dialogDelete = false;
+        this.selectedTemplate = null;
+        this.selectedTemplateName = '';
+        await this.loadTemplates();
+      } catch (error) {
+        this.showRequestError(error, 'No se pudo desactivar la plantilla.', 3000);
       } finally {
         this.deleting = false;
       }
