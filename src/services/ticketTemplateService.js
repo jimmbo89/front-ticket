@@ -360,7 +360,6 @@ const ticketTemplateService = {
       name: `${template.name || 'Plantilla'} (Copia)`,
       tripType: template.tripType,
       status: template.status,
-      defaultTripTypes: template.defaultTripTypes,
       config: JSON.parse(JSON.stringify(template.config || getDefaultTicketTemplateConfig())),
     }, companyId);
   },
