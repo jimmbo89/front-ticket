@@ -55,6 +55,9 @@ export function ticketTemplateTripTypeLabel(value) {
 
 export function normalizeTicketTemplate(template = {}) {
   const defaultTripTypes = template.default_trip_types ?? template.defaultTripTypes;
+  const hasTrips = Boolean(template.has_trips ?? template.hasTrips);
+  const hasTripTemplates = Boolean(template.has_trip_templates ?? template.hasTripTemplates);
+  const inUseValue = template.is_in_use ?? template.isInUse;
 
   return {
     ...template,
@@ -68,6 +71,9 @@ export function normalizeTicketTemplate(template = {}) {
       ? defaultTripTypes.map(normalizeTripType).filter(Boolean)
       : [],
     isDefault: Boolean(template.is_default ?? template.isDefault),
+    hasTrips,
+    hasTripTemplates,
+    isInUse: inUseValue === undefined ? hasTrips || hasTripTemplates : Boolean(inUseValue),
     createdAt: template.created_at ?? template.createdAt,
     updatedAt: template.updated_at ?? template.updatedAt,
   };
