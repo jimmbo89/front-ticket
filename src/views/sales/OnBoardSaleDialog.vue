@@ -47,7 +47,7 @@
                   </div>
                 </div>
               </div>
-              <v-progress-circular v-if="loadingContext" indeterminate size="22" width="2" color="#b45309" />
+              <v-progress-circular v-if="loadingContext" indeterminate size="22" width="2" color="#7c3aed" />
             </div>
 
             <v-alert v-if="contextError" type="warning" variant="tonal" density="compact" class="onboard-alert">
@@ -172,7 +172,7 @@
                   </div>
                 </div>
               </div>
-              <v-progress-circular v-if="loadingRoutes" indeterminate size="22" width="2" color="#b45309" />
+              <v-progress-circular v-if="loadingRoutes" indeterminate size="22" width="2" color="#7c3aed" />
             </div>
 
             <v-alert v-if="!loadingRoutes && !availableRoutes.length" type="info" variant="tonal" density="compact" class="onboard-alert">
@@ -220,7 +220,7 @@
                 </v-list-item>
               </template>
             </v-autocomplete>
-            <v-progress-linear v-if="loadingActiveTrips" indeterminate color="#b45309" class="mt-4" aria-label="Consultando viajes activos" />
+            <v-progress-linear v-if="loadingActiveTrips" indeterminate color="#7c3aed" class="mt-4" aria-label="Consultando viajes activos" />
             <v-alert v-if="activeTripsError" type="warning" variant="tonal" density="compact" class="mt-4">
               {{ activeTripsError }}
               <v-btn variant="text" size="small" :loading="loadingActiveTrips" @click="loadActiveTrips">Reintentar</v-btn>
@@ -248,10 +248,10 @@
                   <small v-if="trip.worker?.name">Operador: {{ trip.worker.name }}</small>
                 </span>
                 <span class="onboard-trip-option__meta">
-                  <v-chip size="small" :color="Number(selectedTripId) === Number(trip.id) ? '#b45309' : '#64748b'" :variant="Number(selectedTripId) === Number(trip.id) ? 'flat' : 'tonal'">
+                  <v-chip size="small" :color="Number(selectedTripId) === Number(trip.id) ? '#7c3aed' : '#64748b'" :variant="Number(selectedTripId) === Number(trip.id) ? 'flat' : 'tonal'">
                     {{ Number(selectedTripId) === Number(trip.id) ? "Seleccionado" : "Activo" }}
                   </v-chip>
-                  <v-icon v-if="Number(selectedTripId) === Number(trip.id)" color="#b45309">mdi-check-circle</v-icon>
+                  <v-icon v-if="Number(selectedTripId) === Number(trip.id)" color="#7c3aed">mdi-check-circle</v-icon>
                 </span>
               </button>
             </div>
@@ -456,7 +456,7 @@
                       @click="!method.disabled && (selectedMethod = method.value)"
                     >
                       <v-card-text class="payment-method-content-pro">
-                        <v-icon size="24" :color="selectedMethod === method.value ? '#78350f' : '#b45309'">{{ method.icon }}</v-icon>
+                        <v-icon size="24" :color="selectedMethod === method.value ? '#5b21b6' : '#7c3aed'">{{ method.icon }}</v-icon>
                         <div class="payment-method-label">{{ method.text }}</div>
                       </v-card-text>
                     </v-card>
@@ -1073,14 +1073,14 @@ export default {
 /* Distribución y controles de Venta Express, con la paleta de venta a bordo. */
 .express-sale-form { height:100%; min-height:0; }
 .ticket-sale-dialog-pro { display:flex; flex-direction:column; height:100vh; height:100dvh; min-height:0; color:#1e293b; background:#f6f8fb; border-radius:0; }
-.ticket-sale-topbar { display:flex; align-items:center; flex-shrink:0; gap:12px; min-height:70px; padding:12px 24px; color:#fff; background:#78350f; border-bottom:1px solid #92400e; }
+.ticket-sale-topbar { display:flex; align-items:center; flex-shrink:0; gap:12px; min-height:70px; padding:12px 24px; color:#fff; background:#5b21b6; border-bottom:1px solid #6d28d9; }
 .ticket-sale-topbar__left { display:flex; align-items:center; gap:11px; min-width:0; }
-.ticket-sale-topbar__icon { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:10px; background:#b45309; color:#fff; }
+.ticket-sale-topbar__icon { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:10px; background:#7c3aed; color:#fff; }
 .ticket-sale-topbar__icon :deep(.v-icon) { font-size:23px!important; }
 .ticket-sale-topbar__title { font-size:19px; font-weight:800; line-height:1.2; }
-.ticket-sale-topbar__subtitle { color:#ffedd5; font-size:12px; line-height:1.4; margin-top:4px; }
-.ticket-sale-step-chip { color:#fff3df; background:#b45309; font-size:11px; font-weight:650; }
-.ticket-sale-close { flex-shrink:0; color:#fff; background:#b45309; border-radius:9px; }
+.ticket-sale-topbar__subtitle { color:#ede9fe; font-size:12px; line-height:1.4; margin-top:4px; }
+.ticket-sale-step-chip { color:#f3e8ff; background:#7c3aed; font-size:11px; font-weight:650; }
+.ticket-sale-close { flex-shrink:0; color:#fff; background:#7c3aed; border-radius:9px; }
 .ticket-sale-body { flex:1; min-height:0; overflow-y:auto; padding:18px 24px 0!important; }
 .ticket-sale-layout { max-width:1480px; margin:0 auto; }
 .ticket-sale-section-card,.ticket-sale-summary-pro { padding:18px; background:#fff; border:1px solid #e4eaf2; border-radius:12px; box-shadow:0 4px 14px #15264b05; }
@@ -1088,12 +1088,12 @@ export default {
 .ticket-sale-section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .ticket-sale-section-title { color:#0f172a; font-size:15px; font-weight:800; line-height:1.4; }
 .ticket-sale-section-subtitle { color:#526176; font-size:12px; line-height:1.5; margin-top:3px; }
-.ticket-sale-mini-icon { display:grid; place-items:center; width:36px; height:36px; margin-right:10px; flex-shrink:0; border-radius:9px; background:#fff7ed; color:#b45309; }
+.ticket-sale-mini-icon { display:grid; place-items:center; width:36px; height:36px; margin-right:10px; flex-shrink:0; border-radius:9px; background:#f3efff; color:#7c3aed; }
 .ticket-sale-label { display:block; margin-bottom:6px; color:#475569; font-size:12px; font-weight:700; }
 .ticket-sale-section-card :deep(.v-row) { row-gap:9px; }
 .ticket-sale-dialog-pro :deep(.v-field) { color:#233654; background:#fff; border-radius:9px!important; font-size:14px; }
 .ticket-sale-dialog-pro :deep(.v-field__outline) { color:#c5cfdd; opacity:1; }
-.ticket-sale-dialog-pro :deep(.v-field--focused .v-field__outline) { color:#b45309; }
+.ticket-sale-dialog-pro :deep(.v-field--focused .v-field__outline) { color:#7c3aed; }
 .ticket-sale-dialog-pro :deep(.v-field__input),.ticket-sale-dialog-pro :deep(.v-label) { color:#233654; font-size:14px; font-weight:500; opacity:1; }
 .ticket-sale-dialog-pro :deep(.v-field__input::placeholder) { color:#64748b; opacity:1; }
 .ticket-sale-dialog-pro :deep(.v-field__prepend-inner .v-icon) { color:#64748b; opacity:1; }
@@ -1102,21 +1102,21 @@ export default {
 .ticket-location-option__subtitle { margin-top:3px; color:#526176; font-size:12px; line-height:1.45; white-space:normal; }
 :global(.busgo-onboard-location-menu .v-list) { background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:6px; }
 :global(.busgo-onboard-location-menu .v-list-item) { border-radius:8px; padding:10px 12px!important; margin:2px 0; }
-:global(.busgo-onboard-location-menu .v-list-item--active) { background:#fff7ed; color:#b45309; }
+:global(.busgo-onboard-location-menu .v-list-item--active) { background:#f3efff; color:#7c3aed; }
 .trip-sale-panel-pro { border:1px solid #e4eaf2; border-radius:10px; overflow-x:auto; }
 .trip-sale-panel-pro__header,.trip-sale-row-pro { display:grid; grid-template-columns:1fr 2.2fr .8fr .8fr 1fr .9fr 1fr 112px; min-width:1000px; align-items:center; gap:12px; padding:12px 16px; }
 .trip-sale-panel-pro__header { min-height:42px; color:#334155; background:#f3f6fa; font-size:11px; font-weight:800; border-bottom:1px solid #e4eaf2; }
 .trip-sale-sortable-header { display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none; }
-.trip-sale-sortable-header:hover { color:#b45309; }
+.trip-sale-sortable-header:hover { color:#7c3aed; }
 .trip-sale-row-pro { min-height:68px; cursor:pointer; background:#fff; border-bottom:1px solid #edf1f6; }
 .trip-sale-row-pro:last-child { border-bottom:0; }
 .trip-sale-row-pro:hover { background:#fffaf1; }
-.trip-sale-row-pro--selected { background:#fff7ed; box-shadow:inset 3px 0 #b45309; }
+.trip-sale-row-pro--selected { background:#f3efff; box-shadow:inset 3px 0 #7c3aed; }
 .trip-sale-code,.trip-sale-strong,.trip-sale-route__name { color:#1e293b; font-size:13px; font-weight:750; }
 .trip-sale-route { min-width:0; }
 .trip-sale-route__title-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .trip-sale-route__meta,.trip-sale-muted { color:#526176; font-size:12px; line-height:1.5; margin-top:3px; overflow-wrap:anywhere; }
-.trip-sale-price { color:#78350f; font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; }
+.trip-sale-price { color:#5b21b6; font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; }
 .ticket-sale-empty { padding:30px 18px; text-align:center; color:#718198; }
 .ticket-sale-empty__title { color:#475569; font-size:14px; font-weight:750; margin-top:10px; }
 .ticket-sale-empty__text { color:#64748b; font-size:12px; line-height:1.5; margin-top:5px; }
@@ -1124,8 +1124,8 @@ export default {
 .ticket-sale-summary-grid > div { min-width:0; padding:12px; background:#f8fafc; border:1px solid #e7edf5; border-radius:9px; }
 .ticket-sale-summary-grid span { display:block; color:#64748b; font-size:11px; font-weight:650; margin-bottom:5px; }
 .ticket-sale-summary-grid strong { display:block; color:#233654; font-size:14px; line-height:1.4; font-weight:750; overflow-wrap:anywhere; }
-.ticket-sale-summary-grid > div:last-child { background:#fff7ed; border-color:#fed7aa; }
-.ticket-sale-summary-grid > div:last-child strong { color:#b45309; }
+.ticket-sale-summary-grid > div:last-child { background:#f3efff; border-color:#ddd6fe; }
+.ticket-sale-summary-grid > div:last-child strong { color:#7c3aed; }
 .ticket-type-list { display:flex; flex-direction:column; gap:10px; }
 .ticket-type-card { padding:12px 14px; margin-bottom:9px; border:1px solid #e4eaf2; border-radius:10px; background:#fff; }
 .ticket-type-card:last-child { margin-bottom:0; }
@@ -1134,22 +1134,22 @@ export default {
 .ticket-type-card__title { color:#233654; font-size:14px; font-weight:750; overflow-wrap:anywhere; }
 .ticket-type-card__price { color:#526176; font-size:12px; margin-top:4px; }
 .ticket-type-card__input { flex:0 0 100px; width:100px; }
-.ticket-type-card__total { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 10px; margin-top:10px; border-radius:7px; background:#fff7ed; color:#78350f; font-size:12px; }
+.ticket-type-card__total { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 10px; margin-top:10px; border-radius:7px; background:#f3efff; color:#5b21b6; font-size:12px; }
 .payment-methods-grid-pro { display:grid; gap:9px; }
 .payment-method-card-pro { color:#334155; background:#fff; border:1px solid #dce4ef; border-radius:9px!important; box-shadow:none!important; cursor:pointer; }
 .payment-method-content-pro { display:flex; align-items:center; gap:10px; padding:12px!important; min-height:48px; }
 .payment-method-label { font-size:13px; font-weight:700; }
-.payment-method-selected { background:#fff7ed; border-color:#b45309; box-shadow:inset 0 0 0 1px #b45309!important; }
+.payment-method-selected { background:#f3efff; border-color:#7c3aed; box-shadow:inset 0 0 0 1px #7c3aed!important; }
 .payment-method-disabled { cursor:not-allowed; opacity:.5; background:#f8fafc; }
-.ticket-total-box { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:15px; margin-top:16px; border-radius:10px; background:#78350f; color:#fff; }
+.ticket-total-box { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:15px; margin-top:16px; border-radius:10px; background:#5b21b6; color:#fff; }
 .ticket-total-box span { font-size:12px; font-weight:650; }
 .ticket-total-box strong { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .ticket-sale-footer-actions { display:flex; align-items:center; gap:10px; position:sticky; bottom:0; z-index:3; margin-top:16px; padding:14px 0; border-top:1px solid #e1e8f1; background:#f6f8fb; }
 .ticket-sale-btn-primary,.ticket-sale-btn-secondary { min-height:40px; padding-inline:18px; border-radius:9px!important; font-size:13px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none!important; }
-.ticket-sale-btn-primary { color:#fff!important; background:#b45309!important; }
+.ticket-sale-btn-primary { color:#fff!important; background:#7c3aed!important; }
 .ticket-sale-btn-secondary { color:#475569!important; background:#fff!important; border:1px solid #dce3ed; }
 .ticket-sale-btn-primary.v-btn--disabled { background:#dce3ed!important; color:#64748b!important; }
-.ticket-sale-btn-primary:focus-visible,.ticket-sale-btn-secondary:focus-visible { outline:3px solid #fdba74; outline-offset:3px; }
+.ticket-sale-btn-primary:focus-visible,.ticket-sale-btn-secondary:focus-visible { outline:3px solid #c4b5fd; outline-offset:3px; }
 @media(max-width:959px) { .ticket-sale-topbar { padding-inline:17px; }.ticket-sale-body { padding:15px 17px 0!important; }.ticket-sale-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) {
   .ticket-sale-topbar { padding:12px; gap:9px; }
@@ -1168,17 +1168,17 @@ export default {
 }
 
 /* Particularidades del contexto, viajes activos y resumen de venta a bordo. */
-.ticket-sale-topbar { background:linear-gradient(110deg,#78350f,#b45309 60%,#c46a13); }
+.ticket-sale-topbar { background:linear-gradient(110deg,#5b21b6,#7c3aed 60%,#8b5cf6); }
 .onboard-section-heading,.onboard-summary-heading { display:flex; align-items:center; gap:11px; min-width:0; }
-.onboard-section-icon { display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; border-radius:9px; background:#fff7ed; color:#b45309; }
+.onboard-section-icon { display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; border-radius:9px; background:#f3efff; color:#7c3aed; }
 .onboard-route-card { margin-top:16px; }
 .onboard-alert { margin-bottom:14px; }
 .onboard-option-meta { color:#526176!important; font-size:12px!important; white-space:normal; }
-.onboard-context-summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:16px; padding:12px; border:1px solid #fed7aa; border-radius:9px; background:#fff7ed; color:#78350f; font-size:12px; font-weight:650; }
+.onboard-context-summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:16px; padding:12px; border:1px solid #ddd6fe; border-radius:9px; background:#f3efff; color:#5b21b6; font-size:12px; font-weight:650; }
 .onboard-context-summary__item { display:inline-flex; align-items:center; gap:6px; }
-.onboard-context-summary__arrow { color:#b45309; }
+.onboard-context-summary__arrow { color:#7c3aed; }
 .onboard-route-selection { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.onboard-route-heading { display:flex; justify-content:space-between; gap:12px; padding-bottom:7px; border-bottom:1px solid #e4eaf2; color:#78350f; }
+.onboard-route-heading { display:flex; justify-content:space-between; gap:12px; padding-bottom:7px; border-bottom:1px solid #e4eaf2; color:#5b21b6; }
 .onboard-route-heading strong { font-size:13px; }
 .onboard-route-heading span { display:flex; align-items:center; gap:4px; color:#526176; font-size:12px; }
 .onboard-route-journey { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:12px; align-items:center; padding-top:9px; }
@@ -1186,7 +1186,7 @@ export default {
 .onboard-route-place .v-avatar { flex-shrink:0; }
 .onboard-route-place small { display:block; color:#64748b; font-size:11px; }
 .onboard-route-place strong { display:block; color:#233654; font-size:13px; overflow-wrap:anywhere; }
-.onboard-route-arrow { color:#b45309; }
+.onboard-route-arrow { color:#7c3aed; }
 :global(.onboard-route-menu) { width:min(720px,calc(100vw - 24px)); }
 :global(.onboard-route-menu .v-list) { padding:6px; background:#fff; }
 :global(.onboard-route-menu .v-list-item) { padding:11px 12px!important; border-radius:9px; }
@@ -1207,9 +1207,9 @@ export default {
 .onboard-passenger-summary strong { color:#233654; }
 .onboard-trip-list { display:grid; gap:9px; max-height:480px; overflow-y:auto; }
 .onboard-trip-option { display:flex; align-items:center; gap:12px; width:100%; padding:12px 16px; border:1px solid #e4eaf2; border-radius:10px; text-align:left; background:#fff; cursor:pointer; }
-.onboard-trip-option:hover,.onboard-trip-option--selected { background:#fff7ed; border-color:#b45309; }
-.onboard-trip-option:focus-visible { outline:3px solid #fdba74; outline-offset:-3px; }
-.onboard-trip-option__icon { color:#b45309; }
+.onboard-trip-option:hover,.onboard-trip-option--selected { background:#f3efff; border-color:#7c3aed; }
+.onboard-trip-option:focus-visible { outline:3px solid #c4b5fd; outline-offset:-3px; }
+.onboard-trip-option__icon { color:#7c3aed; }
 .onboard-trip-option__content { display:grid; flex:1; min-width:0; gap:4px; }
 .onboard-trip-option__content strong { color:#233654; font-size:14px; overflow-wrap:anywhere; }
 .onboard-trip-option__content small { color:#526176; font-size:12px; }

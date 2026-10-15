@@ -396,7 +396,7 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-calendar-clock</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col cols="12" sm="6" md="6">
                     <v-select
                       v-model="editedItem.recurrence_pattern"
                       :items="frequencyOptions"
@@ -445,7 +445,7 @@
                     </v-select>
                   </v-col>
 
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col cols="12" sm="6" md="6">
                     <v-text-field
                       v-model="editedItem.duration"
                       label="Duración (minutos)"
@@ -456,7 +456,7 @@
                     />
                   </v-col>
 
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col cols="12" sm="6" md="6">
                     <v-select
                       v-model="editedItem.saleMode"
                       :items="saleModes"
@@ -476,29 +476,36 @@
                     </v-select>
                   </v-col>
 
-                  <v-col cols="12" sm="6" md="3">
-                    <MultiSelectCombobox
-                      :model-value="ticketTemplateSelection"
+                  <v-col cols="12" sm="6" md="6">
+                    <v-select
+                      :model-value="ticketTemplateSelection[0] ?? null"
                       :items="ticketTemplates"
                       item-title="name"
                       item-value="id"
                       label="Plantilla de ticket"
                       placeholder="Selecciona una plantilla o usa la predeterminada"
                       prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      variant="outlined"
+                      density="compact"
+                      clearable
                       no-data-text="No hay plantillas de tickets activas."
-                      :return-object="false"
-                      :filter-keys="['name']"
                       :disabled="loading"
                       :loading="loading"
                       @update:model-value="onTemplateTicketTemplateChange"
                     >
+                      <template #selection="{ item }">
+                        <v-chip size="small" color="#2454d6" variant="tonal">
+                          {{ item.raw?.name || item.title }}
+                        </v-chip>
+                      </template>
                       <template #item="{ props, item }">
                         <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
                           <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
                           <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
                         </v-list-item>
                       </template>
-                    </MultiSelectCombobox>
+                    </v-select>
                   </v-col>
 
                   <v-col cols="12" md="8">
@@ -1478,7 +1485,6 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
-import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
 import {
   getTicketTemplatesForSaleMode,
   isTicketTemplateCompatibleWithTripType,
@@ -1489,7 +1495,7 @@ import {
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
-  components: { BusgoChip, SaleModeChip, MultiSelectCombobox },
+  components: { BusgoChip, SaleModeChip },
   data: () => ({
     expandedMembersId: null,
     snackbar: false,
@@ -1941,29 +1947,94 @@ export default {
 
       if (!this.ticketTemplateSelectionManual) this.applyDefaultTemplateTicketTemplate();
     },
+    normalizeTemplateBoolean(value, fallback = false) {
+      if (value === undefined || value === null || value === "") {
+        return fallback;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+
+        if (["false", "0", "no", "inactive", "inactivo"].includes(normalized)) {
+          return false;
+        }
+
+        if (["true", "1", "yes", "active", "activo"].includes(normalized)) {
+          return true;
+        }
+      }
+
+      return Boolean(value);
+    },
     onTemplateSaleModeChange() {
       this.syncTemplateTicketTemplatesWithSaleMode();
       this.syncTemplateTicketTemplateWithSaleMode();
     },
     onTemplateTicketTemplateChange(selection) {
-      const ids = Array.isArray(selection) ? selection : [];
+      const ids = Array.isArray(selection)
+        ? selection
+        : selection === null || selection === undefined || selection === ""
+          ? []
+          : [selection];
       const id = ids.length ? ids[ids.length - 1] : null;
       this.ticketTemplateSelection = id === null ? [] : [id];
       this.editedItem.ticket_template_id = id;
       this.ticketTemplateSelectionManual = id !== null;
     },
     parseTemplateStops(value) {
-      if (Array.isArray(value)) return value;
-      if (!value) return [];
+      let parsedValue = value;
+
       if (typeof value === "string") {
         try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [];
+          parsedValue = JSON.parse(value);
         } catch (error) {
           return [];
         }
       }
-      return [];
+
+      if (!Array.isArray(parsedValue)) return [];
+
+      return parsedValue.map((stop) => {
+        const nestedRouteStop = stop?.routeStop ?? stop?.route_stop ?? {};
+        const routeStopId =
+          stop?.route_stop_id ??
+          stop?.routeStopId ??
+          nestedRouteStop?.id ??
+          nestedRouteStop?.route_stop_id;
+
+        return {
+          ...stop,
+          ...(routeStopId !== undefined && routeStopId !== null
+            ? { route_stop_id: routeStopId }
+            : {}),
+          ...(stop?.can_board !== undefined || stop?.canBoard !== undefined
+            ? {
+                can_board: this.normalizeTemplateBoolean(
+                  stop.can_board ?? stop.canBoard,
+                  true
+                ),
+              }
+            : {}),
+          ...(stop?.can_alight !== undefined || stop?.canAlight !== undefined
+            ? {
+                can_alight: this.normalizeTemplateBoolean(
+                  stop.can_alight ?? stop.canAlight,
+                  true
+                ),
+              }
+            : {}),
+          ...(stop?.active !== undefined ||
+          stop?.is_active !== undefined ||
+          stop?.isActive !== undefined
+            ? {
+                active: this.normalizeTemplateBoolean(
+                  stop.active ?? stop.is_active ?? stop.isActive,
+                  true
+                ),
+              }
+            : {}),
+        };
+      });
     },
     buildTemplateStopRows(route = null, tripStops = [], forceIncludeAll = false) {
       const selectedRoute = route || this.getSelectedRouteRecord();
@@ -1971,19 +2042,52 @@ export default {
         ? selectedRoute.routeStops
         : [];
       const stopMap = new Map(
-        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
-          Number(stop.route_stop_id),
-          stop,
-        ])
+        (Array.isArray(tripStops) ? tripStops : [])
+          .map((stop) => {
+            const nestedRouteStop = stop?.routeStop ?? stop?.route_stop ?? {};
+            const routeStopId =
+              stop?.route_stop_id ??
+              stop?.routeStopId ??
+              nestedRouteStop?.id ??
+              nestedRouteStop?.route_stop_id;
+
+            return [Number(routeStopId), stop];
+          })
+          .filter(([routeStopId]) => Number.isFinite(routeStopId))
       );
 
       return routeStops.map((routeStop) => {
-        const existingStop = stopMap.get(Number(routeStop.id));
-        const included = forceIncludeAll ? true : !!existingStop;
+        const routeStopId =
+          routeStop.id ?? routeStop.route_stop_id ?? routeStop.routeStopId;
+        const existingStop = stopMap.get(Number(routeStopId));
+        const included = forceIncludeAll
+          ? true
+          : existingStop
+            ? this.normalizeTemplateBoolean(existingStop.included, true)
+            : false;
+
+        const existingCanBoard =
+          existingStop?.can_board ??
+          existingStop?.canBoard ??
+          existingStop?.allows_boarding;
+        const existingCanAlight =
+          existingStop?.can_alight ??
+          existingStop?.canAlight ??
+          existingStop?.allows_alighting;
+        const existingActive =
+          existingStop?.active ??
+          existingStop?.is_active ??
+          existingStop?.isActive;
+        const routeCanBoard =
+          routeStop.allows_boarding ?? routeStop.allowsBoarding ?? routeStop.can_board;
+        const routeCanAlight =
+          routeStop.allows_alighting ?? routeStop.allowsAlighting ?? routeStop.can_alight;
+        const routeActive =
+          routeStop.active ?? routeStop.is_active ?? routeStop.isActive;
 
         return {
           id: existingStop?.id || "",
-          route_stop_id: routeStop.id,
+          route_stop_id: routeStopId,
           location_id: routeStop.location_id || routeStop.locationId || "",
           companyName: routeStop.companyName || "",
           routeName: routeStop.routeName || "",
@@ -1991,9 +2095,18 @@ export default {
           distance_km: routeStop.distance_km ?? routeStop.distanceKm ?? 0,
           minutes_from_origin:
             routeStop.minutes_from_origin ?? routeStop.minutesFromOrigin ?? 0,
-          can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
-          can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
-          active: existingStop?.active ?? routeStop.active ?? true,
+          can_board: this.normalizeTemplateBoolean(
+            existingCanBoard,
+            this.normalizeTemplateBoolean(routeCanBoard, true)
+          ),
+          can_alight: this.normalizeTemplateBoolean(
+            existingCanAlight,
+            this.normalizeTemplateBoolean(routeCanAlight, true)
+          ),
+          active: this.normalizeTemplateBoolean(
+            existingActive,
+            this.normalizeTemplateBoolean(routeActive, true)
+          ),
           included,
           locationName: routeStop.locationName || routeStop.address || "",
           locationCity: routeStop.locationCity || "",
@@ -2004,17 +2117,35 @@ export default {
       });
     },
     parseTemplateFares(value) {
-      if (Array.isArray(value)) return value;
-      if (!value) return [];
+      let parsedValue = value;
+
       if (typeof value === "string") {
         try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [];
+          parsedValue = JSON.parse(value);
         } catch (error) {
           return [];
         }
       }
-      return [];
+
+      if (!Array.isArray(parsedValue)) return [];
+
+      return parsedValue.map((fare) => ({
+        ...fare,
+        ...(fare?.fare_segment_ticket_type_id === undefined &&
+        fare?.fareSegmentTicketTypeId !== undefined
+          ? { fare_segment_ticket_type_id: fare.fareSegmentTicketTypeId }
+          : {}),
+        ...(fare?.active !== undefined ||
+        fare?.is_active !== undefined ||
+        fare?.isActive !== undefined
+          ? {
+              active: this.normalizeTemplateBoolean(
+                fare.active ?? fare.is_active ?? fare.isActive,
+                true
+              ),
+            }
+          : {}),
+      }));
     },
     buildTemplateFareRows(route = null, tripFares = [], forceIncludeAll = false) {
       const selectedRoute = route || this.getSelectedRouteRecord();
@@ -2025,10 +2156,21 @@ export default {
         : [];
 
       const fareMap = new Map(
-        (Array.isArray(tripFares) ? tripFares : []).map((fare) => [
-          Number(fare.fare_segment_ticket_type_id ?? fare.fareSegmentTicketTypeId),
-          fare,
-        ])
+        (Array.isArray(tripFares) ? tripFares : [])
+          .map((fare) => {
+            const fareSegmentTicketType =
+              fare?.fareSegmentTicketType ?? fare?.fare_segment_ticket_type ?? {};
+            const fareSegmentTicketTypeId =
+              fare?.fare_segment_ticket_type_id ??
+              fare?.fareSegmentTicketTypeId ??
+              fare?.ticket_type_id ??
+              fareSegmentTicketType?.id;
+
+            return [Number(fareSegmentTicketTypeId), fare];
+          })
+          .filter(([fareSegmentTicketTypeId]) =>
+            Number.isFinite(fareSegmentTicketTypeId)
+          )
       );
 
       return fareSegments.map((segment) => {
@@ -2050,19 +2192,33 @@ export default {
             destinationStop?.location || destinationStop || segment.destinationStop
           ),
           fareSegmentTicketTypes: ticketTypes.map((ticketType) => {
-            const existingFare = fareMap.get(Number(ticketType.id));
+            const ticketTypeId =
+              ticketType.id ??
+              ticketType.fare_segment_ticket_type_id ??
+              ticketType.fareSegmentTicketTypeId;
+            const existingFare = fareMap.get(Number(ticketTypeId));
+            const existingFareActive =
+              existingFare?.active ??
+              existingFare?.is_active ??
+              existingFare?.isActive;
             const routeActive =
               ticketType.active ??
+              ticketType.is_active ??
+              ticketType.isActive ??
               ticketType.ticketTypeActive ??
               ticketType.ticketType?.active ??
+              ticketType.ticket_type?.active ??
               false;
 
             return {
               id: existingFare?.id || "",
-              fare_segment_ticket_type_id: ticketType.id,
+              fare_segment_ticket_type_id: ticketTypeId,
               price:
                 existingFare?.price ?? ticketType.base_price ?? ticketType.basePrice ?? 0,
-              active: existingFare?.active ?? routeActive,
+              active: this.normalizeTemplateBoolean(
+                existingFareActive,
+                this.normalizeTemplateBoolean(routeActive, false)
+              ),
               source_type: existingFare?.source_type || "auto",
               ticketTypeName:
                 ticketType.ticketTypeName ||
@@ -2133,7 +2289,7 @@ export default {
           const item = {
             fare_segment_ticket_type_id: fareSegmentTicketTypeId,
             price: Number(ticketType.price) || 0,
-            active: ticketType.active ?? true,
+            active: this.normalizeTemplateBoolean(ticketType.active, true),
             source_type: ticketType.source_type || (ticketType.id ? "manual" : "auto"),
           };
 
@@ -2187,8 +2343,8 @@ export default {
           route_stop_id: Number(row.route_stop_id),
           stop_order: Number(row.stop_order) || 1,
           can_board: !!row.can_board,
-          can_alight: !!row.can_alight,
-          active: row.active ?? true,
+          can_alight: this.normalizeTemplateBoolean(row.can_alight, false),
+          active: this.normalizeTemplateBoolean(row.active, true),
         }))
         .sort((a, b) => a.route_stop_id - b.route_stop_id);
     },

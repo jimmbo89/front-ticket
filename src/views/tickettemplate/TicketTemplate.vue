@@ -17,7 +17,8 @@
         <div class="busgo-page-subtitle">Gestionar configuración, bloques y campos del ticket térmico</div>
       </div>
       <v-spacer />
-      <v-btn variant="outlined" prepend-icon="mdi-star-settings-outline" class="busgo-defaults-btn"
+      <v-btn :color="paleteColors.primary" variant="flat" elevation="0"
+        prepend-icon="mdi-star-settings-outline" class="busgo-add-btn"
         @click="openDefaultConfigDialog">
         Configurar predeterminadas
       </v-btn>
@@ -73,14 +74,9 @@
                     <strong class="template-cell-title">{{ item.name || 'Sin nombre' }}</strong>
                     <span class="template-muted">Configuración de bloques y campos</span>
                   </div>
-                  <div><BusgoChip color="#2454d6">{{ tripTypeLabel(item.tripType) }}</BusgoChip></div>
-                  <div class="template-default-types">
-                    <template v-if="defaultTripTypeLabels(item).length">
-                      <BusgoChip v-for="type in defaultTripTypeLabels(item)" :key="type" color="#7c3aed">
-                        {{ type }}
-                      </BusgoChip>
-                    </template>
-                    <span v-else class="template-muted">No predeterminada</span>
+                  <div class="template-trip-type-cell">
+                    <BusgoChip :color="tripTypeColor(item.tripType)">{{ tripTypeLabel(item.tripType) }}</BusgoChip>
+                    <BusgoChip v-if="isTemplateDefault(item)" color="#7c3aed">Predeterminada</BusgoChip>
                   </div>
                   <div><BusgoChip :color="item.status === 'active' ? '#16845b' : '#64748b'">
                     {{ item.status === 'active' ? 'Activa' : 'Inactiva' }}
@@ -93,10 +89,12 @@
                       title="Editar plantilla" aria-label="Editar plantilla" @click="editTemplate(item)" />
                     <v-btn icon="mdi-content-copy" variant="text" size="small" color="#2454d6"
                       title="Duplicar plantilla" aria-label="Duplicar plantilla" @click="duplicateTemplate(item)" />
-                    <v-btn :icon="item.status === 'active' ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
-                      variant="text" size="small" :color="item.status === 'active' ? '#16845b' : '#64748b'"
+                    <v-btn variant="text" size="small" class="template-status-toggle"
+                      :color="item.status === 'active' ? '#16845b' : '#64748b'"
                       :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
-                      :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)" />
+                      :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)">
+                      <v-icon size="28">{{ item.status === 'active' ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off' }}</v-icon>
+                    </v-btn>
                     <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
                       :color="isTemplateDefault(item) || isTemplateInUse(item) ? '#d97706' : '#dc2626'"
                       :title="deleteActionTitle(item)"
@@ -122,18 +120,40 @@
             </div>
           </div>
           <div class="ticket-dialog-meta">
-            <span>{{ readOnly ? 'Modo consulta' : 'Configuración del ticket' }}</span>
-            <strong>{{ draft.tripType ? tripTypeLabel(draft.tripType) : 'Tipo de viaje pendiente' }}</strong>
+            <span>Paso {{ ticketStep }} de {{ ticketSteps.length }}</span>
+            <strong>{{ ticketSteps[ticketStep - 1].title }}</strong>
           </div>
           <v-btn icon="mdi-close" variant="text" class="ticket-dialog-close"
             aria-label="Cerrar configuración" :disabled="saving" @click="cancelDialog" />
         </header>
 
         <v-card-text class="ticket-dialog-body pa-0">
-          <v-form class="ticket-form" :disabled="readOnly || saving" @submit.prevent="saveTemplate">
-            <div class="ticket-editor-scroll">
-              <div class="ticket-editor-surface">
-              <section class="ticket-general-section">
+          <div class="ticket-progress-nav">
+            <div
+              v-for="(progressItem, progressIndex) in ticketSteps"
+              :key="progressItem.value"
+              class="ticket-progress-item"
+              :class="{
+                'ticket-progress-item--active': ticketStep === progressIndex + 1,
+                'ticket-progress-item--complete': ticketStep > progressIndex + 1
+              }"
+            >
+              <div class="ticket-progress-number">
+                <v-icon v-if="ticketStep > progressIndex + 1" size="16">mdi-check</v-icon>
+                <span v-else>{{ progressIndex + 1 }}</span>
+              </div>
+              <div class="ticket-progress-copy">
+                <span>Etapa {{ String(progressIndex + 1).padStart(2, '0') }}</span>
+                <strong>{{ progressItem.title }}</strong>
+              </div>
+            </div>
+          </div>
+          <v-form ref="ticketForm" class="ticket-form" :disabled="readOnly || saving" @submit.prevent="saveTemplate">
+            <div class="ticket-editor-column">
+              <div class="ticket-editor-scroll">
+                <div class="ticket-editor-surface">
+                <div class="ticket-step-content">
+                <section v-if="ticketStep === 1" class="ticket-general-section">
                 <div class="ticket-editor-section-heading">
                   <div class="ticket-configuration-icon"><v-icon size="19">mdi-file-document-edit-outline</v-icon></div>
                   <h2>Datos generales</h2>
@@ -164,10 +184,8 @@
                     <p>Activa o desactiva los bloques y selecciona los campos que aparecerán en el ticket.</p>
                   </div>
                 </div>
-                <div class="ticket-config-grid">
-                  <div v-for="(groups, columnIndex) in blockGroupColumns" :key="columnIndex" class="ticket-config-column">
-                    <section v-for="group in groups" :key="group.title" class="ticket-config-section"
-                        :style="{ order: blockGroups.indexOf(group) }">
+                <div class="ticket-config-stack">
+                    <section v-for="group in ticketStepGroups" :key="group.title" class="ticket-config-section">
                       <div class="ticket-config-toolbar">
                         <div class="ticket-config-toolbar-icon"><v-icon size="19">{{ group.icon }}</v-icon></div>
                         <strong>{{ group.title }}</strong>
@@ -184,7 +202,7 @@
                               <span>{{ draft.config.blocks[key].enabled ? 'Visible' : 'Oculto' }}</span>
                               <v-switch v-model="draft.config.blocks[key].enabled" color="#16845b"
                                 :true-value="true" :false-value="false" density="compact" hide-details inset
-                                :aria-label="blockDefinitions[key].label" />
+                                class="ticket-block-switch" :aria-label="blockDefinitions[key].label" />
                             </div>
                           </div>
                           <div v-if="draft.config.blocks[key].enabled && hasBlockOptions(key)" class="ticket-block-options">
@@ -233,10 +251,9 @@
                         </section>
                       </div>
                     </section>
-                  </div>
                 </div>
 
-                <section class="ticket-config-section ticket-format-section">
+                <section v-if="ticketStep === 2" class="ticket-config-section ticket-format-section">
                   <div class="ticket-config-toolbar">
                     <div class="ticket-config-toolbar-icon"><v-icon size="19">mdi-format-line-spacing</v-icon></div>
                     <strong>Formato de impresión</strong>
@@ -248,8 +265,26 @@
                       variant="outlined" density="compact" hide-details class="ticket-spacing-select" />
                   </div>
                 </section>
-              </section>
+                </section>
+                </div>
+                </div>
               </div>
+
+              <footer class="ticket-dialog-actions">
+                <v-btn variant="flat" class="ticket-secondary-btn" :disabled="saving" @click="cancelDialog">
+                  {{ readOnly ? 'Cerrar' : 'Cancelar' }}
+                </v-btn>
+                <v-spacer />
+                <v-btn v-if="!readOnly" prepend-icon="mdi-restore" variant="flat" class="ticket-secondary-btn"
+                  :disabled="saving" @click="restoreDefaultConfig">Restaurar</v-btn>
+                <v-btn v-if="ticketStep > 1" prepend-icon="mdi-arrow-left" variant="flat" class="ticket-secondary-btn"
+                  :disabled="saving" @click="ticketStep -= 1">Anterior</v-btn>
+                <v-btn v-if="ticketStep < ticketSteps.length" append-icon="mdi-arrow-right" variant="flat" class="ticket-primary-btn"
+                  :disabled="saving || (!readOnly && ticketStep === 1 && !isDraftValid)"
+                  @click="continueTicketStep">Continuar</v-btn>
+                <v-btn v-if="!readOnly && ticketStep === ticketSteps.length" prepend-icon="mdi-check" variant="flat" class="ticket-primary-btn"
+                  :loading="saving" :disabled="saving || !isDraftValid" @click="saveTemplate">Guardar plantilla</v-btn>
+              </footer>
             </div>
 
             <aside class="ticket-live-preview" aria-label="Vista previa del ticket">
@@ -397,17 +432,6 @@
             </aside>
           </v-form>
         </v-card-text>
-
-        <footer class="ticket-dialog-actions">
-          <v-btn variant="flat" class="ticket-secondary-btn" :disabled="saving" @click="cancelDialog">
-            {{ readOnly ? 'Cerrar' : 'Cancelar' }}
-          </v-btn>
-          <v-spacer />
-          <v-btn v-if="!readOnly" prepend-icon="mdi-restore" variant="flat" class="ticket-secondary-btn"
-            :disabled="saving" @click="restoreDefaultConfig">Restaurar</v-btn>
-          <v-btn v-if="!readOnly" prepend-icon="mdi-check" variant="flat" class="ticket-primary-btn"
-            :loading="saving" :disabled="saving || !isDraftValid" @click="saveTemplate">Guardar plantilla</v-btn>
-        </footer>
       </v-card>
     </v-dialog>
 
@@ -558,9 +582,11 @@ import ticketTemplateService, {
   ticketTemplateTripTypeLabel,
   buildExamplePreviewData,
   buildQrPayload,
+  parseTicketTemplateConfig,
 } from '@/services/ticketTemplateService';
 import { paleteColors } from '@/assets/colors';
 import BusgoChip from '@/components/BusgoChip.vue';
+import { getSaleModeColor } from '@/utils/saleMode';
 
 export default {
   name: 'TicketTemplateView',
@@ -591,10 +617,14 @@ export default {
     filterStatus: null,
     templateSortBy: '',
     templateSortOrder: 'asc',
+    ticketStep: 1,
+    ticketSteps: [
+      { title: 'Datos generales', value: 1 },
+      { title: 'Configuración del ticket', value: 2 },
+    ],
     sortableColumns: [
       { title: 'Nombre', key: 'name' },
       { title: 'Tipo de viaje', key: 'tripType' },
-      { title: 'Predeterminada para', key: 'defaultTripTypes' },
       { title: 'Estado', key: 'status' },
       { title: 'Actualización', key: 'updatedAt' },
     ],
@@ -603,8 +633,8 @@ export default {
       { title: 'Cómodo', value: 'comfortable' },
     ],
     blockGroups: [
-      { title: 'Encabezado del ticket', description: 'Identidad de la empresa y título del viaje.', icon: 'mdi-domain', keys: ['logo', 'companyData', 'tripTitle'] },
-      { title: 'Datos del viaje', description: 'Trayecto, horarios, vehículo y asientos.', icon: 'mdi-map-marker-path', keys: ['route', 'dateTime', 'vehicleData', 'seats'] },
+      { title: 'Encabezado del ticket', description: 'Identidad de la empresa.', icon: 'mdi-domain', keys: ['logo', 'companyData'] },
+      { title: 'Datos del viaje', description: 'Título, trayecto, horarios, vehículo y asientos.', icon: 'mdi-map-marker-path', keys: ['tripTitle', 'route', 'dateTime', 'vehicleData', 'seats'] },
       { title: 'Detalle del pago', description: 'Pasajes, total y datos de la transacción.', icon: 'mdi-credit-card-outline', keys: ['paymentTitle', 'fareDetails', 'total', 'paymentMethod', 'transactionNumber'] },
       { title: 'Validación y control', description: 'Código QR y datos del pie del ticket.', icon: 'mdi-qrcode', keys: ['qr', 'footer'] },
     ],
@@ -634,11 +664,10 @@ export default {
     ],
     headers: [
       { title: 'Nombre', value: 'name', width: '24%' },
-      { title: 'Tipo de viaje', value: 'tripType', width: '14%' },
-      { title: 'Predeterminada para', value: 'defaultTripTypes', width: '19%' },
+      { title: 'Tipo de viaje', value: 'tripType', width: '24%' },
       { title: 'Estado', value: 'status', width: '12%' },
       { title: 'Fecha de actualización', value: 'updatedAt', width: '17%' },
-      { title: 'Acciones', value: 'actions', sortable: false, width: '14%' },
+      { title: 'Acciones', value: 'actions', sortable: false, width: '23%' },
     ],
     nameRules: [
       (v) => !!v || 'El nombre es obligatorio',
@@ -712,11 +741,10 @@ export default {
     },
   },
   computed: {
-    blockGroupColumns() {
-      return [
-        this.blockGroups.filter((group, index) => index % 2 === 0),
-        this.blockGroups.filter((group, index) => index % 2 === 1),
-      ];
+    ticketStepGroups() {
+      return this.ticketStep === 1
+        ? this.blockGroups.slice(0, 2)
+        : this.blockGroups.slice(2, 4);
     },
     confirmationTitle() {
       return this.confirmationAction === 'discard' ? 'Descartar cambios' : 'Restaurar configuración';
@@ -870,6 +898,9 @@ export default {
     tripTypeLabel(value) {
       const option = this.tripTypeOptions.find((item) => item.value === value);
       return option?.title || ticketTemplateTripTypeLabel(value);
+    },
+    tripTypeColor(value) {
+      return getSaleModeColor(value);
     },
     defaultTripTypeLabels(template = {}) {
       return Array.isArray(template.defaultTripTypes)
@@ -1053,6 +1084,7 @@ export default {
     cloneConfig(config) {
       // Completa propiedades faltantes de plantillas anteriores sin perder sus valores.
       const defaults = getDefaultTicketTemplateConfig();
+      const parsedConfig = parseTicketTemplateConfig(config);
       const merge = (base, saved) => {
         const result = { ...base };
         Object.entries(saved || {}).forEach(([key, value]) => {
@@ -1062,7 +1094,7 @@ export default {
         });
         return result;
       };
-      const merged = merge(defaults, config);
+      const merged = merge(defaults, parsedConfig);
       const routeFields = merged.blocks.route.fields;
       // Reemplaza el indicador anterior conservando su visibilidad configurada.
       routeFields.tripId = routeFields.tripId ?? routeFields.direction ?? true;
@@ -1226,18 +1258,21 @@ export default {
     },
     openCreateDialog() {
       this.readOnly = false;
+      this.ticketStep = 1;
       this.draft = this.createEmptyDraft();
       this.originalDraft = JSON.parse(JSON.stringify(this.draft));
       this.dialog = true;
     },
     async editTemplate(template) {
       this.readOnly = false;
+      this.ticketStep = 1;
       this.selectedTemplate = template;
       this.resetDraftToTemplate(template);
       this.dialog = true;
     },
     async viewTemplate(template) {
       this.readOnly = true;
+      this.ticketStep = 1;
       this.selectedTemplate = template;
       this.resetDraftToTemplate(template);
       this.dialog = true;
@@ -1360,6 +1395,19 @@ export default {
       this.dialogConfirm = false;
       this.confirmationAction = '';
     },
+    async continueTicketStep() {
+      if (this.readOnly || this.saving || this.ticketStep >= this.ticketSteps.length) return;
+
+      if (this.ticketStep === 1) {
+        const validation = await this.$refs.ticketForm?.validate();
+        if (!validation?.valid || !this.isDraftValid) {
+          this.showAlert('warning', 'Completa el nombre y el tipo de viaje antes de continuar.', 3000);
+          return;
+        }
+      }
+
+      this.ticketStep += 1;
+    },
     async saveTemplate() {
       if (this.readOnly || this.saving) return;
       if (!this.isDraftValid) {
@@ -1454,10 +1502,13 @@ export default {
 .ticket-template-toolbar :deep(.v-field__outline) { color:#c5cfdd; }
 .ticket-template-toolbar :deep(.v-label) { color:#475569; opacity:1; font-size:13px; }
 .template-list-table :deep(.v-table__wrapper) { overflow-x:auto; }
-.template-list-table :deep(.v-table__wrapper > table) { min-width:1180px; width:100%; table-layout:fixed; }
+.template-list-table :deep(.v-table__wrapper > table) { min-width:1050px; width:100%; table-layout:fixed; }
+.template-list-table :deep(thead) { display:table-header-group!important; visibility:visible!important; }
+.template-list-table :deep(thead tr) { display:table-row!important; visibility:visible!important; }
+.template-list-table :deep(thead th) { display:table-cell!important; visibility:visible!important; }
 .template-list-table :deep(th.template-header-shell) { height:auto!important; padding:0!important; border:0!important; }
 .template-list-table :deep(td.template-row-shell) { padding:0!important; border:0!important; }
-.template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.45fr) minmax(115px,.9fr) minmax(210px,1.35fr) minmax(95px,.75fr) minmax(175px,1.1fr) 180px; align-items:center; gap:14px; padding:12px 18px; min-width:1180px; width:100%; box-sizing:border-box; }
+.template-readable-head,.template-readable-row { display:grid; grid-template-columns:minmax(210px,1.55fr) minmax(200px,1.35fr) minmax(95px,.75fr) minmax(175px,1.1fr) 180px; align-items:center; gap:14px; padding:12px 18px; min-width:1050px; width:100%; box-sizing:border-box; }
 .template-readable-head { background:#f3f6fa; color:#334155; font-size:11px; font-weight:750; border-bottom:1px solid #e4eaf2; }
 .template-heading-group { display:flex; min-width:0; }
 .template-sort-button { display:flex; align-items:center; gap:5px; text-align:left; font:inherit; color:inherit; cursor:pointer; width:fit-content; background:none; border:0; }
@@ -1468,12 +1519,13 @@ export default {
 .template-readable-row > div { min-width:0; }
 .template-cell-title { display:block; font-size:13px; color:#1e293b; font-weight:750; line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
 .template-muted { display:block; color:#64748b; font-size:11px; line-height:1.5; margin-top:5px; }
-.template-default-types { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+.template-trip-type-cell { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
 .template-date { display:flex; align-items:flex-start; gap:6px; color:#475569; font-size:12px; line-height:1.5; }
 .template-date > .v-icon { flex-shrink:0; margin-top:2px; color:#64748b; }
 .template-row-actions { display:flex; align-items:center; gap:0; }
 .template-row-actions .v-btn { flex:0 0 36px; border-radius:8px; width:36px; height:36px; }
 .template-row-actions :deep(.v-icon) { font-size:18px; }
+.template-row-actions .template-status-toggle :deep(.v-icon) { width:28px; height:28px; font-size:28px!important; }
 .template-list-table :deep(.v-data-table-footer) { padding:6px 16px; font-size:12px; color:#475569; min-height:52px; }
 .default-config-dialog { overflow:hidden; border-radius:14px!important; }
 .default-config-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 22px; background:#fff; }
@@ -1508,8 +1560,20 @@ export default {
 .ticket-dialog-close { color:#fff!important; border-radius:9px!important; }
 .ticket-dialog-body { display:flex; flex:1 1 auto; flex-direction:column; overflow:hidden; min-height:0; background:#f6f8fb; }
 .ticket-form { display:grid; grid-template-columns:minmax(0,1fr) 380px; flex:1 1 auto; min-height:0; overflow:hidden; }
-.ticket-editor-scroll { min-width:0; min-height:0; overflow:auto; padding:20px 22px; overscroll-behavior:contain; }
+.ticket-progress-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; flex-shrink:0; padding:18px 24px; background:#fff; border-bottom:1px solid #e5eaf2; }
+.ticket-progress-item { display:flex; align-items:center; gap:11px; padding:12px 14px; border:1px solid #e5eaf2; border-radius:11px; background:#f8fafc; }
+.ticket-progress-number { display:grid; place-items:center; flex:0 0 34px; height:34px; border-radius:10px; background:#e8edf4; color:#475569; font-weight:800; }
+.ticket-progress-copy { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.ticket-progress-copy > span { color:#64748b; font-size:10px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
+.ticket-progress-copy strong { color:#334155; font-size:13px; line-height:1.3; }
+.ticket-progress-item--active { border-color:#a8bff8; background:#eef3ff; box-shadow:0 3px 10px #2454d610; }
+.ticket-progress-item--active .ticket-progress-number { color:#fff; background:#2454d6; }
+.ticket-progress-item--active strong { color:#183d9c; }
+.ticket-progress-item--complete .ticket-progress-number { color:#16875a; background:#e0f5eb; }
+.ticket-editor-column { display:flex; flex-direction:column; min-width:0; min-height:0; }
+.ticket-editor-scroll { flex:1 1 auto; min-width:0; min-height:0; overflow:auto; padding:20px 22px; overscroll-behavior:contain; }
 .ticket-editor-surface { min-width:0; padding:18px; background:#fff; border:1px solid #e4eaf2; border-radius:13px; box-shadow:0 4px 16px rgba(15,23,42,.035); }
+.ticket-step-content { min-width:0; }
 .ticket-editor-section-heading { display:flex; align-items:center; gap:9px; margin-bottom:12px; }
 .ticket-editor-section-heading h2 { color:#0f172a; font-size:15px; font-weight:800; line-height:1.4; }
 .ticket-config-column { position:relative; display:flex; flex-direction:column; gap:18px; min-width:0; }
@@ -1527,7 +1591,7 @@ export default {
 .ticket-configuration-icon { display:grid; flex:0 0 30px; width:30px; height:30px; place-items:center; color:#2454d6; background:#eef3ff; border-radius:8px; }
 .ticket-configuration-heading h2 { margin:0; color:#0f172a; font-size:15px; font-weight:800; line-height:1.4; }
 .ticket-configuration-heading p { margin:4px 0 0; color:#526176; font-size:12px; line-height:1.5; }
-.ticket-config-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:24px; margin-bottom:18px; }
+.ticket-config-stack { display:flex; flex-direction:column; gap:18px; margin-bottom:18px; }
 .ticket-config-column > .ticket-config-section { min-width:0; margin-bottom:0; }
 .ticket-config-section { min-width:0; margin:0; overflow:visible; background:transparent; border:0; border-radius:0; box-shadow:none; }
 .ticket-config-section:last-child { margin-bottom:0; }
@@ -1544,6 +1608,14 @@ export default {
 .ticket-block-toggle { display:flex; align-items:center; flex:0 0 auto; gap:7px; }
 .ticket-block-toggle > span { display:none; }
 .ticket-block-toggle :deep(.v-selection-control) { min-height:32px; }
+.ticket-block-switch { margin-right:-4px; }
+.ticket-block-switch :deep(.v-selection-control) { min-width:38px; width:38px; min-height:28px; }
+.ticket-block-switch :deep(.v-selection-control__wrapper) { width:38px; height:28px; }
+.ticket-block-switch :deep(.v-selection-control__input) { width:28px; height:28px; transform:translateX(-5px); }
+.ticket-block-switch :deep(.v-selection-control--dirty .v-selection-control__input) { transform:translateX(5px); }
+.ticket-block-switch :deep(.v-switch__track) { width:38px; height:22px; }
+.ticket-block-switch :deep(.v-switch__thumb),
+.ticket-block-switch :deep(.v-selection-control--dirty .v-switch__thumb) { width:18px; height:18px; transform:none; }
 .ticket-block-options { display:flex; flex-direction:column; gap:8px; padding:0 12px 12px; }
 .ticket-block-options :deep(.v-label),.ticket-format-options :deep(.v-label) { font-size:12px; font-weight:500; }
 .ticket-block--disabled .ticket-block-heading { background:#fbfcfe; }
@@ -1626,7 +1698,7 @@ export default {
 .ticket-copy-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
 .muted { opacity:.7; }
 
-/* Acciones fijas fuera de las regiones con scroll. */
+/* Acciones del paso dentro de la columna de edición. */
 .ticket-dialog-actions { display:flex; flex:0 0 auto; align-items:center; gap:10px; padding:14px 22px calc(14px + env(safe-area-inset-bottom)); background:#fff; border-top:1px solid #dfe5ed; }
 .ticket-dialog-actions :deep(.v-btn),.busgo-dialog-actions :deep(.v-btn) { min-height:42px; border-radius:9px; font-size:13px; font-weight:800; letter-spacing:0; text-transform:none; }
 .ticket-secondary-btn { color:#475569!important; background:#fff!important; border:1px solid #dce3ed; box-shadow:none!important; }
@@ -1651,10 +1723,13 @@ export default {
   .busgo-page-header { padding-inline:17px; }
   .busgo-defaults-btn { margin-left:auto; }
   .busgo-container { padding:15px 17px 24px!important; }
+  .ticket-dialog-meta { display:none; }
+  .ticket-progress-nav { padding:14px 17px; }
   .ticket-template-toolbar { align-items:stretch; }
   .ticket-template-filter,.ticket-template-filter--status { flex:1 1 200px; min-width:0; }
   .ticket-template-search { flex:1 1 260px; min-width:0; }
   .ticket-form { display:flex; flex-direction:column; overflow-y:auto; }
+  .ticket-editor-column { flex:0 0 auto; }
   .ticket-editor-scroll { overflow:visible; flex:0 0 auto; }
   .ticket-live-preview { flex:0 0 auto; overflow:visible; border-left:0; border-top:1px solid #e1e8f1; padding:18px; }
   .ticket-preview-canvas { max-width:420px; margin-inline:auto; }
@@ -1676,11 +1751,12 @@ export default {
   .ticket-dialog-subtitle { font-size:10px; }
   .ticket-editor-scroll { padding:12px; }
   .ticket-editor-surface { padding:12px; }
+  .ticket-progress-nav { padding:10px; gap:7px; }
+  .ticket-progress-item { padding:8px; gap:7px; }
+  .ticket-progress-copy strong { font-size:11px; }
+  .ticket-progress-number { flex-basis:28px; height:28px; }
   .ticket-block-heading { padding-inline:12px; gap:8px; }
   .ticket-block-options { padding:0 12px 10px; }
-  .ticket-config-grid { grid-template-columns:1fr; gap:16px; }
-  .ticket-config-column { display:contents; }
-  .ticket-config-column + .ticket-config-column::before { display:none; }
   .ticket-option-grid { grid-template-columns:1fr; }
   .ticket-block-label strong { font-size:12px; }
   .ticket-block-toggle > span { display:none; }

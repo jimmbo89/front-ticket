@@ -6177,8 +6177,8 @@ table.v-table>thead,
 }
 
 .ticket-sale-mode--on_board {
-  background: #fff7e6;
-  color: #b45309;
+  background: #f3efff;
+  color: #7c3aed;
 }
 
 .ticket-sale-mode--web {

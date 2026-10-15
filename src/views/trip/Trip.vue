@@ -525,7 +525,7 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-clock-outline</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <v-select
                       v-model="editedItem.saleMode"
                       :items="saleModes"
@@ -545,29 +545,36 @@
                     </v-select>
                   </v-col>
 
-                  <v-col cols="12" md="8">
-                    <MultiSelectCombobox
-                      :model-value="ticketTemplateSelection"
+                  <v-col cols="12" md="6">
+                    <v-select
+                      :model-value="ticketTemplateSelection[0] ?? null"
                       :items="ticketTemplates"
                       item-title="name"
                       item-value="id"
                       label="Plantilla de ticket"
                       placeholder="Selecciona una plantilla o usa la predeterminada"
                       prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      variant="outlined"
+                      density="compact"
+                      clearable
                       no-data-text="No hay plantillas de tickets activas."
-                      :return-object="false"
-                      :filter-keys="['name']"
                       :disabled="loading"
                       :loading="loading"
                       @update:model-value="onTripTicketTemplateChange"
                     >
+                      <template #selection="{ item }">
+                        <v-chip size="small" color="#2454d6" variant="tonal">
+                          {{ item.raw?.name || item.title }}
+                        </v-chip>
+                      </template>
                       <template #item="{ props, item }">
                         <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
                           <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
                           <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
                         </v-list-item>
                       </template>
-                    </MultiSelectCombobox>
+                    </v-select>
                   </v-col>
 
                   <v-col cols="12">
@@ -1498,7 +1505,6 @@ import { handleRequest } from "@/utils/api"; // Ruta al archivo
 import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
-import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
 import {
   getTicketTemplatesForSaleMode,
   isTicketTemplateCompatibleWithTripType,
@@ -1509,7 +1515,7 @@ import {
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 export default {
-  components: { BusgoChip, SaleModeChip, MultiSelectCombobox },
+  components: { BusgoChip, SaleModeChip },
   data: () => ({
     snackbar: false,
     sb_type: "",
@@ -1906,7 +1912,11 @@ export default {
       this.syncTripTicketTemplateWithSaleMode();
     },
     onTripTicketTemplateChange(selection) {
-      const ids = Array.isArray(selection) ? selection : [];
+      const ids = Array.isArray(selection)
+        ? selection
+        : selection === null || selection === undefined || selection === ""
+          ? []
+          : [selection];
       const id = ids.length ? ids[ids.length - 1] : null;
       this.ticketTemplateSelection = id === null ? [] : [id];
       this.editedItem.ticket_template_id = id;
