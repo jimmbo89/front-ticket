@@ -87,7 +87,7 @@ export function normalizeTicketTemplate(template = {}) {
     name: template.name || '',
     tripType: normalizeTripType(template.trip_type ?? template.tripType),
     status: template.status || 'active',
-    config: template.config || getDefaultTicketTemplateConfig(),
+    config: parseTicketTemplateConfig(template.config),
     defaultTripTypes: Array.isArray(defaultTripTypes)
       ? defaultTripTypes.map(normalizeTripType).filter(Boolean)
       : [],
@@ -221,6 +221,46 @@ export function buildExamplePreviewData() {
   };
 }
 
+export function parseTicketTemplateConfig(value) {
+  let parsedValue = value;
+
+  // Production can return config as a JSON string. Parse it before any
+  // merge/clone operation so Object.entries does not enumerate its characters.
+  for (let attempt = 0; attempt < 2 && typeof parsedValue === 'string'; attempt += 1) {
+    try {
+      parsedValue = JSON.parse(parsedValue);
+    } catch (error) {
+      return getDefaultTicketTemplateConfig();
+    }
+  }
+
+  if (!parsedValue || typeof parsedValue !== 'object' || Array.isArray(parsedValue)) {
+    return getDefaultTicketTemplateConfig();
+  }
+
+  // Also repair a config already corrupted by spreading a string into an
+  // object ({ "0": "{", "1": "\"", ... }).
+  const numericKeys = Object.keys(parsedValue)
+    .filter((key) => /^\d+$/.test(key))
+    .sort((a, b) => Number(a) - Number(b));
+
+  if (
+    numericKeys.length > 1 &&
+    numericKeys.every((key) => typeof parsedValue[key] === 'string')
+  ) {
+    try {
+      const repaired = JSON.parse(numericKeys.map((key) => parsedValue[key]).join(''));
+      if (repaired && typeof repaired === 'object' && !Array.isArray(repaired)) {
+        return repaired;
+      }
+    } catch (error) {
+      // Keep the valid object when the numeric properties are unrelated data.
+    }
+  }
+
+  return parsedValue;
+}
+
 export function buildQrPayload(data) {
   // Builds a string payload for QR code, e.g., transaction info
   const { company, tripType, transactionId, vehiclePlate } = data;
@@ -276,7 +316,7 @@ function buildTemplatePayload(templateData = {}, companyId, includeCompany = fal
   }
 
   if (includeCompany || templateData.config !== undefined) {
-    payload.config = templateData.config || getDefaultTicketTemplateConfig();
+    payload.config = parseTicketTemplateConfig(templateData.config);
   }
 
   if (includeCompany) {
@@ -284,7 +324,7 @@ function buildTemplatePayload(templateData = {}, companyId, includeCompany = fal
   }
 
   const defaultTripTypes = templateData.default_trip_types ?? templateData.defaultTripTypes;
-  if (includeCompany || defaultTripTypes !== undefined) {
+  if (defaultTripTypes !== undefined) {
     payload.default_trip_types = Array.isArray(defaultTripTypes)
       ? defaultTripTypes.map(normalizeTripType).filter(Boolean)
       : [];
@@ -417,10 +457,10 @@ const ticketTemplateService = {
   async duplicateTemplate(template, companyId) {
     if (!template) throw new Error('No se encontró la plantilla a duplicar.');
     return this.createTemplate({
-      name: `${template.name || 'Plantilla'} (Copia)`,
-      tripType: template.tripType,
+      name: `Copia de ${template.name || 'Plantilla'}`,
+      tripType: template.tripType ?? template.trip_type,
       status: template.status,
-      config: JSON.parse(JSON.stringify(template.config || getDefaultTicketTemplateConfig())),
+      config: parseTicketTemplateConfig(template.config),
     }, companyId);
   },
 
@@ -434,11 +474,7 @@ const ticketTemplateService = {
     if (!template) throw new Error('No se encontró la plantilla.');
     return this.updateTemplate({
       id: template.id,
-      name: template.name,
-      tripType: template.tripType,
       status: newStatus,
-      defaultTripTypes: Array.isArray(template.defaultTripTypes) ? template.defaultTripTypes : [],
-      config: template.config,
     });
   },
 

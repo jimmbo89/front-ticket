@@ -4231,8 +4231,8 @@ export default {
 }
 
 .ticket-sale-mode--on_board {
-  background: #fff7e6;
-  color: #b45309;
+  background: #f3efff;
+  color: #7c3aed;
 }
 
 .ticket-sale-mode--web {
@@ -5072,8 +5072,8 @@ export default {
 .sales-mode-card:only-child { grid-column:1 / -1; }
 .sales-mode-card { min-width:0; display:flex; flex-direction:column; padding:18px; border-radius:12px; border:1px solid #e0e6ef; background:#fff; color:#162641; box-shadow:0 3px 12px #15264b05; }
 .sales-mode-card--full { border-top:3px solid #2454d6; }
-.sales-mode-card--express { border-top:3px solid #2454d6; }
-.sales-mode-card--on-board { border-top:3px solid #b45309; }
+.sales-mode-card--express { border-top:3px solid #16845b; }
+.sales-mode-card--on-board { border-top:3px solid #7c3aed; }
 .sales-mode-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .sales-mode-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; flex-shrink:0; background:#eef3ff; color:#2454d6; }
 .sales-mode-icon :deep(.v-icon) { font-size:23px!important; }
@@ -5085,8 +5085,8 @@ export default {
 .sales-mode-note { display:flex; align-items:center; gap:5px; color:#64748b; font-size:10px; }
 .sales-launch-button.v-btn { min-height:38px; border-radius:8px; font-size:12px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
 .sales-launch-button--full.v-btn { background:#2454d6; color:#fff; }
-.sales-launch-button--express.v-btn { background:#eef3ff; color:#2454d6; }
-.sales-launch-button--on-board.v-btn { background:#fff7e6; color:#b45309; }
+.sales-launch-button--express.v-btn { background:#eaf8f1; color:#16845b; }
+.sales-launch-button--on-board.v-btn { background:#f3efff; color:#7c3aed; }
 .sales-launch-button:focus-visible { outline:3px solid #6e9bff; outline-offset:3px; }
 .sales-workspace-footnote { display:flex; align-items:center; gap:7px; margin-top:16px; color:#64748b; font-size:11px; line-height:1.5; }
 /* Full dialog: explicit background, type and controls independent of the page. */
@@ -5164,7 +5164,7 @@ export default {
 .sales-mode-card--express .sales-mode-tag { color:#116546; background:#edf8f2; }
 .sales-launch-button--express.v-btn { color:#116546; background:#edf8f2; }
 .sales-launch-button--express:focus-visible { outline-color:#78c9a2; }
-.sales-launch-button--on-board:focus-visible { outline-color:#e7a94f; }
+.sales-launch-button--on-board:focus-visible { outline-color:#c4b5fd; }
 @media(max-width:1100px) { .sales-modes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:959px) { .busgo-full-sale .ticket-sale-topbar { padding-inline:17px; } }
 @media(max-width:600px) {
