@@ -17,6 +17,10 @@
         <div class="busgo-page-subtitle">Gestionar configuración, bloques y campos del ticket térmico</div>
       </div>
       <v-spacer />
+      <v-btn variant="outlined" prepend-icon="mdi-star-settings-outline" class="busgo-defaults-btn"
+        @click="openDefaultConfigDialog">
+        Configurar predeterminadas
+      </v-btn>
       <v-btn :color="paleteColors.primary" variant="flat" elevation="0"
         prepend-icon="mdi-plus" class="busgo-add-btn" @click="openCreateDialog">
         Nueva plantilla
@@ -148,24 +152,6 @@
                   <v-col cols="12" md="3">
                     <v-select v-model="draft.status" :items="statusOptionsLabels" label="Estado"
                       prepend-inner-icon="mdi-toggle-switch-outline" variant="outlined" density="compact" hide-details="auto" />
-                  </v-col>
-                  <v-col cols="12">
-                    <MultiSelectCombobox
-                      :model-value="draft.defaultTripTypes"
-                      :items="tripTypeOptions"
-                      item-title="title"
-                      item-value="value"
-                      label="Tipos de viaje predeterminados"
-                      placeholder="Selecciona uno o varios tipos de viaje"
-                      prepend-inner-icon="mdi-star-settings-outline"
-                      no-data-text="No hay tipos de viaje disponibles."
-                      :return-object="false"
-                      :disabled="readOnly || saving"
-                      :loading="saleModesLoading"
-                      hint="Una plantilla activa puede ser predeterminada para uno o varios tipos de viaje."
-                      persistent-hint
-                      @update:model-value="onDefaultTripTypesChange"
-                    />
                   </v-col>
                 </v-row>
               </section>
@@ -425,6 +411,77 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="defaultConfigDialog" max-width="760" persistent>
+      <v-card class="busgo-dialog-card default-config-dialog">
+        <div class="default-config-header">
+          <div class="default-config-heading">
+            <div class="default-config-icon"><v-icon size="20">mdi-star-settings-outline</v-icon></div>
+            <div>
+              <div class="default-config-title">Configurar predeterminadas</div>
+              <div class="default-config-subtitle">Define qué plantilla se utilizará automáticamente para cada tipo de viaje.</div>
+            </div>
+          </div>
+          <v-btn icon="mdi-close" variant="text" size="small" aria-label="Cerrar configuración de predeterminadas"
+            :disabled="defaultSaving" @click="defaultConfigDialog = false" />
+        </div>
+        <v-divider />
+        <v-card-text class="default-config-body">
+          <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+            Una plantilla de ticket solo puede ser predeterminada para un tipo de viaje y debe estar activa.
+          </v-alert>
+          <v-alert v-if="hasInvalidDefaultAssignments" type="warning" variant="tonal" density="compact" class="mb-4">
+            Se encontraron asociaciones anteriores que no coinciden con el tipo de la plantilla. Los selectores aparecerán vacíos; selecciona una plantilla compatible para corregirlas.
+          </v-alert>
+
+          <div v-if="defaultLoading" class="default-config-loading">
+            <v-progress-circular indeterminate color="#2454d6" size="28" />
+            <span>Cargando plantillas disponibles...</span>
+          </div>
+          <div v-else class="default-config-list">
+            <div v-for="tripType in tripTypeOptions" :key="tripType.value" class="default-config-row">
+              <div class="default-config-type">
+                <v-icon size="19" color="#2454d6">mdi-ticket-outline</v-icon>
+                <div>
+                  <strong>{{ tripType.title }}</strong>
+                  <span>Plantilla predeterminada</span>
+                </div>
+              </div>
+              <v-autocomplete
+                :model-value="defaultAssignments[tripType.value] || null"
+                :items="availableDefaultTemplateOptions(tripType.value)"
+                item-title="name"
+                item-value="selectionId"
+                label="Seleccionar plantilla"
+                placeholder="Sin plantilla predeterminada"
+                prepend-inner-icon="mdi-file-document-outline"
+                variant="outlined"
+                density="compact"
+                clearable
+                hide-details
+                :no-data-text="`No hay plantillas activas de tipo ${tripType.title.toLowerCase()} disponibles.`"
+                :disabled="defaultSaving"
+                @update:model-value="onDefaultAssignmentChange(tripType.value, $event)"
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.raw.name"
+                    :subtitle="item.raw.status === 'active' ? 'Activa' : 'Inactiva'" />
+                </template>
+              </v-autocomplete>
+            </div>
+          </div>
+        </v-card-text>
+        <v-divider />
+        <v-card-actions class="busgo-dialog-actions">
+          <v-btn variant="flat" class="ticket-secondary-btn" :disabled="defaultSaving"
+            @click="defaultConfigDialog = false">Cancelar</v-btn>
+          <v-spacer />
+          <v-btn :color="paleteColors.primary" variant="flat" :loading="defaultSaving"
+            :disabled="defaultLoading || defaultSaving || !defaultAssignmentsDirty"
+            @click="saveDefaultAssignments">Guardar predeterminadas</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog v-model="dialogConfirm" max-width="500px">
       <v-card class="busgo-dialog-card template-small-dialog">
         <v-toolbar :color="confirmationAction === 'discard' ? paleteColors.error : paleteColors.primary">
@@ -504,11 +561,10 @@ import ticketTemplateService, {
 } from '@/services/ticketTemplateService';
 import { paleteColors } from '@/assets/colors';
 import BusgoChip from '@/components/BusgoChip.vue';
-import MultiSelectCombobox from '@/components/MultiSelectCombobox.vue';
 
 export default {
   name: 'TicketTemplateView',
-  components: { BusgoChip, MultiSelectCombobox },
+  components: { BusgoChip },
   data: () => ({
     snackbar: false,
     sb_type: '',
@@ -525,6 +581,9 @@ export default {
     dialog: false,
     dialogDelete: false,
     dialogConfirm: false,
+    defaultConfigDialog: false,
+    defaultLoading: false,
+    defaultSaving: false,
     confirmationAction: '',
     readOnly: false,
     search: '',
@@ -561,6 +620,10 @@ export default {
     selectedTemplateName: '',
     company_id: '',
     templates: [],
+    defaultTemplates: [],
+    defaultAssignments: {},
+    originalDefaultAssignments: {},
+    invalidDefaultAssignments: {},
     draft: null,
     originalDraft: null,
     tripTypeOptions: ticketTemplateTripTypes,
@@ -776,6 +839,18 @@ export default {
         return value(a).localeCompare(value(b), 'es', { numeric: true, sensitivity: 'base' }) * direction;
       });
     },
+    defaultAssignmentsDirty() {
+      const types = new Set([
+        ...Object.keys(this.defaultAssignments || {}),
+        ...Object.keys(this.originalDefaultAssignments || {}),
+      ]);
+
+      return [...types].some((type) => String(this.defaultAssignments?.[type] || '')
+        !== String(this.originalDefaultAssignments?.[type] || ''));
+    },
+    hasInvalidDefaultAssignments() {
+      return Object.values(this.invalidDefaultAssignments || {}).some((templateIds) => templateIds.length > 0);
+    },
   },
   mounted() {
     this.company_id = this.getStorageValue('business_id');
@@ -801,6 +876,58 @@ export default {
         ? template.defaultTripTypes.map((value) => this.tripTypeLabel(value))
         : [];
     },
+    buildDefaultAssignments(templates = []) {
+      const assignments = {};
+      templates.forEach((template) => {
+        const defaultTypes = Array.isArray(template.defaultTripTypes)
+          ? template.defaultTripTypes
+          : [];
+        const fallbackType = template.isDefault && template.tripType ? [template.tripType] : [];
+        [...new Set([...defaultTypes, ...fallbackType])].forEach((type) => {
+          // Una predeterminada solo es válida si coincide con el tipo propio
+          // de la plantilla. Las asociaciones históricas incompatibles no se
+          // muestran como selección actual.
+          if (String(template.tripType) !== String(type)) return;
+          if (assignments[type] === undefined) assignments[type] = String(template.id);
+        });
+      });
+      return assignments;
+    },
+    buildInvalidDefaultAssignments(templates = []) {
+      const invalidAssignments = {};
+      templates.forEach((template) => {
+        const defaultTypes = Array.isArray(template.defaultTripTypes)
+          ? template.defaultTripTypes
+          : [];
+        defaultTypes.forEach((type) => {
+          if (String(template.tripType) === String(type)) return;
+          if (!invalidAssignments[type]) invalidAssignments[type] = [];
+          invalidAssignments[type].push(String(template.id));
+        });
+      });
+      return invalidAssignments;
+    },
+    availableDefaultTemplateOptions(tripType) {
+      const currentId = String(this.defaultAssignments?.[tripType] || '');
+      const assignedElsewhere = new Set(
+        Object.entries(this.defaultAssignments || {})
+          .filter(([type, id]) => type !== tripType && id !== null && id !== undefined && id !== '')
+          .map(([, id]) => String(id)),
+      );
+
+      return this.defaultTemplates
+        .filter((template) => {
+          const templateId = String(template.id);
+          const isCurrent = templateId === currentId;
+          if (isCurrent) return true;
+          if (template.status !== 'active' || template.tripType !== tripType) return false;
+          return !assignedElsewhere.has(templateId);
+        })
+        .map((template) => ({
+          ...template,
+          selectionId: String(template.id),
+        }));
+    },
     isTemplateDefault(template = {}) {
       return Boolean(template.isDefault)
         || (Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length > 0);
@@ -820,14 +947,11 @@ export default {
       if (this.isTemplateInUse(template)) return 'Revisar opciones de desactivación';
       return 'Eliminar plantilla';
     },
-    onDefaultTripTypesChange(selection) {
-      const values = Array.isArray(selection) ? selection : [];
-      this.draft.defaultTripTypes = values
-        .map((item) => {
-          if (!item || typeof item !== 'object') return item;
-          return item.value ?? item.id ?? item.raw?.value ?? item.raw?.id;
-        })
-        .filter((value) => value !== undefined && value !== null && value !== '');
+    onDefaultAssignmentChange(tripType, templateId) {
+      this.defaultAssignments = {
+        ...this.defaultAssignments,
+        [tripType]: templateId ? String(templateId) : null,
+      };
     },
     areSameSelection(first, second) {
       const normalize = (value) => [...new Set((Array.isArray(value) ? value : [])
@@ -1027,6 +1151,78 @@ export default {
     },
     initialize() {
       this.loadTemplates();
+    },
+    async loadDefaultTemplates() {
+      if (!this.company_id) {
+        this.showAlert('warning', 'No se encontró la empresa seleccionada.', 3500);
+        return false;
+      }
+
+      this.defaultLoading = true;
+      try {
+        const response = await ticketTemplateService.listTemplates({
+          companyId: this.company_id,
+          includeSaleModes: false,
+        });
+        this.defaultTemplates = response.templates;
+        const assignments = this.buildDefaultAssignments(response.templates);
+        this.defaultAssignments = { ...assignments };
+        this.originalDefaultAssignments = { ...assignments };
+        this.invalidDefaultAssignments = this.buildInvalidDefaultAssignments(response.templates);
+        return true;
+      } catch (error) {
+        this.defaultTemplates = [];
+        this.defaultAssignments = {};
+        this.originalDefaultAssignments = {};
+        this.invalidDefaultAssignments = {};
+        this.showRequestError(error, 'No se pudieron cargar las plantillas predeterminadas.', 3500);
+        return false;
+      } finally {
+        this.defaultLoading = false;
+      }
+    },
+    async openDefaultConfigDialog() {
+      this.defaultConfigDialog = true;
+      await this.loadDefaultTemplates();
+    },
+    async saveDefaultAssignments() {
+      if (this.defaultSaving || !this.defaultAssignmentsDirty) return;
+
+      const types = new Set([
+        ...Object.keys(this.defaultAssignments || {}),
+        ...Object.keys(this.originalDefaultAssignments || {}),
+      ]);
+      const defaults = [];
+
+      types.forEach((tripType) => {
+        const previousId = String(this.originalDefaultAssignments?.[tripType] || '');
+        const nextId = String(this.defaultAssignments?.[tripType] || '');
+        if (previousId === nextId) return;
+
+        defaults.push({
+          tripType,
+          ticketTemplateId: nextId || null,
+        });
+      });
+
+      if (!defaults.length) return;
+
+      this.defaultSaving = true;
+      try {
+        await ticketTemplateService.updateDefaultAssignments({
+          companyId: this.company_id,
+          defaults,
+        });
+
+        this.showAlert('success', 'Plantillas predeterminadas actualizadas correctamente.', 2500);
+        this.defaultConfigDialog = false;
+        await this.loadTemplates();
+      } catch (error) {
+        await this.loadDefaultTemplates();
+        this.showRequestError(error, 'No se pudieron guardar las plantillas predeterminadas.', 3500);
+      } finally {
+        this.defaultSaving = false;
+      }
     },
     openCreateDialog() {
       this.readOnly = false;
@@ -1242,6 +1438,7 @@ export default {
 .busgo-page-heading { min-width:0; }
 .busgo-page-title { font-size:19px; font-weight:800; color:#0f172a; line-height:1.2; }
 .busgo-page-subtitle { font-size:12px; color:#526176; line-height:1.5; margin-top:4px; }
+.busgo-defaults-btn { min-height:40px; border-color:#c9d5eb!important; color:#2454d6!important; border-radius:9px; font-size:12.5px; font-weight:750; letter-spacing:0; text-transform:none; }
 .busgo-add-btn { min-height:40px; background:#2454d6!important; color:#fff!important; border-radius:9px; font-size:12.5px; font-weight:750; letter-spacing:0; text-transform:none; }
 .busgo-container { padding:18px 24px 28px!important; }
 .busgo-card { background:#fff; border:1px solid #e4eaf2; border-radius:12px; overflow:hidden; }
@@ -1278,6 +1475,22 @@ export default {
 .template-row-actions .v-btn { flex:0 0 36px; border-radius:8px; width:36px; height:36px; }
 .template-row-actions :deep(.v-icon) { font-size:18px; }
 .template-list-table :deep(.v-data-table-footer) { padding:6px 16px; font-size:12px; color:#475569; min-height:52px; }
+.default-config-dialog { overflow:hidden; border-radius:14px!important; }
+.default-config-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 22px; background:#fff; }
+.default-config-heading { display:flex; align-items:center; gap:11px; min-width:0; }
+.default-config-icon { display:grid; flex:0 0 38px; width:38px; height:38px; place-items:center; color:#2454d6; background:#eef3ff; border-radius:10px; }
+.default-config-title { color:#0f172a; font-size:17px; font-weight:850; line-height:1.2; }
+.default-config-subtitle { margin-top:4px; color:#64748b; font-size:11px; font-weight:600; line-height:1.5; }
+.default-config-body { padding:20px 22px 24px!important; background:#f8fafc; }
+.default-config-list { display:flex; flex-direction:column; gap:12px; }
+.default-config-row { display:grid; grid-template-columns:minmax(180px,.7fr) minmax(300px,1.3fr); align-items:center; gap:18px; padding:14px 16px; background:#fff; border:1px solid #e3eaf3; border-radius:11px; }
+.default-config-type { display:flex; align-items:center; gap:10px; min-width:0; }
+.default-config-type > div { display:flex; flex-direction:column; min-width:0; }
+.default-config-type strong { color:#1e293b; font-size:13px; line-height:1.4; }
+.default-config-type span { color:#64748b; font-size:11px; margin-top:3px; }
+.default-config-row :deep(.v-field) { background:#fff; border-radius:9px; }
+.default-config-row :deep(.v-label),.default-config-row :deep(.v-field__input) { font-size:13px; }
+.default-config-loading { display:flex; align-items:center; justify-content:center; gap:12px; min-height:220px; color:#64748b; font-size:13px; }
 .template-alert { display:flex; gap:10px; align-items:center; font-size:12px; }
 .template-alert strong { display:block; font-size:13px; margin-bottom:3px; }
 
@@ -1436,6 +1649,7 @@ export default {
 }
 @media (max-width:959px) {
   .busgo-page-header { padding-inline:17px; }
+  .busgo-defaults-btn { margin-left:auto; }
   .busgo-container { padding:15px 17px 24px!important; }
   .ticket-template-toolbar { align-items:stretch; }
   .ticket-template-filter,.ticket-template-filter--status { flex:1 1 200px; min-width:0; }
@@ -1450,12 +1664,13 @@ export default {
   .busgo-page-header { flex-wrap:wrap; padding:12px; }
   .busgo-page-heading { flex:1 1 calc(100% - 49px); }
   .busgo-page-header > .v-spacer { display:none; }
-  .busgo-add-btn { margin-left:49px; }
+  .busgo-defaults-btn,.busgo-add-btn { flex:1 1 100%; margin-left:49px; }
   .busgo-container { padding:12px!important; }
   .busgo-page-title { font-size:17px; }
   .ticket-template-toolbar { padding-inline:14px; }
   .ticket-template-toolbar > .v-spacer { display:none; }
   .ticket-template-filter,.ticket-template-filter--status,.ticket-template-search { flex-basis:100%; }
+  .default-config-row { grid-template-columns:1fr; gap:10px; }
   .ticket-dialog-header { grid-template-columns:minmax(0,1fr) 42px; gap:8px; padding:10px 12px; }
   .ticket-dialog-meta { display:none; }
   .ticket-dialog-subtitle { font-size:10px; }
