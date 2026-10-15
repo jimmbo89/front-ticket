@@ -1480,9 +1480,8 @@ import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import MultiSelectCombobox from "@/components/MultiSelectCombobox.vue";
 import {
-  findDefaultTicketTemplate,
+  getTicketTemplatesForSaleMode,
   isTicketTemplateCompatibleWithTripType,
-  normalizeTicketTemplates,
   ticketTemplateTripTypeLabel,
 } from "@/services/ticketTemplateService";
 import {
@@ -1906,12 +1905,15 @@ export default {
         : `Tipo: ${ticketTemplateTripTypeLabel(template.tripType)}`;
       return `${defaults} · Activa`;
     },
+    syncTemplateTicketTemplatesWithSaleMode() {
+      this.ticketTemplates = getTicketTemplatesForSaleMode(this.saleModes, this.editedItem.saleMode);
+    },
     isDefaultTicketTemplate(template = {}) {
-      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      const defaultTemplate = this.ticketTemplates[0];
       return String(defaultTemplate?.id) === String(template.id);
     },
     applyDefaultTemplateTicketTemplate() {
-      const defaultTemplate = findDefaultTicketTemplate(this.ticketTemplates, this.editedItem.saleMode);
+      const defaultTemplate = this.ticketTemplates[0];
       const id = defaultTemplate?.id ?? null;
       this.ticketTemplateSelectionManual = false;
       this.editedItem.ticket_template_id = id;
@@ -1940,6 +1942,7 @@ export default {
       if (!this.ticketTemplateSelectionManual) this.applyDefaultTemplateTicketTemplate();
     },
     onTemplateSaleModeChange() {
+      this.syncTemplateTicketTemplatesWithSaleMode();
       this.syncTemplateTicketTemplateWithSaleMode();
     },
     onTemplateTicketTemplateChange(selection) {
@@ -2663,12 +2666,10 @@ export default {
         if (result.success) {
           this.routes = result.data?.triproutes || [];
           this.vehicles = this.normalizeTemplateVehicles(result.data?.tripvehicles);
-          this.ticketTemplates = normalizeTicketTemplates(
-            result.data?.tickettemplates ?? result.data?.ticketTemplates ?? result.data?.ticket_templates
-          ).filter((template) => template.status === "active");
           this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTemplateSaleMode({ useDefault: resetSelections });
+          this.syncTemplateTicketTemplatesWithSaleMode();
 
           if (resetSelections) {
             this.editedItem.route_id = "";

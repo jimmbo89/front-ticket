@@ -48,6 +48,27 @@ export function normalizeTicketTemplateSaleModes(modes) {
     .filter(Boolean);
 }
 
+export function getTicketTemplatesForSaleMode(saleModes, saleMode) {
+  const normalizedSaleMode = normalizeTripType(saleMode);
+  const source = Array.isArray(saleModes) ? saleModes : [];
+  const selectedSaleMode = source.find((mode) => normalizeTripType(
+    mode?.id
+      ?? mode?.value
+      ?? mode?.sale_mode
+      ?? mode?.saleMode
+      ?? mode?.trip_type
+      ?? mode?.tripType,
+  ) === normalizedSaleMode);
+
+  const templates = selectedSaleMode?.tickettemplates
+    ?? selectedSaleMode?.ticketTemplates
+    ?? selectedSaleMode?.ticket_templates
+    ?? [];
+
+  return normalizeTicketTemplates(templates)
+    .filter((template) => template.status === 'active');
+}
+
 export function ticketTemplateTripTypeLabel(value) {
   const normalized = normalizeTripType(value);
   return ticketTemplateTripTypes.find((option) => option.value === normalized)?.title || value || '—';
@@ -210,6 +231,12 @@ function hasValue(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
+function normalizeTemplateId(value) {
+  if (!hasValue(value)) return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : value;
+}
+
 function requireCompanyId(companyId) {
   if (!hasValue(companyId)) {
     throw new Error('No se encontró la empresa seleccionada.');
@@ -352,6 +379,33 @@ const ticketTemplateService = {
     });
     throwRequestError(result, 'No fue posible actualizar la plantilla de tickets.');
     return ticketTemplateFromResponse(result.data);
+  },
+
+  /**
+   * Update several default ticket-template assignments atomically.
+   * Only the trip types included in defaults are changed; omitted types remain
+   * untouched. A null template ID removes the default for that trip type.
+   */
+  async updateDefaultAssignments({ companyId, defaults = [] } = {}) {
+    const data = {
+      company_id: requireCompanyId(companyId),
+      defaults: Array.isArray(defaults)
+        ? defaults.map((assignment) => ({
+          trip_type: normalizeTripType(assignment.tripType ?? assignment.trip_type),
+          ticket_template_id: normalizeTemplateId(
+            assignment.ticketTemplateId ?? assignment.ticket_template_id,
+          ),
+        }))
+        : [],
+    };
+
+    const result = await handleRequest({
+      endpoint: 'ticket-templates-defaults',
+      method: 'PUT',
+      data,
+    });
+    throwRequestError(result, 'No fue posible actualizar las plantillas predeterminadas.');
+    return result.data;
   },
 
   /**
