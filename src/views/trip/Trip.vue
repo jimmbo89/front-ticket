@@ -827,7 +827,7 @@
                                     variant="outlined"
                                     density="compact"
                                     hide-details
-                                    @update:modelValue="syncTripStopTimes"
+                                     @update:modelValue="onTripStopFieldChange"
                                   />
                                 </div>
 
@@ -866,9 +866,9 @@
                                   />
                                 </div>
 
-                                <div style="width: 11%; min-width: 0" class="d-flex justify-center">
-                                  <v-switch
-                                    v-model="slotProps.item.can_alight"
+                                 <div style="width: 11%; min-width: 0" class="d-flex justify-center">
+                                   <v-switch
+                                     v-model="slotProps.item.can_alight"
                                     :true-value="true"
                                     :false-value="false"
                                     :color="
@@ -881,11 +881,11 @@
                                         ? paleteColors.green
                                         : paleteColors.grey
                                     "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTripStopIncludedChange"
+                                     density="compact"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     @update:modelValue="onTripStopIncludedChange"
                                   />
                                 </div>
 
@@ -912,9 +912,9 @@
                                   />
                                 </div>
 
-                                <div style="width: 12%; min-width: 0" class="d-flex justify-center align-center">
-                                  <v-switch
-                                    v-model="slotProps.item.included"
+                                 <div style="width: 12%; min-width: 0" class="d-flex justify-center align-center">
+                                   <v-switch
+                                     v-model="slotProps.item.included"
                                     :true-value="true"
                                     :false-value="false"
                                     :color="
@@ -928,10 +928,11 @@
                                         : paleteColors.grey
                                     "
                                     density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTripStopIncludedChange"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     :disabled="slotProps.item.active === false"
+                                     @update:modelValue="onTripStopIncludedChange"
                                   />
 
                                   <span
@@ -1990,6 +1991,75 @@ export default {
 
       this.expandedTripFareIds = this.expandedTripFareIds[0] === itemId ? [] : [itemId];
     },
+    normalizeTripBoolean(value, fallback = false) {
+      if (value === undefined || value === null || value === "") {
+        return fallback;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (["false", "0", "no", "inactive", "inactivo"].includes(normalized)) {
+          return false;
+        }
+        if (["true", "1", "yes", "active", "activo"].includes(normalized)) {
+          return true;
+        }
+      }
+
+      return Boolean(value);
+    },
+    getTripFareSegmentStopId(segment, side) {
+      const nestedStop = side === "origin"
+        ? segment?.originRouteStop ?? segment?.origin_route_stop
+        : segment?.destinationRouteStop ?? segment?.destination_route_stop;
+
+      return segment?.[`${side}_route_stop_id`]
+        ?? segment?.[`${side}RouteStopId`]
+        ?? nestedStop?.id
+        ?? nestedStop?.route_stop_id
+        ?? null;
+    },
+    isTripFareSegmentEligible(segment, tripStops = this.tripStopRows) {
+      const selectedRouteId = this.editedItem.route_id ?? this.selectedRouteRecord?.id;
+      const segmentRouteId = segment?.route_id ?? segment?.routeId;
+      if (
+        segmentRouteId !== undefined &&
+        segmentRouteId !== null &&
+        selectedRouteId !== undefined &&
+        selectedRouteId !== null &&
+        Number(segmentRouteId) !== Number(selectedRouteId)
+      ) {
+        return false;
+      }
+
+      if (!this.normalizeTripBoolean(
+        segment?.active ?? segment?.is_active ?? segment?.isActive,
+        true
+      )) {
+        return false;
+      }
+
+      const includedStops = (Array.isArray(tripStops) ? tripStops : [])
+        .filter((stop) => stop?.included && stop?.active !== false);
+      const stopIds = includedStops.map((stop) => Number(stop.route_stop_id));
+      if (new Set(stopIds).size !== stopIds.length) {
+        return false;
+      }
+
+      const originId = Number(this.getTripFareSegmentStopId(segment, "origin"));
+      const destinationId = Number(this.getTripFareSegmentStopId(segment, "destination"));
+      if (!Number.isFinite(originId) || !Number.isFinite(destinationId) || originId === destinationId) {
+        return false;
+      }
+
+      const originStop = includedStops.find((stop) => Number(stop.route_stop_id) === originId);
+      const destinationStop = includedStops.find((stop) => Number(stop.route_stop_id) === destinationId);
+      if (!originStop || !destinationStop) {
+        return false;
+      }
+
+      return Number(originStop.stop_order) < Number(destinationStop.stop_order);
+    },
     buildTripFareRows(route = null, tripFares = [], forceIncludeAll = false) {
       const selectedRoute = route || this.selectedRouteRecord;
       const fareSegments = Array.isArray(selectedRoute?.fareSegments)
@@ -2005,7 +2075,9 @@ export default {
         ])
       );
 
-      return fareSegments.map((segment) => {
+      return fareSegments
+        .filter((segment) => this.isTripFareSegmentEligible(segment))
+        .map((segment) => {
         const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
         const destinationStop =
           segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
@@ -2045,9 +2117,9 @@ export default {
                 "",
             };
           }),
-          included: forceIncludeAll || true,
-        };
-      });
+          included: true,
+          };
+        });
     },
     syncTripFareRows(forceIncludeAll = false) {
       const route = this.selectedRouteRecord;
@@ -2071,7 +2143,9 @@ export default {
     normalizeTripFaresPayload(rows = []) {
       const payload = [];
 
-      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+      (Array.isArray(rows) ? rows : [])
+        .filter((segment) => this.isTripFareSegmentEligible(segment))
+        .forEach((segment) => {
         (Array.isArray(segment.fareSegmentTicketTypes)
           ? segment.fareSegmentTicketTypes
           : []
@@ -2098,7 +2172,7 @@ export default {
           }
 
           payload.push(item);
-        });
+          });
       });
 
       return payload.sort(
@@ -2214,23 +2288,54 @@ export default {
     },
     buildTripStopRows(route = null, tripStops = [], forceIncludeAll = false) {
       const selectedRoute = route || this.selectedRouteRecord;
-      const routeStops = Array.isArray(selectedRoute?.routeStops)
+      const rawRouteStops = Array.isArray(selectedRoute?.routeStops)
         ? selectedRoute.routeStops
         : [];
+      const seenRouteStopIds = new Set();
+      const routeStops = rawRouteStops.filter((routeStop) => {
+        const routeStopId = Number(routeStop?.id ?? routeStop?.route_stop_id ?? routeStop?.routeStopId);
+        if (!Number.isFinite(routeStopId) || seenRouteStopIds.has(routeStopId)) {
+          return false;
+        }
+        seenRouteStopIds.add(routeStopId);
+        return true;
+      });
       const stopMap = new Map(
-        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
-          Number(stop.route_stop_id),
-          stop,
-        ])
+        (Array.isArray(tripStops) ? tripStops : [])
+          .map((stop) => [
+            Number(
+              stop?.route_stop_id ??
+              stop?.routeStopId ??
+              stop?.routeStop?.id ??
+              stop?.route_stop?.id
+            ),
+            stop,
+          ])
+          .filter(([routeStopId]) => Number.isFinite(routeStopId))
       );
       const baseDateTime = this.getTripBaseDateTime();
 
       return routeStops.map((routeStop) => {
-        const existingStop = stopMap.get(Number(routeStop.id));
-        const included = forceIncludeAll ? true : !!existingStop;
+        const routeStopId = routeStop.id ?? routeStop.route_stop_id ?? routeStop.routeStopId;
+        const existingStop = stopMap.get(Number(routeStopId));
+        const routeActive = this.normalizeTripBoolean(
+          routeStop.active ?? routeStop.is_active ?? routeStop.isActive,
+          true
+        );
+        const existingActive = this.normalizeTripBoolean(
+          existingStop?.active ?? existingStop?.is_active ?? existingStop?.isActive,
+          routeActive
+        );
+        const existingIncluded = this.normalizeTripBoolean(
+          existingStop?.included ?? existingStop?.is_included ?? existingStop?.isIncluded,
+          true
+        );
+        const included = existingActive && routeActive && (
+          forceIncludeAll ? true : existingStop ? existingIncluded : false
+        );
         return {
           id: existingStop?.id || "",
-          route_stop_id: routeStop.id,
+          route_stop_id: routeStopId,
           location_id: routeStop.location_id || routeStop.locationId || "",
           companyName: routeStop.companyName || "",
           routeName: routeStop.routeName || "",
@@ -2249,7 +2354,7 @@ export default {
             ),
           can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
           can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
-          active: existingStop?.active ?? routeStop.active ?? true,
+          active: existingActive && routeActive,
           source_type: existingStop?.source_type || "auto",
           included,
           locationName: routeStop.locationName || routeStop.address || "",
@@ -2281,6 +2386,7 @@ export default {
     },
     syncTripStopTimes() {
       if (!Array.isArray(this.tripStopRows) || this.tripStopRows.length === 0) {
+        this.syncTripFareRows();
         return;
       }
 
@@ -2310,10 +2416,11 @@ export default {
               : this.formatTripStopDateTime(baseDateTime, minutesOffset + 5),
         };
       });
+      this.syncTripFareRows();
     },
     normalizeTripStopsPayload(rows = []) {
       return (Array.isArray(rows) ? rows : [])
-        .filter((row) => row.included)
+        .filter((row) => row.included && this.normalizeTripBoolean(row.active, true))
         .map((row) => {
           const payload = {
             route_stop_id: Number(row.route_stop_id),
@@ -2346,8 +2453,14 @@ export default {
       );
     },
     onTripStopIncludedChange() {
+      this.tripStopRows = this.tripStopRows.map((row) =>
+        row.active === false ? { ...row, included: false } : row
+      );
       this.syncTripStopTimes();
       this.$forceUpdate();
+    },
+    onTripStopFieldChange() {
+      this.syncTripStopTimes();
     },
     async showBranches() {
       try {

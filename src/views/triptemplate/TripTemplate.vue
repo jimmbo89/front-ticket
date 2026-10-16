@@ -881,11 +881,12 @@
                                         ? paleteColors.green
                                         : paleteColors.grey
                                     "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTemplateStopIncludedChange"
+                                     density="compact"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     :disabled="slotProps.item.active === false"
+                                     @update:modelValue="onTemplateStopIncludedChange"
                                   />
 
                                   <span
@@ -1966,6 +1967,58 @@ export default {
 
       return Boolean(value);
     },
+    getTemplateFareSegmentStopId(segment, side) {
+      const nestedStop = side === "origin"
+        ? segment?.originRouteStop ?? segment?.origin_route_stop
+        : segment?.destinationRouteStop ?? segment?.destination_route_stop;
+
+      return segment?.[`${side}_route_stop_id`]
+        ?? segment?.[`${side}RouteStopId`]
+        ?? nestedStop?.id
+        ?? nestedStop?.route_stop_id
+        ?? null;
+    },
+    isTemplateFareSegmentEligible(segment, tripStops = this.templateStopRows) {
+      const selectedRouteId = this.editedItem.route_id ?? this.getSelectedRouteRecord()?.id;
+      const segmentRouteId = segment?.route_id ?? segment?.routeId;
+      if (
+        segmentRouteId !== undefined &&
+        segmentRouteId !== null &&
+        selectedRouteId !== undefined &&
+        selectedRouteId !== null &&
+        Number(segmentRouteId) !== Number(selectedRouteId)
+      ) {
+        return false;
+      }
+
+      if (!this.normalizeTemplateBoolean(
+        segment?.active ?? segment?.is_active ?? segment?.isActive,
+        true
+      )) {
+        return false;
+      }
+
+      const includedStops = (Array.isArray(tripStops) ? tripStops : [])
+        .filter((stop) => stop?.included && stop?.active !== false);
+      const stopIds = includedStops.map((stop) => Number(stop.route_stop_id));
+      if (new Set(stopIds).size !== stopIds.length) {
+        return false;
+      }
+
+      const originId = Number(this.getTemplateFareSegmentStopId(segment, "origin"));
+      const destinationId = Number(this.getTemplateFareSegmentStopId(segment, "destination"));
+      if (!Number.isFinite(originId) || !Number.isFinite(destinationId) || originId === destinationId) {
+        return false;
+      }
+
+      const originStop = includedStops.find((stop) => Number(stop.route_stop_id) === originId);
+      const destinationStop = includedStops.find((stop) => Number(stop.route_stop_id) === destinationId);
+      if (!originStop || !destinationStop) {
+        return false;
+      }
+
+      return Number(originStop.stop_order) < Number(destinationStop.stop_order);
+    },
     onTemplateSaleModeChange() {
       this.syncTemplateTicketTemplatesWithSaleMode();
       this.syncTemplateTicketTemplateWithSaleMode();
@@ -2038,9 +2091,18 @@ export default {
     },
     buildTemplateStopRows(route = null, tripStops = [], forceIncludeAll = false) {
       const selectedRoute = route || this.getSelectedRouteRecord();
-      const routeStops = Array.isArray(selectedRoute?.routeStops)
+      const rawRouteStops = Array.isArray(selectedRoute?.routeStops)
         ? selectedRoute.routeStops
         : [];
+      const seenRouteStopIds = new Set();
+      const routeStops = rawRouteStops.filter((routeStop) => {
+        const routeStopId = Number(routeStop?.id ?? routeStop?.route_stop_id ?? routeStop?.routeStopId);
+        if (!Number.isFinite(routeStopId) || seenRouteStopIds.has(routeStopId)) {
+          return false;
+        }
+        seenRouteStopIds.add(routeStopId);
+        return true;
+      });
       const stopMap = new Map(
         (Array.isArray(tripStops) ? tripStops : [])
           .map((stop) => {
@@ -2060,11 +2122,6 @@ export default {
         const routeStopId =
           routeStop.id ?? routeStop.route_stop_id ?? routeStop.routeStopId;
         const existingStop = stopMap.get(Number(routeStopId));
-        const included = forceIncludeAll
-          ? true
-          : existingStop
-            ? this.normalizeTemplateBoolean(existingStop.included, true)
-            : false;
 
         const existingCanBoard =
           existingStop?.can_board ??
@@ -2084,6 +2141,18 @@ export default {
           routeStop.allows_alighting ?? routeStop.allowsAlighting ?? routeStop.can_alight;
         const routeActive =
           routeStop.active ?? routeStop.is_active ?? routeStop.isActive;
+        const normalizedRouteActive = this.normalizeTemplateBoolean(routeActive, true);
+        const normalizedExistingActive = this.normalizeTemplateBoolean(
+          existingActive,
+          normalizedRouteActive
+        );
+        const existingIncluded = this.normalizeTemplateBoolean(
+          existingStop?.included ?? existingStop?.is_included ?? existingStop?.isIncluded,
+          true
+        );
+        const included = normalizedExistingActive && normalizedRouteActive && (
+          forceIncludeAll ? true : existingStop ? existingIncluded : false
+        );
 
         return {
           id: existingStop?.id || "",
@@ -2104,8 +2173,8 @@ export default {
             this.normalizeTemplateBoolean(routeCanAlight, true)
           ),
           active: this.normalizeTemplateBoolean(
-            existingActive,
-            this.normalizeTemplateBoolean(routeActive, true)
+            normalizedExistingActive && normalizedRouteActive,
+            false
           ),
           included,
           locationName: routeStop.locationName || routeStop.address || "",
@@ -2173,7 +2242,9 @@ export default {
           )
       );
 
-      return fareSegments.map((segment) => {
+      return fareSegments
+        .filter((segment) => this.isTemplateFareSegmentEligible(segment))
+        .map((segment) => {
         const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
         const destinationStop =
           segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
@@ -2227,9 +2298,9 @@ export default {
                 "",
             };
           }),
-          included: forceIncludeAll || true,
-        };
-      });
+          included: true,
+          };
+        });
     },
     templateFareTicketTypeKey(ticketType, index) {
       return ticketType.id || ticketType.fare_segment_ticket_type_id || index;
@@ -2271,7 +2342,9 @@ export default {
     normalizeTemplateFaresPayload(rows = []) {
       const payload = [];
 
-      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+      (Array.isArray(rows) ? rows : [])
+        .filter((segment) => this.isTemplateFareSegmentEligible(segment))
+        .forEach((segment) => {
         (Array.isArray(segment.fareSegmentTicketTypes)
           ? segment.fareSegmentTicketTypes
           : []
@@ -2298,7 +2371,7 @@ export default {
           }
 
           payload.push(item);
-        });
+          });
       });
 
       return payload.sort(
@@ -2338,7 +2411,7 @@ export default {
     },
     normalizeTemplateStopsPayload(rows = []) {
       return (Array.isArray(rows) ? rows : [])
-        .filter((row) => row.included)
+        .filter((row) => row.included && this.normalizeTemplateBoolean(row.active, true))
         .map((row) => ({
           route_stop_id: Number(row.route_stop_id),
           stop_order: Number(row.stop_order) || 1,
@@ -2355,9 +2428,14 @@ export default {
       );
     },
     onTemplateStopIncludedChange() {
+      this.templateStopRows = this.templateStopRows.map((row) =>
+        row.active === false ? { ...row, included: false } : row
+      );
+      this.syncTemplateFareRows();
       this.$forceUpdate();
     },
     onTemplateStopFieldChange() {
+      this.syncTemplateFareRows();
       this.$forceUpdate();
     },
     hasPermission(requiredPermissions) {
