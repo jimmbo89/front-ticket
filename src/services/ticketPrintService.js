@@ -19,12 +19,6 @@ function blockEnabled(block) {
   return asObject(block).enabled !== false;
 }
 
-function fieldEnabled(block, field) {
-  const normalizedBlock = asObject(block);
-  return blockEnabled(normalizedBlock)
-    && (!normalizedBlock.fields || normalizedBlock.fields[field] !== false);
-}
-
 function toArray(value) {
   if (Array.isArray(value)) return value;
   if (value && typeof value === 'object') return Object.values(value);
@@ -52,9 +46,11 @@ function formatTimePart(value) {
   return date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatMoney(value, decimals = 0) {
+function formatCurrency(value, decimals = 0) {
   const amount = Number(value || 0);
   return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(amount);
@@ -75,21 +71,11 @@ function getSeats(ticket) {
     .filter((seat) => seat !== '');
 }
 
-function renderLabelValue(label, value) {
-  if (value === undefined || value === null || value === '') return '';
-  return `<div class="ticket-template-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
-}
-
-function renderSeparator(enabled) {
-  return enabled ? '<div class="ticket-template-separator"></div>' : '';
-}
-
-function renderCopy({
+function renderThermalCopy({
   ticket,
   config,
   branch,
   companyName,
-  companyImageUrl,
   qrImage,
   nameUser,
   controlCopy,
@@ -98,144 +84,189 @@ function renderCopy({
   const branchData = asObject(branch);
   const companyData = asObject(branchData.company);
   const showSeparators = config.showSeparators !== false;
+  const section = (content, className = 'ticket-section') => (
+    content ? `<div class="${className}">${content}</div>` : ''
+  );
+  const companyFields = asObject(blocks.companyData?.fields);
+  const routeFields = asObject(blocks.route?.fields);
+  const dateFields = asObject(blocks.dateTime?.fields);
+  const vehicleFields = asObject(blocks.vehicleData?.fields);
+  const fareColumns = asObject(blocks.fareDetails?.columns);
+  const footerFields = asObject(blocks.footer?.fields);
   const sections = [];
-  const pushSection = (content) => {
-    if (content) sections.push(`<div class="ticket-template-block">${content}</div>`);
-  };
 
-  if (blockEnabled(blocks.logo) && companyImageUrl) {
-    pushSection(`<img class="ticket-template-logo" src="${escapeHtml(companyImageUrl)}" alt="${escapeHtml(companyName)}">`);
+  if (blockEnabled(blocks.logo)) {
+    sections.push('<header class="busgo-ticket-logo-header"><div class="logo-box">TV</div></header>');
   }
 
-  if (blockEnabled(blocks.companyData)) {
-    const companyFields = asObject(blocks.companyData.fields);
-    const values = [];
+  if (blockEnabled(blocks.companyData) && (
+    companyFields.name !== false
+    || companyFields.rut !== false
+    || companyFields.address !== false
+  )) {
+    const company = [];
     if (companyFields.name !== false) {
-      values.push(`<div class="ticket-template-company-name">${escapeHtml(firstValue(companyName, companyData.name, branchData.name, 'Empresa'))}</div>`);
+      company.push(`<strong class="ticket-company-name">${escapeHtml(firstValue(companyName, companyData.name, branchData.name, 'Empresa'))}</strong>`);
     }
     if (companyFields.rut !== false) {
-      values.push(renderLabelValue('RUT:', firstValue(branchData.rut, companyData.rut)));
+      company.push(`<div class="ticket-preview-row">RUT ${escapeHtml(firstValue(branchData.rut, companyData.rut))}</div>`);
     }
     if (companyFields.address !== false) {
-      values.push(renderLabelValue('Dirección:', firstValue(branchData.address, companyData.address)));
+      company.push(`<div class="ticket-preview-row">${escapeHtml(firstValue(branchData.address, companyData.address))}</div>`);
     }
-    if (values.length) pushSection(`<div class="ticket-template-company">${values.join('')}</div>`);
+    sections.push(section(company.join(''), 'ticket-section company-section'));
   }
 
   if (blockEnabled(blocks.tripTitle)) {
-    pushSection(`<div class="ticket-template-title">${escapeHtml(blocks.tripTitle.text || 'DETALLE DEL VIAJE')}</div>`);
+    sections.push(section(`<div class="ticket-title">${escapeHtml(blocks.tripTitle.text || 'DETALLE DEL VIAJE')}</div>`, 'ticket-section title-section'));
   }
 
-  if (blockEnabled(blocks.route)) {
-    const routeFields = asObject(blocks.route.fields);
+  if (blockEnabled(blocks.route) && (
+    routeFields.origin !== false
+    || routeFields.destination !== false
+    || routeFields.tripId !== false
+  )) {
     const route = [];
     if (routeFields.origin !== false) {
-      route.push(renderLabelValue('Origen:', firstValue(ticket.tripOrigin, ticket.origin, ticket.origin_label, 'No especificado')));
+      route.push(`<div class="ticket-place"><span class="ticket-small-label">Origen</span><strong>${escapeHtml(firstValue(ticket.tripOrigin, ticket.origin, ticket.origin_label, 'No especificado'))}</strong></div>`);
     }
     if (routeFields.destination !== false) {
-      route.push(renderLabelValue('Destino:', firstValue(ticket.tripDestination, ticket.destination, ticket.destination_label, 'No especificado')));
+      route.push(`<div class="ticket-place ticket-place--destination"><span class="ticket-small-label">Destino</span><strong>${escapeHtml(firstValue(ticket.tripDestination, ticket.destination, ticket.destination_label, 'No especificado'))}</strong></div>`);
     }
     if (routeFields.tripId !== false) {
-      route.push(renderLabelValue('Folio:', ticket.id));
+      const trip = asObject(ticket.trip);
+      const tripId = firstValue(ticket.tripId, ticket.trip_id, trip.id, trip.tripId, trip.trip_id, ticket.id);
+      route.push(`<div class="ticket-trip-id"><span>ID del viaje</span><strong>${escapeHtml(tripId)}</strong></div>`);
     }
-    if (route.length) pushSection(`<div class="ticket-template-route">${route.join('')}</div>`);
+    sections.push(section(route.join(''), 'ticket-section route-section'));
   }
 
-  if (blockEnabled(blocks.dateTime)) {
-    const dateFields = asObject(blocks.dateTime.fields);
+  if (blockEnabled(blocks.dateTime) && (
+    dateFields.tripDate !== false
+    || dateFields.departureTime !== false
+    || dateFields.arrivalDate !== false
+    || dateFields.arrivalTime !== false
+  )) {
     const departureValue = firstValue(ticket.departureDateTime, ticket.departure_datetime, ticket.schedule);
     const arrivalValue = firstValue(ticket.arrivalDateTime, ticket.arrival_datetime);
     const dateTime = [];
     if (dateFields.tripDate !== false) {
-      dateTime.push(renderLabelValue('Fecha del viaje:', formatDatePart(firstValue(ticket.tripDate, ticket.trip_date, departureValue))));
+      dateTime.push(`<div class="ticket-schedule-item"><span class="ticket-small-label">Fecha del viaje</span><strong>${escapeHtml(formatDatePart(firstValue(ticket.tripDate, ticket.trip_date, departureValue)))}</strong></div>`);
     }
     if (dateFields.departureTime !== false) {
-      dateTime.push(renderLabelValue('Hora de salida:', formatTimePart(departureValue)));
+      dateTime.push(`<div class="ticket-schedule-item"><span class="ticket-small-label">Hora de salida</span><strong class="ticket-departure-time">${escapeHtml(formatTimePart(departureValue))}</strong></div>`);
     }
     if (dateFields.arrivalDate !== false) {
-      dateTime.push(renderLabelValue('Fecha de llegada:', formatDatePart(firstValue(ticket.arrivalDate, ticket.arrival_date, arrivalValue))));
+      dateTime.push(`<div class="ticket-schedule-item"><span class="ticket-small-label">Fecha de llegada</span><strong>${escapeHtml(formatDatePart(firstValue(ticket.arrivalDate, ticket.arrival_date, arrivalValue)))}</strong></div>`);
     }
     if (dateFields.arrivalTime !== false) {
-      dateTime.push(renderLabelValue('Hora de llegada:', formatTimePart(firstValue(ticket.arrivalTime, ticket.arrival_time, arrivalValue))));
+      dateTime.push(`<div class="ticket-schedule-item"><span class="ticket-small-label">Hora de llegada</span><strong>${escapeHtml(formatTimePart(firstValue(ticket.arrivalTime, ticket.arrival_time, arrivalValue)))}</strong></div>`);
     }
-    if (dateTime.some(Boolean)) pushSection(`<div class="ticket-template-datetime">${dateTime.join('')}</div>`);
+    sections.push(section(dateTime.join(''), 'ticket-section ticket-schedule-grid'));
   }
 
-  if (blockEnabled(blocks.vehicleData)) {
-    const vehicleFields = asObject(blocks.vehicleData.fields);
+  if (blockEnabled(blocks.vehicleData) && (
+    vehicleFields.vehiclePlate !== false
+    || vehicleFields.internalNumber !== false
+  )) {
     const vehicle = [];
     if (vehicleFields.vehiclePlate !== false) {
-      vehicle.push(renderLabelValue('Patente:', firstValue(ticket.vehiclePlate, ticket.vehicle_plate, ticket.plate)));
+      vehicle.push(`<div><span class="ticket-small-label">Patente</span><strong>${escapeHtml(firstValue(ticket.vehiclePlate, ticket.vehicle_plate, ticket.plate))}</strong></div>`);
     }
     if (vehicleFields.internalNumber !== false) {
-      vehicle.push(renderLabelValue('N.º interno:', firstValue(ticket.internalNumber, ticket.internal_number)));
+      vehicle.push(`<div><span class="ticket-small-label">N° interno</span><strong>${escapeHtml(firstValue(ticket.internalNumber, ticket.internal_number))}</strong></div>`);
     }
-    if (vehicle.some(Boolean)) pushSection(`<div class="ticket-template-vehicle">${vehicle.join('')}</div>`);
+    sections.push(section(`<div class="ticket-subtitle">Datos del vehículo</div><div class="ticket-vehicle-grid">${vehicle.join('')}</div>`, 'ticket-section vehicle-section'));
   }
 
   if (blockEnabled(blocks.seats)) {
     const seats = getSeats(ticket);
     if (seats.length || blocks.seats.hideWhenEmpty !== true) {
-      const content = seats.length
-        ? seats.map((seat) => `<span class="ticket-template-seat">${escapeHtml(seat)}</span>`).join('')
-        : `<span class="ticket-template-empty">${escapeHtml(blocks.seats.emptyMessage || 'NO HAY ASIENTOS REGISTRADOS')}</span>`;
-      pushSection(`<div class="ticket-template-seats"><strong>${escapeHtml(blocks.seats.title || 'ASIENTO(S)')}</strong><div>${content}</div></div>`);
+      const seatsMarkup = seats.length
+        ? `<div class="ticket-seat-list">${seats.map((seat) => `<strong class="ticket-seat-number">${escapeHtml(seat)}</strong>`).join('')}</div>`
+        : `<div class="ticket-preview-row ticket-empty-seats">${escapeHtml(blocks.seats.emptyMessage || 'NO HAY ASIENTOS REGISTRADOS')}</div>`;
+      sections.push(section(`<div class="ticket-subtitle">${escapeHtml(blocks.seats.title || 'ASIENTO(S)')}</div>${seatsMarkup}`, 'ticket-section seats-section'));
     }
   }
 
   if (blockEnabled(blocks.paymentTitle)) {
-    pushSection(`<div class="ticket-template-section-title">${escapeHtml(blocks.paymentTitle.text || 'DETALLE DE PAGO')}</div>`);
+    sections.push(section(`<div class="ticket-title">${escapeHtml(blocks.paymentTitle.text || 'DETALLE DE PAGO')}</div>`, 'ticket-section title-section'));
   }
 
-  if (blockEnabled(blocks.fareDetails)) {
-    const columns = asObject(blocks.fareDetails.columns);
+  if (blockEnabled(blocks.fareDetails) && Object.values(fareColumns).some(Boolean)) {
     const items = getTicketItems(ticket);
+    const headers = [];
+    if (fareColumns.type !== false) headers.push('<th scope="col">Pasaje</th>');
+    if (fareColumns.quantity !== false) headers.push('<th scope="col" class="fare-quantity">Cant.</th>');
+    if (fareColumns.unitPrice !== false) headers.push('<th scope="col" class="fare-amount">Precio</th>');
+    if (fareColumns.subtotal !== false) headers.push('<th scope="col" class="fare-amount">Subtotal</th>');
     const rows = items.map((item) => {
       const name = firstValue(item.ticketTypeName, item.ticket_type_name, item.name, item.description, 'Pasaje');
       const quantity = firstValue(item.quantity, item.cant, 0);
       const unitPrice = firstValue(item.unitPrice, item.unit_price, item.basePrice, item.base_price, item.price, 0);
       const subtotal = firstValue(item.subtotal, item.lineTotal, item.line_total, item.total, Number(unitPrice || 0) * Number(quantity || 0));
-      return `<tr><td>${escapeHtml(name)}</td>${columns.quantity === false ? '' : `<td>${escapeHtml(quantity)}</td>`}${columns.unitPrice === false ? '' : `<td>$${formatMoney(unitPrice)}</td>`}${columns.subtotal === false ? '' : `<td>$${formatMoney(subtotal)}</td>`}</tr>`;
+      const cells = [];
+      if (fareColumns.type !== false) cells.push(`<td>${escapeHtml(name)}</td>`);
+      if (fareColumns.quantity !== false) cells.push(`<td class="fare-quantity">${escapeHtml(quantity)}</td>`);
+      if (fareColumns.unitPrice !== false) cells.push(`<td class="fare-amount">${escapeHtml(formatCurrency(unitPrice))}</td>`);
+      if (fareColumns.subtotal !== false) cells.push(`<td class="fare-amount">${escapeHtml(formatCurrency(subtotal))}</td>`);
+      return `<tr>${cells.join('')}</tr>`;
     }).join('');
-    if (rows) {
-      pushSection(`<table class="ticket-template-fares"><thead><tr><th>${escapeHtml(columns.type === false ? '' : 'Tipo')}</th>${columns.quantity === false ? '' : '<th>Cant.</th>'}${columns.unitPrice === false ? '' : '<th>Precio</th>'}${columns.subtotal === false ? '' : '<th>Subtotal</th>'}</tr></thead><tbody>${rows}</tbody></table>`);
+    if (headers.length) {
+      sections.push(section(`<table class="fare-table" aria-label="Detalle de pasajes"><thead><tr>${headers.join('')}</tr></thead><tbody>${rows}</tbody></table>`, 'ticket-section fare-section'));
     }
   }
 
   if (blockEnabled(blocks.total)) {
-    pushSection(`<div class="ticket-template-total"><span>${escapeHtml(blocks.total.label || 'TOTAL')}</span><strong>$${formatMoney(ticket.total, Number(blocks.total.decimals || 0))}</strong></div>`);
+    sections.push(section(`<div class="ticket-preview-row total-row"><strong>${escapeHtml(blocks.total.label || 'TOTAL')}</strong><span>${escapeHtml(formatCurrency(ticket.total, Number(blocks.total.decimals || 0)))}</span></div>`, 'ticket-section total-section'));
   }
 
-  if (blockEnabled(blocks.paymentMethod) && fieldEnabled(blocks.paymentMethod, 'enabled')) {
-    pushSection(renderLabelValue(blocks.paymentMethod.label || 'Medio de pago', firstValue(ticket.method, blocks.paymentMethod.value)));
+  if (blockEnabled(blocks.paymentMethod)) {
+    sections.push(section(`<div class="ticket-reference-row"><span>${escapeHtml(blocks.paymentMethod.label || 'Medio de pago')}</span><strong>${escapeHtml(firstValue(blocks.paymentMethod.value, ticket.method))}</strong></div>`, 'ticket-section ticket-reference-section'));
   }
 
-  if (blockEnabled(blocks.transactionNumber) && fieldEnabled(blocks.transactionNumber, 'enabled')) {
-    pushSection(renderLabelValue(blocks.transactionNumber.label || 'N.º Transacción', firstValue(ticket.transactionId, ticket.transaction_id, blocks.transactionNumber.value, '—')));
+  if (blockEnabled(blocks.transactionNumber)) {
+    sections.push(section(`<div class="ticket-reference-row"><span>${escapeHtml(blocks.transactionNumber.label || 'N° Transacción')}</span><strong class="ticket-reference-number">${escapeHtml(firstValue(blocks.transactionNumber.value, ticket.transactionId, ticket.transaction_id, '—'))}</strong></div>`, 'ticket-section ticket-reference-section'));
   }
 
   if (blockEnabled(blocks.qr) && qrImage) {
     const size = Number(blocks.qr.size || 110);
-    pushSection(`<div class="ticket-template-qr${blocks.qr.centered === false ? '' : ' ticket-template-qr--centered'}"><img src="${escapeHtml(qrImage)}" width="${size}" height="${size}" alt="Código QR"></div>`);
+    const alignment = blocks.qr.centered === false ? '0' : '0 auto';
+    sections.push(section(`<div class="qr-wrapper" style="width:${size}px;margin:${alignment}"><img src="${escapeHtml(qrImage)}" width="${size}" height="${size}" alt="Código QR" class="qr-image"></div>`, 'ticket-section qr-section'));
   }
 
-  if (blockEnabled(blocks.footer)) {
-    const footerFields = asObject(blocks.footer.fields);
+  if (blockEnabled(blocks.footer) && (
+    footerFields.copyControl !== false
+    || footerFields.transactionId !== false
+    || footerFields.optionalText !== false
+  )) {
     const footer = [];
-    if (controlCopy && footerFields.copyControl !== false) footer.push('<div class="ticket-template-control-copy">-Copia de control-</div>');
+    if (controlCopy && footerFields.copyControl !== false) footer.push('<div class="ticket-preview-row ticket-copy-label">Copia de control</div>');
     const transactionId = firstValue(ticket.transactionId, ticket.transaction_id);
-    if (footerFields.transactionId !== false && transactionId) footer.push(renderLabelValue('ID de transacción:', transactionId));
-    if (footerFields.vehiclePlate !== false && firstValue(ticket.vehiclePlate, ticket.vehicle_plate, ticket.plate)) footer.push(renderLabelValue('Patente:', firstValue(ticket.vehiclePlate, ticket.vehicle_plate, ticket.plate)));
-    if (footerFields.optionalText !== false && blocks.footer.optionalText) footer.push(`<div class="ticket-template-footer-text">${escapeHtml(blocks.footer.optionalText)}</div>`);
-    if (footer.length) pushSection(`<div class="ticket-template-footer">${footer.join('')}</div>`);
+    if (footerFields.transactionId !== false) footer.push(`<div class="ticket-preview-row">ID ${escapeHtml(transactionId)}</div>`);
+    if (footerFields.optionalText !== false && blocks.footer.optionalText) footer.push(`<div class="ticket-preview-row">${escapeHtml(blocks.footer.optionalText)}</div>`);
+    if (footer.length) sections.push(section(footer.join(''), 'ticket-section footer-section'));
   }
 
   const reprintCount = Number(ticket.print ?? ticket.reprintCount ?? ticket.reprint_count ?? 0);
   const reprintNotice = reprintCount > 1
-    ? `<div class="ticket-template-reprint">(COPIA REIMPRESA POR EL OPERADOR ${escapeHtml(nameUser || '')})</div>`
+    ? `<div class="ticket-reprint">(COPIA REIMPRESA POR EL OPERADOR ${escapeHtml(nameUser || '')})</div>`
     : '';
+  const thermalClass = config.spacing === 'compact' ? ' compact' : '';
+  const separatorClass = showSeparators ? '' : ' thermal-paper--no-separators';
+  return `<section class="ticket-template-copy ${controlCopy ? 'ticket-template-copy--control' : ''}"><div class="thermal-paper${thermalClass}${separatorClass}">${sections.join('')}${reprintNotice}</div></section>`;
+}
 
-  return `<section class="ticket-template-copy ${controlCopy ? 'ticket-template-copy--control' : ''}">${sections.join(renderSeparator(showSeparators))}${reprintNotice}</section>`;
+function renderCopy({
+  ticket,
+  config,
+  branch,
+  companyName,
+  qrImage,
+  nameUser,
+  controlCopy,
+}) {
+  return renderThermalCopy({ ticket, config, branch, companyName, qrImage, nameUser, controlCopy });
 }
 
 export function getTicketTemplateConfig(ticket = {}) {
@@ -264,12 +295,16 @@ export function buildTicketTemplateMarkup({
   qrImage = '',
   nameUser = '',
 } = {}) {
-  return `<div class="ticket-template-print ticket-template-print--${config.spacing === 'compact' ? 'compact' : 'comfortable'}">${renderCopy({ ticket, config, branch, companyName, companyImageUrl, qrImage, nameUser, controlCopy: false })}${renderCopy({ ticket, config, branch, companyName, companyImageUrl, qrImage, nameUser, controlCopy: true })}</div>`;
+  const originalCopy = renderCopy({ ticket, config, branch, companyName, companyImageUrl, qrImage, nameUser, controlCopy: false });
+  const controlCopy = renderCopy({ ticket, config, branch, companyName, companyImageUrl, qrImage, nameUser, controlCopy: true });
+
+  return `<div class="ticket-template-print ticket-template-print--${config.spacing === 'compact' ? 'compact' : 'comfortable'}">${originalCopy}${controlCopy}</div>`;
 }
 
 export function buildTicketTemplatePrintHtml(options = {}) {
   const markup = buildTicketTemplateMarkup(options);
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ticket de Viaje</title><style>
-    *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;padding:10px;color:#111;font-size:13px}.ticket-template-print{max-width:100%;margin:0 auto}.ticket-template-copy{break-inside:avoid}.ticket-template-copy--control{margin-top:18px;padding-top:14px;border-top:1px dashed #000}.ticket-template-block{margin-bottom:10px}.ticket-template-print--compact .ticket-template-block{margin-bottom:6px}.ticket-template-logo{display:block;width:150px;height:80px;object-fit:contain;margin:0 auto 8px}.ticket-template-company{text-align:center}.ticket-template-company-name{font-size:18px;font-weight:700;margin-bottom:5px}.ticket-template-title,.ticket-template-section-title{text-align:center;font-weight:700;font-size:15px}.ticket-template-section-title{border-bottom:1px solid #111;padding-bottom:5px}.ticket-template-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:5px}.ticket-template-row span{font-weight:500}.ticket-template-row strong{text-align:right}.ticket-template-seats>div{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.ticket-template-seat{padding:4px 7px;border:1px solid #111;border-radius:4px}.ticket-template-empty{font-size:11px}.ticket-template-fares{width:100%;border-collapse:collapse}.ticket-template-fares th,.ticket-template-fares td{padding:4px 3px;border-bottom:1px solid #ddd;text-align:left}.ticket-template-fares th:not(:first-child),.ticket-template-fares td:not(:first-child){text-align:right}.ticket-template-total{display:flex;justify-content:space-between;border-top:1px solid #111;padding-top:7px;font-size:16px}.ticket-template-qr--centered{text-align:center}.ticket-template-qr img{object-fit:contain}.ticket-template-control-copy{text-align:center;font-style:italic;margin-bottom:7px}.ticket-template-footer-text{text-align:center;font-size:11px}.ticket-template-reprint{text-align:center;font-size:11px;text-transform:uppercase;margin-top:8px}.ticket-template-separator{border-top:1px dashed #111;margin:10px 0}@page{size:auto;margin:0}@media print{body{padding:5px}}
+    *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;padding:10px;color:#111;font-size:13px}.ticket-template-print{max-width:100%;margin:0 auto}.ticket-template-copy{break-inside:avoid}.ticket-template-copy--control{margin-top:18px;padding-top:14px;border-top:1px dashed #000}@page{size:auto;margin:0}@media print{body{padding:5px}}
+    .thermal-paper{width:100%;max-width:360px;box-sizing:border-box;background:#fff;color:#000;border:1px solid #d9d9d9;padding:18px 15px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.08);overflow-wrap:anywhere}.thermal-paper.compact{padding:12px;line-height:1.3}.ticket-preview-row,.ticket-section,.ticket-title,.ticket-subtitle{width:100%}.ticket-section{border-top:1px dashed #000;padding-top:10px;margin-top:10px}.thermal-paper.compact .ticket-section{padding-top:6px;margin-top:6px}.ticket-section:first-child{border-top:none;padding-top:0;margin-top:0}.thermal-paper--no-separators .ticket-section{border-top:0}.ticket-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}.ticket-subtitle{margin-bottom:7px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}.title-section{text-align:center}.thermal-paper>.busgo-ticket-logo-header{display:block!important;width:100%;padding:0 0 7px;text-align:center}.thermal-paper>.busgo-ticket-logo-header>.logo-box{display:grid!important;place-items:center;width:38px;height:38px;margin:0 auto!important;border:2px solid #000;border-radius:7px;color:#000;font-size:14px;font-weight:800}.thermal-paper>.company-section{display:block!important;width:100%;padding-top:0;margin-top:0;border-top:0;text-align:center;font-size:10px;line-height:1.5}.thermal-paper .ticket-company-name{display:block!important;width:100%;margin:0 0 7px;text-align:center!important;font-size:17px;font-weight:800;line-height:1.2}.route-section{border-top:0;padding-top:8px;margin-top:0}.ticket-small-label{display:block;margin-bottom:3px;font-size:9px;font-weight:600;line-height:1.3;text-transform:uppercase;letter-spacing:.04em}.ticket-place+.ticket-place{margin-top:9px}.ticket-place strong{display:block;font-size:14px;font-weight:700;line-height:1.25}.ticket-place--destination strong{font-size:18px;font-weight:800}.ticket-trip-id{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-top:9px;font-size:10px}.ticket-trip-id span{font-weight:500}.ticket-trip-id strong{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.ticket-schedule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px;align-items:start}.ticket-schedule-item{min-width:0}.ticket-schedule-item strong{display:block;font-size:12px;line-height:1.3;font-variant-numeric:tabular-nums}.ticket-schedule-item .ticket-departure-time{font-size:23px;font-weight:800;line-height:1}.ticket-vehicle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ticket-vehicle-grid strong{display:block;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}.ticket-seat-list{display:flex;flex-wrap:wrap;gap:6px}.ticket-seat-number{display:grid;place-items:center;min-width:36px;min-height:30px;padding:3px 7px;color:#000;border:1px solid #000;border-radius:4px;font-size:17px;line-height:1;font-variant-numeric:tabular-nums}.ticket-empty-seats{font-size:10px}.fare-section{margin-top:0;padding-top:7px;border-top:0}.fare-table{width:100%;table-layout:auto;border-collapse:collapse;font-size:11px}.fare-table th{border-bottom:1px solid #000;padding:0 3px 5px 0;font-size:9px;font-weight:700;text-align:left}.fare-table td{border-bottom:0;padding:6px 3px 0 0;text-align:left;overflow-wrap:anywhere}.fare-table .fare-quantity{text-align:center;white-space:nowrap}.fare-table .fare-amount{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.fare-table th:last-child,.fare-table td:last-child{padding-right:0}.total-section{border-top:2px solid #000;padding-top:9px;margin-top:11px}.total-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.total-row>strong{font-size:12px;font-weight:800;text-transform:uppercase}.total-row>span{flex-shrink:0;font-size:23px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}.ticket-reference-section{padding-top:7px;margin-top:0;border-top:0}.ticket-reference-row{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:3px 10px}.ticket-reference-row>span{font-size:10px}.ticket-reference-row>strong{min-width:0;max-width:100%;font-size:11px;text-align:right;overflow-wrap:anywhere}.ticket-reference-number{font-family:'Courier New',monospace;font-variant-numeric:tabular-nums}.qr-section{padding-top:12px;margin-top:10px;border-top:0}.qr-wrapper{max-width:100%;background:#fff}.qr-image{display:block;max-width:100%;height:auto;border:0;background:#fff}.footer-section{padding-top:8px;margin-top:9px;text-align:center;font-size:9px;line-height:1.5}.ticket-copy-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.ticket-reprint{text-align:center;font-size:11px;text-transform:uppercase;margin-top:8px}
   </style></head><body>${markup}<script>setTimeout(() => { window.print(); window.close(); }, 300);<\/script></body></html>`;
 }
