@@ -24,7 +24,7 @@
             <v-col cols="12" md="6"><v-text-field v-model.trim="formItem.serial" label="Número de serie" placeholder="Serie del fabricante" prepend-inner-icon="mdi-barcode" variant="outlined" density="comfortable" :rules="serialRules" clearable /></v-col>
           </v-row>
 
-          <div class="form-section-label form-section-label--spaced">Vehículos del dispositivo</div>
+          <div class="form-section-label form-section-label--spaced">Vehículos del dispositivo (OPCIONAL)</div>
           <section class="vehicle-association-panel">
             <div class="association-heading">
               <div class="association-heading-icon"><v-icon size="19">mdi-bus</v-icon></div>

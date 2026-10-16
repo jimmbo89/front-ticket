@@ -608,7 +608,7 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showTicketDialog" max-width="500" persistent>
+  <v-dialog v-model="showTicketDialog" max-width="420" persistent>
     <v-card class="ticket-preview-dialog ticket-print-card">
       <div class="ticket-confirm-heading">
         <span class="ticket-confirm-icon ticket-confirm-icon--preview"><v-icon size="22">mdi-ticket-confirmation-outline</v-icon></span>
@@ -646,8 +646,8 @@
           </div>
         </div>
 
-        <v-btn icon @click="printTicket" class="ticket-print-button" title="Imprimir">
-          <v-icon>mdi-printer</v-icon>
+        <v-btn icon="mdi-printer" variant="tonal" color="primary" size="small" @click="printTicket"
+          class="ticket-print-button" title="Reimprimir ticket" aria-label="Reimprimir ticket">
         </v-btn>
       </v-card-title>
 
@@ -4185,12 +4185,16 @@ export default {
 
 .ticket-print-header {
   position: relative;
+  min-height: 56px;
+  padding: 8px 64px 8px 16px;
 }
 
 .ticket-print-button {
   position: absolute;
   right: 16px;
-  top: 16px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
 }
 
 .ticket-branch-logo-preview {
