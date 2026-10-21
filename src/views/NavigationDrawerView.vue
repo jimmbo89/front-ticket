@@ -188,7 +188,7 @@ export default {
         title: "Plantillas de tickets",
         to: "ticket-template",
         permission: "view_tickettemplates",
-      },
+        },
     ],
 
     tickets: [
