@@ -187,12 +187,7 @@ export default {
         icon: "mdi-ticket-percent-outline",
         title: "Plantillas de tickets",
         to: "ticket-template",
-        permission: [
-          "view_tickets",
-          "view_tickets_company",
-          "view_tickettemplates",
-          "view_tickettemplates_company",
-        ],
+        permission: "view_tickettemplates",
       },
     ],
 
