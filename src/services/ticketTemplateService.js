@@ -71,6 +71,7 @@ export function getTicketTemplatesForSaleMode(saleModes, saleMode) {
 
 export function ticketTemplateTripTypeLabel(value) {
   const normalized = normalizeTripType(value);
+  if (normalized === 'system') return 'Sistema';
   return ticketTemplateTripTypes.find((option) => option.value === normalized)?.title || value || '—';
 }
 
@@ -379,6 +380,55 @@ const ticketTemplateService = {
       templates: templatesFromResponse(result.data),
       saleModes: saleModesFromResponse(result.data),
     };
+  },
+
+  /**
+   * Load the global system ticket template.
+   * The endpoint returns a single template, sometimes keyed by its ID.
+   */
+  async getSystemTemplate() {
+    const result = await handleRequest({
+      endpoint: 'get-system-ticket-template',
+      method: 'POST',
+      data: {},
+    });
+
+    if ([204, 404].includes(Number(result?.status)) || (!result?.success && result?.message === 'No encontrado.')) {
+      return null;
+    }
+
+    throwRequestError(result, 'No fue posible cargar la plantilla de ticket por defecto.');
+    const source = result.data?.ticketTemplate
+      ?? result.data?.template
+      ?? result.data;
+    const templates = normalizeTicketTemplates(
+      source && typeof source === 'object' && !Array.isArray(source)
+        && ('id' in source || 'name' in source || 'trip_type' in source)
+        ? [source]
+        : source,
+    );
+
+    return templates.find((template) => normalizeTripType(template.tripType) === 'system')
+      || templates[0]
+      || null;
+  },
+
+  /**
+   * Create the single global system ticket template.
+   * The backend rejects duplicate global templates with HTTP 409.
+   */
+  async createSystemTemplate(templateData = {}) {
+    const result = await handleRequest({
+      endpoint: 'system-ticket-template',
+      method: 'POST',
+      data: {
+        name: String(templateData.name || '').trim(),
+        config: parseTicketTemplateConfig(templateData.config),
+      },
+    });
+
+    throwRequestError(result, 'No fue posible crear la plantilla de ticket por defecto.');
+    return ticketTemplateFromResponse(result.data);
   },
 
   /**

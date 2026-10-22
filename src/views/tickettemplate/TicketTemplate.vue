@@ -8,7 +8,7 @@
       </div>
     </v-snackbar>
 
-    <v-card class="busgo-page-header" elevation="0">
+    <v-card v-if="!systemOnly" class="busgo-page-header" elevation="0">
       <v-avatar :color="paleteColors.primary" class="busgo-page-icon">
         <v-icon>mdi-ticket-confirmation-outline</v-icon>
       </v-avatar>
@@ -28,7 +28,7 @@
       </v-btn>
     </v-card>
 
-    <v-container fluid class="busgo-container">
+    <v-container v-if="!systemOnly" fluid class="busgo-container">
       <v-card class="busgo-card" elevation="0">
         <div class="busgo-card-header">
           <div>
@@ -87,15 +87,15 @@
                       title="Ver configuración" aria-label="Ver configuración" @click="viewTemplate(item)" />
                     <v-btn icon="mdi-pencil-outline" variant="text" size="small" color="#2454d6"
                       title="Editar plantilla" aria-label="Editar plantilla" @click="editTemplate(item)" />
-                    <v-btn icon="mdi-content-copy" variant="text" size="small" color="#2454d6"
+                    <v-btn v-if="!isSystemTemplate(item)" icon="mdi-content-copy" variant="text" size="small" color="#2454d6"
                       title="Duplicar plantilla" aria-label="Duplicar plantilla" @click="duplicateTemplate(item)" />
-                    <v-btn variant="text" size="small" class="template-status-toggle"
+                    <v-btn v-if="!isSystemTemplate(item)" variant="text" size="small" class="template-status-toggle"
                       :color="item.status === 'active' ? '#16845b' : '#64748b'"
                       :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                       :aria-label="item.status === 'active' ? 'Desactivar' : 'Activar'" @click="toggleTemplateStatus(item)">
                       <v-icon size="28">{{ item.status === 'active' ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off' }}</v-icon>
                     </v-btn>
-                    <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
+                    <v-btn v-if="!isSystemTemplate(item)" icon="mdi-trash-can-outline" variant="text" size="small"
                       :color="isTemplateDefault(item) || isTemplateInUse(item) ? '#d97706' : '#dc2626'"
                       :title="deleteActionTitle(item)"
                       :aria-label="deleteActionTitle(item)" @click="confirmDelete(item)" />
@@ -123,7 +123,7 @@
             <span>Paso {{ ticketStep }} de {{ ticketSteps.length }}</span>
             <strong>{{ ticketSteps[ticketStep - 1].title }}</strong>
           </div>
-          <v-btn icon="mdi-close" variant="text" class="ticket-dialog-close"
+          <v-btn v-if="!systemOnly || draft.id" icon="mdi-close" variant="text" class="ticket-dialog-close"
             aria-label="Cerrar configuración" :disabled="saving" @click="cancelDialog" />
         </header>
 
@@ -159,19 +159,20 @@
                   <h2>Datos generales</h2>
                 </div>
                 <v-row>
-                  <v-col cols="12" md="6">
-                    <v-text-field v-model="draft.name" label="Nombre de la plantilla" prepend-inner-icon="mdi-text-box-outline"
-                      variant="outlined" density="compact" :rules="nameRules" hide-details="auto" />
-                  </v-col>
-                  <v-col cols="12" md="3">
-                    <v-select v-model="draft.tripType" :items="tripTypeOptions" label="Tipo de viaje"
+                   <v-col cols="12" :md="systemOnly ? 9 : 6">
+                     <v-text-field v-model="draft.name" label="Nombre de la plantilla" prepend-inner-icon="mdi-text-box-outline"
+                       variant="outlined" density="compact" :rules="nameRules" hide-details="auto" />
+                   </v-col>
+                   <v-col v-if="!systemOnly" cols="12" md="3">
+                     <v-select v-model="draft.tripType" :items="tripTypeEditorOptions" label="Tipo de viaje"
                       prepend-inner-icon="mdi-ticket-outline" variant="outlined" density="compact" hide-details="auto"
                       :loading="saleModesLoading"
                       :rules="[(value) => !!value || 'Selecciona el tipo de viaje']" />
                   </v-col>
-                  <v-col cols="12" md="3">
-                    <v-select v-model="draft.status" :items="statusOptionsLabels" label="Estado"
-                      prepend-inner-icon="mdi-toggle-switch-outline" variant="outlined" density="compact" hide-details="auto" />
+                   <v-col cols="12" md="3">
+                     <v-select v-model="draft.status" :items="statusOptionsLabels" label="Estado"
+                       prepend-inner-icon="mdi-toggle-switch-outline" variant="outlined" density="compact" hide-details="auto"
+                       :disabled="systemOnly || saving" />
                   </v-col>
                 </v-row>
               </section>
@@ -271,7 +272,7 @@
               </div>
 
               <footer class="ticket-dialog-actions">
-                <v-btn variant="flat" class="ticket-secondary-btn" :disabled="saving" @click="cancelDialog">
+                <v-btn v-if="!systemOnly || draft.id" variant="flat" class="ticket-secondary-btn" :disabled="saving" @click="cancelDialog">
                   {{ readOnly ? 'Cerrar' : 'Cancelar' }}
                 </v-btn>
                 <v-spacer />
@@ -294,7 +295,7 @@
               </div>
               <div class="ticket-preview-meta">
                 <strong>{{ draft.name.trim() || 'Nueva plantilla' }}</strong>
-                <div><BusgoChip color="#2454d6">{{ tripTypeLabel(draft.tripType) }}</BusgoChip>
+                 <div><BusgoChip v-if="!systemOnly" color="#2454d6">{{ tripTypeLabel(draft.tripType) }}</BusgoChip>
                   <BusgoChip :color="draft.status === 'active' ? '#16845b' : '#64748b'">
                     {{ draft.status === 'active' ? 'Activa' : 'Inactiva' }}
                   </BusgoChip>
@@ -432,6 +433,10 @@
             </aside>
           </v-form>
         </v-card-text>
+      </v-card>
+      <v-card v-else-if="systemOnly" class="ticket-dialog ticket-system-loading">
+        <v-progress-circular indeterminate :color="paleteColors.primary" size="42" />
+        <strong>Cargando plantilla de ticket por defecto...</strong>
       </v-card>
     </v-dialog>
 
@@ -591,6 +596,12 @@ import { getSaleModeColor } from '@/utils/saleMode';
 export default {
   name: 'TicketTemplateView',
   components: { BusgoChip },
+  props: {
+    systemOnly: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data: () => ({
     snackbar: false,
     sb_type: '',
@@ -741,6 +752,14 @@ export default {
     },
   },
   computed: {
+    tripTypeEditorOptions() {
+      const options = Array.isArray(this.tripTypeOptions) ? [...this.tripTypeOptions] : [];
+      const hasSystemOption = options.some((item) => String(item?.value || '').toLowerCase() === 'system');
+      if (this.isSystemTemplate(this.draft || {}) && !hasSystemOption) {
+        options.push({ title: 'Sistema', value: 'system' });
+      }
+      return options;
+    },
     ticketStepGroups() {
       return this.ticketStep === 1
         ? this.blockGroups.slice(0, 2)
@@ -794,6 +813,11 @@ export default {
       });
     },
     dialogTitle() {
+      if (this.systemOnly) {
+        return this.draft?.id
+          ? 'Editar plantilla de ticket por defecto'
+          : 'Nueva plantilla de ticket por defecto';
+      }
       if (this.readOnly) return 'Vista previa y configuración';
       return this.draft && this.draft.id ? 'Editar plantilla' : 'Nueva plantilla';
     },
@@ -849,7 +873,7 @@ export default {
     isDraftValid() {
       if (!this.draft) return false;
       const name = (this.draft.name || '').trim();
-      return name.length >= 3 && !!this.draft.tripType;
+      return this.systemOnly ? name.length >= 3 : name.length >= 3 && !!this.draft.tripType;
     },
     sortedTemplates() {
       const direction = this.templateSortOrder === 'desc' ? -1 : 1;
@@ -880,10 +904,19 @@ export default {
       return Object.values(this.invalidDefaultAssignments || {}).some((templateIds) => templateIds.length > 0);
     },
   },
+  created() {
+    if (this.systemOnly) {
+      this.dialog = true;
+    }
+  },
   mounted() {
     this.company_id = this.getStorageValue('business_id');
     this.ensureAccess();
-    this.loadTemplates({ includeSaleModes: true });
+    if (this.systemOnly) {
+      this.loadSystemTemplate();
+    } else {
+      this.loadTemplates({ includeSaleModes: true });
+    }
   },
   methods: {
     getStorageValue(key) {
@@ -896,11 +929,15 @@ export default {
       }
     },
     tripTypeLabel(value) {
+      if (String(value || '').trim().toLowerCase() === 'system') return 'Sistema';
       const option = this.tripTypeOptions.find((item) => item.value === value);
       return option?.title || ticketTemplateTripTypeLabel(value);
     },
     tripTypeColor(value) {
       return getSaleModeColor(value);
+    },
+    isSystemTemplate(template = {}) {
+      return String(template.tripType ?? template.trip_type ?? '').trim().toLowerCase() === 'system';
     },
     defaultTripTypeLabels(template = {}) {
       return Array.isArray(template.defaultTripTypes)
@@ -1028,7 +1065,7 @@ export default {
         .map((permission) => String(permission).trim())
         .filter(Boolean);
 
-      const allowedPermissions = ['*', 'ticket-template', 'ticket-template:*', 'ticket-template:read', 'ticket-template:write', 'tickets:read', 'tickets:write'];
+      const allowedPermissions = ['*', 'ticket-template', 'ticket-template:*', 'ticket-template:read', 'ticket-template:write', 'view_tickettemplates', 'view_system_ticket_template', 'tickets:read', 'tickets:write'];
       const hasAccess = normalized.length === 0 || normalized.some((permission) => allowedPermissions.includes(permission));
 
       if (!hasAccess) {
@@ -1136,6 +1173,14 @@ export default {
         config: this.cloneConfig(getDefaultTicketTemplateConfig()),
       };
     },
+    createSystemTemplateDraft() {
+      return {
+        ...this.createEmptyDraft(),
+        name: 'Plantilla global del sistema',
+        tripType: 'system',
+        status: 'active',
+      };
+    },
     resetDraftToTemplate(template) {
       this.draft = {
         ...template,
@@ -1179,6 +1224,31 @@ export default {
         if (shouldIncludeSaleModes) {
           this.saleModesLoading = false;
         }
+      }
+    },
+    async loadSystemTemplate() {
+      this.loading = true;
+      try {
+        const template = await ticketTemplateService.getSystemTemplate();
+        if (!template) {
+          this.readOnly = false;
+          this.ticketStep = 1;
+          this.selectedTemplate = null;
+          this.draft = this.createSystemTemplateDraft();
+          this.originalDraft = JSON.parse(JSON.stringify(this.draft));
+          this.dialog = true;
+          return;
+        }
+
+        this.readOnly = false;
+        this.ticketStep = 1;
+        this.selectedTemplate = template;
+        this.resetDraftToTemplate(template);
+        this.dialog = true;
+      } catch (error) {
+        this.showRequestError(error, 'No se pudo cargar la plantilla de ticket por defecto.', 3500);
+      } finally {
+        this.loading = false;
       }
     },
     initialize() {
@@ -1278,6 +1348,7 @@ export default {
       this.dialog = true;
     },
     async duplicateTemplate(item) {
+      if (this.isSystemTemplate(item)) return;
       try {
         const copied = await ticketTemplateService.duplicateTemplate(item, this.company_id);
         if (copied) {
@@ -1289,6 +1360,7 @@ export default {
       }
     },
     async toggleTemplateStatus(item) {
+      if (this.isSystemTemplate(item)) return;
       try {
         const nextStatus = item.status === 'active' ? 'inactive' : 'active';
         if (nextStatus === 'inactive' && this.isTemplateDefault(item)) {
@@ -1310,12 +1382,13 @@ export default {
       }
     },
     confirmDelete(item) {
+      if (this.isSystemTemplate(item)) return;
       this.selectedTemplate = item;
       this.selectedTemplateName = item.name;
       this.dialogDelete = true;
     },
     async deleteTemplateConfirmed() {
-      if (!this.selectedTemplate) return;
+      if (!this.selectedTemplate || this.isSystemTemplate(this.selectedTemplate)) return;
       if (!this.selectedTemplateCanDelete) {
         this.dialogDelete = false;
         this.showAlert(
@@ -1363,6 +1436,17 @@ export default {
     },
     cancelDialog() {
       if (this.saving || this.dialogConfirm) return;
+      if (this.systemOnly) {
+        if (!this.draft?.id) return;
+        const dirty = JSON.stringify(this.draft) !== JSON.stringify(this.originalDraft);
+        if (dirty) {
+          this.confirmationAction = 'discard';
+          this.dialogConfirm = true;
+          return;
+        }
+        this.$router.push({ name: 'TicketTemplates' });
+        return;
+      }
       if (this.readOnly) {
         this.dialog = false;
         return;
@@ -1391,14 +1475,20 @@ export default {
         this.dialog = false;
         this.draft = null;
         this.originalDraft = null;
+        if (this.systemOnly) {
+          this.dialogConfirm = false;
+          this.confirmationAction = '';
+          this.$router.push({ name: 'TicketTemplates' });
+          return;
+        }
       }
       this.dialogConfirm = false;
       this.confirmationAction = '';
     },
     async continueTicketStep() {
-      if (this.readOnly || this.saving || this.ticketStep >= this.ticketSteps.length) return;
+      if (this.saving || this.ticketStep >= this.ticketSteps.length) return;
 
-      if (this.ticketStep === 1) {
+      if (!this.readOnly && this.ticketStep === 1) {
         const validation = await this.$refs.ticketForm?.validate();
         if (!validation?.valid || !this.isDraftValid) {
           this.showAlert('warning', 'Completa el nombre y el tipo de viaje antes de continuar.', 3000);
@@ -1460,17 +1550,31 @@ export default {
 
         const saved = this.draft.id
           ? await ticketTemplateService.updateTemplate(payload)
-          : await ticketTemplateService.createTemplate(payload, this.company_id);
+          : this.systemOnly
+            ? await ticketTemplateService.createSystemTemplate({
+              name: trimmedName,
+              config: this.draft.config,
+            })
+            : await ticketTemplateService.createTemplate(payload, this.company_id);
 
         if (saved) {
           this.showAlert('success', 'Plantilla guardada correctamente.', 2500);
-          this.dialog = false;
-          await this.loadTemplates();
-          this.draft = null;
-          this.originalDraft = null;
+          if (this.systemOnly) {
+            this.selectedTemplate = saved;
+            this.resetDraftToTemplate(saved);
+            this.ticketStep = 1;
+          } else {
+            this.dialog = false;
+            await this.loadTemplates();
+            this.draft = null;
+            this.originalDraft = null;
+          }
         }
       } catch (error) {
         this.showRequestError(error, 'No se pudo guardar la plantilla.', 3000);
+        if (this.systemOnly && !this.draft?.id && Number(error?.status) === 409) {
+          await this.loadSystemTemplate();
+        }
       } finally {
         this.saving = false;
       }
@@ -1548,6 +1652,8 @@ export default {
 
 /* Nombres propios para evitar colisiones con los estilos globales de viajes. */
 .ticket-dialog { display:flex; flex-direction:column; min-height:0; height:100vh; height:100dvh; color:#1e293b; background:#f6f8fb; border-radius:0; }
+.ticket-system-loading { align-items:center; justify-content:center; gap:14px; text-align:center; }
+.ticket-system-loading strong { color:#334155; font-size:14px; font-weight:700; }
 .ticket-dialog-header { z-index:2; display:grid; flex:0 0 auto; grid-template-columns:minmax(0,1fr) auto 42px; align-items:center; gap:18px; min-height:72px; padding:11px 22px; color:#fff; background:radial-gradient(circle at 88% -40%,rgba(53,184,232,.38),transparent 230px),linear-gradient(110deg,#0e1f46,#173b8f 58%,#2454d6); box-shadow:0 5px 18px rgba(15,23,42,.18); }
 .ticket-dialog-heading { display:flex; align-items:center; gap:11px; min-width:0; }
 .ticket-dialog-heading > div:last-child { min-width:0; }

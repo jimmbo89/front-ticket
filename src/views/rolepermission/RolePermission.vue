@@ -44,7 +44,7 @@
             <v-autocomplete v-model="editedItem.permission_ids" :items="permissions" item-title="name" item-value="id"
               label="Permiso" placeholder="Busca por nombre o módulo" prepend-inner-icon="mdi-shield-search-outline"
               variant="outlined" density="comfortable" :rules="selectRules" no-data-text="No hay permisos disponibles"
-              multiple chips closable-chips
+              multiple chips closable-chips hide-selected
               :menu-props="{ maxHeight: 420, minWidth: 540, contentClass: 'permission-menu' }">
               <template #item="{ props, item }">
                 <v-list-item
