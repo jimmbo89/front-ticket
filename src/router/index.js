@@ -192,14 +192,22 @@ const routes = [
             /* webpackChunkName: "home" */ "@/views/triptemplate/TripTemplate.vue"
           ),
       },
-     {
-       path: "/ticket-template",
-       name: "TicketTemplates",
-       component: () =>
-         import(
-           /* webpackChunkName: "home" */ "@/views/tickettemplate/TicketTemplate.vue"
-         ),
-     },
+      {
+        path: "/ticket-template",
+        name: "TicketTemplates",
+        component: () =>
+          import(
+            /* webpackChunkName: "home" */ "@/views/tickettemplate/TicketTemplate.vue"
+          ),
+      },
+      {
+        path: "/system-ticket-template",
+        name: "SystemTicketTemplate",
+        component: () =>
+          import(
+            /* webpackChunkName: "home" */ "@/views/tickettemplate/SystemTicketTemplate.vue"
+          ),
+      },
    ],
  },
 ];

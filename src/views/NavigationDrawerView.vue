@@ -189,6 +189,12 @@ export default {
         to: "ticket-template",
         permission: "view_tickettemplates",
       },
+      {
+        icon: "mdi-star-settings-outline",
+        title: "Plantilla de ticket por defecto",
+        to: "system-ticket-template",
+        permission: "view_system_ticket_template",
+      },
     ],
 
     tickets: [
@@ -228,12 +234,12 @@ export default {
         to: "ticket",
         permission: ["view_tickets", "view_tickets_company"],
       },
-      {
+      /*{
         title: "Recaudación",
         icon: "mdi-cash-multiple",
         to: "ticketdate",
         permission: ["view_ticketsdate", "view_ticketsdate_company"],
-      },
+      },*/
       {
         title: "Recaudación por Trabajador",
         icon: "mdi-account-cash-outline",
