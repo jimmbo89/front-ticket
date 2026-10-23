@@ -396,7 +396,7 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-calendar-clock</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="6">
                     <v-select
                       v-model="editedItem.recurrence_pattern"
                       :items="frequencyOptions"
@@ -445,7 +445,7 @@
                     </v-select>
                   </v-col>
 
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="6">
                     <v-text-field
                       v-model="editedItem.duration"
                       label="Duración (minutos)"
@@ -456,7 +456,7 @@
                     />
                   </v-col>
 
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" sm="6" md="6">
                     <v-select
                       v-model="editedItem.saleMode"
                       :items="saleModes"
@@ -468,9 +468,42 @@
                       variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      @update:model-value="onTemplateSaleModeChange"
                     >
                       <template #selection="{ item }">
                         <SaleModeChip :value="item.raw?.id || editedItem.saleMode" />
+                      </template>
+                    </v-select>
+                  </v-col>
+
+                  <v-col cols="12" sm="6" md="6">
+                    <v-select
+                      :model-value="ticketTemplateSelection[0] ?? null"
+                      :items="ticketTemplates"
+                      item-title="name"
+                      item-value="id"
+                      label="Plantilla de ticket"
+                      placeholder="Selecciona una plantilla o usa la predeterminada"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      variant="outlined"
+                      density="compact"
+                      clearable
+                      no-data-text="No hay plantillas de tickets activas."
+                      :disabled="loading"
+                      :loading="loading"
+                      @update:model-value="onTemplateTicketTemplateChange"
+                    >
+                      <template #selection="{ item }">
+                        <v-chip size="small" color="#2454d6" variant="tonal">
+                          {{ item.raw?.name || item.title }}
+                        </v-chip>
+                      </template>
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
+                          <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
+                          <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
+                        </v-list-item>
                       </template>
                     </v-select>
                   </v-col>
@@ -848,11 +881,12 @@
                                         ? paleteColors.green
                                         : paleteColors.grey
                                     "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTemplateStopIncludedChange"
+                                     density="compact"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     :disabled="slotProps.item.active === false"
+                                     @update:modelValue="onTemplateStopIncludedChange"
                                   />
 
                                   <span
@@ -1453,6 +1487,11 @@ import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
+  getTicketTemplatesForSaleMode,
+  isTicketTemplateCompatibleWithTripType,
+  ticketTemplateTripTypeLabel,
+} from "@/services/ticketTemplateService";
+import {
   getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
@@ -1481,6 +1520,9 @@ export default {
     workers: [],
     branches: [],
     saleModes: [{ id: "normal", name: "Venta Full" }],
+    ticketTemplates: [],
+    ticketTemplateSelection: [],
+    ticketTemplateSelectionManual: false,
     filteredWorkers: [],
     templateStopRows: [],
     templateFareRows: [],
@@ -1567,6 +1609,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1582,6 +1625,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1598,6 +1642,7 @@ export default {
       days_of_week: "",
       active: true,
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1857,38 +1902,257 @@ export default {
         this.editedItem.saleMode = this.getDefaultSaleMode();
       }
     },
+    ticketTemplateOptionSubtitle(template = {}) {
+      const defaults = Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length
+        ? `Predeterminada para: ${template.defaultTripTypes.map(ticketTemplateTripTypeLabel).join(", ")}`
+        : `Tipo: ${ticketTemplateTripTypeLabel(template.tripType)}`;
+      return `${defaults} · Activa`;
+    },
+    syncTemplateTicketTemplatesWithSaleMode() {
+      this.ticketTemplates = getTicketTemplatesForSaleMode(this.saleModes, this.editedItem.saleMode);
+    },
+    isDefaultTicketTemplate(template = {}) {
+      const defaultTemplate = this.ticketTemplates[0];
+      return String(defaultTemplate?.id) === String(template.id);
+    },
+    applyDefaultTemplateTicketTemplate() {
+      const defaultTemplate = this.ticketTemplates[0];
+      const id = defaultTemplate?.id ?? null;
+      this.ticketTemplateSelectionManual = false;
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+    },
+    syncTemplateTicketTemplateWithSaleMode() {
+      const currentTemplate = this.ticketTemplates.find(
+        (template) => String(template.id) === String(this.editedItem.ticket_template_id),
+      );
+
+      if (isTicketTemplateCompatibleWithTripType(currentTemplate, this.editedItem.saleMode)) {
+        return;
+      }
+
+      this.applyDefaultTemplateTicketTemplate();
+    },
+    ensureTemplateTicketTemplateSelection({ useDefault = false } = {}) {
+      if (useDefault) this.ticketTemplateSelectionManual = false;
+
+      if (!useDefault && this.editedItem.ticket_template_id !== null && this.editedItem.ticket_template_id !== undefined && this.editedItem.ticket_template_id !== "") {
+        this.ticketTemplateSelection = [this.editedItem.ticket_template_id];
+        this.ticketTemplateSelectionManual = true;
+        return;
+      }
+
+      if (!this.ticketTemplateSelectionManual) this.applyDefaultTemplateTicketTemplate();
+    },
+    normalizeTemplateBoolean(value, fallback = false) {
+      if (value === undefined || value === null || value === "") {
+        return fallback;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+
+        if (["false", "0", "no", "inactive", "inactivo"].includes(normalized)) {
+          return false;
+        }
+
+        if (["true", "1", "yes", "active", "activo"].includes(normalized)) {
+          return true;
+        }
+      }
+
+      return Boolean(value);
+    },
+    getTemplateFareSegmentStopId(segment, side) {
+      const nestedStop = side === "origin"
+        ? segment?.originRouteStop ?? segment?.origin_route_stop
+        : segment?.destinationRouteStop ?? segment?.destination_route_stop;
+
+      return segment?.[`${side}_route_stop_id`]
+        ?? segment?.[`${side}RouteStopId`]
+        ?? nestedStop?.id
+        ?? nestedStop?.route_stop_id
+        ?? null;
+    },
+    isTemplateFareSegmentEligible(segment, tripStops = this.templateStopRows) {
+      const selectedRouteId = this.editedItem.route_id ?? this.getSelectedRouteRecord()?.id;
+      const segmentRouteId = segment?.route_id ?? segment?.routeId;
+      if (
+        segmentRouteId !== undefined &&
+        segmentRouteId !== null &&
+        selectedRouteId !== undefined &&
+        selectedRouteId !== null &&
+        Number(segmentRouteId) !== Number(selectedRouteId)
+      ) {
+        return false;
+      }
+
+      if (!this.normalizeTemplateBoolean(
+        segment?.active ?? segment?.is_active ?? segment?.isActive,
+        true
+      )) {
+        return false;
+      }
+
+      const includedStops = (Array.isArray(tripStops) ? tripStops : [])
+        .filter((stop) => stop?.included && stop?.active !== false);
+      const stopIds = includedStops.map((stop) => Number(stop.route_stop_id));
+      if (new Set(stopIds).size !== stopIds.length) {
+        return false;
+      }
+
+      const originId = Number(this.getTemplateFareSegmentStopId(segment, "origin"));
+      const destinationId = Number(this.getTemplateFareSegmentStopId(segment, "destination"));
+      if (!Number.isFinite(originId) || !Number.isFinite(destinationId) || originId === destinationId) {
+        return false;
+      }
+
+      const originStop = includedStops.find((stop) => Number(stop.route_stop_id) === originId);
+      const destinationStop = includedStops.find((stop) => Number(stop.route_stop_id) === destinationId);
+      if (!originStop || !destinationStop) {
+        return false;
+      }
+
+      return Number(originStop.stop_order) < Number(destinationStop.stop_order);
+    },
+    onTemplateSaleModeChange() {
+      this.syncTemplateTicketTemplatesWithSaleMode();
+      this.syncTemplateTicketTemplateWithSaleMode();
+    },
+    onTemplateTicketTemplateChange(selection) {
+      const ids = Array.isArray(selection)
+        ? selection
+        : selection === null || selection === undefined || selection === ""
+          ? []
+          : [selection];
+      const id = ids.length ? ids[ids.length - 1] : null;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelectionManual = id !== null;
+    },
     parseTemplateStops(value) {
-      if (Array.isArray(value)) return value;
-      if (!value) return [];
+      let parsedValue = value;
+
       if (typeof value === "string") {
         try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [];
+          parsedValue = JSON.parse(value);
         } catch (error) {
           return [];
         }
       }
-      return [];
+
+      if (!Array.isArray(parsedValue)) return [];
+
+      return parsedValue.map((stop) => {
+        const nestedRouteStop = stop?.routeStop ?? stop?.route_stop ?? {};
+        const routeStopId =
+          stop?.route_stop_id ??
+          stop?.routeStopId ??
+          nestedRouteStop?.id ??
+          nestedRouteStop?.route_stop_id;
+
+        return {
+          ...stop,
+          ...(routeStopId !== undefined && routeStopId !== null
+            ? { route_stop_id: routeStopId }
+            : {}),
+          ...(stop?.can_board !== undefined || stop?.canBoard !== undefined
+            ? {
+                can_board: this.normalizeTemplateBoolean(
+                  stop.can_board ?? stop.canBoard,
+                  true
+                ),
+              }
+            : {}),
+          ...(stop?.can_alight !== undefined || stop?.canAlight !== undefined
+            ? {
+                can_alight: this.normalizeTemplateBoolean(
+                  stop.can_alight ?? stop.canAlight,
+                  true
+                ),
+              }
+            : {}),
+          ...(stop?.active !== undefined ||
+          stop?.is_active !== undefined ||
+          stop?.isActive !== undefined
+            ? {
+                active: this.normalizeTemplateBoolean(
+                  stop.active ?? stop.is_active ?? stop.isActive,
+                  true
+                ),
+              }
+            : {}),
+        };
+      });
     },
     buildTemplateStopRows(route = null, tripStops = [], forceIncludeAll = false) {
       const selectedRoute = route || this.getSelectedRouteRecord();
-      const routeStops = Array.isArray(selectedRoute?.routeStops)
+      const rawRouteStops = Array.isArray(selectedRoute?.routeStops)
         ? selectedRoute.routeStops
         : [];
+      const seenRouteStopIds = new Set();
+      const routeStops = rawRouteStops.filter((routeStop) => {
+        const routeStopId = Number(routeStop?.id ?? routeStop?.route_stop_id ?? routeStop?.routeStopId);
+        if (!Number.isFinite(routeStopId) || seenRouteStopIds.has(routeStopId)) {
+          return false;
+        }
+        seenRouteStopIds.add(routeStopId);
+        return true;
+      });
       const stopMap = new Map(
-        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
-          Number(stop.route_stop_id),
-          stop,
-        ])
+        (Array.isArray(tripStops) ? tripStops : [])
+          .map((stop) => {
+            const nestedRouteStop = stop?.routeStop ?? stop?.route_stop ?? {};
+            const routeStopId =
+              stop?.route_stop_id ??
+              stop?.routeStopId ??
+              nestedRouteStop?.id ??
+              nestedRouteStop?.route_stop_id;
+
+            return [Number(routeStopId), stop];
+          })
+          .filter(([routeStopId]) => Number.isFinite(routeStopId))
       );
 
       return routeStops.map((routeStop) => {
-        const existingStop = stopMap.get(Number(routeStop.id));
-        const included = forceIncludeAll ? true : !!existingStop;
+        const routeStopId =
+          routeStop.id ?? routeStop.route_stop_id ?? routeStop.routeStopId;
+        const existingStop = stopMap.get(Number(routeStopId));
+
+        const existingCanBoard =
+          existingStop?.can_board ??
+          existingStop?.canBoard ??
+          existingStop?.allows_boarding;
+        const existingCanAlight =
+          existingStop?.can_alight ??
+          existingStop?.canAlight ??
+          existingStop?.allows_alighting;
+        const existingActive =
+          existingStop?.active ??
+          existingStop?.is_active ??
+          existingStop?.isActive;
+        const routeCanBoard =
+          routeStop.allows_boarding ?? routeStop.allowsBoarding ?? routeStop.can_board;
+        const routeCanAlight =
+          routeStop.allows_alighting ?? routeStop.allowsAlighting ?? routeStop.can_alight;
+        const routeActive =
+          routeStop.active ?? routeStop.is_active ?? routeStop.isActive;
+        const normalizedRouteActive = this.normalizeTemplateBoolean(routeActive, true);
+        const normalizedExistingActive = this.normalizeTemplateBoolean(
+          existingActive,
+          normalizedRouteActive
+        );
+        const existingIncluded = this.normalizeTemplateBoolean(
+          existingStop?.included ?? existingStop?.is_included ?? existingStop?.isIncluded,
+          true
+        );
+        const included = normalizedExistingActive && normalizedRouteActive && (
+          forceIncludeAll ? true : existingStop ? existingIncluded : false
+        );
 
         return {
           id: existingStop?.id || "",
-          route_stop_id: routeStop.id,
+          route_stop_id: routeStopId,
           location_id: routeStop.location_id || routeStop.locationId || "",
           companyName: routeStop.companyName || "",
           routeName: routeStop.routeName || "",
@@ -1896,9 +2160,18 @@ export default {
           distance_km: routeStop.distance_km ?? routeStop.distanceKm ?? 0,
           minutes_from_origin:
             routeStop.minutes_from_origin ?? routeStop.minutesFromOrigin ?? 0,
-          can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
-          can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
-          active: existingStop?.active ?? routeStop.active ?? true,
+          can_board: this.normalizeTemplateBoolean(
+            existingCanBoard,
+            this.normalizeTemplateBoolean(routeCanBoard, true)
+          ),
+          can_alight: this.normalizeTemplateBoolean(
+            existingCanAlight,
+            this.normalizeTemplateBoolean(routeCanAlight, true)
+          ),
+          active: this.normalizeTemplateBoolean(
+            normalizedExistingActive && normalizedRouteActive,
+            false
+          ),
           included,
           locationName: routeStop.locationName || routeStop.address || "",
           locationCity: routeStop.locationCity || "",
@@ -1909,17 +2182,35 @@ export default {
       });
     },
     parseTemplateFares(value) {
-      if (Array.isArray(value)) return value;
-      if (!value) return [];
+      let parsedValue = value;
+
       if (typeof value === "string") {
         try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [];
+          parsedValue = JSON.parse(value);
         } catch (error) {
           return [];
         }
       }
-      return [];
+
+      if (!Array.isArray(parsedValue)) return [];
+
+      return parsedValue.map((fare) => ({
+        ...fare,
+        ...(fare?.fare_segment_ticket_type_id === undefined &&
+        fare?.fareSegmentTicketTypeId !== undefined
+          ? { fare_segment_ticket_type_id: fare.fareSegmentTicketTypeId }
+          : {}),
+        ...(fare?.active !== undefined ||
+        fare?.is_active !== undefined ||
+        fare?.isActive !== undefined
+          ? {
+              active: this.normalizeTemplateBoolean(
+                fare.active ?? fare.is_active ?? fare.isActive,
+                true
+              ),
+            }
+          : {}),
+      }));
     },
     buildTemplateFareRows(route = null, tripFares = [], forceIncludeAll = false) {
       const selectedRoute = route || this.getSelectedRouteRecord();
@@ -1930,13 +2221,26 @@ export default {
         : [];
 
       const fareMap = new Map(
-        (Array.isArray(tripFares) ? tripFares : []).map((fare) => [
-          Number(fare.fare_segment_ticket_type_id ?? fare.fareSegmentTicketTypeId),
-          fare,
-        ])
+        (Array.isArray(tripFares) ? tripFares : [])
+          .map((fare) => {
+            const fareSegmentTicketType =
+              fare?.fareSegmentTicketType ?? fare?.fare_segment_ticket_type ?? {};
+            const fareSegmentTicketTypeId =
+              fare?.fare_segment_ticket_type_id ??
+              fare?.fareSegmentTicketTypeId ??
+              fare?.ticket_type_id ??
+              fareSegmentTicketType?.id;
+
+            return [Number(fareSegmentTicketTypeId), fare];
+          })
+          .filter(([fareSegmentTicketTypeId]) =>
+            Number.isFinite(fareSegmentTicketTypeId)
+          )
       );
 
-      return fareSegments.map((segment) => {
+      return fareSegments
+        .filter((segment) => this.isTemplateFareSegmentEligible(segment))
+        .map((segment) => {
         const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
         const destinationStop =
           segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
@@ -1955,19 +2259,33 @@ export default {
             destinationStop?.location || destinationStop || segment.destinationStop
           ),
           fareSegmentTicketTypes: ticketTypes.map((ticketType) => {
-            const existingFare = fareMap.get(Number(ticketType.id));
+            const ticketTypeId =
+              ticketType.id ??
+              ticketType.fare_segment_ticket_type_id ??
+              ticketType.fareSegmentTicketTypeId;
+            const existingFare = fareMap.get(Number(ticketTypeId));
+            const existingFareActive =
+              existingFare?.active ??
+              existingFare?.is_active ??
+              existingFare?.isActive;
             const routeActive =
               ticketType.active ??
+              ticketType.is_active ??
+              ticketType.isActive ??
               ticketType.ticketTypeActive ??
               ticketType.ticketType?.active ??
+              ticketType.ticket_type?.active ??
               false;
 
             return {
               id: existingFare?.id || "",
-              fare_segment_ticket_type_id: ticketType.id,
+              fare_segment_ticket_type_id: ticketTypeId,
               price:
                 existingFare?.price ?? ticketType.base_price ?? ticketType.basePrice ?? 0,
-              active: existingFare?.active ?? routeActive,
+              active: this.normalizeTemplateBoolean(
+                existingFareActive,
+                this.normalizeTemplateBoolean(routeActive, false)
+              ),
               source_type: existingFare?.source_type || "auto",
               ticketTypeName:
                 ticketType.ticketTypeName ||
@@ -1976,9 +2294,9 @@ export default {
                 "",
             };
           }),
-          included: forceIncludeAll || true,
-        };
-      });
+          included: true,
+          };
+        });
     },
     templateFareTicketTypeKey(ticketType, index) {
       return ticketType.id || ticketType.fare_segment_ticket_type_id || index;
@@ -2020,7 +2338,9 @@ export default {
     normalizeTemplateFaresPayload(rows = []) {
       const payload = [];
 
-      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+      (Array.isArray(rows) ? rows : [])
+        .filter((segment) => this.isTemplateFareSegmentEligible(segment))
+        .forEach((segment) => {
         (Array.isArray(segment.fareSegmentTicketTypes)
           ? segment.fareSegmentTicketTypes
           : []
@@ -2038,7 +2358,7 @@ export default {
           const item = {
             fare_segment_ticket_type_id: fareSegmentTicketTypeId,
             price: Number(ticketType.price) || 0,
-            active: ticketType.active ?? true,
+            active: this.normalizeTemplateBoolean(ticketType.active, true),
             source_type: ticketType.source_type || (ticketType.id ? "manual" : "auto"),
           };
 
@@ -2047,7 +2367,7 @@ export default {
           }
 
           payload.push(item);
-        });
+          });
       });
 
       return payload.sort(
@@ -2087,13 +2407,13 @@ export default {
     },
     normalizeTemplateStopsPayload(rows = []) {
       return (Array.isArray(rows) ? rows : [])
-        .filter((row) => row.included)
+        .filter((row) => row.included && this.normalizeTemplateBoolean(row.active, true))
         .map((row) => ({
           route_stop_id: Number(row.route_stop_id),
           stop_order: Number(row.stop_order) || 1,
           can_board: !!row.can_board,
-          can_alight: !!row.can_alight,
-          active: row.active ?? true,
+          can_alight: this.normalizeTemplateBoolean(row.can_alight, false),
+          active: this.normalizeTemplateBoolean(row.active, true),
         }))
         .sort((a, b) => a.route_stop_id - b.route_stop_id);
     },
@@ -2104,9 +2424,14 @@ export default {
       );
     },
     onTemplateStopIncludedChange() {
+      this.templateStopRows = this.templateStopRows.map((row) =>
+        row.active === false ? { ...row, included: false } : row
+      );
+      this.syncTemplateFareRows();
       this.$forceUpdate();
     },
     onTemplateStopFieldChange() {
+      this.syncTemplateFareRows();
       this.$forceUpdate();
     },
     hasPermission(requiredPermissions) {
@@ -2409,6 +2734,8 @@ export default {
         schedule: this.getCurrentTime(),
       });
       this.originalItem = Object.assign({}, this.defaultItem);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.editedItem.branch_id = this.branch_id;
       await this.loadTripTemplateFormData(this.editedItem.branch_id, {
         resetSelections: true,
@@ -2424,6 +2751,8 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
@@ -2572,6 +2901,7 @@ export default {
           this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTemplateSaleMode({ useDefault: resetSelections });
+          this.syncTemplateTicketTemplatesWithSaleMode();
 
           if (resetSelections) {
             this.editedItem.route_id = "";
@@ -2582,18 +2912,29 @@ export default {
             this.expandedTemplateFareIds = [];
             this.estimated = 0;
             this.filteredWorkers = [];
+            this.editedItem.ticket_template_id = null;
+            this.ticketTemplateSelection = [];
+            this.ticketTemplateSelectionManual = false;
           } else {
             this.filterWorkers();
           }
+
+          this.ensureTemplateTicketTemplateSelection({ useDefault: resetSelections });
         } else {
           this.routes = [];
           this.vehicles = [];
+          this.ticketTemplates = [];
+          this.ticketTemplateSelection = [];
+          this.ticketTemplateSelectionManual = false;
           this.workers = [];
           this.filteredWorkers = [];
           this.saleModes = this.normalizeSaleModeOptions();
           this.ensureTemplateSaleMode();
         }
       } catch (error) {
+        this.ticketTemplates = [];
+        this.ticketTemplateSelection = [];
+        this.ticketTemplateSelectionManual = false;
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2609,6 +2950,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      this.syncTemplateTicketTemplateWithSaleMode();
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
@@ -2621,6 +2963,7 @@ export default {
           "days_of_week",
           "active",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2649,6 +2992,7 @@ export default {
           }, {});
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
+          updatedFields.ticket_template_id = this.editedItem.ticket_template_id ?? null;
           try {
             const result = await handleRequest({
               endpoint: "trip-template",
@@ -2690,6 +3034,7 @@ export default {
           "days_of_week",
           "active",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2773,6 +3118,10 @@ export default {
       this.step = 1;
       this.originalItem = _.cloneDeep(item);
       this.editedItem = _.cloneDeep(item);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = this.editedItem.ticket_template_id !== null
+        && this.editedItem.ticket_template_id !== undefined
+        && this.editedItem.ticket_template_id !== "";
       this.originalItem.saleMode = this.normalizeTemplateSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTemplateSaleMode(this.editedItem);
       this.originalItem.tripStops = this.parseTemplateStops(this.originalItem.tripStops);

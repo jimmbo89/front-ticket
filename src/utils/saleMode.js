@@ -1,7 +1,7 @@
 export const SALE_MODE_COLORS = Object.freeze({
   express: "#16845b",
   full: "#2454d6",
-  on_board: "#b45309",
+  on_board: "#7c3aed",
   web: "#0369a1",
 });
 

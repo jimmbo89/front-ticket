@@ -525,7 +525,7 @@
 
                 <div class="trip-form-section-title trip-form-section-title--schedule"><v-icon size="17">mdi-clock-outline</v-icon><span>Programación y venta</span></div>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <v-select
                       v-model="editedItem.saleMode"
                       :items="saleModes"
@@ -537,9 +537,42 @@
                       variant="outlined"
                       :rules="selectRules"
                       density="compact"
+                      @update:model-value="onTripSaleModeChange"
                     >
                       <template #selection="{ item }">
                         <SaleModeChip :value="item.raw?.id || editedItem.saleMode" />
+                      </template>
+                    </v-select>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-select
+                      :model-value="ticketTemplateSelection[0] ?? null"
+                      :items="ticketTemplates"
+                      item-title="name"
+                      item-value="id"
+                      label="Plantilla de ticket"
+                      placeholder="Selecciona una plantilla o usa la predeterminada"
+                      prepend-inner-icon="mdi-ticket-confirmation-outline"
+                      :menu-props="{ contentClass: 'trip-standard-menu' }"
+                      variant="outlined"
+                      density="compact"
+                      clearable
+                      no-data-text="No hay plantillas de tickets activas."
+                      :disabled="loading"
+                      :loading="loading"
+                      @update:model-value="onTripTicketTemplateChange"
+                    >
+                      <template #selection="{ item }">
+                        <v-chip size="small" color="#2454d6" variant="tonal">
+                          {{ item.raw?.name || item.title }}
+                        </v-chip>
+                      </template>
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" :title="item.raw.name" :subtitle="ticketTemplateOptionSubtitle(item.raw)">
+                          <template #prepend><v-icon color="primary">mdi-ticket-confirmation-outline</v-icon></template>
+                          <template #append><v-chip v-if="isDefaultTicketTemplate(item.raw)" size="x-small" color="success" variant="tonal">Predeterminada</v-chip></template>
+                        </v-list-item>
                       </template>
                     </v-select>
                   </v-col>
@@ -794,7 +827,7 @@
                                     variant="outlined"
                                     density="compact"
                                     hide-details
-                                    @update:modelValue="syncTripStopTimes"
+                                     @update:modelValue="onTripStopFieldChange"
                                   />
                                 </div>
 
@@ -833,9 +866,9 @@
                                   />
                                 </div>
 
-                                <div style="width: 11%; min-width: 0" class="d-flex justify-center">
-                                  <v-switch
-                                    v-model="slotProps.item.can_alight"
+                                 <div style="width: 11%; min-width: 0" class="d-flex justify-center">
+                                   <v-switch
+                                     v-model="slotProps.item.can_alight"
                                     :true-value="true"
                                     :false-value="false"
                                     :color="
@@ -848,11 +881,11 @@
                                         ? paleteColors.green
                                         : paleteColors.grey
                                     "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTripStopIncludedChange"
+                                     density="compact"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     @update:modelValue="onTripStopIncludedChange"
                                   />
                                 </div>
 
@@ -879,9 +912,9 @@
                                   />
                                 </div>
 
-                                <div style="width: 12%; min-width: 0" class="d-flex justify-center align-center">
-                                  <v-switch
-                                    v-model="slotProps.item.included"
+                                 <div style="width: 12%; min-width: 0" class="d-flex justify-center align-center">
+                                   <v-switch
+                                     v-model="slotProps.item.included"
                                     :true-value="true"
                                     :false-value="false"
                                     :color="
@@ -895,10 +928,11 @@
                                         : paleteColors.grey
                                     "
                                     density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTripStopIncludedChange"
+                                     hide-details
+                                     inset
+                                     class="custom-switch compact-inline-switch"
+                                     :disabled="slotProps.item.active === false"
+                                     @update:modelValue="onTripStopIncludedChange"
                                   />
 
                                   <span
@@ -1473,6 +1507,12 @@ import _ from "lodash";
 import BusgoChip from "@/components/BusgoChip.vue";
 import SaleModeChip from "@/components/SaleModeChip.vue";
 import {
+  getTicketTemplatesForSaleMode,
+  isTicketTemplateCompatibleWithTripType,
+  normalizeTripType,
+  ticketTemplateTripTypeLabel,
+} from "@/services/ticketTemplateService";
+import {
   getSaleModeLabel as getSharedSaleModeLabel,
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
@@ -1503,6 +1543,9 @@ export default {
     workers: [],
     branches: [],
     saleModes: [{ id: "normal", name: "Venta Full" }],
+    ticketTemplates: [],
+    ticketTemplateSelection: [],
+    ticketTemplateSelectionManual: false,
     filteredWorkers: [],
     tripStopRows: [],
     tripFareRows: [],
@@ -1568,6 +1611,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1583,6 +1627,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1598,6 +1643,7 @@ export default {
       start: "",
       end: "",
       saleMode: "normal",
+      ticket_template_id: null,
       workers: [],
       tripStops: [],
       tripFares: [],
@@ -1817,6 +1863,95 @@ export default {
         this.editedItem.saleMode = this.getDefaultSaleMode();
       }
     },
+    ticketTemplateOptionSubtitle(template = {}) {
+      const defaults = Array.isArray(template.defaultTripTypes) && template.defaultTripTypes.length
+        ? `Predeterminada para: ${template.defaultTripTypes.map(ticketTemplateTripTypeLabel).join(", ")}`
+        : `Tipo: ${ticketTemplateTripTypeLabel(template.tripType)}`;
+      return `${defaults} · Activa`;
+    },
+    isSystemTicketTemplate(template = {}) {
+      const source = template?.ticket_template
+        ?? template?.ticketTemplate
+        ?? template;
+      return normalizeTripType(source?.trip_type ?? source?.tripType) === "system";
+    },
+    syncTripTicketTemplatesWithSaleMode() {
+      this.ticketTemplates = getTicketTemplatesForSaleMode(this.saleModes, this.editedItem.saleMode);
+    },
+    isDefaultTicketTemplate(template = {}) {
+      const defaultTemplate = this.ticketTemplates[0];
+      return String(defaultTemplate?.id) === String(template.id);
+    },
+    applyDefaultTripTicketTemplate() {
+      const defaultTemplate = this.ticketTemplates[0];
+      const id = defaultTemplate?.id ?? null;
+      this.ticketTemplateSelectionManual = false;
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelection = id === null ? [] : [id];
+    },
+    syncTripTicketTemplateWithSaleMode() {
+      if (this.isSystemTicketTemplate(this.originalItem) && !this.ticketTemplateSelectionManual) {
+        return;
+      }
+
+      const currentTemplate = this.ticketTemplates.find(
+        (template) => String(template.id) === String(this.editedItem.ticket_template_id),
+      );
+
+      if (isTicketTemplateCompatibleWithTripType(currentTemplate, this.editedItem.saleMode)) {
+        return;
+      }
+
+      this.applyDefaultTripTicketTemplate();
+    },
+    ensureTripTicketTemplateSelection({ useDefault = false } = {}) {
+      if (useDefault) this.ticketTemplateSelectionManual = false;
+
+      if (!useDefault && this.isSystemTicketTemplate(this.originalItem)) {
+        this.ticketTemplateSelection = [];
+        this.ticketTemplateSelectionManual = false;
+        return;
+      }
+
+      if (!useDefault && this.editedItem.ticket_template_id !== null && this.editedItem.ticket_template_id !== undefined && this.editedItem.ticket_template_id !== "") {
+        this.ticketTemplateSelection = [this.editedItem.ticket_template_id];
+        this.ticketTemplateSelectionManual = true;
+        return;
+      }
+
+      if (!this.ticketTemplateSelectionManual) this.applyDefaultTripTicketTemplate();
+    },
+    onTripSaleModeChange() {
+      this.syncTripTicketTemplatesWithSaleMode();
+      this.syncTripTicketTemplateWithSaleMode();
+    },
+    onTripTicketTemplateChange(selection) {
+      const ids = Array.isArray(selection)
+        ? selection
+        : selection === null || selection === undefined || selection === ""
+          ? []
+          : [selection];
+      const id = ids.length ? ids[ids.length - 1] : null;
+
+      if (id === null) {
+        if (this.isSystemTicketTemplate(this.originalItem)) {
+          this.editedItem.ticket_template_id = this.originalItem.ticket_template_id;
+          this.ticketTemplateSelection = [];
+          this.ticketTemplateSelectionManual = false;
+          return;
+        }
+
+        const currentId = this.editedItem.ticket_template_id;
+        this.ticketTemplateSelection = currentId === null || currentId === undefined || currentId === ""
+          ? []
+          : [currentId];
+        return;
+      }
+
+      this.ticketTemplateSelection = id === null ? [] : [id];
+      this.editedItem.ticket_template_id = id;
+      this.ticketTemplateSelectionManual = id !== null;
+    },
     compareTrips(a, b) {
       const direction = this.tripSortOrder === "asc" ? 1 : -1;
       const aValue = this.getTripSortValue(a, this.tripSortBy);
@@ -1885,6 +2020,75 @@ export default {
 
       this.expandedTripFareIds = this.expandedTripFareIds[0] === itemId ? [] : [itemId];
     },
+    normalizeTripBoolean(value, fallback = false) {
+      if (value === undefined || value === null || value === "") {
+        return fallback;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (["false", "0", "no", "inactive", "inactivo"].includes(normalized)) {
+          return false;
+        }
+        if (["true", "1", "yes", "active", "activo"].includes(normalized)) {
+          return true;
+        }
+      }
+
+      return Boolean(value);
+    },
+    getTripFareSegmentStopId(segment, side) {
+      const nestedStop = side === "origin"
+        ? segment?.originRouteStop ?? segment?.origin_route_stop
+        : segment?.destinationRouteStop ?? segment?.destination_route_stop;
+
+      return segment?.[`${side}_route_stop_id`]
+        ?? segment?.[`${side}RouteStopId`]
+        ?? nestedStop?.id
+        ?? nestedStop?.route_stop_id
+        ?? null;
+    },
+    isTripFareSegmentEligible(segment, tripStops = this.tripStopRows) {
+      const selectedRouteId = this.editedItem.route_id ?? this.selectedRouteRecord?.id;
+      const segmentRouteId = segment?.route_id ?? segment?.routeId;
+      if (
+        segmentRouteId !== undefined &&
+        segmentRouteId !== null &&
+        selectedRouteId !== undefined &&
+        selectedRouteId !== null &&
+        Number(segmentRouteId) !== Number(selectedRouteId)
+      ) {
+        return false;
+      }
+
+      if (!this.normalizeTripBoolean(
+        segment?.active ?? segment?.is_active ?? segment?.isActive,
+        true
+      )) {
+        return false;
+      }
+
+      const includedStops = (Array.isArray(tripStops) ? tripStops : [])
+        .filter((stop) => stop?.included && stop?.active !== false);
+      const stopIds = includedStops.map((stop) => Number(stop.route_stop_id));
+      if (new Set(stopIds).size !== stopIds.length) {
+        return false;
+      }
+
+      const originId = Number(this.getTripFareSegmentStopId(segment, "origin"));
+      const destinationId = Number(this.getTripFareSegmentStopId(segment, "destination"));
+      if (!Number.isFinite(originId) || !Number.isFinite(destinationId) || originId === destinationId) {
+        return false;
+      }
+
+      const originStop = includedStops.find((stop) => Number(stop.route_stop_id) === originId);
+      const destinationStop = includedStops.find((stop) => Number(stop.route_stop_id) === destinationId);
+      if (!originStop || !destinationStop) {
+        return false;
+      }
+
+      return Number(originStop.stop_order) < Number(destinationStop.stop_order);
+    },
     buildTripFareRows(route = null, tripFares = [], forceIncludeAll = false) {
       const selectedRoute = route || this.selectedRouteRecord;
       const fareSegments = Array.isArray(selectedRoute?.fareSegments)
@@ -1900,7 +2104,9 @@ export default {
         ])
       );
 
-      return fareSegments.map((segment) => {
+      return fareSegments
+        .filter((segment) => this.isTripFareSegmentEligible(segment))
+        .map((segment) => {
         const originStop = segment.originRouteStop ?? segment.origin_route_stop ?? null;
         const destinationStop =
           segment.destinationRouteStop ?? segment.destination_route_stop ?? null;
@@ -1940,9 +2146,9 @@ export default {
                 "",
             };
           }),
-          included: forceIncludeAll || true,
-        };
-      });
+          included: true,
+          };
+        });
     },
     syncTripFareRows(forceIncludeAll = false) {
       const route = this.selectedRouteRecord;
@@ -1966,7 +2172,9 @@ export default {
     normalizeTripFaresPayload(rows = []) {
       const payload = [];
 
-      (Array.isArray(rows) ? rows : []).forEach((segment) => {
+      (Array.isArray(rows) ? rows : [])
+        .filter((segment) => this.isTripFareSegmentEligible(segment))
+        .forEach((segment) => {
         (Array.isArray(segment.fareSegmentTicketTypes)
           ? segment.fareSegmentTicketTypes
           : []
@@ -1993,7 +2201,7 @@ export default {
           }
 
           payload.push(item);
-        });
+          });
       });
 
       return payload.sort(
@@ -2109,23 +2317,54 @@ export default {
     },
     buildTripStopRows(route = null, tripStops = [], forceIncludeAll = false) {
       const selectedRoute = route || this.selectedRouteRecord;
-      const routeStops = Array.isArray(selectedRoute?.routeStops)
+      const rawRouteStops = Array.isArray(selectedRoute?.routeStops)
         ? selectedRoute.routeStops
         : [];
+      const seenRouteStopIds = new Set();
+      const routeStops = rawRouteStops.filter((routeStop) => {
+        const routeStopId = Number(routeStop?.id ?? routeStop?.route_stop_id ?? routeStop?.routeStopId);
+        if (!Number.isFinite(routeStopId) || seenRouteStopIds.has(routeStopId)) {
+          return false;
+        }
+        seenRouteStopIds.add(routeStopId);
+        return true;
+      });
       const stopMap = new Map(
-        (Array.isArray(tripStops) ? tripStops : []).map((stop) => [
-          Number(stop.route_stop_id),
-          stop,
-        ])
+        (Array.isArray(tripStops) ? tripStops : [])
+          .map((stop) => [
+            Number(
+              stop?.route_stop_id ??
+              stop?.routeStopId ??
+              stop?.routeStop?.id ??
+              stop?.route_stop?.id
+            ),
+            stop,
+          ])
+          .filter(([routeStopId]) => Number.isFinite(routeStopId))
       );
       const baseDateTime = this.getTripBaseDateTime();
 
       return routeStops.map((routeStop) => {
-        const existingStop = stopMap.get(Number(routeStop.id));
-        const included = forceIncludeAll ? true : !!existingStop;
+        const routeStopId = routeStop.id ?? routeStop.route_stop_id ?? routeStop.routeStopId;
+        const existingStop = stopMap.get(Number(routeStopId));
+        const routeActive = this.normalizeTripBoolean(
+          routeStop.active ?? routeStop.is_active ?? routeStop.isActive,
+          true
+        );
+        const existingActive = this.normalizeTripBoolean(
+          existingStop?.active ?? existingStop?.is_active ?? existingStop?.isActive,
+          routeActive
+        );
+        const existingIncluded = this.normalizeTripBoolean(
+          existingStop?.included ?? existingStop?.is_included ?? existingStop?.isIncluded,
+          true
+        );
+        const included = existingActive && routeActive && (
+          forceIncludeAll ? true : existingStop ? existingIncluded : false
+        );
         return {
           id: existingStop?.id || "",
-          route_stop_id: routeStop.id,
+          route_stop_id: routeStopId,
           location_id: routeStop.location_id || routeStop.locationId || "",
           companyName: routeStop.companyName || "",
           routeName: routeStop.routeName || "",
@@ -2144,7 +2383,7 @@ export default {
             ),
           can_board: existingStop?.can_board ?? routeStop.allows_boarding ?? true,
           can_alight: existingStop?.can_alight ?? routeStop.allows_alighting ?? true,
-          active: existingStop?.active ?? routeStop.active ?? true,
+          active: existingActive && routeActive,
           source_type: existingStop?.source_type || "auto",
           included,
           locationName: routeStop.locationName || routeStop.address || "",
@@ -2176,6 +2415,7 @@ export default {
     },
     syncTripStopTimes() {
       if (!Array.isArray(this.tripStopRows) || this.tripStopRows.length === 0) {
+        this.syncTripFareRows();
         return;
       }
 
@@ -2205,10 +2445,11 @@ export default {
               : this.formatTripStopDateTime(baseDateTime, minutesOffset + 5),
         };
       });
+      this.syncTripFareRows();
     },
     normalizeTripStopsPayload(rows = []) {
       return (Array.isArray(rows) ? rows : [])
-        .filter((row) => row.included)
+        .filter((row) => row.included && this.normalizeTripBoolean(row.active, true))
         .map((row) => {
           const payload = {
             route_stop_id: Number(row.route_stop_id),
@@ -2241,8 +2482,14 @@ export default {
       );
     },
     onTripStopIncludedChange() {
+      this.tripStopRows = this.tripStopRows.map((row) =>
+        row.active === false ? { ...row, included: false } : row
+      );
       this.syncTripStopTimes();
       this.$forceUpdate();
+    },
+    onTripStopFieldChange() {
+      this.syncTripStopTimes();
     },
     async showBranches() {
       try {
@@ -2366,6 +2613,7 @@ export default {
           this.workers = [];
           this.saleModes = this.normalizeSaleModeOptions(result.data?.saleModes);
           this.ensureTripSaleMode({ useDefault: resetSelections });
+          this.syncTripTicketTemplatesWithSaleMode();
 
           if (resetSelections) {
             this.editedItem.route_id = "";
@@ -2377,18 +2625,29 @@ export default {
             this.expandedTripFareIds = [];
             this.estimated = null;
             this.editedItem.arrival = null;
+            this.editedItem.ticket_template_id = null;
+            this.ticketTemplateSelection = [];
+            this.ticketTemplateSelectionManual = false;
           } else {
             this.filterWorkers();
           }
+
+          this.ensureTripTicketTemplateSelection({ useDefault: resetSelections });
         } else {
           this.routes = [];
           this.vehicles = [];
+          this.ticketTemplates = [];
+          this.ticketTemplateSelection = [];
+          this.ticketTemplateSelectionManual = false;
           this.workers = [];
           this.filteredWorkers = [];
           this.saleModes = this.normalizeSaleModeOptions();
           this.ensureTripSaleMode();
         }
       } catch (error) {
+        this.ticketTemplates = [];
+        this.ticketTemplateSelection = [];
+        this.ticketTemplateSelectionManual = false;
         this.showAlert(
           "error",
           "Ocurrió un error inesperado al procesar la solicitud.",
@@ -2415,6 +2674,8 @@ export default {
         schedule: this.getCurrentTime(),
       });
       this.originalItem = Object.assign({}, this.defaultItem);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.editedItem.branch_id = this.branch_id;
       await this.loadTripFormData(this.editedItem.branch_id, {
         resetSelections: true,
@@ -2429,6 +2690,8 @@ export default {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.originalItem = Object.assign({}, this.defaultItem);
       });
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = false;
       this.file = null;
       this.imgMiniatura = "";
       this.editedIndex = -1;
@@ -2569,6 +2832,7 @@ export default {
     },
     async save() {
       this.loading = true;
+      this.syncTripTicketTemplateWithSaleMode();
       if (this.editedIndex === -1) {
         this.valid = false;
         const fieldsToUpdate = [
@@ -2581,6 +2845,7 @@ export default {
           "start",
           "end",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2607,6 +2872,11 @@ export default {
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.date = this.editedItem.date ? this.editedItem.date : new Date();
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
+          if (this.editedItem.ticket_template_id !== null
+            && this.editedItem.ticket_template_id !== undefined
+            && this.editedItem.ticket_template_id !== "") {
+            updatedFields.ticket_template_id = this.editedItem.ticket_template_id;
+          }
           try {
             const result = await handleRequest({
               endpoint: "trip",
@@ -2648,6 +2918,7 @@ export default {
           "start",
           "end",
           "saleMode",
+          "ticket_template_id",
           "workers",
           "tripStops",
           "tripFares",
@@ -2677,6 +2948,11 @@ export default {
             }
             return obj;
           }, {});
+        if (updatedFields.ticket_template_id === null
+          || updatedFields.ticket_template_id === undefined
+          || updatedFields.ticket_template_id === "") {
+          delete updatedFields.ticket_template_id;
+        }
         if (Object.keys(updatedFields).length > 0) {
           updatedFields.id = this.editedItem.id;
           updatedFields.branch_id = this.editedItem.branch_id ?? this.branch_id;
@@ -2719,6 +2995,11 @@ export default {
       const trip = item?.raw || item;
       this.originalItem = _.cloneDeep(trip);
       this.editedItem = _.cloneDeep(trip);
+      this.ticketTemplateSelection = [];
+      this.ticketTemplateSelectionManual = !this.isSystemTicketTemplate(this.editedItem.ticket_template)
+        && this.editedItem.ticket_template_id !== null
+        && this.editedItem.ticket_template_id !== undefined
+        && this.editedItem.ticket_template_id !== "";
       this.originalItem.saleMode = this.normalizeTripSaleMode(this.originalItem);
       this.editedItem.saleMode = this.normalizeTripSaleMode(this.editedItem);
       this.originalItem.tripFares = Array.isArray(this.originalItem.tripFares)

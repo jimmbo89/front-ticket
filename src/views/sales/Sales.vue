@@ -608,7 +608,7 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showTicketDialog" max-width="500" persistent>
+  <v-dialog v-model="showTicketDialog" max-width="420" persistent>
     <v-card class="ticket-preview-dialog ticket-print-card">
       <div class="ticket-confirm-heading">
         <span class="ticket-confirm-icon ticket-confirm-icon--preview"><v-icon size="22">mdi-ticket-confirmation-outline</v-icon></span>
@@ -617,7 +617,7 @@
         <v-btn icon="mdi-close" variant="text" size="small" aria-label="Cerrar vista previa" @click="showTicketDialog = false" />
       </div>
       <v-card-title class="ticket-print-header">
-        <div class="d-flex flex-column align-center" style="width: 100%">
+        <div v-if="!ticketTemplateConfig" class="d-flex flex-column align-center" style="width: 100%">
           <div v-if="ticketCompanyImage" class="ticket-branch-logo-preview mb-3">
             <img :src="`${this.$axios.defaults.baseURL}images/${ticketCompanyImage}`" :alt="ticketCompanyName"
               class="ticket-branch-logo-preview__img" />
@@ -646,12 +646,23 @@
           </div>
         </div>
 
-        <v-btn icon @click="printTicket" class="ticket-print-button" title="Imprimir">
-          <v-icon>mdi-printer</v-icon>
+        <v-btn icon="mdi-printer" variant="tonal" color="primary" size="small" @click="printTicket"
+          class="ticket-print-button" title="Reimprimir ticket" aria-label="Reimprimir ticket">
         </v-btn>
       </v-card-title>
 
       <v-card-text>
+        <TicketTemplatePrintPreview
+          v-if="ticketTemplateConfig"
+          :ticket="currentTicket"
+          :config="ticketTemplateConfig"
+          :branch="selectedBranch"
+          :company-name="ticketCompanyName"
+          :company-image-url="ticketCompanyImage ? `${this.$axios.defaults.baseURL}images/${ticketCompanyImage}` : ''"
+          :qr-image="ticketTemplateQrImage"
+          :name-user="nameUser"
+        />
+        <div v-else>
         <div class="ticket-container">
           <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
@@ -775,6 +786,7 @@
             (COPIA REIMPRESA POR EL OPERADOR {{ nameUser }})
           </div>
         </div>
+        </div>
       </v-card-text>
 
       <v-card-actions class="busgo-dialog-actions">
@@ -800,6 +812,11 @@ import {
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 import QRCode from "qrcode";
+import {
+  buildTicketTemplatePrintHtml,
+  getTicketTemplateConfig,
+} from "@/services/ticketPrintService";
+import TicketTemplatePrintPreview from "@/components/TicketTemplatePrintPreview.vue";
 import ExpressTicketSale from "@/views/ticket/ExpressTicketSale.vue";
 import OnBoardSaleDialog from "@/views/sales/OnBoardSaleDialog.vue";
 
@@ -809,7 +826,7 @@ const PENDING_CARD_PAYMENT_STORAGE_KEY = "ticketWebPendingCardPayment";
 
 export default {
   name: 'SalesView',
-  components: { ExpressTicketSale, OnBoardSaleDialog, SaleModeChip },
+  components: { ExpressTicketSale, OnBoardSaleDialog, SaleModeChip, TicketTemplatePrintPreview },
   data: () => ({ snackbar: false,
     sb_type: "",
     sb_message: "",
@@ -836,6 +853,7 @@ export default {
     promotions: [],
     tickettypes: [],
     currentTicket: {},
+    ticketTemplateQrImage: "",
     nameUser: "",
     selectedBranch: {},
     data: {},
@@ -932,6 +950,9 @@ export default {
     tripSaleSortOrder: "asc",
     role: null }),
   computed: { formTitle() { return "Venta Full"; },
+    ticketTemplateConfig() {
+      return getTicketTemplateConfig(this.currentTicket);
+    },
     ticketCompanyImage() {
       return (
         this.getLocalStorageValue("imageBusiness") ||
@@ -2910,7 +2931,10 @@ export default {
       try {
         const qrData = this.currentTicket.qr;
 
-        if (!qrData) return;
+        if (!qrData) {
+          await this.refreshTicketTemplatePreview();
+          return;
+        }
 
         // Opciones comunes para ambos QR
         const qrOptions = {
@@ -2931,10 +2955,48 @@ export default {
         if (this.$refs.qrCanvasControl) {
           await QRCode.toCanvas(this.$refs.qrCanvasControl, qrData, qrOptions);
         }
+        await this.refreshTicketTemplatePreview();
       } catch (error) {
         console.error("Error generando QR codes:", error);
         this.showAlert("error", "Error al generar códigos QR", 3000);
       }
+    },
+    async refreshTicketTemplatePreview() {
+      this.ticketTemplateQrImage = "";
+      const config = this.ticketTemplateConfig;
+      if (!config) return;
+
+      const qrData = this.currentTicket.qr || this.currentTicket.id;
+      if (qrData) {
+        this.ticketTemplateQrImage = await QRCode.toDataURL(String(qrData), {
+          width: Number(config.blocks?.qr?.size || 110),
+          margin: 1,
+          color: { dark: "#000000", light: "#ffffff" },
+        });
+      }
+    },
+    async printTicketWithTemplate() {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        this.showAlert("warning", "El navegador bloqueó la ventana de impresión.", 3000);
+        return;
+      }
+
+      await this.refreshTicketTemplatePreview();
+      const printContent = buildTicketTemplatePrintHtml({
+        ticket: this.currentTicket,
+        config: this.ticketTemplateConfig,
+        branch: this.selectedBranch,
+        companyName: this.ticketCompanyName,
+        companyImageUrl: this.ticketCompanyImage
+          ? `${this.$axios.defaults.baseURL}images/${this.ticketCompanyImage}`
+          : "",
+        qrImage: this.ticketTemplateQrImage,
+        nameUser: this.nameUser,
+      });
+      printWindow.document.open();
+      printWindow.document.write(printContent);
+      printWindow.document.close();
     },
     async handleExpressSaleSaved(ticket = null) {
       
@@ -2967,6 +3029,10 @@ export default {
     },
     async printTicket() {
       try {
+        if (this.ticketTemplateConfig) {
+          await this.printTicketWithTemplate();
+          return;
+        }
         const printWindow = window.open("", "_blank");
 
         // Generar ambos cÃ³digos QR
@@ -4118,12 +4184,16 @@ export default {
 
 .ticket-print-header {
   position: relative;
+  min-height: 56px;
+  padding: 8px 64px 8px 16px;
 }
 
 .ticket-print-button {
   position: absolute;
   right: 16px;
-  top: 16px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
 }
 
 .ticket-branch-logo-preview {
@@ -4164,8 +4234,8 @@ export default {
 }
 
 .ticket-sale-mode--on_board {
-  background: #fff7e6;
-  color: #b45309;
+  background: #f3efff;
+  color: #7c3aed;
 }
 
 .ticket-sale-mode--web {
@@ -5005,8 +5075,8 @@ export default {
 .sales-mode-card:only-child { grid-column:1 / -1; }
 .sales-mode-card { min-width:0; display:flex; flex-direction:column; padding:18px; border-radius:12px; border:1px solid #e0e6ef; background:#fff; color:#162641; box-shadow:0 3px 12px #15264b05; }
 .sales-mode-card--full { border-top:3px solid #2454d6; }
-.sales-mode-card--express { border-top:3px solid #2454d6; }
-.sales-mode-card--on-board { border-top:3px solid #b45309; }
+.sales-mode-card--express { border-top:3px solid #16845b; }
+.sales-mode-card--on-board { border-top:3px solid #7c3aed; }
 .sales-mode-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .sales-mode-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; flex-shrink:0; background:#eef3ff; color:#2454d6; }
 .sales-mode-icon :deep(.v-icon) { font-size:23px!important; }
@@ -5018,8 +5088,8 @@ export default {
 .sales-mode-note { display:flex; align-items:center; gap:5px; color:#64748b; font-size:10px; }
 .sales-launch-button.v-btn { min-height:38px; border-radius:8px; font-size:12px; font-weight:750; letter-spacing:0; text-transform:none; box-shadow:none; }
 .sales-launch-button--full.v-btn { background:#2454d6; color:#fff; }
-.sales-launch-button--express.v-btn { background:#eef3ff; color:#2454d6; }
-.sales-launch-button--on-board.v-btn { background:#fff7e6; color:#b45309; }
+.sales-launch-button--express.v-btn { background:#eaf8f1; color:#16845b; }
+.sales-launch-button--on-board.v-btn { background:#f3efff; color:#7c3aed; }
 .sales-launch-button:focus-visible { outline:3px solid #6e9bff; outline-offset:3px; }
 .sales-workspace-footnote { display:flex; align-items:center; gap:7px; margin-top:16px; color:#64748b; font-size:11px; line-height:1.5; }
 /* Full dialog: explicit background, type and controls independent of the page. */
@@ -5097,7 +5167,7 @@ export default {
 .sales-mode-card--express .sales-mode-tag { color:#116546; background:#edf8f2; }
 .sales-launch-button--express.v-btn { color:#116546; background:#edf8f2; }
 .sales-launch-button--express:focus-visible { outline-color:#78c9a2; }
-.sales-launch-button--on-board:focus-visible { outline-color:#e7a94f; }
+.sales-launch-button--on-board:focus-visible { outline-color:#c4b5fd; }
 @media(max-width:1100px) { .sales-modes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:959px) { .busgo-full-sale .ticket-sale-topbar { padding-inline:17px; } }
 @media(max-width:600px) {

@@ -902,10 +902,16 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showTicketDialog" max-width="500" persistent>
-    <v-card class="ticket-print-card">
+  <v-dialog v-model="showTicketDialog" max-width="420" persistent>
+    <v-card class="ticket-preview-dialog ticket-print-card">
+      <div class="ticket-confirm-heading">
+        <span class="ticket-confirm-icon ticket-confirm-icon--preview"><v-icon size="22">mdi-ticket-confirmation-outline</v-icon></span>
+        <div><strong>Vista previa del ticket</strong><span>Revisa el comprobante antes de imprimir</span></div>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" size="small" aria-label="Cerrar vista previa" @click="showTicketDialog = false" />
+      </div>
       <v-card-title class="ticket-print-header">
-        <div class="d-flex flex-column align-center" style="width: 100%">
+        <div v-if="!ticketTemplateConfig" class="d-flex flex-column align-center" style="width: 100%">
           <div v-if="ticketCompanyImage" class="ticket-branch-logo-preview mb-3">
             <img :src="`${this.$axios.defaults.baseURL}images/${ticketCompanyImage}`" :alt="ticketCompanyName"
               class="ticket-branch-logo-preview__img" />
@@ -934,12 +940,23 @@
           </div>
         </div>
 
-        <v-btn icon @click="printTicket" class="ticket-print-button" title="Imprimir">
-          <v-icon>mdi-printer</v-icon>
+        <v-btn icon="mdi-printer" variant="tonal" color="primary" size="small" @click="printTicket"
+          class="ticket-print-button" title="Reimprimir ticket" aria-label="Reimprimir ticket">
         </v-btn>
       </v-card-title>
 
       <v-card-text>
+        <TicketTemplatePrintPreview
+          v-if="ticketTemplateConfig"
+          :ticket="currentTicket"
+          :config="ticketTemplateConfig"
+          :branch="selectedBranch"
+          :company-name="ticketCompanyName"
+          :company-image-url="ticketCompanyImage ? `${this.$axios.defaults.baseURL}images/${ticketCompanyImage}` : ''"
+          :qr-image="ticketTemplateQrImage"
+          :name-user="nameUser"
+        />
+        <div v-else>
         <div class="ticket-container">
           <div class="ticket-print-dates mb-3">
             <div class="font-weight-medium">
@@ -1071,6 +1088,7 @@
             (COPIA REIMPRESA POR EL OPERADOR {{ nameUser }})
           </div>
         </div>
+        </div>
       </v-card-text>
 
       <v-card-actions class="busgo-dialog-actions">
@@ -1098,6 +1116,11 @@ import {
   normalizeSaleMode as normalizeSharedSaleMode,
 } from "@/utils/saleMode";
 import QRCode from "qrcode";
+import {
+  buildTicketTemplatePrintHtml,
+  getTicketTemplateConfig,
+} from "@/services/ticketPrintService";
+import TicketTemplatePrintPreview from "@/components/TicketTemplatePrintPreview.vue";
 import * as XLSX from "xlsx";
 import ReportDateRangeFilter from "@/components/ReportDateRangeFilter.vue";
 import ReportKpiCards from "@/components/ReportKpiCards.vue";
@@ -1113,6 +1136,7 @@ export default {
     ReportKpiCards,
     BusgoChip,
     SaleModeChip,
+    TicketTemplatePrintPreview,
   },
   data: () => ({
     snackbar: false,
@@ -1167,6 +1191,7 @@ export default {
     promotions: [],
     tickettypes: [],
     currentTicket: {},
+    ticketTemplateQrImage: "",
     expandedTicketItems: [],
     nameBranch: "",
     imageBranch: "",
@@ -1312,6 +1337,9 @@ export default {
     tripSaleSortOrder: "asc",
   }),
   computed: {
+    ticketTemplateConfig() {
+      return getTicketTemplateConfig(this.currentTicket);
+    },
     salesKpiCards() {
       return [
         {
@@ -3998,7 +4026,10 @@ export default {
       try {
         const qrData = this.currentTicket.qr;
 
-        if (!qrData) return;
+        if (!qrData) {
+          await this.refreshTicketTemplatePreview();
+          return;
+        }
 
         // Opciones comunes para ambos QR
         const qrOptions = {
@@ -4019,10 +4050,48 @@ export default {
         if (this.$refs.qrCanvasControl) {
           await QRCode.toCanvas(this.$refs.qrCanvasControl, qrData, qrOptions);
         }
+        await this.refreshTicketTemplatePreview();
       } catch (error) {
         console.error("Error generando QR codes:", error);
         this.showError("Error al generar códigos QR");
       }
+    },
+    async refreshTicketTemplatePreview() {
+      this.ticketTemplateQrImage = "";
+      const config = this.ticketTemplateConfig;
+      if (!config) return;
+
+      const qrData = this.currentTicket.qr || this.currentTicket.id;
+      if (qrData) {
+        this.ticketTemplateQrImage = await QRCode.toDataURL(String(qrData), {
+          width: Number(config.blocks?.qr?.size || 110),
+          margin: 1,
+          color: { dark: "#000000", light: "#ffffff" },
+        });
+      }
+    },
+    async printTicketWithTemplate() {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        this.showError("El navegador bloqueó la ventana de impresión.");
+        return;
+      }
+
+      await this.refreshTicketTemplatePreview();
+      const printContent = buildTicketTemplatePrintHtml({
+        ticket: this.currentTicket,
+        config: this.ticketTemplateConfig,
+        branch: this.selectedBranch,
+        companyName: this.ticketCompanyName,
+        companyImageUrl: this.ticketCompanyImage
+          ? `${this.$axios.defaults.baseURL}images/${this.ticketCompanyImage}`
+          : "",
+        qrImage: this.ticketTemplateQrImage,
+        nameUser: this.nameUser,
+      });
+      printWindow.document.open();
+      printWindow.document.write(printContent);
+      printWindow.document.close();
     },
     formatDate(dateString) {
       if (!dateString) return "";
@@ -4095,6 +4164,10 @@ export default {
     },
     async printTicket() {
       try {
+        if (this.ticketTemplateConfig) {
+          await this.printTicketWithTemplate();
+          return;
+        }
         const printWindow = window.open("", "_blank");
 
         // Generar ambos cÃ³digos QR
@@ -6060,14 +6133,62 @@ table.v-table>thead,
   overflow: hidden;
 }
 
+.ticket-preview-dialog {
+  color: #1e293b;
+  background: #fff;
+  border: 1px solid #dfe6ef;
+  border-radius: 14px !important;
+}
+
+.ticket-confirm-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 17px 20px;
+  border-bottom: 1px solid #e8edf5;
+}
+
+.ticket-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #dc2626;
+  background: #fff1f2;
+}
+
+.ticket-confirm-icon--preview {
+  color: #2454d6;
+  background: #eef3ff;
+}
+
+.ticket-confirm-heading strong {
+  display: block;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.ticket-confirm-heading span:not(.ticket-confirm-icon) {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 11.5px;
+}
+
 .ticket-print-header {
   position: relative;
+  min-height: 56px;
+  padding: 8px 64px 8px 16px;
 }
 
 .ticket-print-button {
   position: absolute;
   right: 16px;
-  top: 16px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
 }
 
 .ticket-branch-logo-preview {
@@ -6108,8 +6229,8 @@ table.v-table>thead,
 }
 
 .ticket-sale-mode--on_board {
-  background: #fff7e6;
-  color: #b45309;
+  background: #f3efff;
+  color: #7c3aed;
 }
 
 .ticket-sale-mode--web {

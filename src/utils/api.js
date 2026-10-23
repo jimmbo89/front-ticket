@@ -44,6 +44,16 @@ export async function handleRequest({ endpoint, method = 'GET', data = null, par
           return fallback;
         }
 
+        if (Array.isArray(data.details)) {
+          const validationDetails = data.details
+            .flat(Infinity)
+            .filter((detail) => typeof detail === 'string' && detail.trim());
+
+          if (validationDetails.length) {
+            return validationDetails.join('. ');
+          }
+        }
+
         if (typeof data.details === 'string' && data.details.trim()) {
           return data.details;
         }
