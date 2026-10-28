@@ -15,7 +15,7 @@
           <div class="form-section-label">Información general</div>
           <v-row dense>
             <v-col v-if="showBranch" cols="12" md="6">
-              <v-autocomplete v-model="formItem.branch_id" :items="branches" item-title="name" item-value="id" label="Sucursal" prepend-inner-icon="mdi-store-outline" variant="outlined" density="comfortable" no-data-text="No hay sucursales disponibles" :rules="selectRules" :disabled="!isCreating" @update:model-value="onBranchChanged">
+              <v-autocomplete v-model="formItem.branch_id" :items="branches" item-title="name" item-value="id" label="Sucursal" prepend-inner-icon="mdi-store-outline" variant="outlined" density="comfortable" no-data-text="No hay sucursales disponibles" :rules="selectRules" :disabled="loading || saving" @update:model-value="onBranchChanged">
                 <template #item="{ props, item }"><v-list-item v-bind="props" :prepend-avatar="branchImage(item.raw)" :title="item.raw.name" /></template>
               </v-autocomplete>
             </v-col>
@@ -231,7 +231,7 @@ export default {
       if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     },
-    onBranchChanged(value) { if (this.isCreating) this.$emit("branch-change", value); },
+    onBranchChanged(value) { this.$emit("branch-change", value); },
     isActive(value) { return value === true || Number(value) === 1 || String(value).toLowerCase() === "true"; },
     vehicleFilter(value, query, item) {
       const search = String(query ?? "").toLowerCase().trim();

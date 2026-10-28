@@ -653,259 +653,117 @@
             <template #item.2>
               <div class="trip-step-pane">
               <div class="trip-step-content">
-                <v-sheet border class="trip-config-section">
+                <v-sheet border class="trip-config-section trip-stop-config-section">
                   <v-toolbar class="trip-config-toolbar" color="transparent">
-                    <v-row align="center">
+                    <v-row align="center" no-gutters>
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1">
                           <strong>Paradas de la plantilla</strong>
                         </span>
 
                         <div class="text-caption" style="opacity: 0.85">
-                          La última columna agrega o quita la asociación de la parada a la
-                          plantilla. La tabla muestra la información propia de la parada.
+                          La columna de asociación agrega o quita la parada de la plantilla. La tabla muestra la información propia de la parada.
                         </div>
+                      </v-col>
+                      <v-spacer />
+                      <v-col cols="12" md="4" class="trip-stop-toolbar-actions">
+                        <v-text-field
+                          v-model="templateStopSearch"
+                          class="trip-stop-search"
+                          density="compact"
+                          variant="outlined"
+                          prepend-inner-icon="mdi-magnify"
+                          placeholder="Buscar parada..."
+                          hide-details
+                          clearable
+                        />
                       </v-col>
                     </v-row>
                   </v-toolbar>
 
-                  <v-card-text>
-                    <StandardDataTable
-                      :headers="tripStopsHeaders"
-                      :items="templateStopRows"
-                      class="elevation-1 trip-step-table"
-                      height="100%"
-                      fixed-header
-                      :items-per-page-text="'Elementos por páginas'"
-                      no-data-text="No hay datos disponibles"
-                      :loading="loading"
-                      loading-text="Cargando datos..."
-                    >
-                      <template #headers><tr><th colspan="100" class="trip-header-shell">
-                        <v-card
-                          flat
-                          color="blue-grey-lighten-5"
-                          class="trip-table-manual-head standard-table-header"
-                          elevation="1"
-                          style="
-                            border: 1px solid #eceff1;
-                            height: 40px;
-                            min-height: 40px;
-                            display: flex;
-                            align-items: center;
-                          "
-                        >
-                          <v-card-text
-                            class="d-flex pa-2"
-                            style="
-                              width: 100%;
-                              min-width: 0;
-                              height: 100%;
-                              padding: 0 16px !important;
-                              display: flex;
-                              align-items: center;
-                            "
+                  <v-card-text class="trip-config-list-content">
+                    <div class="trip-list-scroll trip-stop-list" role="table" aria-label="Paradas de la plantilla">
+                      <div class="trip-list-header trip-stop-list-header" role="row">
+                        <div style="width:22%" role="columnheader">Parada</div>
+                        <div style="width:10%" role="columnheader">Orden</div>
+                        <div style="width:10%" role="columnheader">Distancia</div>
+                        <div style="width:10%" role="columnheader">Minutos</div>
+                        <div style="width:10%" role="columnheader">Subir</div>
+                        <div style="width:10%" role="columnheader">Bajar</div>
+                        <div style="width:8%" role="columnheader">Activa</div>
+                        <div style="width:13%" class="trip-list-column-centered" role="columnheader">Asociar a la plantilla</div>
+                        <div style="width:7%" role="columnheader">Editar</div>
+                      </div>
+
+                      <div v-if="loading" class="trip-list-state">Cargando datos...</div>
+                      <div v-else-if="!filteredTemplateStopRows.length" class="trip-list-state">No hay paradas disponibles.</div>
+
+                      <div
+                        v-for="stop in filteredTemplateStopRows"
+                        :key="stop.route_stop_id"
+                        class="trip-list-row trip-stop-list-row"
+                        role="row"
+                        :style="{ opacity: stop.included ? 1 : 0.85 }"
+                      >
+                        <div class="trip-stop-place" style="width:22%" role="cell">
+                          <v-avatar class="trip-list-avatar" color="grey-lighten-4">
+                            <v-img :src="getImageUrl(stop.locationImage)" alt="image" cover />
+                          </v-avatar>
+                          <div class="trip-list-copy">
+                            <strong>{{ stop.locationName }}</strong>
+                            <span>{{ [stop.locationCity, stop.locationCountry].filter(Boolean).join(', ') || 'Sin localidad' }}</span>
+                          </div>
+                        </div>
+
+                        <div style="width:10%" class="trip-stop-order-cell" role="cell">
+                          <v-text-field
+                            v-model="stop.stop_order"
+                            :data-template-stop-id="stop.route_stop_id"
+                            type="number"
+                            min="1"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            @update:modelValue="onTemplateStopFieldChange"
+                          />
+                        </div>
+                        <div style="width:10%" class="trip-list-value" role="cell">{{ stop.distance_km }} km</div>
+                        <div style="width:10%" class="trip-list-value" role="cell">{{ stop.minutes_from_origin }} min</div>
+
+                        <div style="width:10%" class="trip-list-control" role="cell">
+                          <v-switch v-model="stop.can_board" :true-value="true" :false-value="false" :color="stop.can_board ? paleteColors.green : paleteColors.grey" :base-color="stop.can_board ? paleteColors.green : paleteColors.grey" density="compact" hide-details inset class="custom-switch compact-inline-switch" @update:modelValue="onTemplateStopFieldChange" />
+                        </div>
+                        <div style="width:10%" class="trip-list-control" role="cell">
+                          <v-switch v-model="stop.can_alight" :true-value="true" :false-value="false" :color="stop.can_alight ? paleteColors.green : paleteColors.grey" :base-color="stop.can_alight ? paleteColors.green : paleteColors.grey" density="compact" hide-details inset class="custom-switch compact-inline-switch" @update:modelValue="onTemplateStopFieldChange" />
+                        </div>
+                        <div style="width:8%" class="trip-list-control" role="cell">
+                          <v-switch v-model="stop.active" :true-value="true" :false-value="false" :color="stop.active ? paleteColors.green : paleteColors.grey" :base-color="stop.active ? paleteColors.green : paleteColors.grey" density="compact" hide-details inset class="custom-switch compact-inline-switch" @update:modelValue="onTemplateStopFieldChange" />
+                        </div>
+                        <div style="width:13%" class="trip-list-association" role="cell">
+                          <v-btn
+                            class="trip-association-button"
+                            variant="text"
+                            :color="stop.included ? paleteColors.green : paleteColors.grey"
+                            :title="stop.included ? 'Quitar parada de la plantilla' : 'Asociar parada a la plantilla'"
+                            :aria-label="stop.included ? 'Quitar parada de la plantilla' : 'Asociar parada a la plantilla'"
+                            @click="stop.included = !stop.included; onTemplateStopIncludedChange()"
                           >
-                            <div style="width: 24%; min-width: 0" class="text-left font-weight-bold">
-                              Parada
-                            </div>
-
-                            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                              Orden
-                            </div>
-
-                            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                              Distancia
-                            </div>
-
-                            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                              Minutos
-                            </div>
-
-                            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                              Subir
-                            </div>
-
-                            <div style="width: 11%; min-width: 0" class="text-left font-weight-bold">
-                              Bajar
-                            </div>
-
-                            <div style="width: 9%; min-width: 0" class="text-left font-weight-bold">
-                              Estado
-                            </div>
-
-                            <div style="width: 12%; min-width: 0" class="d-flex justify-left font-weight-bold">
-                              Asociar
-                            </div>
-                          </v-card-text>
-                        </v-card>
-                      </th></tr></template>
-
-                      <template #item="slotProps">
-                        <tr>
-                          <td colspan="100" style="padding: 0; border: none">
-                            <v-card
-                              class="trip-stop-row-card"
-                              elevation="1"
-                              density="comfortable"
-                              flat
-                              :style="{
-                                opacity: slotProps.item.included ? 1 : 0.55,
-                                border: slotProps.item.included
-                                  ? '1px solid #e5e7eb'
-                                  : '1px dashed #cbd5e1'
-                              }"
-                            >
-                              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                                <div class="d-flex align-center" style="width: 24%; min-width: 0">
-                                  <v-avatar class="mr-3 icono-concavo" color="grey-lighten-4">
-                                    <v-img
-                                      :src="`${this.$axios.defaults.baseURL}images/${slotProps.item.locationImage}`"
-                                      alt="image"
-                                      cover
-                                    />
-                                  </v-avatar>
-
-                                  <div class="text-truncate">
-                                    <div class="font-weight-medium">
-                                      {{ slotProps.item.locationName }}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div style="width: 11%; min-width: 0" class="px-1">
-                                  <v-text-field
-                                    v-model="slotProps.item.stop_order"
-                                    type="number"
-                                    min="1"
-                                    variant="outlined"
-                                    density="compact"
-                                    hide-details
-                                    @update:modelValue="onTemplateStopFieldChange"
-                                  />
-                                </div>
-
-                                <div style="width: 11%; min-width: 0" class="text-truncate">
-                                  <div class="font-weight-medium">
-                                    {{ slotProps.item.distance_km }} km
-                                  </div>
-                                </div>
-
-                                <div style="width: 11%; min-width: 0" class="text-truncate">
-                                  <div class="font-weight-medium">
-                                    {{ slotProps.item.minutes_from_origin }} min
-                                  </div>
-                                </div>
-
-                                <div style="width: 11%; min-width: 0" class="d-flex justify-center">
-                                  <v-switch
-                                    v-model="slotProps.item.can_board"
-                                    :true-value="true"
-                                    :false-value="false"
-                                    :color="
-                                      slotProps.item.can_board
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    :base-color="
-                                      slotProps.item.can_board
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTemplateStopFieldChange"
-                                  />
-                                </div>
-
-                                <div style="width: 11%; min-width: 0" class="d-flex justify-center">
-                                  <v-switch
-                                    v-model="slotProps.item.can_alight"
-                                    :true-value="true"
-                                    :false-value="false"
-                                    :color="
-                                      slotProps.item.can_alight
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    :base-color="
-                                      slotProps.item.can_alight
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTemplateStopFieldChange"
-                                  />
-                                </div>
-
-                                <div style="width: 9%; min-width: 0" class="d-flex justify-center">
-                                  <v-switch
-                                    v-model="slotProps.item.active"
-                                    :true-value="true"
-                                    :false-value="false"
-                                    :color="
-                                      slotProps.item.active
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    :base-color="
-                                      slotProps.item.active
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    density="compact"
-                                    hide-details
-                                    inset
-                                    class="custom-switch compact-inline-switch"
-                                    @update:modelValue="onTemplateStopFieldChange"
-                                  />
-                                </div>
-
-                                <div style="width: 12%; min-width: 0" class="d-flex justify-center align-center">
-                                  <v-switch
-                                    v-model="slotProps.item.included"
-                                    :true-value="true"
-                                    :false-value="false"
-                                    :color="
-                                      slotProps.item.included
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                    :base-color="
-                                      slotProps.item.included
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    "
-                                     density="compact"
-                                     hide-details
-                                     inset
-                                     class="custom-switch compact-inline-switch"
-                                     :disabled="slotProps.item.active === false"
-                                     @update:modelValue="onTemplateStopIncludedChange"
-                                  />
-
-                                  <span
-                                    class="ml-2 text-body-2 font-weight-medium text-no-wrap"
-                                    :style="{
-                                      color: slotProps.item.included
-                                        ? paleteColors.green
-                                        : paleteColors.grey
-                                    }"
-                                  >
-                                    {{ slotProps.item.included ? "Asociada" : "Sin asociar" }}
-                                  </span>
-                                </div>
-                              </v-card-text>
-                            </v-card>
-                          </td>
-                        </tr>
-                      </template>
-                    </StandardDataTable>
+                            <v-icon size="24">{{ stop.included ? 'mdi-link-off' : 'mdi-link-plus' }}</v-icon>
+                          </v-btn>
+                          <span :style="{ color: stop.included ? paleteColors.green : paleteColors.grey }">{{ stop.included ? 'Quitar' : 'Asociar' }}</span>
+                        </div>
+                        <div style="width:7%" class="trip-list-action" role="cell">
+                          <v-btn
+                            icon="mdi-pencil-outline"
+                            size="30"
+                            variant="text"
+                            :color="paleteColors.primary"
+                            title="Editar parada de la plantilla"
+                            @click="focusTemplateStop(stop)"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </v-card-text>
                 </v-sheet>
               </div>
@@ -936,9 +794,9 @@
             <template #item.3>
               <div class="trip-step-pane">
               <div class="trip-step-content">
-                <v-sheet border class="trip-config-section">
-                  <v-toolbar class="trip-config-toolbar" color="transparent">
-                    <v-row align="center">
+                <v-sheet border class="trip-config-section trip-fare-config-section">
+                    <v-toolbar class="trip-config-toolbar" color="transparent">
+                    <v-row align="center" no-gutters>
                       <v-col cols="12" md="7" class="grow ml-4">
                         <span class="text-subtitle-1">
                           <strong>Tramos y tipos de pasaje</strong>
@@ -949,237 +807,132 @@
                           precio de cada tipo de pasaje.
                         </div>
                       </v-col>
+                      <v-spacer />
+                      <v-col cols="12" md="4" class="trip-fare-toolbar-actions">
+                        <v-text-field
+                          v-model="templateFareSearch"
+                          class="trip-fare-search"
+                          density="compact"
+                          variant="outlined"
+                          prepend-inner-icon="mdi-magnify"
+                          placeholder="Buscar tramo..."
+                          hide-details
+                          clearable
+                        />
+                      </v-col>
                     </v-row>
                   </v-toolbar>
 
-                  <v-card-text>
-                    <StandardDataTable
-                      :headers="tripFaresHeaders"
-                      :items="templateFareRows"
-                      class="elevation-1 trip-step-table"
-                      height="100%"
-                      fixed-header
-                      :items-per-page-text="'Elementos por páginas'"
-                      no-data-text="No hay datos disponibles"
-                      :loading="loading"
-                      loading-text="Cargando datos..."
-                    >
-                      <template #headers><tr><th colspan="100" class="trip-header-shell">
-                        <v-card
-                          flat
-                          color="blue-grey-lighten-5"
-                          class="trip-table-manual-head standard-table-header"
-                          elevation="1"
-                          style="
-                            border: 1px solid #eceff1;
-                            height: 40px;
-                            min-height: 40px;
-                            display: flex;
-                            align-items: center;
-                          "
-                        >
-                          <v-card-text
-                            class="d-flex pa-2"
-                            style="
-                              width: 100%;
-                              min-width: 0;
-                              height: 100%;
-                              padding: 0 16px !important;
-                              display: flex;
-                              align-items: center;
-                            "
+                  <v-card-text class="trip-config-list-content">
+                    <div class="trip-list-scroll trip-fare-list" role="table" aria-label="Tramos y tipos de pasaje de la plantilla">
+                      <div class="trip-list-header trip-fare-list-header" role="row">
+                        <div style="width:22%" role="columnheader">Origen</div>
+                        <div style="width:22%" role="columnheader">Destino</div>
+                        <div style="width:12%" role="columnheader">Precio base</div>
+                        <div style="width:16%" role="columnheader">Vigencia</div>
+                        <div style="width:8%" class="trip-list-column-centered" role="columnheader">Estado</div>
+                        <div style="width:12%" class="trip-list-column-centered" role="columnheader">Asociar</div>
+                        <div style="width:4%" role="columnheader">Editar</div>
+                        <div style="width:4%" role="columnheader">Tipos</div>
+                      </div>
+
+                      <div v-if="loading" class="trip-list-state">Cargando datos...</div>
+                      <div v-else-if="!filteredTemplateFareRows.length" class="trip-list-state">No hay tramos disponibles.</div>
+
+                      <div
+                        v-for="fare in filteredTemplateFareRows"
+                        :key="fare.id || `${fare.originLabel}-${fare.destinationLabel}`"
+                        class="trip-list-row trip-fare-list-row"
+                        role="row"
+                      >
+                        <div style="width:22%" class="trip-list-value trip-list-primary" role="cell">{{ fare.originLabel }}</div>
+                        <div style="width:22%" class="trip-list-value trip-list-primary" role="cell">{{ fare.destinationLabel }}</div>
+                        <div style="width:12%" class="trip-list-value" role="cell">{{ formatNumber(fare.base_price) }}</div>
+                        <div style="width:16%" class="trip-list-validity" role="cell">
+                          <span>{{ fare.valid_from || '-' }}</span>
+                          <span>hasta {{ fare.valid_to || '-' }}</span>
+                        </div>
+                        <div style="width:8%" class="trip-list-status" role="cell">
+                          <v-switch
+                            :model-value="fare.active"
+                            :true-value="true"
+                            :false-value="false"
+                            :color="fare.active ? paleteColors.green : paleteColors.grey"
+                            :base-color="fare.active ? paleteColors.green : paleteColors.grey"
+                            density="compact"
+                            hide-details
+                            inset
+                            readonly
+                            class="custom-switch compact-inline-switch"
+                            :title="fare.active ? 'Tramo activo en la ruta' : 'Tramo inactivo en la ruta'"
+                          />
+                        </div>
+                        <div style="width:12%" class="trip-list-association" role="cell">
+                          <v-btn
+                            class="trip-association-button"
+                            variant="text"
+                            :color="fare.included ? paleteColors.green : paleteColors.grey"
+                            :title="fare.included ? 'Quitar tramo de la plantilla' : 'Asociar tramo a la plantilla'"
+                            :aria-label="fare.included ? 'Quitar tramo de la plantilla' : 'Asociar tramo a la plantilla'"
+                            @click="toggleTemplateFareIncluded(fare)"
                           >
-                            <div style="width: 28%; min-width: 0" class="text-left font-weight-bold">
-                              Origen
-                            </div>
+                            <v-icon size="24">{{ fare.included ? 'mdi-link-off' : 'mdi-link-plus' }}</v-icon>
+                          </v-btn>
+                          <span :style="{ color: fare.included ? paleteColors.green : paleteColors.grey }">{{ fare.included ? 'Quitar' : 'Asociar' }}</span>
+                        </div>
+                        <div style="width:4%" class="trip-list-action" role="cell">
+                          <v-btn
+                            icon="mdi-pencil-outline"
+                            size="30"
+                            variant="text"
+                            :color="paleteColors.primary"
+                            title="Editar tramo de la plantilla"
+                            @click="toggleTemplateFareExpanded(fare)"
+                          />
+                        </div>
+                        <div style="width:4%" class="trip-list-action" role="cell">
+                          <v-btn
+                            v-if="fare.fareSegmentTicketTypes && fare.fareSegmentTicketTypes.length"
+                            size="32"
+                            icon
+                            variant="outlined"
+                            :color="paleteColors.primary"
+                            class="trip-fare-expand-button"
+                            @click="toggleTemplateFareExpanded(fare)"
+                            title="Ver tipos de pasaje"
+                          >
+                            <v-icon size="18">{{ isTemplateFareExpanded(fare) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                          </v-btn>
+                        </div>
 
-                            <div style="width: 28%; min-width: 0" class="text-left font-weight-bold">
-                              Destino
-                            </div>
+                        <v-expand-transition>
+                          <div v-if="isTemplateFareExpanded(fare) && fare.fareSegmentTicketTypes && fare.fareSegmentTicketTypes.length" class="trip-fare-expanded">
+                            <v-card variant="outlined" class="trip-fare-ticket-types-panel rounded-lg" elevation="0">
+                              <div class="trip-fare-ticket-types-header">
+                                <div class="trip-fare-col-name">Tipo de pasajero</div>
+                                <div class="trip-fare-col-price">Precio (Bs.)</div>
+                                <div class="trip-fare-col-status">Habilitado</div>
+                              </div>
 
-                            <div style="width: 14%; min-width: 0" class="text-left font-weight-bold">
-                              Precio base
-                            </div>
-
-                            <div style="width: 18%; min-width: 0" class="text-left font-weight-bold">
-                              Vigencia
-                            </div>
-
-                            <div style="width: 10%; min-width: 0" class="text-left font-weight-bold">
-                              Estado
-                            </div>
-
-                          <div style="width: 2%; min-width: 0" class="d-flex justify-left font-weight-bold standard-table-header__actions">Tipos</div>
-                          </v-card-text>
-                        </v-card>
-                      </th></tr></template>
-
-                      <template #item="slotProps">
-                        <tr>
-                          <td colspan="100" style="padding: 0; border: none">
-                            <v-card
-                              class="trip-fare-row-card"
-                              elevation="1"
-                              density="comfortable"
-                              flat
-                            >
-                              <v-card-text class="d-flex align-center pa-2" style="width: 100%; min-width: 0">
-                                <div style="width: 28%; min-width: 0" class="text-truncate">
-                                  <span>{{ slotProps.item.originLabel }}</span>
+                              <div v-for="(ticketType, ticketIndex) in fare.fareSegmentTicketTypes" :key="templateFareTicketTypeKey(ticketType, ticketIndex)" class="trip-fare-ticket-types-row">
+                                <div class="trip-fare-col-name">
+                                  <div class="font-weight-medium text-truncate">{{ ticketType.ticketTypeName }}</div>
                                 </div>
-
-                                <div style="width: 28%; min-width: 0" class="text-truncate">
-                                  <span>{{ slotProps.item.destinationLabel }}</span>
+                                <div class="trip-fare-col-price">
+                                  <v-text-field v-model="ticketType.price" type="number" step="1" min="0" variant="outlined" density="compact" hide-details />
                                 </div>
-
-                                <div style="width: 14%; min-width: 0" class="text-truncate">
-                                  <span>{{ formatNumber(slotProps.item.base_price) }}</span>
+                                <div class="trip-fare-col-status">
+                                  <div class="trip-fare-status-inline">
+                                    <v-switch v-model="ticketType.active" :true-value="true" :false-value="false" :color="ticketType.active ? paleteColors.green : paleteColors.grey" :base-color="ticketType.active ? paleteColors.green : paleteColors.grey" density="compact" hide-details inset class="trip-fare-row-switch" />
+                                    <span class="trip-fare-status-label text-body-2" :style="{ color: ticketType.active ? paleteColors.green : paleteColors.grey }">{{ ticketType.active ? 'Si' : 'No' }}</span>
+                                  </div>
                                 </div>
-
-                                <div style="width: 18%; min-width: 0" class="text-truncate">
-                                  <div>{{ slotProps.item.valid_from || "-" }}</div>
-                                  <div>hasta {{ slotProps.item.valid_to || "-" }}</div>
-                                </div>
-
-                                <div style="width: 10%; min-width: 0" class="text-truncate">
-                                  <v-chip
-                                    :color="
-                                      slotProps.item.active
-                                        ? paleteColors.active
-                                        : paleteColors.inactive
-                                    "
-                                    :text-color="paleteColors.white"
-                                  >
-                                    {{ slotProps.item.active ? "Activo" : "Inactivo" }}
-                                  </v-chip>
-                                </div>
-
-                                <div class="d-flex gap-1" style="width: 2%; justify-content: flex-end; flex-wrap: nowrap">
-                                  <v-btn
-                                    v-if="
-                                      slotProps.item.fareSegmentTicketTypes &&
-                                      slotProps.item.fareSegmentTicketTypes.length
-                                    "
-                                    size="35"
-                                    icon
-                                    variant="outlined"
-                                    :style="{
-                                      'border-width': '1px',
-                                      'border-style': 'solid'
-                                    }"
-                                    :color="paleteColors.primary"
-                                    @click="toggleTemplateFareExpanded(slotProps.item)"
-                                    class="flex-shrink-0"
-                                    title="Ver tipos de pasaje"
-                                  >
-                                    <v-icon size="20">
-                                      {{
-                                        isTemplateFareExpanded(slotProps.item)
-                                          ? "mdi-chevron-up"
-                                          : "mdi-chevron-down"
-                                      }}
-                                    </v-icon>
-                                  </v-btn>
-                                </div>
-                              </v-card-text>
-
-                              <v-expand-transition>
-                                <div
-                                  v-if="
-                                    isTemplateFareExpanded(slotProps.item) &&
-                                    slotProps.item.fareSegmentTicketTypes &&
-                                    slotProps.item.fareSegmentTicketTypes.length
-                                  "
-                                  class="px-4 pb-4"
-                                >
-                                  <v-card
-                                    variant="outlined"
-                                    class="trip-fare-ticket-types-panel rounded-lg"
-                                    elevation="0"
-                                  >
-                                    <div class="trip-fare-ticket-types-header">
-                                      <div class="trip-fare-col-name">
-                                        Tipo de pasajero
-                                      </div>
-
-                                      <div class="trip-fare-col-price">
-                                        Precio (Bs.)
-                                      </div>
-
-                                      <div class="trip-fare-col-status">
-                                        Habilitado
-                                      </div>
-                                    </div>
-
-                                    <div
-                                      v-for="(ticketType, ticketIndex) in slotProps.item
-                                        .fareSegmentTicketTypes"
-                                      :key="
-                                        templateFareTicketTypeKey(ticketType, ticketIndex)
-                                      "
-                                      class="trip-fare-ticket-types-row"
-                                    >
-                                      <div class="trip-fare-col-name">
-                                        <div class="font-weight-medium text-truncate">
-                                          {{ ticketType.ticketTypeName }}
-                                        </div>
-                                      </div>
-
-                                      <div class="trip-fare-col-price">
-                                        <v-text-field
-                                          v-model="ticketType.price"
-                                          type="number"
-                                          step="1"
-                                          min="0"
-                                          variant="outlined"
-                                          density="compact"
-                                          hide-details
-                                        />
-                                      </div>
-
-                                      <div class="trip-fare-col-status">
-                                        <div class="trip-fare-status-inline">
-                                          <v-switch
-                                            v-model="ticketType.active"
-                                            :true-value="true"
-                                            :false-value="false"
-                                            :color="
-                                              ticketType.active
-                                                ? paleteColors.green
-                                                : paleteColors.grey
-                                            "
-                                            :base-color="
-                                              ticketType.active
-                                                ? paleteColors.green
-                                                : paleteColors.grey
-                                            "
-                                            density="compact"
-                                            hide-details
-                                            inset
-                                            class="trip-fare-row-switch"
-                                          />
-
-                                          <span
-                                            class="trip-fare-status-label text-body-2"
-                                            :style="{
-                                              color: ticketType.active
-                                                ? paleteColors.green
-                                                : paleteColors.grey
-                                            }"
-                                          >
-                                            {{ ticketType.active ? "Si" : "No" }}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </v-card>
-                                </div>
-                              </v-expand-transition>
+                              </div>
                             </v-card>
-                          </td>
-                        </tr>
-                      </template>
-                    </StandardDataTable>
+                          </div>
+                        </v-expand-transition>
+                      </div>
+                    </div>
                   </v-card-text>
                 </v-sheet>
               </div>
@@ -1205,105 +958,69 @@
             <template #item.4>
               <div class="trip-step-pane">
                 <div class="trip-step-content">
-                  <v-sheet border class="trip-config-section">
-                  <v-toolbar class="trip-config-toolbar" color="transparent">
-                    <v-row align="center">
-                      <v-col cols="12" md="7" class="grow ml-4">
-                        <span class="text-subtitle-1">
-                          <strong>Relación de Trabajadores</strong>
-                        </span>
-                      </v-col>
-
-                      <v-col cols="12" md="4" class="text-right">
-                        <!--<v-btn
-                          class="text-subtitle-1"
-                          :color="paleteColors.white"
-                          variant="tonal"
-                          elevation="2"
-                          prepend-icon="mdi-plus-circle"
-                          @click="showAssiegnedWorker"
-                        >
-                          Asignar Trabajador
-                        </v-btn>-->
-                      </v-col>
-                    </v-row>
-                  </v-toolbar>
-
-                  <v-card-text>
-                    <StandardDataTable
-                      :headers="headersWorkers"
-                      :items="filteredWorkers"
-                      class="elevation-1 trip-step-table"
-                      height="100%"
-                      fixed-header
-                      :items-per-page-text="'Elementos por páginas'"
-                      no-data-text="No hay datos disponibles"
-                      :loading="loading"
-                      loading-text="Cargando datos..."
-                    >
-                      <template #item.workerName="{ item }">
-                        <v-avatar
-                          class="mr-1"
-                          elevation="3"
-                          color="grey-lighten-4"
-                          size="large"
-                        >
-                          <v-img
-                            :src="`${this.$axios.defaults.baseURL}images/${item.workerImage}?t=${Date.now()}`"
-                            alt="image"
-                          />
-                        </v-avatar>
-
-                        {{ item.workerName }}
-                      </template>
-
-                      <template #item.actions="{ item }">
-                        <div class="trip-worker-assignment-inline">
-                          <v-switch
-                            :model-value="isWorkerAssociated(item)"
-                            @update:model-value="
-                              (value) => {
-                                value
-                                  ? saveAssignedWorker(item)
-                                  : deleteItemWorker(item);
-                              }
-                            "
-                            :true-value="true"
-                            :false-value="false"
-                            :color="
-                              isWorkerAssociated(item)
-                                ? paleteColors.green
-                                : paleteColors.grey
-                            "
-                            :base-color="
-                              isWorkerAssociated(item)
-                                ? paleteColors.green
-                                : paleteColors.grey
-                            "
-                            density="compact"
-                            hide-details
-                            inset
-                            class="trip-worker-assignment-switch"
-                            :title="
-                              isWorkerAssociated(item)
-                                ? 'Quitar trabajador del viaje'
-                                : 'Asignar trabajador al viaje'
-                            "
-                          />
-                          <span
-                            class="text-body-2 trip-worker-assignment-label"
-                            :style="{
-                              color: isWorkerAssociated(item)
-                                ? paleteColors.green
-                                : paleteColors.grey
-                            }"
-                          >
-                            {{ isWorkerAssociated(item) ? "Asignado" : "Sin asignar" }}
+                  <v-sheet border class="trip-config-section trip-worker-config-section">
+                    <v-toolbar class="trip-config-toolbar" color="transparent">
+                      <v-row align="center" no-gutters>
+                        <v-col cols="12" md="7" class="grow ml-4">
+                          <span class="text-subtitle-1">
+                            <strong>Trabajadores de la plantilla</strong>
                           </span>
+                          <div class="text-caption">Selecciona los trabajadores que participarán en esta plantilla.</div>
+                        </v-col>
+                        <v-spacer />
+                        <v-col cols="12" md="4" class="trip-worker-toolbar-actions">
+                          <v-text-field
+                            v-model="workerSearch"
+                            class="trip-worker-search"
+                            density="compact"
+                            variant="outlined"
+                            prepend-inner-icon="mdi-magnify"
+                            placeholder="Buscar trabajador..."
+                            hide-details
+                            clearable
+                          />
+                        </v-col>
+                      </v-row>
+                    </v-toolbar>
+
+                    <v-card-text class="trip-config-list-content">
+                      <div class="trip-list-scroll trip-worker-assignment-list" role="table" aria-label="Trabajadores de la plantilla">
+                        <div class="trip-list-header trip-worker-list-header" role="row">
+                          <div style="width:50%" role="columnheader">Trabajador</div>
+                          <div style="width:25%" role="columnheader">Rol</div>
+                          <div style="width:25%" class="trip-list-column-centered" role="columnheader">Asignar a la plantilla</div>
                         </div>
-                      </template>
-                    </StandardDataTable>
-                  </v-card-text>
+
+                        <div v-if="loading" class="trip-list-state">Cargando datos...</div>
+                        <div v-else-if="!filteredTemplateWorkers.length" class="trip-list-state">No hay trabajadores disponibles.</div>
+
+                        <div v-for="worker in filteredTemplateWorkers" :key="worker.id" class="trip-list-row trip-worker-list-row" role="row">
+                          <div style="width:50%" class="trip-worker-place" role="cell">
+                            <v-avatar class="trip-list-avatar" elevation="3" color="grey-lighten-4">
+                              <v-img :src="getImageUrl(worker.workerImage)" alt="image" />
+                            </v-avatar>
+                            <div class="trip-list-copy"><strong>{{ worker.workerName }}</strong></div>
+                          </div>
+                          <div style="width:25%" class="trip-list-value" role="cell">{{ worker.roleName || '-' }}</div>
+                          <div style="width:25%" class="trip-list-association" role="cell">
+                            <v-switch
+                              :model-value="isWorkerAssociated(worker)"
+                              @update:model-value="(value) => value ? saveAssignedWorker(worker) : deleteItemWorker(worker)"
+                              :true-value="true"
+                              :false-value="false"
+                              :color="isWorkerAssociated(worker) ? paleteColors.green : paleteColors.grey"
+                              :base-color="isWorkerAssociated(worker) ? paleteColors.green : paleteColors.grey"
+                              density="compact"
+                              hide-details
+                              inset
+                              class="custom-switch compact-inline-switch"
+                              :title="isWorkerAssociated(worker) ? 'Quitar trabajador de la plantilla' : 'Asignar trabajador a la plantilla'"
+                            />
+                            <span :style="{ color: isWorkerAssociated(worker) ? paleteColors.green : paleteColors.grey }">{{ isWorkerAssociated(worker) ? 'Asignado' : 'Sin asignar' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </v-card-text>
                   </v-sheet>
                 </div>
 
@@ -1526,7 +1243,10 @@ export default {
     filteredWorkers: [],
     templateStopRows: [],
     templateFareRows: [],
-    expandedTemplateFareIds: [],
+     templateStopSearch: "",
+     templateFareSearch: "",
+     workerSearch: "",
+     expandedTemplateFareIds: [],
     data: {},
     selectedWorker: "",
     route: "",
@@ -1734,6 +1454,43 @@ export default {
           )
       );
     },
+    filteredTemplateStopRows() {
+      const query = String(this.templateStopSearch || "").trim().toLowerCase();
+      if (!query) return this.templateStopRows;
+
+      return this.templateStopRows.filter((stop) =>
+        [stop.locationName, stop.locationCity, stop.locationCountry, stop.stop_order]
+          .filter((value) => value !== null && value !== undefined)
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+      );
+    },
+     filteredTemplateFareRows() {
+       const query = String(this.templateFareSearch || "").trim().toLowerCase();
+       if (!query) return this.templateFareRows;
+
+       return this.templateFareRows.filter((fare) =>
+         [fare.originLabel, fare.destinationLabel, fare.base_price, fare.valid_from, fare.valid_to]
+           .filter((value) => value !== null && value !== undefined)
+           .join(" ")
+           .toLowerCase()
+           .includes(query)
+       );
+     },
+     filteredTemplateWorkers() {
+       const query = String(this.workerSearch || "").trim().toLowerCase();
+       const workers = Array.isArray(this.filteredWorkers) ? this.filteredWorkers : [];
+       if (!query) return workers;
+
+       return workers.filter((worker) =>
+         [worker.workerName, worker.roleName]
+           .filter((value) => value !== null && value !== undefined)
+           .join(" ")
+           .toLowerCase()
+           .includes(query)
+       );
+     },
   },
   mounted() {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
@@ -1995,7 +1752,7 @@ export default {
       }
 
       const includedStops = (Array.isArray(tripStops) ? tripStops : [])
-        .filter((stop) => stop?.included && stop?.active !== false);
+        .filter((stop) => stop?.included);
       const stopIds = includedStops.map((stop) => Number(stop.route_stop_id));
       if (new Set(stopIds).size !== stopIds.length) {
         return false;
@@ -2146,9 +1903,7 @@ export default {
           existingStop?.included ?? existingStop?.is_included ?? existingStop?.isIncluded,
           true
         );
-        const included = normalizedExistingActive && normalizedRouteActive && (
-          forceIncludeAll ? true : existingStop ? existingIncluded : false
-        );
+        const included = forceIncludeAll ? true : existingStop ? existingIncluded : false;
 
         return {
           id: existingStop?.id || "",
@@ -2314,6 +2069,28 @@ export default {
       this.expandedTemplateFareIds =
         this.expandedTemplateFareIds[0] === itemId ? [] : [itemId];
     },
+    toggleTemplateFareIncluded(fare) {
+      if (!fare) return;
+      fare.included = !fare.included;
+      if (!fare.included) {
+        this.expandedTemplateFareIds = this.expandedTemplateFareIds.filter(
+          (id) => Number(id) !== Number(fare.id)
+        );
+      }
+      this.$forceUpdate();
+    },
+    focusTemplateStop(stop) {
+      const stopId = String(stop?.route_stop_id ?? "");
+      if (!stopId) return;
+
+      this.$nextTick(() => {
+        const input = document.querySelector(
+          `[data-template-stop-id="${CSS.escape(stopId)}"] input`
+        );
+        input?.focus();
+        input?.select?.();
+      });
+    },
     syncTemplateFareRows(forceIncludeAll = false) {
       const route = this.getSelectedRouteRecord();
       if (!route) {
@@ -2339,6 +2116,7 @@ export default {
       const payload = [];
 
       (Array.isArray(rows) ? rows : [])
+        .filter((segment) => segment?.included !== false)
         .filter((segment) => this.isTemplateFareSegmentEligible(segment))
         .forEach((segment) => {
         (Array.isArray(segment.fareSegmentTicketTypes)
@@ -2407,7 +2185,7 @@ export default {
     },
     normalizeTemplateStopsPayload(rows = []) {
       return (Array.isArray(rows) ? rows : [])
-        .filter((row) => row.included && this.normalizeTemplateBoolean(row.active, true))
+        .filter((row) => row.included)
         .map((row) => ({
           route_stop_id: Number(row.route_stop_id),
           stop_order: Number(row.stop_order) || 1,
@@ -2424,9 +2202,6 @@ export default {
       );
     },
     onTemplateStopIncludedChange() {
-      this.templateStopRows = this.templateStopRows.map((row) =>
-        row.active === false ? { ...row, included: false } : row
-      );
       this.syncTemplateFareRows();
       this.$forceUpdate();
     },
@@ -2728,7 +2503,10 @@ export default {
       this.filteredWorkers = [];
       this.templateStopRows = [];
       this.templateFareRows = [];
-      this.expandedTemplateFareIds = [];
+       this.templateStopSearch = "";
+       this.templateFareSearch = "";
+       this.workerSearch = "";
+       this.expandedTemplateFareIds = [];
       this.editedIndex = -1;
       this.editedItem = Object.assign({}, this.defaultItem, {
         schedule: this.getCurrentTime(),
@@ -2758,6 +2536,8 @@ export default {
       this.editedIndex = -1;
       this.templateStopRows = [];
       this.templateFareRows = [];
+      this.templateStopSearch = "";
+      this.templateFareSearch = "";
       this.expandedTemplateFareIds = [];
     },
     async showAssiegnedWorker() {
@@ -3130,7 +2910,10 @@ export default {
       this.editedItem.tripFares = this.parseTemplateFares(this.editedItem.tripFares);
       this.templateStopRows = [];
       this.templateFareRows = [];
-      this.editedItem.branch_id = this.editedItem.branch_id ?? this.branch_id;
+       this.templateStopSearch = "";
+       this.templateFareSearch = "";
+       this.workerSearch = "";
+       this.editedItem.branch_id = this.editedItem.branch_id ?? this.branch_id;
       await this.loadTripTemplateFormData(this.editedItem.branch_id, {
         resetSelections: false,
       });
@@ -4083,4 +3866,244 @@ export default {
 @media(max-width:959px) { .trip-form { display:flex; flex-direction:column; }.trip-live-summary { order:-1; display:flex; gap:10px; flex:0 0 auto; max-height:148px; padding:10px 14px; border-left:0; border-bottom:1px solid #e1e8f1; overflow:auto; }.trip-summary-heading,.trip-vehicle-preview,.trip-preview-note { display:none; }.trip-route-preview,.trip-schedule-preview { flex:1 0 220px; margin:0; padding:10px 12px; }.trip-live-summary .trip-preview-eyebrow,.trip-preview-duration,.trip-preview-route-code { display:none; }.trip-preview-stop { padding-bottom:8px; }.trip-preview-stop small { display:none; }.trip-preview-stop strong { font-size:12px; }.trip-stepper { flex:1 1 auto; height:auto; }.trip-step-actions .v-btn { min-width:80px; font-size:12px; } }
 @media(max-width:700px) { .trip-progress-nav { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:10px; }.trip-progress-item { gap:7px; padding:8px; }.trip-progress-copy strong { font-size:11px; }.trip-progress-number { flex-basis:28px; height:28px; }.trip-option-journey { grid-template-columns:1fr; gap:10px; }.trip-option-arrow { display:none; }.trip-step-pane--summary .trip-step-content { padding:16px 12px; } }
 @media(max-width:600px) { .trip-dialog-header { grid-template-columns:minmax(0,1fr) 42px; padding:10px 12px; }.trip-dialog-progress { display:none; }.trip-dialog-subtitle { max-width:230px; }.trip-progress-copy strong { font-size:10px; }.trip-time-panel { padding:12px; }.trip-time-journey { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }.trip-time-duration { grid-column:1 / -1; grid-row:2; display:flex; justify-content:center; gap:8px; }.trip-time-duration>div { margin:0; }.trip-time-value,.trip-departure-input .v-field__input { font-size:27px!important; }.trip-time-panel-heading>span { font-size:10px; }.trip-vehicle-option-meta { grid-template-columns:1fr; } }
+.trip-stop-toolbar-actions,
+.trip-fare-toolbar-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  padding:0 14px 0 0;
+}
+.trip-stop-search,
+.trip-fare-search {
+  min-width:180px;
+  max-width:240px;
+}
+.trip-stop-search .v-field,
+.trip-fare-search .v-field,
+.trip-worker-search .v-field {
+  min-height:38px!important;
+  border-color:#d1d5db!important;
+  border-radius:9px!important;
+  background:#fff;
+  box-shadow:none!important;
+}
+.trip-worker-toolbar-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  padding:0 36px 0 0!important;
+}
+.trip-worker-search {
+  min-width:180px;
+  max-width:240px;
+  margin-right:8px;
+}
+.trip-config-list-content {
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-height:0;
+  padding:0!important;
+  overflow:hidden;
+}
+.trip-list-scroll {
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+.trip-list-header,
+.trip-list-row {
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  min-width:900px;
+}
+.trip-list-header > div,
+.trip-list-row > div {
+  box-sizing:border-box;
+  flex:0 0 auto;
+  min-width:0;
+}
+.trip-list-column-centered {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.trip-list-header {
+  position:sticky;
+  z-index:1;
+  top:0;
+  min-height:43px;
+  padding:0 16px;
+  color:#64748b;
+  background:#f8fafc;
+  border-bottom:1px solid #e5e7eb;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+}
+.trip-list-row {
+  min-height:58px;
+  padding:7px 16px;
+  color:#1f2937;
+  background:#fff;
+  border-bottom:1px solid #edf0f3;
+  font-size:12px;
+  font-weight:600;
+  transition:background .15s ease;
+}
+.trip-list-row:hover { background:#fbfcfe; }
+.trip-list-avatar {
+  flex:0 0 32px;
+  width:32px!important;
+  height:32px!important;
+  margin-right:10px;
+  border:1px solid #dce6ff;
+  border-radius:8px!important;
+}
+.trip-stop-place,
+.trip-worker-place {
+  display:flex;
+  align-items:center;
+  min-width:0;
+}
+.trip-list-copy {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.trip-list-copy strong {
+  overflow:hidden;
+  color:#1f2937;
+  font-size:12px;
+  font-weight:800;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.trip-list-copy span {
+  margin-top:3px;
+  overflow:hidden;
+  color:#6b7280;
+  font-size:10px;
+  font-weight:600;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.trip-list-value {
+  overflow:hidden;
+  color:#374151;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.trip-list-primary { color:#1f2937; font-weight:800; }
+.trip-list-validity {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  overflow:hidden;
+  color:#374151;
+  font-size:11px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+.trip-list-status {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.trip-list-control,
+.trip-list-action {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.trip-list-association {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.trip-association-button {
+  flex:0 0 40px;
+  min-width:40px!important;
+  width:40px!important;
+  height:40px!important;
+  margin-inline:0!important;
+  padding:0!important;
+}
+.trip-list-association > span {
+  display:block;
+  max-width:calc(100% - 44px);
+  overflow:hidden;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.2;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.trip-stop-order-cell { padding-inline:7px; }
+.trip-stop-order-cell .v-field { min-height:34px!important; border-radius:999px!important; }
+.trip-stop-order-cell .v-field__input {
+  justify-content:center;
+  padding-inline:6px!important;
+  color:#374151;
+  font-size:12px;
+  font-weight:750;
+  text-align:center;
+}
+.trip-list-state {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:900px;
+  min-height:90px;
+  padding:16px;
+  color:#64748b;
+  font-size:12px;
+  font-weight:600;
+}
+.trip-fare-list-row { flex-wrap:wrap; }
+.trip-template-types-action { justify-content:flex-end; }
+.trip-fare-expanded {
+  flex:0 0 100%!important;
+  width:100%;
+  padding:8px 0 0;
+}
+.trip-fare-expanded .trip-fare-ticket-types-panel { margin:0; }
+.trip-fare-expand-button {
+  width:30px!important;
+  height:30px!important;
+  border-color:#2454d6!important;
+}
+@media(max-width:600px) {
+  .trip-stop-toolbar-actions,
+  .trip-fare-toolbar-actions {
+    align-items:stretch;
+    flex-direction:column;
+    padding:8px 14px 0 0;
+  }
+  .trip-stop-search,
+  .trip-fare-search {
+    width:100%;
+    max-width:none;
+  }
+  .trip-worker-toolbar-actions {
+    align-items:stretch;
+    flex-direction:column;
+    padding:8px 36px 0 0!important;
+  }
+  .trip-worker-search {
+    width:100%;
+    max-width:none;
+  }
+}
 </style>

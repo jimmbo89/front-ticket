@@ -60,7 +60,7 @@
                   <section class="branch-association-panel">
                     <div class="association-heading">
                       <div class="association-heading-icon"><v-icon size="19">mdi-store-marker-outline</v-icon></div>
-                      <div><div class="association-heading-title">Sucursales (OPCIONAL)</div><div class="association-heading-copy">Selecciona una o varias sucursales. Puedes buscar, seleccionar y quitar opciones desde el mismo campo.</div></div>
+                      <div><div class="association-heading-title">Sucursales asociadas</div><div class="association-heading-copy">Selecciona una o varias sucursales. Puedes buscar, seleccionar y quitar opciones desde el mismo campo.</div></div>
                     </div>
                     <MultiSelectCombobox
                       :model-value="selectedBranchRows"
@@ -126,6 +126,44 @@
                       </MultiSelectCombobox>
                     </section>
                   </template>
+
+                  <section class="device-association-panel">
+                    <div class="association-heading">
+                      <div class="association-heading-icon"><v-icon size="19">mdi-devices</v-icon></div>
+                      <div><div class="association-heading-title">Dispositivos a bordo (opcional)</div><div class="association-heading-copy">Selecciona uno o varios dispositivos disponibles en las sucursales asociadas.</div></div>
+                    </div>
+                    <MultiSelectCombobox
+                      :model-value="selectedDeviceRows"
+                      :items="availableDevices"
+                      item-title="displayName"
+                      item-value="id"
+                      label="Seleccionar dispositivos"
+                      placeholder="Busca por nombre o número de serie"
+                      prepend-inner-icon="mdi-devices"
+                      no-data-text="No hay dispositivos disponibles para las sucursales seleccionadas."
+                      :disabled="loading || (!selectedBranchIds.length && !selectedDeviceRows.length)"
+                      :loading="loading"
+                      :custom-filter="deviceFilter"
+                      :menu-props="{ contentClass: 'vehicle-device-select-menu' }"
+                      class="vehicle-device-combobox"
+                      @update:model-value="updateSelectedDevices"
+                    >
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" :disabled="item.raw.disabled" :title="item.raw.displayName" :subtitle="deviceCaption(item.raw)">
+                          <template #prepend><div class="device-avatar"><v-icon size="18">mdi-cellphone</v-icon></div></template>
+                          <template #append><span class="device-option-status" :class="item.raw.disabled ? 'device-option-status--unavailable' : 'device-option-status--available'">{{ deviceStatusText(item.raw) }}</span></template>
+                        </v-list-item>
+                      </template>
+                      <template #selection="{ item, remove }">
+                        <v-chip class="selected-device-chip" closable @click:close="remove">
+                          <template #prepend><v-icon size="14">mdi-cellphone</v-icon></template>
+                          {{ item.raw.displayName }}
+                        </v-chip>
+                      </template>
+                    </MultiSelectCombobox>
+                    <div v-if="!selectedBranchIds.length" class="association-help"><v-icon size="17">mdi-information-outline</v-icon><span>Asocia al menos una sucursal para consultar sus dispositivos.</span></div>
+                    <div v-else class="association-help"><v-icon size="17">mdi-information-outline</v-icon><span>Los dispositivos asociados a otro vehículo aparecen deshabilitados.</span></div>
+                  </section>
                 </div>
                 <v-divider />
                 <div class="vehicle-step-actions"><v-btn type="button" variant="text" class="cancel-button" :disabled="loading" @click="prevStep">Volver</v-btn><v-spacer /><v-btn type="submit" class="save-button" elevation="0" :loading="loading" :disabled="!valid">{{ isCreating ? "Crear vehículo" : "Guardar vehículo" }}</v-btn></div>
@@ -184,6 +222,7 @@ export default {
     vehicle: { type: Object, default: () => ({}) },
     structures: { type: Array, default: () => [] },
     branches: { type: Array, default: () => [] },
+    vehicles: { type: Array, default: () => [] },
     isCreating: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
   },
@@ -192,10 +231,12 @@ export default {
     formItem: {},
     originalBranches: [],
     branchRows: [],
+    originalDevices: [],
+    selectedDeviceIds: [],
     originalRoutePreferences: [],
     preferredRouteIds: [],
     step: 1,
-    stepItems: ["Datos del vehículo", "Sucursales y rutas"],
+    stepItems: ["Datos del vehículo", "Operación"],
     file: null,
     imgMiniatura: "",
     snackbar: false,
@@ -212,11 +253,61 @@ export default {
   computed: {
     isOpen: { get() { return this.modelValue; }, set(value) { this.$emit("update:modelValue", value); } },
     imagePreview() { return this.imgMiniatura || this.imageUrl(this.formItem?.image || this.vehicle?.image); },
+    deviceAssignments() {
+      const assignments = new Map();
+      this.toArray(this.vehicles).forEach((vehicle) => {
+        this.toArray(vehicle?.devices).forEach((device) => {
+          const deviceId = device?.device_id ?? device?.deviceId ?? device?.id;
+          if (deviceId === undefined || deviceId === null || deviceId === "") return;
+          assignments.set(String(deviceId), {
+            vehicleId: vehicle.id ?? vehicle.vehicle_id ?? vehicle.vehicleId ?? null,
+            vehicle: {
+              plate: vehicle.plate,
+              internal_number: vehicle.internal_number ?? vehicle.internalNumber,
+            },
+          });
+        });
+      });
+      return assignments;
+    },
     selectedBranchIds() {
       return this.branchRows.filter((branch) => branch.associated).map((branch) => branch.id).filter(Boolean);
     },
     selectedBranchRows() {
       return this.branchRows.filter((branch) => branch.associated);
+    },
+    selectedDeviceRows() {
+      const selectedIds = new Set(this.selectedDeviceIds.map((deviceId) => String(deviceId)));
+      return this.availableDevices.filter((device) => selectedIds.has(String(device.id)));
+    },
+    availableDevices() {
+      const selectedBranchIds = new Set(this.selectedBranchIds.map((id) => String(id)));
+      const deviceMap = new Map();
+      this.branchRows
+        .filter((branch) => selectedBranchIds.has(String(branch.id)))
+        .forEach((branch) => {
+          this.toArray(branch.devices).forEach((device) => {
+            const normalized = this.normalizeDevice(device);
+            if (!normalized.id) return;
+            const key = String(normalized.id);
+            if (!deviceMap.has(key)) deviceMap.set(key, normalized);
+          });
+        });
+      const currentVehicleId = this.vehicle?.id ?? this.formItem?.id ?? null;
+      const selectedIds = new Set(this.selectedDeviceIds.map((deviceId) => String(deviceId)));
+      return Array.from(deviceMap.values()).map((device) => {
+        const assignedToAnotherVehicle = device.assignedVehicleId !== null
+          && device.assignedVehicleId !== undefined
+          && device.assignedVehicleId !== ""
+          && String(device.assignedVehicleId) !== String(currentVehicleId ?? "");
+        const selected = selectedIds.has(String(device.id));
+        return {
+          ...device,
+          associated: selected,
+          disabled: assignedToAnotherVehicle && !selected,
+          assignedToAnotherVehicle,
+        };
+      });
     },
     availableRoutes() {
       const selectedIds = new Set(this.selectedBranchIds.map((id) => String(id)));
@@ -259,6 +350,36 @@ export default {
         return null;
       }).filter(Boolean);
     },
+    deviceChanges() {
+      const originalById = new Map(this.originalDevices.map((device) => [String(device.id), device]));
+      const selectedIds = new Set(this.selectedDeviceIds.map((deviceId) => String(deviceId)));
+      const vehicleId = this.vehicle?.id || this.formItem?.id || null;
+      const changes = [];
+
+      originalById.forEach((original, deviceId) => {
+        if (!selectedIds.has(deviceId)) {
+          changes.push({
+            association_id: original.associationId ?? null,
+            vehicle_id: vehicleId,
+            device_id: original.id,
+            action: "delete",
+          });
+        }
+      });
+
+      selectedIds.forEach((deviceId) => {
+        if (!originalById.has(deviceId)) {
+          changes.push({
+            association_id: null,
+            vehicle_id: vehicleId,
+            device_id: deviceId,
+            action: "associate",
+          });
+        }
+      });
+
+      return changes;
+    },
   },
   watch: {
     modelValue(value) { if (value) this.syncFromVehicle(); },
@@ -277,6 +398,11 @@ export default {
       vehicleBranches.forEach((branch) => { const normalized = this.normalizeBranch(branch); if (!normalized.id) return; byId.set(String(normalized.id), { ...byId.get(String(normalized.id)), ...normalized }); });
       this.branchRows = Array.from(byId.values()).map((branch) => this.isCreating ? { ...branch, associated: false, relationId: null } : branch);
       this.originalBranches = this.isCreating ? [] : this.branchRows.map((branch) => ({ ...branch }));
+      this.originalDevices = this.isCreating
+        ? []
+        : this.toArray(this.vehicle?.devices).map((device) => this.normalizeDevice(device, true)).filter((device) => device.id);
+      this.selectedDeviceIds = this.originalDevices.map((device) => device.id);
+      this.pruneSelectedDevices();
       const rawRoutePreferences = this.vehicle?.route_preferences ?? this.vehicle?.routePreferences ?? [];
       this.originalRoutePreferences = this.isCreating ? [] : this.toArray(rawRoutePreferences).map((preference) => this.normalizeRoutePreference(preference)).filter((preference) => preference.route_id);
       const preferredRouteIds = this.originalRoutePreferences
@@ -297,6 +423,47 @@ export default {
       const relationId = branch.association_id ?? branch.associationId ?? branch.branchVehicleId ?? branch.branch_vehicle_id ?? branch.branchVehicle?.id ?? branch.branch_vehicle?.id ?? relation.id ?? null;
       const associated = branch.associated === false ? false : branch.associated === true || (branch.associated == null && Boolean(relationId));
       return { ...branch, id, name: branch.name ?? branch.branchName ?? branch.branch_name ?? "Sucursal sin nombre", address: branch.address ?? branch.branchAddress ?? branch.branch_address ?? "Dirección no disponible", image: branch.image ?? branch.branchImage ?? branch.branch_image ?? "", associated, relationId };
+    },
+    normalizeDevice(device = {}, associatedOverride = null) {
+      const source = device?.device && typeof device.device === "object" ? device.device : device;
+      const relation = device.deviceVehicle || device.device_vehicle || device.association || device.deviceVehicleRelation || {};
+      const id = device.device_id ?? device.deviceId ?? device.device?.id ?? device.id ?? "";
+      const catalogAssignment = this.deviceAssignments.get(String(id)) || {};
+      const assignedVehicleId = device.vehicle_id
+        ?? device.vehicleId
+        ?? device.assigned_vehicle_id
+        ?? device.assignedVehicleId
+        ?? device.vehicle?.id
+        ?? relation.vehicle_id
+        ?? relation.vehicleId
+        ?? catalogAssignment.vehicleId
+        ?? null;
+      const assignedVehicle = device.vehicle || relation.vehicle || catalogAssignment.vehicle || {};
+      const associated = associatedOverride !== null
+        ? associatedOverride
+        : device.associated === true || device.is_associated === true || Boolean(relation.id);
+      const associationId = device.association_id
+        ?? device.associationId
+        ?? device.deviceVehicleId
+        ?? device.device_vehicle_id
+        ?? device.deviceVehicle?.id
+        ?? device.association?.id
+        ?? relation.id
+        ?? null;
+      const name = source.name ?? device.name ?? "Dispositivo sin nombre";
+      const serial = source.serial ?? device.serial ?? "";
+      return {
+        ...source,
+        ...device,
+        id,
+        name,
+        serial,
+        displayName: name,
+        assignedVehicleId,
+        assignedVehicleLabel: assignedVehicle.plate || assignedVehicle.internal_number || assignedVehicle.internalNumber || device.vehicle_plate || device.vehiclePlate || "otro vehículo",
+        associated,
+        associationId,
+      };
     },
     normalizeRoute(route = {}) {
       const origin = route.origin || {};
@@ -337,6 +504,7 @@ export default {
       }
       this.branchRows = this.branchRows.map((branch) => ({ ...branch, associated: selectedIds.has(String(branch.id)) }));
       this.pruneSelectedRoutes();
+      this.pruneSelectedDevices(true);
     },
     pruneSelectedRoutes() {
       if (!this.selectedBranchIds.length) return;
@@ -357,9 +525,53 @@ export default {
     routeCaption(route = {}) {
       return [route.originName, route.destinationName].filter(Boolean).join(" → ");
     },
+    deviceFilter(value, query, item) {
+      const search = String(query ?? "").toLowerCase().trim();
+      if (!search) return 1;
+      const device = item?.raw ?? item ?? {};
+      const searchable = [value, device.id, device.name, device.serial, device.mac, device.assignedVehicleLabel]
+        .map((part) => String(part ?? "").toLowerCase())
+        .join(" ");
+      return searchable.includes(search) ? 1 : -1;
+    },
+    deviceCaption(device = {}) {
+      return [device.serial ? `Serie: ${device.serial}` : "Sin serie", device.mac ? `MAC: ${device.mac}` : ""]
+        .filter(Boolean)
+        .join(" · ");
+    },
+    deviceStatusText(device = {}) {
+      if (device.disabled && device.assignedVehicleLabel) return `Asignado a ${device.assignedVehicleLabel}`;
+      return "Disponible";
+    },
     updateSelectedRoutes(selectedRoutes) {
       const availableIds = new Set(this.availableRoutes.map((route) => String(route.id)));
       this.preferredRouteIds = [...new Set(this.toArray(selectedRoutes).map((route) => String(route?.id ?? route)).filter((routeId) => availableIds.has(routeId)))];
+    },
+    updateSelectedDevices(selectedDevices) {
+      const availableIds = new Set(this.availableDevices.filter((device) => !device.disabled).map((device) => String(device.id)));
+      this.selectedDeviceIds = [...new Set(this.toArray(selectedDevices)
+        .map((device) => String(device?.id ?? device))
+        .filter((deviceId) => availableIds.has(deviceId)))];
+    },
+    pruneSelectedDevices(notifyUser = false) {
+      const availableIds = new Set();
+      this.branchRows
+        .filter((branch) => branch.associated)
+        .forEach((branch) => this.toArray(branch.devices).forEach((device) => {
+          const normalized = this.normalizeDevice(device);
+          if (normalized.id) availableIds.add(String(normalized.id));
+        }));
+      const previousCount = this.selectedDeviceIds.length;
+      const nextSelectedIds = this.selectedDeviceIds.filter((deviceId) => availableIds.has(String(deviceId)));
+      if (nextSelectedIds.length !== previousCount) {
+        this.selectedDeviceIds = nextSelectedIds;
+        if (notifyUser) {
+          const removedCount = previousCount - nextSelectedIds.length;
+          this.notify("info", removedCount === 1
+            ? "El dispositivo dejó de estar disponible al cambiar las sucursales."
+            : removedCount + " dispositivos dejaron de estar disponibles al cambiar las sucursales.");
+        }
+      }
     },
     removeSelectedRoute(routeId) {
       const removedId = String(routeId);
@@ -371,6 +583,7 @@ export default {
       if (branch.associated && original?.associated && !branch.relationId) { this.notify("warning", "No se pudo identificar la asociación de la sucursal."); return; }
       branch.associated = !branch.associated;
       this.pruneSelectedRoutes();
+      this.pruneSelectedDevices(true);
     },
     async nextStep() {
       if (this.step >= this.stepItems.length || this.loading) return;
@@ -393,7 +606,7 @@ export default {
     async saveVehicle() {
       const validation = await this.$refs.form?.validate();
       if (!validation?.valid) return;
-      this.$emit("save", { item: { ...this.formItem }, file: this.file, branches: this.branchChanges, routePreferences: this.routePreferenceChanges });
+      this.$emit("save", { item: { ...this.formItem }, file: this.file, branches: this.branchChanges, devices: this.deviceChanges, routePreferences: this.routePreferenceChanges });
     },
     async submit() {
       if (this.step !== this.stepItems.length) { await this.nextStep(); return; }
@@ -747,4 +960,12 @@ export default {
 
 <style>
 .vehicle-route-select-menu .v-list{padding:6px!important}.vehicle-route-select-menu .v-list-item{min-height:54px;margin:2px 0;border-radius:9px}.vehicle-route-select-menu .v-list-item:hover{background:#f4f7ff}.vehicle-route-select-menu .v-list-item__prepend{margin-inline-end:12px!important}.vehicle-route-select-menu .v-list-item-subtitle{color:#64748b!important;font-size:10.5px!important;font-weight:650!important;opacity:1!important}.vehicle-route-select-menu .route-avatar{flex:0 0 36px;width:36px;height:36px}.route-selection-heading{margin-top:13px;color:#475569;font-size:11px;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.route-selection-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.selected-route-chip{max-width:100%;color:#2454d6!important;background:#eef3ff!important;font-size:11px!important;font-weight:750!important}.selected-route-chip .v-chip__content{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selected-route-chip .v-chip__close{color:#64748b!important}.selected-route-chip .v-chip__close:hover{color:#dc2626!important}
+</style>
+
+<style scoped>
+.device-association-panel{margin-top:14px;padding:13px;background:#f8fafc;border:1px solid #e8edf5;border-radius:10px}.device-association-panel .association-help{display:flex;align-items:flex-start;gap:7px;margin-top:8px;color:#64748b;font-size:10.5px;line-height:1.45}.device-association-panel .association-help .v-icon{flex-shrink:0;margin-top:1px;color:#7692be}.device-avatar{display:grid;flex:0 0 36px;width:36px;height:36px;place-items:center;color:#2454d6;background:#eef3ff;border:1px solid #dce6ff;border-radius:9px}.device-option-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:7px;font-size:10px;font-weight:800;white-space:nowrap}.device-option-status--available{color:#116b49;background:#eaf8f1}.device-option-status--unavailable{color:#8a5b08;background:#fff6e6}.selected-device-chip{max-width:220px!important;color:#2454d6!important;background:#eef3ff!important;font-size:11px!important;font-weight:750!important}.selected-device-chip .v-chip__content{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selected-device-chip .v-chip__close{color:#64748b!important}.selected-device-chip .v-chip__close:hover{color:#dc2626!important}
+</style>
+
+<style>
+.vehicle-device-select-menu .v-list{padding:6px!important}.vehicle-device-select-menu .v-list-item{min-height:54px;margin:2px 0;border-radius:9px}.vehicle-device-select-menu .v-list-item:hover{background:#f4f7ff}.vehicle-device-select-menu .v-list-item__prepend{margin-inline-end:12px!important}.vehicle-device-select-menu .v-list-item-subtitle{color:#64748b!important;font-size:10.5px!important;font-weight:650!important;opacity:1!important}.vehicle-device-select-menu .device-avatar{flex:0 0 36px;width:36px;height:36px}
 </style>

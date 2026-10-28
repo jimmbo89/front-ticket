@@ -360,18 +360,79 @@
                             </div>
                           </div>
 
-                          <v-text-field
-                            v-model.number="ticket.quantity"
-                            @update:model-value="handleQuantityChange(ticket, $event)"
-                            variant="outlined"
-                            density="compact"
-                            rounded="lg"
-                            type="number"
-                            min="0"
-                            hide-details="auto"
-                            class="ticket-type-card__input"
-                            :error-messages="quantityErrors[ticket.trip_fare_id || ticket.id]"
-                          />
+                          <div class="ticket-type-card__controls">
+                            <v-text-field
+                              v-model.number="ticket.quantity"
+                              @update:model-value="handleQuantityChange(ticket, $event)"
+                              variant="outlined"
+                              density="compact"
+                              rounded="lg"
+                              type="number"
+                              min="0"
+                              hide-details="auto"
+                              class="ticket-type-card__input"
+                              :error-messages="quantityErrors[ticket.trip_fare_id || ticket.id]"
+                            />
+
+                            <div class="ticket-type-card__promotion">
+                              <div v-if="ticket.showPromotionSelect" class="ticket-type-card__promotion-select">
+                                <v-autocomplete
+                                  v-model="ticket.selectedPromotion"
+                                  :items="promotions"
+                                  label="Seleccionar tarifa"
+                                  item-title="name"
+                                  item-value="id"
+                                  variant="outlined"
+                                  density="compact"
+                                  hide-details="auto"
+                                  prepend-inner-icon="mdi-tag-outline"
+                                  :no-data-text="'No hay tarifas disponibles'"
+                                  @update:model-value="(value) => applyPromotion(ticket, value)"
+                                  @blur="hidePromotionSelect(ticket)"
+                                  autofocus
+                                >
+                                  <template #item="{ props, item }">
+                                    <v-list-item v-bind="props">
+                                      <template #title>
+                                        <span>{{ item.raw.name }}</span>
+                                      </template>
+                                      <template #subtitle>
+                                        <span>{{ formatPromotionDiscount(item.raw) }}</span>
+                                      </template>
+                                    </v-list-item>
+                                  </template>
+                                </v-autocomplete>
+                              </div>
+
+                              <div v-else-if="ticket.promotion_id" class="ticket-type-card__promotion-applied">
+                                <v-chip size="small" variant="tonal" color="primary" prepend-icon="mdi-tag-outline">
+                                  {{ ticket.namePromotion }} · {{ formatPromotionDiscount(ticket) }}
+                                </v-chip>
+                                <v-btn
+                                  icon="mdi-close"
+                                  variant="text"
+                                  size="x-small"
+                                  color="error"
+                                  title="Quitar tarifa"
+                                  aria-label="Quitar tarifa"
+                                  @click="removePromotion(ticket)"
+                                />
+                              </div>
+
+                              <v-btn
+                                v-else
+                                variant="text"
+                                size="small"
+                                color="primary"
+                                prepend-icon="mdi-tag-plus-outline"
+                                class="ticket-type-card__promotion-button"
+                                :disabled="Number(ticket.quantity) <= 0 || promotions.length === 0"
+                                @click="showPromotionSelect(ticket)"
+                              >
+                                Agregar tarifa
+                              </v-btn>
+                            </div>
+                          </div>
                         </div>
 
                         <div v-if="Number(ticket.quantity) > 0" class="ticket-type-card__total">
@@ -499,6 +560,7 @@ export default {
     allowedDestinations: [],
     trips: [],
     ticketTypes: [],
+    promotions: [],
     quantityErrors: {},
     step: 1,
     sortBy: "schedule",
@@ -644,6 +706,7 @@ export default {
       this.trips = [];
       this.allowedDestinations = [];
       this.ticketTypes = [];
+      this.promotions = [];
       this.quantityErrors = {};
       this.step = 1;
       await this.loadLocations();
@@ -700,8 +763,12 @@ export default {
         });
 
         this.locations = result.success ? result.data?.locations || [] : [];
+        this.promotions = result.success
+          ? this.normalizePromotions(result.data?.promotions || [])
+          : [];
       } catch (error) {
         this.locations = [];
+        this.promotions = [];
         this.$emit("alert", "error", "Ocurrio un error inesperado al procesar la solicitud.", 3000);
       } finally {
         this.loadingDestinations = false;
@@ -875,7 +942,116 @@ export default {
         price: basePrice,
         quantity: 0,
         line_total: 0,
+        showPromotionSelect: false,
+        selectedPromotion: null,
+        promotion_id: null,
+        namePromotion: "",
+        percentage: 0,
+        discount_type: null,
+        discount: 0,
       };
+    },
+    normalizePromotions(promotions = []) {
+      return (Array.isArray(promotions)
+        ? promotions
+        : Object.values(promotions || {})
+      ).map((promotion) => ({
+        ...promotion,
+        discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
+      }));
+    },
+    getPromotionDiscountType(promotion = {}) {
+      return (
+        promotion.discount_type ??
+        promotion.discountType ??
+        promotion.promotion_discount_type ??
+        promotion.promotionDiscountType ??
+        promotion.promotion_details?.discount_type ??
+        promotion.promotion_details?.discountType ??
+        promotion.promotionDetails?.discount_type ??
+        promotion.promotionDetails?.discountType ??
+        "monto"
+      );
+    },
+    formatPromotionDiscount(promotion = {}) {
+      const discountType = this.getPromotionDiscountType(promotion);
+      const value = Number(
+        promotion.percentage ??
+        promotion.value ??
+        promotion.amount ??
+        promotion.promotion_details?.percentage ??
+        0
+      ) || 0;
+
+      return discountType === "porcentaje"
+        ? `Porcentaje: ${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`
+        : `Monto fijo: ${new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0,
+          }).format(value)}`;
+    },
+    recalculateTicketLine(ticket = {}) {
+      const quantity = Math.max(0, Number(ticket.quantity) || 0);
+      const basePrice = Number(ticket.base_price) || 0;
+      const grossTotal = basePrice * quantity;
+      const hasPromotion = ticket.promotion_id !== null &&
+        ticket.promotion_id !== undefined &&
+        ticket.promotion_id !== "";
+      const discountType = hasPromotion ? this.getPromotionDiscountType(ticket) : null;
+      const value = hasPromotion
+        ? Number(ticket.percentage ?? ticket.value ?? ticket.amount ?? 0) || 0
+        : 0;
+      const discountPerUnit = discountType === "porcentaje"
+        ? (basePrice * value) / 100
+        : value;
+      const discount = hasPromotion
+        ? Math.min(grossTotal, Math.max(0, discountPerUnit * quantity))
+        : 0;
+
+      ticket.discount = discount;
+      ticket.line_total = Math.max(0, grossTotal - discount);
+    },
+    showPromotionSelect(ticket = {}) {
+      if (Number(ticket.quantity) <= 0 || this.promotions.length === 0) return;
+      ticket.showPromotionSelect = true;
+      ticket.selectedPromotion = null;
+    },
+    hidePromotionSelect(ticket = {}) {
+      if (!ticket.promotion_id) {
+        ticket.showPromotionSelect = false;
+        ticket.selectedPromotion = null;
+      }
+    },
+    applyPromotion(ticket = {}, promotionId) {
+      const promotion = (this.promotions || []).find(
+        (item) => Number(item.id) === Number(promotionId)
+      );
+      if (!promotion) return;
+
+      ticket.promotion_id = promotion.id ?? promotion.promotion_id;
+      ticket.namePromotion = promotion.name ?? promotion.title ?? "";
+      ticket.promotion_details = promotion;
+      ticket.promotionDetails = promotion;
+      ticket.discount_type = this.getPromotionDiscountType(promotion);
+      ticket.percentage = Number(
+        promotion.percentage ?? promotion.value ?? promotion.amount ?? 0
+      ) || 0;
+      ticket.showPromotionSelect = false;
+      ticket.selectedPromotion = null;
+      this.recalculateTicketLine(ticket);
+    },
+    removePromotion(ticket = {}) {
+      ticket.promotion_id = null;
+      ticket.namePromotion = "";
+      ticket.promotion_details = null;
+      ticket.promotionDetails = null;
+      ticket.discount_type = null;
+      ticket.percentage = 0;
+      ticket.discount = 0;
+      ticket.showPromotionSelect = false;
+      ticket.selectedPromotion = null;
+      this.recalculateTicketLine(ticket);
     },
     handleQuantityChange(ticket, value) {
       const ticketId = ticket.trip_fare_id || ticket.id;
@@ -886,7 +1062,7 @@ export default {
       const finalQuantity = Math.min(requestedQuantity, maxAllowed);
 
       ticket.quantity = finalQuantity;
-      ticket.line_total = finalQuantity * (Number(ticket.base_price) || 0);
+      this.recalculateTicketLine(ticket);
       this.quantityErrors = {
         ...this.quantityErrors,
         [ticketId]:
@@ -897,15 +1073,26 @@ export default {
       const branchId = this.selectedBranchId ?? this.branchId;
       const ticketItems = this.ticketTypes
         .filter((ticket) => Number(ticket.quantity) > 0)
-        .map((ticket) => ({
-          trip_fare_id: Number(ticket.trip_fare_id),
-          ticket_type_id: Number(ticket.ticket_type_id),
-          quantity: Number(ticket.quantity) || 0,
-          base_price: Number(ticket.base_price) || 0,
-          unit_price: Number(ticket.base_price) || 0,
-          subtotal: Number(ticket.line_total) || 0,
-          currency: "CLP",
-        }));
+        .map((ticket) => {
+          const payload = {
+            trip_fare_id: Number(ticket.trip_fare_id),
+            ticket_type_id: Number(ticket.ticket_type_id),
+            quantity: Number(ticket.quantity) || 0,
+            base_price: Number(ticket.base_price) || 0,
+            unit_price: Number(ticket.base_price) || 0,
+            subtotal: Number(ticket.line_total) || 0,
+            currency: "CLP",
+          };
+
+          if (ticket.promotion_id !== null && ticket.promotion_id !== undefined && ticket.promotion_id !== "") {
+            payload.promotion_id = Number(ticket.promotion_id);
+            payload.namePromotion = ticket.namePromotion ?? "";
+            payload.percentage = Number(ticket.percentage) || 0;
+            payload.discount = Number(ticket.discount) || 0;
+          }
+
+          return payload;
+        });
 
       const payload = {
         branch_id: Number(branchId),
@@ -1208,9 +1395,15 @@ export default {
 .ticket-type-card:last-child { margin-bottom:0; }
 .ticket-type-card__main { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .ticket-type-card__main > div:first-child { min-width:0; }
+.ticket-type-card__controls { display:flex; align-items:center; justify-content:flex-end; gap:10px; min-width:0; }
 .ticket-type-card__title { color:#233654; font-size:14px; font-weight:750; overflow-wrap:anywhere; }
 .ticket-type-card__price { color:#526176; font-size:12px; margin-top:4px; }
 .ticket-type-card__input { flex:0 0 100px; width:100px; }
+.ticket-type-card__promotion { display:flex; align-items:center; gap:4px; margin-left:8px; min-width:0; }
+.ticket-type-card__promotion-select { width:220px; }
+.ticket-type-card__promotion-applied { display:flex; align-items:center; gap:2px; min-width:0; }
+.ticket-type-card__promotion-applied .v-chip { max-width:190px; }
+.ticket-type-card__promotion-button { padding-inline:0; text-transform:none; }
 .ticket-type-card__total { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 10px; margin-top:10px; border-radius:7px; background:#edf8f2; color:#116546; font-size:12px; }
 .payment-methods-grid-pro { display:grid; gap:9px; }
 .payment-method-card-pro { color:#334155; background:#fff; border:1px solid #dce4ef; border-radius:9px!important; box-shadow:none!important; cursor:pointer; }
@@ -1240,6 +1433,9 @@ export default {
   .ticket-sale-summary-grid > div:first-child { grid-column:1 / -1; }
   .ticket-type-card { padding:11px; }
   .ticket-type-card__input { flex-basis:88px; width:88px; }
+  .ticket-type-card__main { align-items:flex-start; flex-wrap:wrap; }
+  .ticket-type-card__controls { width:100%; justify-content:flex-end; }
+  .ticket-type-card__promotion-select { width:min(220px,calc(100vw - 170px)); }
   .ticket-sale-footer-actions .v-spacer { display:none; }
   .ticket-sale-btn-primary,.ticket-sale-btn-secondary { flex:1; min-width:0; padding-inline:12px; }
 }

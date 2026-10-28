@@ -1206,3 +1206,20 @@ export default {
   .dialog-actions { padding-inline: 13px !important; }
 }
 </style>
+
+<style>
+.permissions-table thead {
+  display: table-header-group !important;
+  visibility: visible !important;
+}
+
+.permissions-table thead tr {
+  display: table-row !important;
+  visibility: visible !important;
+}
+
+.permissions-table thead th {
+  display: table-cell !important;
+  visibility: visible !important;
+}
+</style>

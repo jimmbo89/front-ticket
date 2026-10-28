@@ -46,6 +46,8 @@
           items-per-page-text="Elementos por página"
           no-data-text="No hay vehículos disponibles"
           loading-text="Cargando vehículos..."
+          item-value="id"
+          v-model:expanded="expandedVehicles"
           class="vehicles-table"
         >
           <template #loading><v-skeleton-loader type="table-row@5" /></template>
@@ -63,6 +65,41 @@
           </template>
           <template #[`item.brand`]="{ item }"><span class="vehicle-text">{{ item.brand || "Sin marca" }}</span></template>
           <template #[`item.model`]="{ item }"><span class="vehicle-text">{{ item.model || "Sin modelo" }}</span></template>
+          <template #[`item.devices`]="{ item }">
+            <div v-if="toArray(item.devices).length" class="vehicle-devices-cell">
+              <span v-for="device in toArray(item.devices).slice(0, 2)" :key="device.id" class="vehicle-device-chip">{{ device.name || device.serial || "Sin nombre" }}</span>
+              <v-btn
+                variant="text"
+                size="small"
+                class="vehicle-devices-toggle"
+                :aria-label="isVehicleDevicesExpanded(item) ? 'Ocultar dispositivos' : 'Ver dispositivos'"
+                :aria-expanded="isVehicleDevicesExpanded(item)"
+                @click.stop="toggleVehicleDevices(item)"
+              >
+                <v-icon size="17">{{ isVehicleDevicesExpanded(item) ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
+                <span>{{ deviceCountLabel(item) }}</span>
+              </v-btn>
+            </div>
+            <span v-else class="vehicle-text vehicle-text--muted">Sin dispositivo</span>
+          </template>
+          <template #expanded-row="{ columns, item }">
+            <tr class="vehicle-devices-expanded-row">
+              <td :colspan="columns.length" class="vehicle-devices-expanded-cell">
+                <section class="vehicle-devices-panel" :aria-label="'Dispositivos del vehículo ' + (item.plate || item.id)">
+                  <div class="vehicle-devices-panel-heading">
+                    <div><strong>Dispositivos asociados</strong><span>{{ toArray(item.devices).length }} dispositivo(s) asociado(s)</span></div>
+                    <v-icon size="18">mdi-devices</v-icon>
+                  </div>
+                  <div class="vehicle-devices-list">
+                    <div v-for="device in toArray(item.devices)" :key="device.id" class="vehicle-device-detail">
+                      <div class="vehicle-device-detail-icon"><v-icon size="17">mdi-cellphone</v-icon></div>
+                      <div class="vehicle-device-detail-copy"><strong>{{ device.name || "Dispositivo sin nombre" }}</strong><span>Serie: {{ device.serial || "Sin serie" }}<template v-if="device.mac"> · MAC: {{ device.mac }}</template></span></div>
+                    </div>
+                  </div>
+                </section>
+              </td>
+            </tr>
+          </template>
           <template #[`item.seats`]="{ item }"><span class="seat-badge"><v-icon size="14">mdi-seat-passenger</v-icon>{{ item.seats || 0 }}</span></template>
           <template #[`item.state`]="{ item }"><span class="status-badge" :class="Number(item.state) === 1 ? 'status-badge--active' : 'status-badge--inactive'"><span class="status-dot"></span>{{ Number(item.state) === 1 ? "Activo" : "Inactivo" }}</span></template>
           <template #[`item.actions`]="{ item }">
@@ -73,7 +110,7 @@
             </div>
           </template>
         </StandardDataTable>
-        <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Gestiona los trabajadores asignados desde las acciones de cada vehículo.</div>
+        <div class="table-footer-note"><v-icon size="15">mdi-information-outline</v-icon>Consulta los dispositivos asociados desde la columna Dispositivos y gestiona los trabajadores desde las acciones del vehículo.</div>
       </v-card>
     </v-container>
 
@@ -82,6 +119,7 @@
       :vehicle="editedItem"
       :structures="structures"
       :branches="branches"
+      :vehicles="vehicles"
       :is-creating="editedIndex === -1"
       :loading="loading"
       @save="save"
@@ -173,21 +211,25 @@ export default {
 
     sortBy: [{ key: "plate", order: "asc" }],
 
+    expandedVehicles: [],
+
     headers: [
 
       //{ title: 'Sucursal', value: 'branchName', width: '20%' },
 
-      { title: "Patente", key: "plate", sortable: true, width: "24%" },
+      { title: "Patente", key: "plate", sortable: true, width: "20%" },
 
-      { title: "Marca", key: "brand", sortable: true, width: "18%" },
+      { title: "Marca", key: "brand", sortable: true, width: "13%" },
 
-      { title: "Modelo", key: "model", sortable: true, width: "18%" },
+      { title: "Modelo", key: "model", sortable: true, width: "13%" },
+
+      { title: "Dispositivos", key: "devices", sortable: false, width: "18%" },
 
       //{ title: 'Rut', value: 'rut', width: '15%' },
 
-      { title: "Asientos", key: "seats", sortable: true, width: "12%" },
+      { title: "Asientos", key: "seats", sortable: true, width: "10%" },
 
-      { title: "Estado", key: "state", sortable: true, width: "12%" },
+      { title: "Estado", key: "state", sortable: true, width: "10%" },
 
       { title: "Acciones", key: "actions", sortable: false, align: "end", width: "16%" },
 
@@ -397,6 +439,22 @@ export default {
     toArray(value) {
       return Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : []);
     },
+    isVehicleDevicesExpanded(item) {
+      const vehicleId = item?.id;
+      return this.expandedVehicles.some((expandedId) => String(expandedId) === String(vehicleId));
+    },
+    deviceCountLabel(item) {
+      const count = this.toArray(item?.devices).length;
+      return this.isVehicleDevicesExpanded(item) ? "Ocultar" : "Ver todos (" + count + ")";
+    },
+    toggleVehicleDevices(item) {
+      const vehicleId = item?.id;
+      if (vehicleId === undefined || vehicleId === null || !this.toArray(item?.devices).length) return;
+      const isExpanded = this.isVehicleDevicesExpanded(item);
+      this.expandedVehicles = isExpanded
+        ? this.expandedVehicles.filter((expandedId) => String(expandedId) !== String(vehicleId))
+        : [...this.expandedVehicles, vehicleId];
+    },
     resetEditor() {
       this.editedItem = Object.assign({}, this.defaultItem);
       this.originalItem = Object.assign({}, this.defaultItem);
@@ -458,6 +516,8 @@ export default {
 
             internal_number: vehicle.internal_number ?? vehicle.internalNumber ?? "",
 
+            devices: this.toArray(vehicle.devices),
+
           }));
 
           this.imageVersion += 1;
@@ -494,7 +554,7 @@ export default {
 
     },
 
-    async save({ item = {}, file = null, branches = [], routePreferences = [] } = {}) {
+    async save({ item = {}, file = null, branches = [], devices = [], routePreferences = [] } = {}) {
       this.editedItem = { ...this.editedItem, ...item };
       const creating = this.editedIndex === -1;
       const fields = ["brand", "model", "plate", "internal_number", "rut", "seats", "state", "structure_id"];
@@ -507,6 +567,7 @@ export default {
 
       if (file) payload.image = Array.isArray(file) ? file[0] : file;
       if (Array.isArray(branches) && branches.length) payload.branches = JSON.stringify(branches);
+      if (Array.isArray(devices) && devices.length) payload.devices = JSON.stringify(devices);
       if (Array.isArray(routePreferences) && routePreferences.length) payload.route_preferences = JSON.stringify(routePreferences);
       if (!creating && !Object.keys(payload).length) {
         this.showAlert("warning", "No se realizaron cambios.", 3000);
@@ -1180,14 +1241,14 @@ export default {
 
 @media (max-width:959px) { .page-header { padding-inline:17px; }.page-content { padding:15px 17px 24px; }.table-toolbar { align-items:stretch; flex-direction:column; }.toolbar-filters { justify-content:flex-start; }.branch-filter,.search-field { flex:1 1 0; } }
 
-@media (max-width:600px) { .page-header { align-items:flex-start; padding:11px 12px; }.page-subtitle { max-width:210px; }.add-button { min-width:42px!important; padding-inline:10px!important; }.add-button :deep(.v-btn__content) { font-size:0; }.add-button :deep(.v-icon) { margin:0!important; }.page-content { padding:11px 12px 20px; }.toolbar-filters { align-items:stretch; flex-direction:column; }.branch-filter,.search-field { flex-basis:auto; width:100%; }.dialog-header { padding:14px; }.dialog-body { padding:17px 14px 12px!important; }.status-control,.image-upload-area { align-items:flex-start; flex-direction:column; }.status-switch { width:100%; justify-content:space-between; }.dialog-actions { padding-inline:13px!important; } }
+@media (max-width:600px) { .page-header { align-items:flex-start; padding:11px 12px; }.page-subtitle { max-width:210px; }.add-button { min-width:42px!important; padding-inline:10px!important; }.add-button :deep(.v-btn__content) { font-size:0; }.add-button :deep(.v-icon) { margin:0!important; }.page-content { padding:11px 12px 20px; }.toolbar-filters { align-items:stretch; flex-direction:column; }.branch-filter,.search-field { flex-basis:auto; width:100%; }.dialog-header { padding:14px; }.dialog-body { padding:17px 14px 12px!important; }.status-control,.image-upload-area { align-items:flex-start; flex-direction:column; }.status-switch { width:100%; justify-content:space-between; }.dialog-actions { padding-inline:13px!important; }.vehicle-devices-panel { margin-inline:10px; }.vehicle-devices-list { grid-template-columns:1fr; } }
 
 
 .vehicle-name-cell { display:flex; align-items:center; gap:10px; min-width:190px; }
 .vehicle-avatar { display:grid; flex:0 0 38px; width:38px; height:38px; place-items:center; overflow:hidden; color:#2454d6; background:#eef3ff; border:1px solid #dce6ff; border-radius:9px; }
 .vehicle-photo,.image-fallback { width:100%; height:100%; }.vehicle-photo :deep(.v-img__img) { object-fit:cover; }.image-fallback { display:grid; place-items:center; }
 .cell-copy { min-width:0; }.vehicle-plate { overflow:hidden; color:#0f172a; font-size:13px; font-weight:850; text-overflow:ellipsis; white-space:nowrap; }.vehicle-number { margin-top:2px; overflow:hidden; color:#64748b; font-size:10.5px; font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
-.vehicle-text { color:#334155; font-size:12.5px; font-weight:700; }
+.vehicle-text { color:#334155; font-size:12.5px; font-weight:700; }.vehicle-text--muted { color:#64748b; font-weight:650; }.vehicle-devices-cell { display:flex; flex-wrap:wrap; align-items:center; gap:4px; max-width:100%; }.vehicle-device-chip { max-width:125px; overflow:hidden; padding:4px 7px; color:#2454d6; background:#eef3ff; border-radius:6px; font-size:10.5px; font-weight:750; text-overflow:ellipsis; white-space:nowrap; }.vehicle-devices-toggle { min-width:0!important; padding-inline:5px!important; color:#2454d6!important; font-size:10.5px!important; font-weight:800!important; text-transform:none!important; }.vehicle-devices-toggle .v-btn__content { gap:3px; white-space:nowrap; }.vehicle-devices-toggle:hover { background:#eef3ff; }.vehicle-devices-expanded-row { background:#fbfdff; }.vehicle-devices-expanded-cell { padding:0!important; border-bottom:1px solid #e8edf5!important; }.vehicle-devices-panel { margin:10px 17px 12px; padding:12px 14px; background:#fff; border:1px solid #dfe7f2; border-radius:10px; box-shadow:0 3px 10px rgba(15,23,42,.05); }.vehicle-devices-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:9px; color:#2454d6; border-bottom:1px solid #edf1f5; }.vehicle-devices-panel-heading>div { display:flex; min-width:0; flex-direction:column; gap:2px; }.vehicle-devices-panel-heading strong { color:#334155; font-size:12px; font-weight:850; }.vehicle-devices-panel-heading span { color:#64748b; font-size:10px; font-weight:650; }.vehicle-devices-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 16px; padding-top:10px; }.vehicle-device-detail { display:flex; align-items:center; gap:8px; min-width:0; padding:7px 8px; background:#f8fafc; border:1px solid #edf1f5; border-radius:8px; }.vehicle-device-detail-icon { display:grid; flex:0 0 28px; width:28px; height:28px; place-items:center; color:#2454d6; background:#eef3ff; border-radius:7px; }.vehicle-device-detail-copy { display:flex; min-width:0; flex-direction:column; gap:2px; }.vehicle-device-detail-copy strong,.vehicle-device-detail-copy span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.vehicle-device-detail-copy strong { color:#334155; font-size:11px; font-weight:800; }.vehicle-device-detail-copy span { color:#64748b; font-size:10px; font-weight:650; }
 .seat-badge { display:inline-flex; align-items:center; gap:5px; min-height:26px; padding:3px 9px; color:#2454d6; background:#eef3ff; border-radius:8px; font-size:11.5px; font-weight:800; }
 .action-button--worker { color:#0c9468!important; }.action-button--worker:hover { background:#eaf8f3; }
 .status-control { margin-top:5px; }.status-switch.is-active { color:#0c9468; }.status-switch.is-inactive { color:#64748b; }.status-switch :deep(.v-switch) { flex:0 0 auto; }

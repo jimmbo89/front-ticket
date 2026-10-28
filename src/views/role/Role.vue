@@ -315,3 +315,20 @@ export default {
 .permission-actions { flex:0 0 auto; min-height:60px; padding:10px 20px!important; background:#fff; }
 .permission-done { min-width:110px; min-height:39px; color:#fff!important; background:linear-gradient(100deg,#2454d6,#3266e4)!important; border-radius:9px!important; font-size:12px; font-weight:800; letter-spacing:0; text-transform:none; }
 </style>
+
+<style>
+.roles-table thead {
+  display: table-header-group !important;
+  visibility: visible !important;
+}
+
+.roles-table thead tr {
+  display: table-row !important;
+  visibility: visible !important;
+}
+
+.roles-table thead th {
+  display: table-cell !important;
+  visibility: visible !important;
+}
+</style>

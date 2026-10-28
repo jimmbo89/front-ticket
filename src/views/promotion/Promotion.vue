@@ -1145,3 +1145,20 @@ export default {
   .dialog-actions { padding-inline: 13px !important; }
 }
 </style>
+
+<style>
+.tariff-table thead {
+  display: table-header-group !important;
+  visibility: visible !important;
+}
+
+.tariff-table thead tr {
+  display: table-row !important;
+  visibility: visible !important;
+}
+
+.tariff-table thead th {
+  display: table-cell !important;
+  visibility: visible !important;
+}
+</style>

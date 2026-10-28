@@ -402,13 +402,74 @@
                                 </div>
                               </div>
 
-                              <v-text-field v-model.number="ticket.cant"
-                                @update:model-value="handleQuantityChange(ticket, $event)"
-                                @blur="validateQuantity(ticket)" variant="outlined" density="compact" rounded="lg"
-                                type="number" min="0" hide-details="auto" class="ticket-type-card__input"
-                                :error-messages="(currentlyEditing === ticket.trip_fare_id && seatError) ||
-                                  quantityErrors[ticket.trip_fare_id]
-                                  " />
+                              <div class="ticket-type-card__controls">
+                                <v-text-field v-model.number="ticket.cant"
+                                  @update:model-value="handleQuantityChange(ticket, $event)"
+                                  @blur="validateQuantity(ticket)" variant="outlined" density="compact" rounded="lg"
+                                  type="number" min="0" hide-details="auto" class="ticket-type-card__input"
+                                  :error-messages="(currentlyEditing === ticket.trip_fare_id && seatError) ||
+                                    quantityErrors[ticket.trip_fare_id]
+                                    " />
+
+                                <div class="ticket-type-card__promotion">
+                                  <div v-if="ticket.showPromotionSelect" class="ticket-type-card__promotion-select">
+                                    <v-autocomplete
+                                      v-model="ticket.selectedPromotion"
+                                      :items="promotions"
+                                      label="Seleccionar tarifa"
+                                      item-title="name"
+                                      item-value="id"
+                                      variant="outlined"
+                                      density="compact"
+                                      hide-details="auto"
+                                      prepend-inner-icon="mdi-tag-outline"
+                                      :no-data-text="'No hay tarifas disponibles'"
+                                      @update:model-value="(value) => applyPromotion(ticket, value)"
+                                      @blur="hidePromotionSelect(ticket)"
+                                      autofocus
+                                    >
+                                      <template #item="{ props, item }">
+                                        <v-list-item v-bind="props">
+                                          <template #title>
+                                            <span>{{ item.raw.name }}</span>
+                                          </template>
+                                          <template #subtitle>
+                                            <span>{{ formatPromotionDiscount(item.raw) }}</span>
+                                          </template>
+                                        </v-list-item>
+                                      </template>
+                                    </v-autocomplete>
+                                  </div>
+
+                                  <div v-else-if="ticket.promotion_id" class="ticket-type-card__promotion-applied">
+                                    <v-chip size="small" variant="tonal" color="primary" prepend-icon="mdi-tag-outline">
+                                      {{ ticket.namePromotion }} · {{ formatPromotionDiscount(ticket) }}
+                                    </v-chip>
+                                    <v-btn
+                                      icon="mdi-close"
+                                      variant="text"
+                                      size="x-small"
+                                      color="error"
+                                      title="Quitar tarifa"
+                                      aria-label="Quitar tarifa"
+                                      @click="removePromotion(ticket)"
+                                    />
+                                  </div>
+
+                                  <v-btn
+                                    v-else
+                                    variant="text"
+                                    size="small"
+                                    color="primary"
+                                    prepend-icon="mdi-tag-plus-outline"
+                                    class="ticket-type-card__promotion-button"
+                                    :disabled="Number(ticket.cant) <= 0 || promotions.length === 0"
+                                    @click="showPromotionSelect(ticket)"
+                                  >
+                                    Agregar tarifa
+                                  </v-btn>
+                                </div>
+                              </div>
                             </div>
 
                             <div v-if="Number(ticket.cant) > 0" class="ticket-type-card__total">
@@ -1086,9 +1147,13 @@ export default {
     this.role = JSON.parse(LocalStorageService.getItem("role"));
     this.nameUser = JSON.parse(LocalStorageService.getItem("name"));
     this.permissions = LocalStorageService.getItem("permissions");
-    this.mostrarFila = this.hasPermission("view_tickets_company");
-    if (!this.mostrarFila) this.branch_id = LocalStorageService.getItem("branch_id");
-    this.showBranches();
+    if (this.hasPermission("view_tickets_company")) {
+      this.showBranches();
+      this.mostrarFila = true;
+    } else {
+      this.branch_id = LocalStorageService.getItem("branch_id");
+      
+    }
     this.restorePendingCardPayment();
   },
   methods: { getLocalStorageValue(key) {
@@ -2232,6 +2297,198 @@ export default {
         discount_type: promotion.discount_type ?? promotion.discountType ?? "monto",
       }));
     },
+    getPromotionDiscountType(promotion = {}) {
+      return (
+        promotion.discount_type ??
+        promotion.discountType ??
+        promotion.promotion_discount_type ??
+        promotion.promotionDiscountType ??
+        promotion.promotion_details?.discount_type ??
+        promotion.promotion_details?.discountType ??
+        promotion.promotionDetails?.discount_type ??
+        promotion.promotionDetails?.discountType ??
+        "monto"
+      );
+    },
+    formatPromotionDiscount(promotion = {}) {
+      const discountType = this.getPromotionDiscountType(promotion);
+      const value = Number(
+        promotion.percentage ??
+        promotion.value ??
+        promotion.amount ??
+        promotion.promotion_details?.percentage ??
+        0
+      ) || 0;
+
+      return discountType === "porcentaje"
+        ? `Porcentaje: ${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`
+        : `Monto fijo: ${new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0,
+          }).format(value)}`;
+    },
+    getPromotionAdjustment(ticket = {}, promotion = {}, basePrice = null) {
+      const unitPrice = Number(
+        ticket.base_price ??
+        ticket.price ??
+        ticket.unit_price ??
+        basePrice ??
+        this.getSelectedTripBasePrice()
+      ) || 0;
+      const quantity = Math.max(0, Number(ticket.cant ?? ticket.quantity) || 0);
+      const discountType = this.getPromotionDiscountType(promotion);
+      const value = Number(
+        promotion.percentage ??
+        promotion.value ??
+        promotion.amount ??
+        0
+      ) || 0;
+      const discountPerUnit = discountType === "porcentaje"
+        ? (unitPrice * value) / 100
+        : value;
+      const discount = Math.min(
+        unitPrice * quantity,
+        Math.max(0, discountPerUnit * quantity)
+      );
+
+      return {
+        promotion_discount_type: discountType,
+        promotionDiscountType: discountType,
+        promotion_base_price: unitPrice,
+        promotionBasePrice: unitPrice,
+        promotion_unit_discount: discountPerUnit,
+        promotionUnitDiscount: discountPerUnit,
+        promotion_discount: discount,
+        promotionDiscount: discount,
+        percentage: value,
+        discount,
+      };
+    },
+    attachPromotionDetails(ticket = {}, promotion = {}) {
+      return {
+        ...ticket,
+        promotion_id: promotion.id ?? promotion.promotion_id ?? null,
+        namePromotion: promotion.name ?? promotion.title ?? "",
+        promotion_details: promotion,
+        promotionDetails: promotion,
+        ...this.getPromotionAdjustment(ticket, promotion),
+        showPromotionSelect: false,
+        selectedPromotion: null,
+      };
+    },
+    showPromotionSelect(ticket = {}) {
+      const ticketId = Number(ticket.trip_fare_id ?? ticket.tripFareId ?? ticket.id);
+      const updatedTickets = [...this.normalizeEditedTickettypes()];
+      const existingIndex = updatedTickets.findIndex(
+        (item) => Number(item.trip_fare_id ?? item.tripFareId ?? item.id) === ticketId
+      );
+      const existingTicket = existingIndex !== -1
+        ? updatedTickets[existingIndex]
+        : this.buildTicketTypeRecord(ticket, Number(ticket.cant) || 0, ticket);
+      const updatedTicket = this.buildTicketTypeRecord(
+        existingTicket,
+        Number(existingTicket.cant ?? ticket.cant) || 0,
+        {
+          ...existingTicket,
+          showPromotionSelect: true,
+          selectedPromotion: null,
+        }
+      );
+
+      if (existingIndex === -1) {
+        updatedTickets.push(updatedTicket);
+      } else {
+        updatedTickets[existingIndex] = updatedTicket;
+      }
+
+      this.editedItem.tickettypes = updatedTickets;
+    },
+    hidePromotionSelect(ticket = {}) {
+      const ticketId = Number(ticket.trip_fare_id ?? ticket.tripFareId ?? ticket.id);
+      const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
+        if (Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !== ticketId) {
+          return item;
+        }
+
+        return this.buildTicketTypeRecord(
+          item,
+          Number(item.cant ?? item.quantity) || 0,
+          { ...item, showPromotionSelect: false, selectedPromotion: null }
+        );
+      });
+
+      this.editedItem.tickettypes = updatedTickets;
+    },
+    applyPromotion(ticket = {}, promotionId) {
+      const promotion = (this.promotions || []).find(
+        (item) => Number(item.id) === Number(promotionId)
+      );
+      if (!promotion) return;
+
+      const ticketId = Number(ticket.trip_fare_id ?? ticket.tripFareId ?? ticket.id);
+      const updatedTickets = [...this.normalizeEditedTickettypes()];
+      const existingIndex = updatedTickets.findIndex(
+        (item) => Number(item.trip_fare_id ?? item.tripFareId ?? item.id) === ticketId
+      );
+      const currentTicket = existingIndex !== -1
+        ? updatedTickets[existingIndex]
+        : this.buildTicketTypeRecord(ticket, Number(ticket.cant) || 0, ticket);
+      const ticketWithPromotion = this.attachPromotionDetails(
+        currentTicket,
+        promotion
+      );
+      const updatedTicket = this.buildTicketTypeRecord(
+        ticketWithPromotion,
+        Number(currentTicket.cant ?? ticket.cant) || 0,
+        ticketWithPromotion
+      );
+
+      if (existingIndex === -1) {
+        updatedTickets.push(updatedTicket);
+      } else {
+        updatedTickets[existingIndex] = updatedTicket;
+      }
+
+      this.editedItem.tickettypes = updatedTickets;
+      this.recalculateTicketTotals();
+    },
+    removePromotion(ticket = {}) {
+      const ticketId = Number(ticket.trip_fare_id ?? ticket.tripFareId ?? ticket.id);
+      const updatedTickets = this.normalizeEditedTickettypes().map((item) => {
+        if (Number(item.trip_fare_id ?? item.tripFareId ?? item.id) !== ticketId) {
+          return item;
+        }
+
+        return this.buildTicketTypeRecord(
+          item,
+          Number(item.cant ?? item.quantity) || 0,
+          {
+            ...item,
+            promotion_id: null,
+            namePromotion: "",
+            percentage: 0,
+            discount_type: null,
+            discount: 0,
+            promotion_details: null,
+            promotionDetails: null,
+            promotion_discount_type: null,
+            promotionDiscountType: null,
+            promotion_base_price: null,
+            promotionBasePrice: null,
+            promotion_unit_discount: null,
+            promotionUnitDiscount: null,
+            promotion_discount: null,
+            promotionDiscount: null,
+            showPromotionSelect: false,
+            selectedPromotion: null,
+          }
+        );
+      });
+
+      this.editedItem.tickettypes = updatedTickets;
+      this.recalculateTicketTotals();
+    },
     getTicketTypePayableAmount(ticket) {
       const cant = Math.max(0, Number(ticket?.cant) || 0);
       if (!cant) {
@@ -2249,10 +2506,7 @@ export default {
     try {
       const result = await handleRequest({ endpoint: 'branch', method: 'GET' });
       this.branches = result.success && Array.isArray(result.data?.branches) ? result.data.branches : [];
-      if (this.branches.length && !this.branches.some((branch) => String(branch.id) === String(this.branch_id))) {
-        this.branch_id = this.branches[0].id;
-      }
-      this.mostrarFila = this.hasPermission("view_tickets_company") || this.branches.length > 1;
+      this.branch_id = this.branches[0]?.id ?? '';
       if (!result.success) this.showAlert('warning', result.message || 'No se pudieron cargar las sucursales.', 3000);
     } catch (error) {
       this.branches = [];
@@ -2498,6 +2752,14 @@ export default {
             payload.id = Number(item.id);
           }
 
+          const promotionId = item.promotion_id ?? item.promotionId ?? null;
+          if (promotionId !== null && promotionId !== undefined && promotionId !== "") {
+            payload.promotion_id = Number(promotionId);
+            payload.namePromotion = item.namePromotion ?? "";
+            payload.percentage = Number(item.percentage) || 0;
+            payload.discount = Number(item.discount) || 0;
+          }
+
           return payload;
         })
         .sort((a, b) => Number(a.trip_fare_id) - Number(b.trip_fare_id));
@@ -2508,6 +2770,10 @@ export default {
           id: item.id ?? null,
           trip_fare_id: Number(item.trip_fare_id),
           quantity: Number(item.quantity) || 0,
+          promotion_id: item.promotion_id ?? null,
+          namePromotion: item.namePromotion ?? "",
+          percentage: Number(item.percentage) || 0,
+          discount: Number(item.discount) || 0,
         }));
 
       return (
@@ -2618,7 +2884,9 @@ export default {
       await this.showGeneratedTicket(ticket);
       this.showAlert("success", message, 3000);
       this.branch_id = this.editedItem.branch_id || ticket.branch_id || this.branch_id;
-      this.close();
+      // Cierra únicamente el formulario de venta. La previsualización debe
+      // permanecer abierta para que el operador pueda revisarla o imprimirla.
+      this.dialog = false;
     },
     getCardPaymentErrorMessage(result = {}) {
       const backendMessage = [
@@ -2886,22 +3154,7 @@ export default {
               // AquÃ­ llamamos a la funciÃ³n de impresiÃ³n con los datos del ticket
               if (result.data && result.data.ticket) {
                 console.log("Ticket generado:", result.data.ticket);
-                this.currentTicket = {};
-                this.currentTicket = result.data.ticket;
-                this.showTicketDialog = true;
-
-                const branchIdBuscado = this.currentTicket.branch_id; // o el ID que necesitas comparar
-
-                // Encuentra la branch que coincide
-                const branchEncontrada = this.branches.find(
-                  (branch) => branch.id === branchIdBuscado
-                );
-
-                // Si necesitas la branch en this para usarla en el template
-                this.selectedBranch = branchEncontrada || null;
-                // Genera el QR despuÃ©s de que el componente se haya renderizado
-                await this.$nextTick();
-                await this.generateQRCode();
+                await this.showGeneratedTicket(result.data.ticket);
                 //this.printTicket(result.data.ticket);
               }
               this.showAlert("success", result.message, 3000);
@@ -2925,7 +3178,9 @@ export default {
         this.loading = false;
         this.valid = true;
       }
-      if (shouldClose) this.close();
+      // Ocultar el formulario no debe desmontar la vista de impresión recién
+      // abierta. El diálogo de impresión se cierra desde su propio botón.
+      if (shouldClose) this.dialog = false;
     },
     async generateQRCode() {
       try {
@@ -3477,7 +3732,44 @@ export default {
       const definition = this.getTicketTypeDefinition(ticketOrId);
       const basePrice = Number(definition.base_price ?? definition.price ?? 0) || 0;
       const cant = Math.max(0, Number(quantity) || 0);
-      const lineTotal = basePrice * cant;
+      const promotionDetails =
+        existing.promotion_details ??
+        existing.promotionDetails ??
+        existing.promotion ??
+        null;
+      const promotionId =
+        existing.promotion_id ??
+        existing.promotionId ??
+        promotionDetails?.id ??
+        null;
+      const hasPromotion =
+        promotionId !== null && promotionId !== undefined && promotionId !== "";
+      const promotionSource = hasPromotion
+        ? { ...promotionDetails, ...existing }
+        : {};
+      const discountType = hasPromotion
+        ? this.getPromotionDiscountType(promotionSource)
+        : null;
+      const percentage = hasPromotion
+        ? Number(
+          existing.percentage ??
+          promotionDetails?.percentage ??
+          promotionDetails?.value ??
+          promotionDetails?.amount ??
+          0
+        ) || 0
+        : 0;
+      const grossTotal = basePrice * cant;
+      const discountPerUnit = discountType === "porcentaje"
+        ? (basePrice * percentage) / 100
+        : percentage;
+      const discount = hasPromotion
+        ? Math.min(
+          grossTotal,
+          Math.max(0, discountPerUnit * cant)
+        )
+        : 0;
+      const lineTotal = Math.max(0, grossTotal - discount);
       const record = {
         ...existing,
         id: existing.id ?? definition.id ?? null,
@@ -3494,6 +3786,23 @@ export default {
         base_price: basePrice,
         basePrice,
         price: basePrice,
+        promotion_id: hasPromotion ? promotionId : null,
+        namePromotion: hasPromotion
+          ? existing.namePromotion ?? promotionDetails?.name ?? promotionDetails?.title ?? ""
+          : "",
+        percentage: hasPromotion ? percentage : 0,
+        discount_type: hasPromotion ? discountType : null,
+        discount,
+        promotion_details: hasPromotion ? promotionDetails : null,
+        promotionDetails: hasPromotion ? promotionDetails : null,
+        promotion_discount_type: hasPromotion ? discountType : null,
+        promotionDiscountType: hasPromotion ? discountType : null,
+        promotion_base_price: hasPromotion ? basePrice : null,
+        promotionBasePrice: hasPromotion ? basePrice : null,
+        promotion_unit_discount: hasPromotion ? discountPerUnit : null,
+        promotionUnitDiscount: hasPromotion ? discountPerUnit : null,
+        promotion_discount: hasPromotion ? discount : null,
+        promotionDiscount: hasPromotion ? discount : null,
         line_total: lineTotal,
         lineTotal,
         total: lineTotal,
@@ -4652,6 +4961,42 @@ export default {
   gap: 14px;
 }
 
+.ticket-type-card__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ticket-type-card__promotion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  min-width: 0;
+}
+
+.ticket-type-card__promotion-select {
+  width: 220px;
+}
+
+.ticket-type-card__promotion-applied {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ticket-type-card__promotion-applied .v-chip {
+  max-width: 190px;
+}
+
+.ticket-type-card__promotion-button {
+  padding-inline: 0;
+  text-transform: none;
+}
+
 .ticket-type-card__title {
   font-size: 14px;
   font-weight: 900;
@@ -4666,6 +5011,18 @@ export default {
 
 .ticket-type-card__input {
   max-width: 96px;
+}
+
+@media (max-width: 720px) {
+  .ticket-type-card__main {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ticket-type-card__controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .ticket-type-card__total {
