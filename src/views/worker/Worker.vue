@@ -378,6 +378,24 @@ export default {
 
     },
 
+    normalizeRoleType(value, fallback = '') {
+      const normalized = String(value ?? '').trim().toUpperCase();
+      if (normalized === 'SUCURSAL' || normalized === 'BRANCH') return 'Sucursal';
+      if (normalized === 'EMPRESA' || normalized === 'SISTEMA' || normalized === 'SYSTEM' || normalized === 'COMPANY') return 'Empresa';
+      return String(fallback ?? '').trim();
+    },
+
+    normalizeRole(role = {}, fallbackType = '') {
+      const roleData = role?.raw ?? role ?? {};
+      const id = roleData.role_id ?? roleData.roleId ?? roleData.id ?? '';
+      const declaredType = roleData.type ?? roleData.role_type ?? roleData.roleType ?? '';
+      return {
+        ...roleData,
+        id,
+        type: this.normalizeRoleType(declaredType, fallbackType),
+      };
+    },
+
     workerImage(image) {
 
       return `${this.$axios.defaults.baseURL}images/${image}?t=${this.getCacheTimestamp()}`;
@@ -456,8 +474,15 @@ export default {
       }
       const rolesById = new Map();
       const branchesById = new Map();
-      results.forEach((result) => {
-        this.toArray(result.data?.roles).forEach((role) => rolesById.set(String(role.id), role));
+      results.forEach((result, index) => {
+        const requestedRoleType = roleTypes[index];
+        this.toArray(result.data?.roles).forEach((rawRole) => {
+          // El tipo declarado por el rol es la fuente de verdad. El tipo
+          // solicitado solo cubre respuestas legacy que no traen ese campo.
+          const role = this.normalizeRole(rawRole, requestedRoleType);
+          if (role.id === '') return;
+          rolesById.set(String(role.id), role);
+        });
         this.toArray(result.data?.branches).forEach((branch) => branchesById.set(String(branch.id), branch));
       });
       this.roles = Array.from(rolesById.values());
@@ -1133,7 +1158,16 @@ export default {
 .form-dialog,.delete-dialog { overflow:hidden; color:#1e293b; background:#fff; border:1px solid #dfe6ef; border-radius:14px!important; box-shadow:0 22px 60px rgba(15,23,42,.2)!important; }.dialog-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:17px 20px; }.dialog-title { color:#0f172a; font-size:16px; font-weight:850; line-height:1.2; }.dialog-subtitle { margin-top:4px; color:#64748b; font-size:11.5px; font-weight:600; }.dialog-close { color:#64748b!important; }.dialog-body { max-height:70vh; padding:21px 22px 16px!important; overflow-y:auto; }.form-section-label { margin-bottom:13px; color:#475569; font-size:10.5px; font-weight:850; letter-spacing:.065em; text-transform:uppercase; }.form-section-label--spaced { margin-top:7px; }.dialog-body :deep(.v-field) { border-radius:9px; }.dialog-body :deep(.v-field__outline) { color:#d6dee9; }.dialog-body :deep(.v-label) { color:#64748b; font-size:13px; font-weight:650; opacity:1; }.dialog-body :deep(.v-field__input) { color:#1e293b; font-size:13px; font-weight:650; }
 .image-upload-area { display:flex; align-items:center; gap:14px; padding:12px; background:#f8fafc; border:1px solid #e8edf5; border-radius:10px; }.image-preview { flex:0 0 92px; width:92px; height:68px; overflow:hidden; background:#eef3ff; border:1px solid #dce6ff; border-radius:9px; }.preview-placeholder { display:grid; width:100%; height:100%; place-items:center; color:#2454d6; }.upload-copy { flex:1; min-width:0; }.upload-title { color:#334155; font-size:12.5px; font-weight:800; }.upload-description { margin:3px 0 8px; color:#64748b; font-size:10.5px; font-weight:600; }.file-field { max-width:330px; }.password-alert { margin-top:2px; font-size:11.5px; font-weight:650; }
 .dialog-actions { justify-content:flex-end; gap:9px; padding:14px 20px!important; }.cancel-button { min-width:94px; min-height:39px; color:#475569!important; font-size:12.5px; font-weight:750; letter-spacing:0; text-transform:none; border-radius:9px!important; }.cancel-button:hover { background:#f1f5f9; }.save-button { min-width:150px; padding-inline:18px!important; }.delete-dialog { padding:29px 27px 24px; text-align:center; }.delete-icon { display:grid; width:56px; height:56px; margin:0 auto 16px; place-items:center; color:#dc2626; background:#fff1f2; border:1px solid #ffe0e4; border-radius:15px; }.delete-title { color:#0f172a; font-size:18px; font-weight:850; }.delete-message { max-width:340px; margin:10px auto 22px; color:#64748b; font-size:12.5px; font-weight:600; line-height:1.55; }.delete-message strong { color:#334155; font-weight:800; }.delete-actions { display:flex; justify-content:center; gap:9px; }.delete-button { min-width:112px; min-height:40px; color:#fff!important; background:#dc2626!important; border-radius:9px!important; font-size:12.5px; font-weight:800; letter-spacing:0; text-transform:none; }.snackbar-content { display:flex; align-items:center; gap:10px; }.snackbar-title { font-size:11px; font-weight:850; }.snackbar-message { margin-top:2px; font-size:9.5px; font-weight:600; }.busgo-snackbar :deep(.v-snackbar__wrapper) { border-radius:11px; }
-@media (max-width:1250px) { .workers-table { overflow-x:auto; }.workers-table :deep(.v-table__wrapper) { min-width:1180px; } }
+@media (max-width:1250px) { .workers-table { overflow-x:hidden; }.workers-table :deep(.v-table__wrapper) { min-width:0; } }
+.workers-table :deep(.v-table__wrapper) { overflow-x:hidden; min-width:0; }
+.workers-table :deep(.v-table__wrapper > table) { width:100%; min-width:0; table-layout:fixed; }
+.workers-table :deep(.v-table__wrapper > table > thead > tr > th),.workers-table :deep(.v-table__wrapper > table > tbody > tr > td) { min-width:0; max-width:0; overflow:hidden; }
+.worker-name-cell { min-width:0; width:100%; }
+.cell-copy { min-width:0; overflow:hidden; }
+.contact-cell,.address-cell { min-width:0; width:100%; max-width:100%; }
+.contact-cell span,.address-cell span { min-width:0; }
+.address-cell { max-width:100%; }
+.role-badge { max-width:100%; }
 @media (max-width:959px) { .page-header { padding-inline:17px; }.page-content { padding:15px 17px 24px; }.table-toolbar { align-items:stretch; flex-direction:column; }.toolbar-filters { justify-content:flex-start; }.search-field { flex:1 1 auto; } }
 @media (max-width:600px) { .page-header { align-items:flex-start; padding:11px 12px; }.page-subtitle { max-width:210px; }.add-button { min-width:42px!important; padding-inline:10px!important; }.add-button :deep(.v-btn__content) { font-size:0; }.add-button :deep(.v-icon) { margin:0!important; }.page-content { padding:11px 12px 20px; }.search-field { width:100%; }.dialog-header { padding:14px; }.dialog-body { padding:17px 14px 12px!important; }.image-upload-area { align-items:flex-start; flex-direction:column; }.dialog-actions { padding-inline:13px!important; } }
 </style>

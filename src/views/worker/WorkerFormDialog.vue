@@ -123,8 +123,17 @@ export default {
     hasAssociatedBranch() { return this.branchRows.some((branch) => branch.associated); },
     selectedBranchRows() { return this.branchRows.filter((branch) => branch.associated); },
     selectedRoleType() {
-      const selectedRole = this.roles.find((role) => String(role.id) === String(this.formItem.role_id));
-      return selectedRole?.type ?? this.formItem?.role?.type ?? this.formItem?.roleType ?? this.formItem?.role_type ?? "";
+      const roleId = this.roleIdFrom(this.formItem);
+      const selectedRole = this.roles.find((role) => String(this.roleIdFrom(role)) === String(roleId));
+      return this.normalizeRoleType(
+        selectedRole?.type
+          || selectedRole?.roleType
+          || selectedRole?.role_type
+          || this.formItem?.role?.type
+          || this.formItem?.roleType
+          || this.formItem?.role_type
+          || ""
+      );
     },
     requiresBranchAssociation() { return String(this.selectedRoleType).trim().toLowerCase() === "sucursal"; },
     branchRules() {
@@ -133,13 +142,15 @@ export default {
         : [];
     },
     branchChanges() {
-      if (!this.requiresBranchAssociation) return [];
       const originalById = new Map(this.originalBranches.map((branch) => [String(branch.id), branch]));
       return this.branchRows.map((branch) => {
         const original = originalById.get(String(branch.id));
         const originalAssociated = Boolean(original?.associated);
-        if (!originalAssociated && branch.associated) return { branch_id: branch.id, action: "associate" };
+        if (!originalAssociated && branch.associated) {
+          return this.requiresBranchAssociation ? { branch_id: branch.id, action: "associate" } : null;
+        }
         if (originalAssociated && !branch.associated) return { association_id: original.relationId, branch_id: branch.id, action: "delete" };
+        if (originalAssociated && branch.associated && !this.requiresBranchAssociation) return { association_id: original.relationId, branch_id: branch.id, action: "delete" };
         return null;
       }).filter(Boolean);
     },
@@ -152,14 +163,32 @@ export default {
   methods: {
     defaultItem() { return { id: "", name: "", user: "", email: "", image: "", phone: "", password: "", rut: "", address: "", role_id: "", user_id: "", branches: [] }; },
     toArray(value) { return Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : []); },
+    roleIdFrom(value = {}) { return value?.role_id ?? value?.roleId ?? value?.id ?? value ?? ""; },
+    normalizeRoleType(value) {
+      const normalized = String(value ?? "").trim().toUpperCase();
+      if (normalized === "SUCURSAL" || normalized === "BRANCH") return "Sucursal";
+      if (normalized === "EMPRESA" || normalized === "SISTEMA" || normalized === "SYSTEM" || normalized === "COMPANY") return "Empresa";
+      return String(value ?? "").trim();
+    },
     syncFromWorker() {
-      this.formItem = { ...this.defaultItem(), ...this.worker, branches: [] };
+      const workerRoleId = this.worker?.role_id ?? this.worker?.roleId ?? "";
+      this.formItem = {
+        ...this.defaultItem(),
+        ...this.worker,
+        role_id: workerRoleId,
+        branches: [],
+      };
       const catalog = this.toArray(this.branches);
       const workerBranches = this.toArray(this.worker?.branches);
       const byId = new Map();
       catalog.forEach((branch) => { const normalized = this.normalizeBranch({ ...branch, associated: false, association_id: null }); if (normalized.id) byId.set(String(normalized.id), normalized); });
       workerBranches.forEach((branch) => { const normalized = this.normalizeBranch(branch); if (!normalized.id) return; byId.set(String(normalized.id), { ...byId.get(String(normalized.id)), ...normalized }); });
       this.branchRows = Array.from(byId.values());
+      const associatedRoleId = this.branchRows.find((branch) => branch.associated && branch.associationRoleId !== null && branch.associationRoleId !== undefined && branch.associationRoleId !== "")?.associationRoleId;
+      const selectedRoleExists = this.roles.some((role) => String(this.roleIdFrom(role)) === String(this.roleIdFrom(this.formItem)));
+      if (!selectedRoleExists && associatedRoleId !== null && associatedRoleId !== undefined && associatedRoleId !== "") {
+        this.formItem.role_id = associatedRoleId;
+      }
       if (this.isCreating) {
         this.originalBranches = [];
         this.branchRows = this.branchRows.map((branch) => ({ ...branch, associated: false, relationId: null }));
@@ -177,9 +206,10 @@ export default {
       delete branchData.role_id;
       delete branchData.roleId;
       delete branchData.association_role_id;
+      const associationRoleId = branch.role_id ?? branch.roleId ?? branch.association_role_id ?? null;
       const relationId = branch.association_id ?? branch.associationId ?? branch.workerBranchId ?? branch.worker_branch_id ?? null;
       const associated = branch.associated === true || relationId !== null && relationId !== undefined && relationId !== "";
-      return { ...branchData, id: branch.branch_id ?? branch.branchId ?? branch.id ?? "", name: branch.name ?? branch.branchName ?? "Sucursal sin nombre", address: branch.address ?? branch.branchAddress ?? "Dirección no disponible", image: branch.image ?? branch.branchImage ?? "", associated, relationId };
+      return { ...branchData, id: branch.branch_id ?? branch.branchId ?? branch.id ?? "", name: branch.name ?? branch.branchName ?? "Sucursal sin nombre", address: branch.address ?? branch.branchAddress ?? "Dirección no disponible", image: branch.image ?? branch.branchImage ?? "", associated, relationId, associationRoleId };
     },
     baseImageUrl(source) {
       if (!source) return "";
